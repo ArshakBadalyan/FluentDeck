@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/services/screen_tutorial_segments.dart';
-import 'package:untitled2/services/screen_tutorial_service.dart';
-import 'package:untitled2/ui_elements/screen_tutorial_overlay.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/services/screen_tutorial_segments.dart';
+import 'package:speakstack/services/screen_tutorial_service.dart';
+import 'package:speakstack/ui_elements/screen_tutorial_overlay.dart';
 
 /// Modal list of spotlight segments for the **current** main + sub-tab
 /// (`ScreenTutorialReplayCoordinator`).

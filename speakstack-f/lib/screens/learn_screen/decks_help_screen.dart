@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/data/decks_help_content.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/data/decks_help_content.dart';
 
 /// In-app Decks help and FAQ (Phase 5G).
 class DecksHelpScreen extends StatefulWidget {

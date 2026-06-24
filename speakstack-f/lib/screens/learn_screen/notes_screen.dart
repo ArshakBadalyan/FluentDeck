@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/user_note_model.dart';
-import 'package:untitled2/screens/learn_screen/note_edit_screen.dart';
-import 'package:untitled2/services/note_service.dart';
-import 'package:untitled2/widgets/swipe_action_backgrounds.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/user_note_model.dart';
+import 'package:speakstack/screens/learn_screen/note_edit_screen.dart';
+import 'package:speakstack/services/note_service.dart';
+import 'package:speakstack/widgets/swipe_action_backgrounds.dart';
 
 enum _NoteSourceFilter { all, catalog, speaking, manual }
 

@@ -1,6 +1,6 @@
-import 'package:untitled2/models/speaking_session_record_model.dart';
-import 'package:untitled2/services/api_service.dart';
-import 'package:untitled2/services/tutor_memory_service.dart';
+import 'package:speakstack/models/speaking_session_record_model.dart';
+import 'package:speakstack/services/api_service.dart';
+import 'package:speakstack/services/tutor_memory_service.dart';
 
 class StudyHallSpeakingWord {
   final String word;

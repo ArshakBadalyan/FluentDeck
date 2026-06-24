@@ -1,4 +1,4 @@
-package io.framework7.matheapp
+package com.speakstack.app
 
 import io.flutter.embedding.android.FlutterActivity
 

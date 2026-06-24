@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/utils/card_browser_utils.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/utils/card_browser_utils.dart';
 
 /// Browser state shown in menu labels (checkmarks / subtitles).
 class CardBrowserOptionsState {

@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/services/card_tag_undo_store.dart';
-import 'package:untitled2/services/flashcard_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/services/card_tag_undo_store.dart';
+import 'package:speakstack/services/flashcard_service.dart';
 
 enum BulkTagMode { add, remove, replace }
 

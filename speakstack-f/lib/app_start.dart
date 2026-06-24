@@ -2,22 +2,22 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled2/clarity_user_sync.dart'
-    if (dart.library.html) 'package:untitled2/clarity_user_sync_stub.dart';
-import 'package:untitled2/english_main_screen.dart';
-import 'package:untitled2/screens/onboarding/english_onboarding_screen.dart';
-import 'package:untitled2/services/analytics_service.dart';
-import 'package:untitled2/services/auth_service.dart';
-import 'package:untitled2/services/english_level_service.dart';
-import 'package:untitled2/services/deck_backup_service.dart';
-import 'package:untitled2/services/deck_notification_service.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/services/push_notification_service.dart';
-import 'package:untitled2/services/token_storage.dart';
-import 'package:untitled2/services/mobile_app_update_gate.dart';
-import 'package:untitled2/ui_elements/loading_overlay.dart';
-import 'package:untitled2/widgets/mobile_force_update_screen.dart';
-import 'package:untitled2/widgets/mobile_soft_update_host.dart';
+import 'package:speakstack/clarity_user_sync.dart'
+    if (dart.library.html) 'package:speakstack/clarity_user_sync_stub.dart';
+import 'package:speakstack/english_main_screen.dart';
+import 'package:speakstack/screens/onboarding/english_onboarding_screen.dart';
+import 'package:speakstack/services/analytics_service.dart';
+import 'package:speakstack/services/auth_service.dart';
+import 'package:speakstack/services/english_level_service.dart';
+import 'package:speakstack/services/deck_backup_service.dart';
+import 'package:speakstack/services/deck_notification_service.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/services/push_notification_service.dart';
+import 'package:speakstack/services/token_storage.dart';
+import 'package:speakstack/services/mobile_app_update_gate.dart';
+import 'package:speakstack/ui_elements/loading_overlay.dart';
+import 'package:speakstack/widgets/mobile_force_update_screen.dart';
+import 'package:speakstack/widgets/mobile_soft_update_host.dart';
 
 class AppStart extends StatefulWidget {
   const AppStart({super.key});

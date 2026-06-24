@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/localization/app_localizations.dart';
+import 'package:speakstack/localization/app_localizations.dart';
 
-import 'package:untitled2/english_main_screen.dart';
+import 'package:speakstack/english_main_screen.dart';
 import '../../routing/app_route_names.dart';
-import '../../routing/mathe_page_routes.dart';
+import '../../routing/app_page_routes.dart';
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
 import '../../ui_elements/auth_input_decoration.dart';
@@ -69,7 +69,7 @@ class _RegisterFormState extends State<RegisterForm> {
         AudioService().play('formSubmit');
         Navigator.pushReplacement(
           context,
-          matheMaterialPageRoute(
+          appMaterialPageRoute(
             name: AppRouteNames.main,
             builder: (_) => const EnglishMainScreen(initialMainIndex: 0),
           ),

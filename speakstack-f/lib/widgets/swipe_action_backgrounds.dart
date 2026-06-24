@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
+import 'package:speakstack/app_colors.dart';
 
 /// Shared swipe backgrounds (conversation history / card browser style).
 class SwipeActionBackgrounds {

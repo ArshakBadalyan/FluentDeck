@@ -2,15 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:untitled2/clarity_user_sync.dart'
-    if (dart.library.html) 'package:untitled2/clarity_user_sync_stub.dart';
-import 'package:untitled2/services/analytics_service.dart';
-import 'package:untitled2/services/campaign_analytics.dart';
-import 'package:untitled2/services/english_level_service.dart';
-import 'package:untitled2/services/push_notification_service.dart';
-import 'package:untitled2/services/token_storage.dart';
+import 'package:speakstack/clarity_user_sync.dart'
+    if (dart.library.html) 'package:speakstack/clarity_user_sync_stub.dart';
+import 'package:speakstack/services/analytics_service.dart';
+import 'package:speakstack/services/campaign_analytics.dart';
+import 'package:speakstack/services/english_level_service.dart';
+import 'package:speakstack/services/push_notification_service.dart';
+import 'package:speakstack/services/token_storage.dart';
 
-import 'package:untitled2/utils/user_facing_api_error.dart';
+import 'package:speakstack/utils/user_facing_api_error.dart';
+
+import 'package:speakstack/utils/strapi_response.dart';
 
 import 'api_service.dart';
 
@@ -157,7 +159,10 @@ class AuthService {
         return {'status': 'error', 'message': 'Unexpected response'};
       }
 
-      final map = Map<String, dynamic>.from(data);
+      final map = StrapiResponse.row(data);
+      if (map == null) {
+        return {'status': 'error', 'message': 'Unexpected response'};
+      }
       if (map['error'] != null) {
         return {'status': 'error', 'message': map['error']?['message']};
       }

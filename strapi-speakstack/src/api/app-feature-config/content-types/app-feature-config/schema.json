@@ -45,6 +45,19 @@
     "advancedLevelsRequiringPremium": {
       "type": "json",
       "default": ["B2", "C1", "C2"]
+    },
+    "freeRolePlayPerCategory": {
+      "type": "integer",
+      "default": 2,
+      "min": 0
+    },
+    "freeTopicLevelGroups": {
+      "type": "json",
+      "default": ["intermediate"]
+    },
+    "gamesRequirePremium": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

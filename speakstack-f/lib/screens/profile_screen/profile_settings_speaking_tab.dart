@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/models/speaking_preferences.dart';
-import 'package:untitled2/services/conversation_service.dart';
-import 'package:untitled2/services/english_level_service.dart';
-import 'package:untitled2/services/speaking_preferences_service.dart';
-import 'package:untitled2/ui_elements/modern_page_widgets.dart';
-import 'package:untitled2/widgets/cefr_level_chips.dart';
+import 'package:speakstack/models/speaking_preferences.dart';
+import 'package:speakstack/services/conversation_service.dart';
+import 'package:speakstack/services/english_level_service.dart';
+import 'package:speakstack/services/speaking_preferences_service.dart';
+import 'package:speakstack/ui_elements/modern_page_widgets.dart';
+import 'package:speakstack/widgets/cefr_level_chips.dart';
 
 /// AI Speaking section for Profile → Settings (no outer scroll view).
 class ProfileSettingsSpeakingSection extends StatefulWidget {

@@ -1180,9 +1180,53 @@
     "changes-title": "Änderungen der Datenschutzerklärung",
     "changes-text": "Wir behalten uns vor, diese Datenschutzerklärung anzupassen, um stets den aktuellen rechtlichen Anforderungen zu entsprechen.",
     "contact-title": "Kontakt",
-    "contact-email": "info@schulmatheapp.de",
-    "contact-website": "https://schulmatheapp.de",
+    "contact-email": "support@speakstack.app",
+    "contact-website": "https://speakstack.app",
     "date": "Datum der Datenschutzerklärung: 20.04.2026"
+  },
+  "errors": {
+    "network": "Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+    "unexpected": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "unauthorized": "Bitte melden Sie sich erneut an.",
+    "server": "Der Server ist derzeit nicht erreichbar. Versuchen Sie es später erneut.",
+    "request-failed": "Die Anfrage konnte nicht abgeschlossen werden. Bitte erneut versuchen."
+  },
+  "speaking-activity": {
+    "error-generic": "Sprechaktivität konnte nicht geladen werden.",
+    "session-history": {
+      "title": "Sitzungsverlauf",
+      "empty": "Beenden Sie eine Sprechsitzung mit „Ende & Bewerten“, um den Verlauf hier zu sehen.",
+      "view-all": "Alle anzeigen ({count})"
+    },
+    "saved-phrases": {
+      "title": "Gespeicherte Sätze",
+      "empty": "Speichern Sie Wörter aus einem Gespräch, um sie hier zu sehen.",
+      "view-all": "Alle anzeigen ({count})"
+    },
+    "review-log": {
+      "title": "Wiederholungsprotokoll",
+      "view-all": "Alle anzeigen ({count})"
+    },
+    "session-detail": {
+      "title": "Sitzungsdetails",
+      "score": "Sitzungspunktzahl",
+      "mode": "Modus",
+      "completed": "Abgeschlossen",
+      "duration": "Dauer",
+      "duration-minutes": "{minutes} Min.",
+      "turns": "Züge",
+      "summary": "Zusammenfassung",
+      "feedback": "Tutor-Feedback",
+      "transcript-hint": "Vollständige Transkripte finden Sie unter Sprechen → Verlauf auf diesem Gerät."
+    },
+    "streak": {
+      "day": "Tag Serie",
+      "days": "Tage Serie"
+    }
+  },
+  "speaking-premium": {
+    "locked-message": "Dieses Angebot ist mit Premium verfügbar. Upgrade für alle Rollenspiele, Themen und Spiele.",
+    "badge": "Premium"
   },
   "versions": [
     {

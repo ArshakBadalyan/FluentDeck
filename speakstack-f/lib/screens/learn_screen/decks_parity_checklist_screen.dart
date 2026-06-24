@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/services/decks_parity_checklist_store.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/services/decks_parity_checklist_store.dart';
 
 /// Interactive AnkiDroid parity QA checklist (Step 8).
 class DecksParityChecklistScreen extends StatefulWidget {

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/screens/learn_screen/card_browser_screen.dart';
-import 'package:untitled2/screens/learn_screen/card_edit_screen.dart';
-import 'package:untitled2/screens/learn_screen/deck_detail_screen.dart';
-import 'package:untitled2/screens/learn_screen/review_session_screen.dart';
-import 'package:untitled2/screens/learn_screen/widgets/deck_count_buttons.dart';
-import 'package:untitled2/screens/learn_screen/widgets/deck_edit_sheet.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/screens/learn_screen/card_browser_screen.dart';
+import 'package:speakstack/screens/learn_screen/card_edit_screen.dart';
+import 'package:speakstack/screens/learn_screen/deck_detail_screen.dart';
+import 'package:speakstack/screens/learn_screen/review_session_screen.dart';
+import 'package:speakstack/screens/learn_screen/widgets/deck_count_buttons.dart';
+import 'package:speakstack/screens/learn_screen/widgets/deck_edit_sheet.dart';
 
 /// Deck overview — opened by tapping deck name or count buttons (AnkiDroid pattern).
 class DeckOverviewScreen extends StatefulWidget {

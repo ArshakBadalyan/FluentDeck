@@ -2,6 +2,7 @@
 
 const { getOrCreateDefaultDeck } = require('./flashcard-auto-create');
 const { createNoteAndCards } = require('./flashcard-note-sync');
+const { findUserById, updateByNumericId } = require('./document-service');
 
 const FREE_AUTO_NOTE_LIMIT = 10;
 
@@ -73,7 +74,7 @@ async function processSpeakingNoteAction(strapi, userId, noteAction, options = {
     return { processed: false, reason: 'missing_word' };
   }
 
-  const user = await strapi.entityService.findOne('plugin::users-permissions.user', userId, {
+  const user = await findUserById(strapi, userId, {
     fields: ['special', 'speaking_auto_notes_count'],
   });
   const isPremium = user?.special === true;
@@ -118,8 +119,8 @@ async function processSpeakingNoteAction(strapi, userId, noteAction, options = {
   });
 
   if (!isPremium) {
-    await strapi.entityService.update('plugin::users-permissions.user', userId, {
-      data: { speaking_auto_notes_count: usedCount + 1 },
+    await updateByNumericId(strapi, 'plugin::users-permissions.user', userId, {
+      speaking_auto_notes_count: usedCount + 1,
     });
   }
 

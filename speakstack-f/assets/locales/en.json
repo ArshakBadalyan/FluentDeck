@@ -28,7 +28,8 @@
     "save": "save",
     "start": "Start",
     "close": "Close",
-    "ok": "OK"
+    "ok": "OK",
+    "retry": "Retry"
   },
   "inputs": {
     "E-mail-address": "E-mail address",
@@ -1177,9 +1178,53 @@
     "changes-title": "Changes to this privacy policy",
     "changes-text": "We reserve the right to update this privacy policy to always comply with current legal requirements.",
     "contact-title": "Contact",
-    "contact-email": "info@schulmatheapp.de",
-    "contact-website": "https://schulmatheapp.de",
+    "contact-email": "support@speakstack.app",
+    "contact-website": "https://speakstack.app",
     "date": "Privacy policy date: 20.04.2026"
+  },
+  "errors": {
+    "network": "Check your internet connection and try again.",
+    "unexpected": "Something went wrong. Please try again.",
+    "unauthorized": "Please sign in again to continue.",
+    "server": "The server is unavailable right now. Try again later.",
+    "request-failed": "We couldn't complete that request. Please try again."
+  },
+  "speaking-activity": {
+    "error-generic": "Could not load speaking activity. Please try again.",
+    "session-history": {
+      "title": "Session history",
+      "empty": "Complete a speaking session and tap End & score to see history here.",
+      "view-all": "View all ({count})"
+    },
+    "saved-phrases": {
+      "title": "Saved phrases",
+      "empty": "Save words from a conversation to see them here.",
+      "view-all": "View all ({count})"
+    },
+    "review-log": {
+      "title": "Review log",
+      "view-all": "View all ({count})"
+    },
+    "session-detail": {
+      "title": "Session details",
+      "score": "Session score",
+      "mode": "Mode",
+      "completed": "Completed",
+      "duration": "Duration",
+      "duration-minutes": "{minutes} min",
+      "turns": "Turns",
+      "summary": "Summary",
+      "feedback": "Tutor feedback",
+      "transcript-hint": "Full turn-by-turn transcripts are saved in Speak → History on this device."
+    },
+    "streak": {
+      "day": "day streak",
+      "days": "days streak"
+    }
+  },
+  "speaking-premium": {
+    "locked-message": "This item is available with Premium. Upgrade to unlock all role-plays, topics, and games.",
+    "badge": "Premium"
   },
   "versions": [
     {

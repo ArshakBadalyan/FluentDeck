@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/models/flashcard_stats_model.dart';
-import 'package:untitled2/utils/statistics_labels.dart';
-import 'package:untitled2/utils/file_download.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/models/flashcard_stats_model.dart';
+import 'package:speakstack/utils/statistics_labels.dart';
+import 'package:speakstack/utils/file_download.dart';
 
 class FlashcardStatsExportService {
   FlashcardStatsExportService._();

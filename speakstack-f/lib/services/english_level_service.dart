@@ -1,9 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled2/models/user_progress_model.dart';
-import 'package:untitled2/screens/onboarding/english_onboarding_screen.dart';
-import 'package:untitled2/services/auth_service.dart';
-import 'package:untitled2/services/token_storage.dart';
-import 'package:untitled2/services/user_progress_service.dart';
+import 'package:speakstack/models/user_progress_model.dart';
+import 'package:speakstack/screens/onboarding/english_onboarding_screen.dart';
+import 'package:speakstack/services/auth_service.dart';
+import 'package:speakstack/services/token_storage.dart';
+import 'package:speakstack/services/user_progress_service.dart';
 
 class EnglishLevelService {
   EnglishLevelService._();

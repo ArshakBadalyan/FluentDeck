@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/lesson_model.dart';
-import 'package:untitled2/screens/lessons_screen/lessons_screen.dart';
-import 'package:untitled2/services/english_level_service.dart';
-import 'package:untitled2/services/lesson_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/lesson_model.dart';
+import 'package:speakstack/screens/lessons_screen/lesson_detail_screen.dart';
+import 'package:speakstack/services/english_level_service.dart';
+import 'package:speakstack/services/lesson_service.dart';
 
 class LessonsListTab extends StatefulWidget {
   const LessonsListTab({super.key});

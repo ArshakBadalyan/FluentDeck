@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/services/audio_service.dart';
-import 'package:untitled2/services/notifications_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/services/audio_service.dart';
+import 'package:speakstack/services/notifications_service.dart';
+import 'package:speakstack/utils/strapi_response.dart';
 
 class NotificationPanel extends StatefulWidget {
   final VoidCallback? onChanged;
@@ -28,17 +29,10 @@ class _NotificationPanelState extends State<NotificationPanel> {
     setState(() => _loading = true);
     final res = await NotificationsService.getNotifications();
     final raw = res['data'] as List? ?? [];
-    final parsed = raw.map((n) {
-      if (n is! Map) return <String, dynamic>{};
-      final attrs = n['attributes'];
-      if (attrs is Map) {
-        return {
-          'id': n['id'],
-          ...Map<String, dynamic>.from(attrs),
-        };
-      }
-      return Map<String, dynamic>.from(n);
-    }).toList();
+    final parsed = raw
+        .whereType<Map>()
+        .map((n) => StrapiResponse.unwrap(Map<String, dynamic>.from(n)))
+        .toList();
     if (!mounted) return;
     setState(() {
       _items = parsed;

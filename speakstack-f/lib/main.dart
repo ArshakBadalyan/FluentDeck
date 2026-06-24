@@ -5,15 +5,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/services/admob_service.dart';
-import 'package:untitled2/services/analytics_service.dart';
-import 'package:untitled2/services/click_tracking.dart';
-import 'package:untitled2/services/consent_service.dart';
-import 'package:untitled2/services/audio_service.dart';
-import 'package:untitled2/services/interaction_haptics.dart';
-import 'package:untitled2/services/deck_notification_service.dart';
-import 'package:untitled2/services/push_notification_service.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/services/admob_service.dart';
+import 'package:speakstack/services/analytics_service.dart';
+import 'package:speakstack/services/click_tracking.dart';
+import 'package:speakstack/services/consent_service.dart';
+import 'package:speakstack/services/audio_service.dart';
+import 'package:speakstack/services/interaction_haptics.dart';
+import 'package:speakstack/services/deck_notification_service.dart';
+import 'package:speakstack/services/push_notification_service.dart';
 
 import 'app_start.dart';
 import 'app_text_theme.dart';
@@ -36,28 +36,19 @@ List<String> _adMobTestDeviceIds() {
       .toList();
 }
 
-/// Loads [assets/english_config.txt] (KEY=value), falling back to legacy
-/// [assets/mathe_config.txt]. On web, [rootBundle] resolves some paths to
+/// Loads [assets/speakstack_config.txt]. On web, [rootBundle] resolves some paths to
 /// `…/assets/<file>` while the file is served at `…/assets/assets/<file>`;
 /// we fetch using [Uri.base] so `/web/` + `assets/assets/` matches deployment.
 Future<void> _loadDotenv() async {
-  const primary = 'assets/english_config.txt';
-  const legacy = 'assets/mathe_config.txt';
+  const primary = 'assets/speakstack_config.txt';
 
   if (kIsWeb) {
-    Future<http.Response> fetchConfig(String assetPath) {
-      final uri = Uri.base.resolve('assets/$assetPath');
-      return http.get(uri);
-    }
-
-    var res = await fetchConfig(primary);
-    if (res.statusCode != 200) {
-      res = await fetchConfig(legacy);
-    }
+    final uri = Uri.base.resolve('assets/$primary');
+    final res = await http.get(uri);
     if (res.statusCode != 200) {
       throw Exception(
-        'Could not load $primary or $legacy (HTTP ${res.statusCode}). '
-        'Put KEY=value lines in assets/english_config.txt, then '
+        'Could not load $primary (HTTP ${res.statusCode}). '
+        'Put KEY=value lines in assets/speakstack_config.txt, then '
         'flutter build web --release --base-href /web/ --pwa-strategy none',
       );
     }
@@ -65,11 +56,7 @@ Future<void> _loadDotenv() async {
     return;
   }
 
-  try {
-    await dotenv.load(fileName: primary);
-  } catch (_) {
-    await dotenv.load(fileName: legacy);
-  }
+  await dotenv.load(fileName: primary);
 }
 
 final ClarityRouteObserver _clarityRouteObserver = ClarityRouteObserver();

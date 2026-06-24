@@ -209,6 +209,10 @@
       "relation": "oneToOne",
       "target": "api::user-progress.user-progress",
       "mappedBy": "user"
+    },
+    "old_data": {
+      "type": "json",
+      "private": true
     }
   }
 }

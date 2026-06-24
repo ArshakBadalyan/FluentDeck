@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/screens/learn_screen/card_browser_screen.dart';
-import 'package:untitled2/screens/learn_screen/card_edit_screen.dart';
-import 'package:untitled2/screens/learn_screen/review_session_screen.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/widgets/swipe_action_backgrounds.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/screens/learn_screen/card_browser_screen.dart';
+import 'package:speakstack/screens/learn_screen/card_edit_screen.dart';
+import 'package:speakstack/screens/learn_screen/review_session_screen.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/widgets/swipe_action_backgrounds.dart';
 
 class DeckDetailScreen extends StatefulWidget {
   const DeckDetailScreen({super.key, required this.deckId});

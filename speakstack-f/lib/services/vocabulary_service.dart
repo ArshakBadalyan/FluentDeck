@@ -1,5 +1,6 @@
 import '../models/placement_test_model.dart';
 import '../models/vocabulary_entry_model.dart';
+import '../utils/strapi_response.dart';
 import 'api_service.dart';
 import 'english_level_service.dart';
 
@@ -37,8 +38,7 @@ class VocabularyService {
     }
 
     final data = await ApiService.get('vocabulary/catalog?${params.join('&')}');
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
 
     return rows
         .whereType<Map>()
@@ -52,8 +52,7 @@ class VocabularyService {
 
   Future<List<SavedWordModel>> fetchMyWords() async {
     final data = await ApiService.get('vocabulary/my-words');
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
 
     return rows
         .whereType<Map>()

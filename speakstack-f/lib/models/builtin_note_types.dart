@@ -1,4 +1,4 @@
-import 'package:untitled2/models/flashcard_note_model.dart';
+import 'package:speakstack/models/flashcard_note_model.dart';
 
 /// Built-in note types mirrored from the Strapi API (offline fallback).
 List<NoteTypeModel> builtinNoteTypes() => const [

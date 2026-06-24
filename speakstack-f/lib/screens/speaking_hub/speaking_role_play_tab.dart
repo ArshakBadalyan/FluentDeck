@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
+import 'package:speakstack/app_colors.dart';
 
 import '../../models/conversation_prompt_model.dart';
 import '../../models/speaking_session_context.dart';
@@ -8,6 +8,7 @@ import '../../services/speaking_content_service.dart';
 import '../../services/speaking_scores_service.dart';
 import '../../services/speaking_session_service.dart';
 import '../../utils/speaking_item_icons.dart';
+import '../../utils/speaking_premium_gate.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingRolePlayTab extends StatefulWidget {
@@ -51,8 +52,9 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
     try {
       await SpeakingSessionService.instance.refreshScoresFromServer();
       final category = _filters[_filterIndex].$1;
-      final scenarios = await SpeakingContentService.instance
-          .fetchRolePlayScenarios(category: category);
+      final catalog = await SpeakingContentService.instance
+          .fetchRolePlayCatalog(category: category);
+      final scenarios = catalog.items;
 
       final scores = <String, int?>{};
       for (final s in scenarios) {
@@ -66,7 +68,8 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
         _selected =
             scenarios.any((s) => s.referenceKey == _selected?.referenceKey)
                 ? _selected
-                : (scenarios.isNotEmpty ? scenarios.first : null);
+                : firstUnlocked(scenarios, (s) => s.isPremiumLocked) ??
+                    (scenarios.isNotEmpty ? scenarios.first : null);
         _scoreCache = scores;
         _loading = false;
       });
@@ -249,6 +252,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
             ),
             score: _scoreCache[scenario.referenceKey],
             selected: _selected?.referenceKey == scenario.referenceKey,
+            isPremiumLocked: !scenario.isLocal && scenario.isPremiumLocked,
             trailing:
                 scenario.isLocal
                     ? IconButton(
@@ -257,7 +261,13 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
                       onPressed: () => _deleteCustom(scenario),
                     )
                     : null,
-            onTap: () => setState(() => _selected = scenario),
+            onTap: () {
+              if (!scenario.isLocal && scenario.isPremiumLocked) {
+                showSpeakingPremiumSnackBar(context);
+                return;
+              }
+              setState(() => _selected = scenario);
+            },
           );
         },
       ),
@@ -293,9 +303,10 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
         Expanded(child: _buildList()),
         SpeakingStartButton(
           label: 'Start Role-Play',
-          enabled: _selected != null,
+          enabled: _selected != null && (!_selected!.isPremiumLocked || _selected!.isLocal),
           onPressed:
-              _selected == null
+              _selected == null ||
+                  (_selected!.isPremiumLocked && !_selected!.isLocal)
                   ? null
                   : () {
                     widget.onStart(

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/conversation_training_session.dart';
-import 'package:untitled2/models/speaking_session_record_model.dart';
-import 'package:untitled2/services/conversation_service.dart';
-import 'package:untitled2/services/main_navigation_coordinator.dart';
-import 'package:untitled2/services/study_hall_service.dart';
-import 'package:untitled2/services/tutor_memory_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/conversation_training_session.dart';
+import 'package:speakstack/models/speaking_session_record_model.dart';
+import 'package:speakstack/services/conversation_service.dart';
+import 'package:speakstack/services/main_navigation_coordinator.dart';
+import 'package:speakstack/services/study_hall_service.dart';
+import 'package:speakstack/services/tutor_memory_service.dart';
 
 class StudyHallScreen extends StatefulWidget {
   const StudyHallScreen({super.key});

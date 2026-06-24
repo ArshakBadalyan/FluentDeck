@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/services/flashcard_maintenance_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/services/flashcard_maintenance_service.dart';
 
 /// Shows check / maintenance result dialog.
 Future<void> showFlashcardCheckResultDialog(

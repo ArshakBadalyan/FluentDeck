@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/grammar_correction.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/grammar_correction.dart';
 
 class _TextRange {
   const _TextRange(this.start, this.end);

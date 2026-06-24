@@ -1,4 +1,4 @@
-import 'package:untitled2/models/occlusion_model.dart';
+import 'package:speakstack/models/occlusion_model.dart';
 
 class CardReviewStateModel {
   final int? id;

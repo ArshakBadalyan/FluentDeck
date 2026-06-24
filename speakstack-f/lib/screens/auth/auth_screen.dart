@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/localization/app_localizations.dart';
+import 'package:speakstack/localization/app_localizations.dart';
 import 'login_form.dart';
 import 'register_form.dart';
 import 'nickname_form.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
+import 'package:speakstack/app_colors.dart';
 
 import '../../models/conversation_training_session.dart';
 import '../../models/flashcard_model.dart';

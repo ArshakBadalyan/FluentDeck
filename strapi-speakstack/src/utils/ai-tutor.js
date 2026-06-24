@@ -478,6 +478,7 @@ async function synthesizeSpeech(text) {
 async function loadUserTutorContext(strapi, userId) {
   const { loadTutorMemory } = require('./tutor-memory');
   const { normalizePracticeLanguage } = require('./practice-languages');
+  const { findUserById } = require('./document-service');
   let userLevel = "B1";
   let weakAreas = [];
   let tutorMemory = [];
@@ -489,21 +490,17 @@ async function loadUserTutorContext(strapi, userId) {
   };
 
   try {
-    const user = await strapi.entityService.findOne(
-      "plugin::users-permissions.user",
-      userId,
-      {
-        fields: [
-          "english_level",
-          "practice_language",
-          "response_language",
-          "translation_language",
-          "show_translations",
-          "auto_conversation",
-          "speaking_auto_notes_count",
-        ],
-      },
-    );
+    const user = await findUserById(strapi, userId, {
+      fields: [
+        "english_level",
+        "practice_language",
+        "response_language",
+        "translation_language",
+        "show_translations",
+        "auto_conversation",
+        "speaking_auto_notes_count",
+      ],
+    });
     if (user?.english_level) {
       userLevel = user.english_level;
     }
@@ -521,13 +518,10 @@ async function loadUserTutorContext(strapi, userId) {
   }
 
   try {
-    const progresses = await strapi.entityService.findMany(
-      "api::user-progress.user-progress",
-      {
-        filters: { user: { id: userId } },
-        limit: 1,
-      },
-    );
+    const progresses = await strapi.documents("api::user-progress.user-progress").findMany({
+      filters: { user: { id: userId } },
+      limit: 1,
+    });
     const progress = progresses?.[0];
     if (progress?.currentLevel) {
       userLevel = progress.currentLevel;

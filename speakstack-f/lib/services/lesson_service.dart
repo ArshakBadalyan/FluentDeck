@@ -1,5 +1,6 @@
 import '../models/conversation_prompt_model.dart';
 import '../models/lesson_model.dart';
+import '../utils/strapi_response.dart';
 import 'api_service.dart';
 
 class LessonService {
@@ -22,8 +23,7 @@ class LessonService {
 
     final query = filters.isEmpty ? '' : '?${filters.join('&')}';
     final data = await ApiService.get('lessons$query');
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
 
     return rows
         .whereType<Map>()
@@ -33,9 +33,9 @@ class LessonService {
 
   Future<LessonModel?> fetchLessonById(int id) async {
     final data = await ApiService.get('lessons/$id?populate=exercises');
-    final row = data is Map ? data['data'] : null;
-    if (row is! Map) return null;
-    return LessonModel.fromJson(Map<String, dynamic>.from(row));
+    final row = StrapiResponse.row(data);
+    if (row == null) return null;
+    return LessonModel.fromJson(row);
   }
 
   Future<List<ConversationPromptModel>> fetchConversationPrompts({
@@ -46,8 +46,7 @@ class LessonService {
             ? '?filters[difficultyLevel][\$eq]=$difficultyLevel&sort=id:asc'
             : '?sort=id:asc';
     final data = await ApiService.get('conversation-prompts$query');
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
 
     return rows
         .whereType<Map>()

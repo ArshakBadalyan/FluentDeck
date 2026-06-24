@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/services/review_settings_store.dart';
-import 'package:untitled2/ui_elements/modern_page_widgets.dart';
+import 'package:speakstack/services/review_settings_store.dart';
+import 'package:speakstack/ui_elements/modern_page_widgets.dart';
 
 /// Appearance and accessibility settings (stored locally, app-wide).
 class ProfileSettingsGeneralSection extends StatefulWidget {

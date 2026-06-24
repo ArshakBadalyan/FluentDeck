@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/screens/learn_screen/decks_help_screen.dart';
-import 'package:untitled2/services/decks_help_hints_store.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/screens/learn_screen/decks_help_screen.dart';
+import 'package:speakstack/services/decks_help_hints_store.dart';
 
 /// Help icon that opens [DecksHelpScreen]; optionally shows a first-visit hint once.
 class DecksContextualHelpButton extends StatelessWidget {

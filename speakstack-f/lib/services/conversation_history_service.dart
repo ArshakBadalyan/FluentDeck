@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled2/models/conversation_session_model.dart';
-import 'package:untitled2/models/conversation_turn_model.dart';
-import 'package:untitled2/services/token_storage.dart';
+import 'package:speakstack/models/conversation_session_model.dart';
+import 'package:speakstack/models/conversation_turn_model.dart';
+import 'package:speakstack/services/token_storage.dart';
 
 const _storageKeyPrefix = 'conversation_history_v1_';
 

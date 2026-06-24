@@ -1,15 +1,15 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/models/flashcard_note_model.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/ui_elements/primary_button.dart';
-import 'package:untitled2/utils/html_text_utils.dart';
-import 'package:untitled2/widgets/html_field_editor.dart';
-import 'package:untitled2/models/occlusion_model.dart';
-import 'package:untitled2/widgets/image_occlusion_editor.dart';
-import 'package:untitled2/widgets/note_preview_sheet.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/models/flashcard_note_model.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/ui_elements/primary_button.dart';
+import 'package:speakstack/utils/html_text_utils.dart';
+import 'package:speakstack/widgets/html_field_editor.dart';
+import 'package:speakstack/models/occlusion_model.dart';
+import 'package:speakstack/widgets/image_occlusion_editor.dart';
+import 'package:speakstack/widgets/note_preview_sheet.dart';
 
 /// Anki-style add / edit note screen (Phase 4C).
 class CardEditScreen extends StatefulWidget {

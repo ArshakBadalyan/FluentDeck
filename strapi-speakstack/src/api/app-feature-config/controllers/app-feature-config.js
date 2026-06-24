@@ -70,6 +70,25 @@ module.exports = createCoreController(
         advancedLevelsRequiringPremium: Array.isArray(advanced)
           ? advanced
           : DEFAULT_CONFIG.advancedLevelsRequiringPremium,
+        freeRolePlayPerCategory: pickInt(
+          'freeRolePlayPerCategory',
+          'free_role_play_per_category',
+          DEFAULT_CONFIG.freeRolePlayPerCategory,
+        ),
+        freeTopicLevelGroups: (() => {
+          let groups =
+            entry.freeTopicLevelGroups ?? entry.free_topic_level_groups ?? DEFAULT_CONFIG.freeTopicLevelGroups;
+          if (typeof groups === 'string') {
+            try {
+              groups = JSON.parse(groups);
+            } catch {
+              groups = DEFAULT_CONFIG.freeTopicLevelGroups;
+            }
+          }
+          return Array.isArray(groups) ? groups : DEFAULT_CONFIG.freeTopicLevelGroups;
+        })(),
+        gamesRequirePremium:
+          entry.gamesRequirePremium === true || entry.games_require_premium === true,
       };
     },
   }),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/services/audio_service.dart';
-import 'package:untitled2/services/auth_service.dart';
-import 'package:untitled2/ui_elements/primary_button.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/services/audio_service.dart';
+import 'package:speakstack/services/auth_service.dart';
+import 'package:speakstack/ui_elements/primary_button.dart';
 
 /// Shown on logout if the user has no password yet: set password (same rules as
 /// register / Security tab) or delete account (soft-anonymize via [AuthService.deleteNicknamedUser]).

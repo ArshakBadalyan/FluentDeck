@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/services/flashcard_service.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/services/flashcard_service.dart';
 
 enum FlashcardImportFormat { csv, txt, apkg, json }
 

@@ -1,5 +1,5 @@
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/models/flashcard_stats_model.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/models/flashcard_stats_model.dart';
 
 /// Anki-style scope and range labels for Statistics (Step 5).
 class StatisticsLabels {

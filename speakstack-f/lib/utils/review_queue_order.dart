@@ -1,6 +1,6 @@
-import 'package:untitled2/models/flashcard_model.dart';
+import 'package:speakstack/models/flashcard_model.dart';
 
-import 'package:untitled2/services/review_settings_store.dart';
+import 'package:speakstack/services/review_settings_store.dart';
 
 /// Reorders a fetched review queue per New study screen settings.
 List<FlashcardModel> applyNewCardPosition(

@@ -16,6 +16,14 @@ module.exports = ({ env }) => [
       // includes(Origin)—so ['*'] never matches real browser origins → CORS failure.
       origin: '*',
       maxAge: 86400,
+      headers: [
+        'Content-Type',
+        'Authorization',
+        'Origin',
+        'Accept',
+        'Strapi-Response-Format',
+      ],
+      keepHeaderOnError: true,
     },
   },
   "strapi::poweredBy",

@@ -1,16 +1,18 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/speaking_session_record_model.dart';
-import 'package:untitled2/models/user_note_model.dart';
-import 'package:untitled2/models/user_progress_model.dart';
-import 'package:untitled2/screens/activity_screen/speaking_saved_phrases_screen.dart';
-import 'package:untitled2/screens/activity_screen/speaking_session_history_screen.dart';
-import 'package:untitled2/services/note_service.dart';
-import 'package:untitled2/services/speaking_session_service.dart';
-import 'package:untitled2/services/user_progress_service.dart';
-import 'package:untitled2/widgets/activity_preview_list.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/speaking_session_record_model.dart';
+import 'package:speakstack/models/user_note_model.dart';
+import 'package:speakstack/models/user_progress_model.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/screens/activity_screen/speaking_saved_phrases_screen.dart';
+import 'package:speakstack/screens/activity_screen/speaking_session_detail_screen.dart';
+import 'package:speakstack/screens/activity_screen/speaking_session_history_screen.dart';
+import 'package:speakstack/services/note_service.dart';
+import 'package:speakstack/services/speaking_session_service.dart';
+import 'package:speakstack/services/user_progress_service.dart';
+import 'package:speakstack/widgets/activity_preview_list.dart';
 
 class EnglishActivityScreen extends StatefulWidget {
   const EnglishActivityScreen({super.key});
@@ -59,7 +61,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = speakingSessionLoadError(context, e);
         _loading = false;
       });
     }
@@ -71,6 +73,8 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_loading) {
       return const ColoredBox(
         color: _pageBg,
@@ -91,7 +95,10 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                 const SizedBox(height: 12),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                FilledButton(onPressed: _load, child: const Text('Retry')),
+                FilledButton(
+                  onPressed: _load,
+                  child: Text(l10n.t('buttons.retry')),
+                ),
               ],
             ),
           ),
@@ -114,7 +121,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
-            _StreakHero(streakDays: progress.streakDays),
+            _StreakHero(streakDays: progress.streakDays, l10n: l10n),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -161,12 +168,11 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
             ),
             const SizedBox(height: 24),
             _ActivitySection(
-              title: 'Session history',
+              title: l10n.t('speaking-activity.session-history.title'),
               icon: Icons.history_rounded,
               child: _history.isEmpty
                   ? _EmptyHint(
-                      text:
-                          'Complete a speaking session and tap End & score to see history here.',
+                      text: l10n.t('speaking-activity.session-history.empty'),
                     )
                   : ActivityPreviewList(
                       itemCount: _history.length,
@@ -185,13 +191,17 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                           title: '${session.historyTitle} — ${session.modeLabel}',
                           subtitle: _formatSessionTime(session.completedAt),
                           score: session.score,
+                          onTap:
+                              () => Navigator.of(context).push(
+                                SpeakingSessionDetailScreen.route(session),
+                              ),
                         );
                       },
                     ),
             ),
             const SizedBox(height: 16),
             _ActivitySection(
-              title: 'Saved phrases',
+              title: l10n.t('speaking-activity.saved-phrases.title'),
               icon: Icons.bookmark_outline_rounded,
               child: _savedPhrases.isEmpty
                   ? _EmptyHint(
@@ -345,9 +355,10 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
 }
 
 class _StreakHero extends StatelessWidget {
-  const _StreakHero({required this.streakDays});
+  const _StreakHero({required this.streakDays, required this.l10n});
 
   final int streakDays;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -386,7 +397,9 @@ class _StreakHero extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  streakDays == 1 ? 'day streak' : 'day streak',
+                  streakDays == 1
+                      ? l10n.t('speaking-activity.streak.day')
+                      : l10n.t('speaking-activity.streak.days'),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -565,18 +578,25 @@ class _HistoryCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.score,
+    this.onTap,
   });
 
   final String title;
   final String subtitle;
   final int score;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Material(
+      color: const Color(0xFFF4FBF6),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4FBF6),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: AppColors.greenCorrect.withValues(alpha: 0.25),
@@ -639,6 +659,8 @@ class _HistoryCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import '../models/grammar_correction.dart';
 import '../models/user_progress_model.dart';
+import '../utils/strapi_response.dart';
 import 'api_service.dart';
 import 'token_storage.dart';
 
@@ -14,9 +15,9 @@ class UserProgressService {
     final data = await ApiService.get(
       'user-progresses?filters[user][id][\$eq]=$userId',
     );
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null || rows.isEmpty) return null;
-    return UserProgressModel.fromJson(Map<String, dynamic>.from(rows.first as Map));
+    final rows = StrapiResponse.list(data);
+    if (rows.isEmpty) return null;
+    return UserProgressModel.fromJson(rows.first);
   }
 
   Future<UserProgressModel> createIfMissing() async {
@@ -41,9 +42,9 @@ class UserProgressService {
       },
     });
 
-    final row = data is Map ? data['data'] : null;
-    if (row is Map) {
-      return UserProgressModel.fromJson(Map<String, dynamic>.from(row));
+    final row = StrapiResponse.row(data);
+    if (row != null) {
+      return UserProgressModel.fromJson(row);
     }
     return const UserProgressModel(userId: 0);
   }

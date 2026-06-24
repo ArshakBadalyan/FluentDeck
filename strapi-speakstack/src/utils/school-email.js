@@ -55,7 +55,7 @@ function institutionMatchesDomain(institution, domain) {
 }
 
 async function loadInstitutions(strapi) {
-  return strapi.entityService.findMany("api::institution.institution", {
+  return strapi.documents("api::institution.institution").findMany({
     fields: ["id", "name", "place_id", "allowed_email_domains"],
     limit: -1,
   });

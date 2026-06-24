@@ -3,6 +3,7 @@
 const { getOrCreateDefaultDeck } = require('./flashcard-auto-create');
 const { createNoteAndCards } = require('./flashcard-note-sync');
 const { FREE_AUTO_NOTE_LIMIT } = require('./speaking-note-actions');
+const { updateByNumericId } = require('./document-service');
 
 function extractAutoSaveCandidates(corrections) {
   if (!Array.isArray(corrections)) return [];
@@ -109,8 +110,8 @@ async function autoSaveCorrectionsFromTurn(strapi, userId, corrections) {
   }
 
   if (notesUsed > 0 && !isPremium) {
-    await strapi.entityService.update('plugin::users-permissions.user', userId, {
-      data: { speaking_auto_notes_count: usedCount + notesUsed },
+    await updateByNumericId(strapi, 'plugin::users-permissions.user', userId, {
+      speaking_auto_notes_count: usedCount + notesUsed,
     });
   }
 

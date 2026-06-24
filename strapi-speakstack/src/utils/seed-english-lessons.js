@@ -77,7 +77,7 @@ const SAMPLE_LESSONS = [
  * Inserts sample lessons when the collection is empty (dev bootstrap).
  */
 async function seedEnglishLessons(strapi) {
-  const existing = await strapi.entityService.findMany("api::lesson.lesson", {
+  const existing = await strapi.documents("api::lesson.lesson").findMany({
     limit: 1,
   });
   if (existing?.length > 0) {
@@ -89,7 +89,7 @@ async function seedEnglishLessons(strapi) {
 
   for (const lesson of SAMPLE_LESSONS) {
     const { exercises, ...lessonFields } = lesson;
-    const row = await strapi.entityService.create("api::lesson.lesson", {
+    const row = await strapi.documents("api::lesson.lesson").create({
       data: {
         ...lessonFields,
         publishedAt: now,
@@ -97,7 +97,7 @@ async function seedEnglishLessons(strapi) {
     });
 
     for (const exercise of exercises) {
-      await strapi.entityService.create("api::exercise.exercise", {
+      await strapi.documents("api::exercise.exercise").create({
         data: {
           ...exercise,
           lesson: row.id,

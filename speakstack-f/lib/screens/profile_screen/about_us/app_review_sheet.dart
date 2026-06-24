@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/services/app_review_webhook_service.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/services/app_review_webhook_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Play / App Store targets when CMS policy is not loaded (matches [mobile_app_update_gate] fallbacks).
 const String kPlayStoreListingForReview =
-    'https://play.google.com/store/apps/details?id=io.framework7.matheapp';
+    'https://play.google.com/store/apps/details?id=com.speakstack.app';
 const String kAppStoreWriteReview =
     'https://apps.apple.com/app/id6447060725?action=write-review';
 

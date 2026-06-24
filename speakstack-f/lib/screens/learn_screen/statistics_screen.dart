@@ -1,16 +1,16 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/data/decks_help_content.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/models/flashcard_stats_model.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/services/flashcard_stats_export_service.dart';
-import 'package:untitled2/screens/learn_screen/review_log_screen.dart';
-import 'package:untitled2/screens/learn_screen/widgets/decks_contextual_help.dart';
-import 'package:untitled2/services/decks_help_hints_store.dart';
-import 'package:untitled2/utils/statistics_labels.dart';
-import 'package:untitled2/widgets/activity_preview_list.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/data/decks_help_content.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/models/flashcard_stats_model.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/services/flashcard_stats_export_service.dart';
+import 'package:speakstack/screens/learn_screen/review_log_screen.dart';
+import 'package:speakstack/screens/learn_screen/widgets/decks_contextual_help.dart';
+import 'package:speakstack/services/decks_help_hints_store.dart';
+import 'package:speakstack/utils/statistics_labels.dart';
+import 'package:speakstack/widgets/activity_preview_list.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});

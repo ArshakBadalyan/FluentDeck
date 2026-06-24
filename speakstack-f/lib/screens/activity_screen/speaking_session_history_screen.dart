@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/speaking_session_record_model.dart';
-import 'package:untitled2/services/speaking_session_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/models/speaking_session_record_model.dart';
+import 'package:speakstack/screens/activity_screen/speaking_session_detail_screen.dart';
+import 'package:speakstack/services/speaking_session_service.dart';
 
 class SpeakingSessionHistoryScreen extends StatefulWidget {
   const SpeakingSessionHistoryScreen({super.key});
@@ -43,22 +45,29 @@ class _SpeakingSessionHistoryScreenState
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = speakingSessionLoadError(context, e);
         _loading = false;
       });
     }
   }
 
-  String _formatSessionTime(DateTime dt) {
-    return DateFormat('MMM d, yyyy · h:mm a').format(dt.toLocal());
+  String _formatSessionTime(BuildContext context, DateTime dt) {
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.yMMMd(locale).add_jm().format(dt.toLocal());
+  }
+
+  void _openSession(SpeakingSessionRecord session) {
+    Navigator.of(context).push(SpeakingSessionDetailScreen.route(session));
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: _pageBg,
       appBar: AppBar(
-        title: const Text('Session history'),
+        title: Text(l10n.t('speaking-activity.session-history.title')),
         backgroundColor: AppColors.primaryPurple,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -75,7 +84,10 @@ class _SpeakingSessionHistoryScreenState
                     children: [
                       Text(_error!, textAlign: TextAlign.center),
                       const SizedBox(height: 16),
-                      FilledButton(onPressed: _load, child: const Text('Retry')),
+                      FilledButton(
+                        onPressed: _load,
+                        child: Text(l10n.t('buttons.retry')),
+                      ),
                     ],
                   ),
                 ),
@@ -85,7 +97,7 @@ class _SpeakingSessionHistoryScreenState
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Text(
-                    'Complete a speaking session and tap End & score to see history here.',
+                    l10n.t('speaking-activity.session-history.empty'),
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey.shade600, height: 1.45),
                   ),
@@ -102,8 +114,9 @@ class _SpeakingSessionHistoryScreenState
                     final session = _history[index];
                     return _SessionHistoryCard(
                       title: '${session.historyTitle} — ${session.modeLabel}',
-                      subtitle: _formatSessionTime(session.completedAt),
+                      subtitle: _formatSessionTime(context, session.completedAt),
                       score: session.score,
+                      onTap: () => _openSession(session),
                     );
                   },
                 ),
@@ -117,77 +130,91 @@ class _SessionHistoryCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.score,
+    required this.onTap,
   });
 
   final String title;
   final String subtitle;
   final int score;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.greenCorrect.withValues(alpha: 0.25),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.greenCorrect.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.chat_bubble_outline_rounded,
-              color: AppColors.greenCorrect,
-              size: 20,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.greenCorrect.withValues(alpha: 0.25),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.greenCorrect.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                child: const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  color: AppColors.greenCorrect,
+                  size: 20,
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.greenCorrect.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '$score/10',
-              style: const TextStyle(
-                color: Color(0xFF1B9E4B),
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.greenCorrect.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '$score/10',
+                  style: const TextStyle(
+                    color: Color(0xFF1B9E4B),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right, color: Colors.grey.shade500, size: 20),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

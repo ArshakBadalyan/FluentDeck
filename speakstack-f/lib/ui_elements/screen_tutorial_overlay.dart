@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/services/screen_tutorial_segments.dart';
-import 'package:untitled2/services/screen_tutorial_service.dart';
-import 'package:untitled2/services/user_session.dart';
-import 'package:untitled2/ui_elements/screen_tutorial_targets.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/services/screen_tutorial_segments.dart';
+import 'package:speakstack/services/screen_tutorial_service.dart';
+import 'package:speakstack/services/user_session.dart';
+import 'package:speakstack/ui_elements/screen_tutorial_targets.dart';
 
 /// Air between spotlight edge and arrow tip ([_PointerGlyph]); all steps share this.
 const double _kCoachArrowTipGap = 14;

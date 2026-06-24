@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/vocabulary_entry_model.dart';
-import 'package:untitled2/services/vocabulary_service.dart';
-import 'package:untitled2/ui_elements/primary_button.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/vocabulary_entry_model.dart';
+import 'package:speakstack/services/vocabulary_service.dart';
+import 'package:speakstack/ui_elements/primary_button.dart';
 
 class WordDetailScreen extends StatefulWidget {
   const WordDetailScreen({

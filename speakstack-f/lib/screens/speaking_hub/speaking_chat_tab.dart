@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
+import 'package:speakstack/app_colors.dart';
 
 import '../../models/speaking_session_context.dart';
 import '../../widgets/speaking_hub_widgets.dart';

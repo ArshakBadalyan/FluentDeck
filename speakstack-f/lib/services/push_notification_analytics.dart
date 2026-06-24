@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:untitled2/services/analytics_service.dart';
+import 'package:speakstack/services/analytics_service.dart';
 
 /// Firebase Analytics / GA4 events for push opt-in attribution (entry_point).
 class PushNotificationAnalytics {

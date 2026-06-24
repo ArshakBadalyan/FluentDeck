@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
+import 'package:speakstack/app_colors.dart';
 
 /// Shared visual language for Activity, Decks, and Profile screens.
 class AppPageColors {

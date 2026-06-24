@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:untitled2/models/conversation_session_model.dart';
-import 'package:untitled2/services/conversation_history_service.dart';
-import 'package:untitled2/services/main_navigation_coordinator.dart';
-import 'package:untitled2/widgets/swipe_action_backgrounds.dart';
-import 'package:untitled2/services/conversation_service.dart';
+import 'package:speakstack/models/conversation_session_model.dart';
+import 'package:speakstack/services/conversation_history_service.dart';
+import 'package:speakstack/services/main_navigation_coordinator.dart';
+import 'package:speakstack/widgets/swipe_action_backgrounds.dart';
+import 'package:speakstack/services/conversation_service.dart';
 
 class ConversationHistoryScreen extends StatefulWidget {
   const ConversationHistoryScreen({super.key});

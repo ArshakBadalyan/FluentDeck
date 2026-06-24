@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/models/flashcard_note_model.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/models/flashcard_note_model.dart';
 
 const _webCacheKey = 'flashcard_offline_cache_v1';
 const _webPendingKey = 'flashcard_pending_reviews_v1';

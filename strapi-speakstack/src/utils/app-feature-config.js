@@ -8,6 +8,9 @@ const DEFAULT_CONFIG = {
   freePlacementRetakesPerMonth: 1,
   freeDailyConversationTurns: 10,
   advancedLevelsRequiringPremium: ['B2', 'C1', 'C2'],
+  freeRolePlayPerCategory: 2,
+  freeTopicLevelGroups: ['intermediate'],
+  gamesRequirePremium: false,
 };
 
 async function getFeatureConfig(strapi) {
@@ -37,6 +40,19 @@ async function getFeatureConfig(strapi) {
     advanced = DEFAULT_CONFIG.advancedLevelsRequiringPremium;
   }
 
+  let freeTopicLevelGroups =
+    entry.freeTopicLevelGroups ?? entry.free_topic_level_groups;
+  if (typeof freeTopicLevelGroups === 'string') {
+    try {
+      freeTopicLevelGroups = JSON.parse(freeTopicLevelGroups);
+    } catch {
+      freeTopicLevelGroups = DEFAULT_CONFIG.freeTopicLevelGroups;
+    }
+  }
+  if (!Array.isArray(freeTopicLevelGroups)) {
+    freeTopicLevelGroups = DEFAULT_CONFIG.freeTopicLevelGroups;
+  }
+
   return {
     freeMaxSavedWords: pickInt('freeMaxSavedWords', 'free_max_saved_words', 20),
     freeMaxDecks: pickInt('freeMaxDecks', 'free_max_decks', 3),
@@ -61,6 +77,14 @@ async function getFeatureConfig(strapi) {
       10,
     ),
     advancedLevelsRequiringPremium: advanced,
+    freeRolePlayPerCategory: pickInt(
+      'freeRolePlayPerCategory',
+      'free_role_play_per_category',
+      DEFAULT_CONFIG.freeRolePlayPerCategory,
+    ),
+    freeTopicLevelGroups: freeTopicLevelGroups.map((v) => String(v).toLowerCase()),
+    gamesRequirePremium:
+      entry.gamesRequirePremium === true || entry.games_require_premium === true,
   };
 }
 

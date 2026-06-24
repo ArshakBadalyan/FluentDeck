@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/utils/html_text_utils.dart';
-import 'package:untitled2/utils/type_answer_utils.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/utils/html_text_utils.dart';
+import 'package:speakstack/utils/type_answer_utils.dart';
 
 /// Preview a study card from the browser (Phase 4D).
 class CardPreviewSheet extends StatefulWidget {

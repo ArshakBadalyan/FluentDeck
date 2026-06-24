@@ -1,5 +1,6 @@
 import '../models/speaking_session_context.dart';
 import '../models/speaking_session_record_model.dart';
+import '../utils/strapi_response.dart';
 import 'api_service.dart';
 import 'speaking_scores_service.dart';
 
@@ -107,8 +108,7 @@ class SpeakingSessionService {
     final data = await ApiService.get(
       'speaking-sessions/recent?limit=$limit',
     );
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
 
     return rows
         .whereType<Map>()

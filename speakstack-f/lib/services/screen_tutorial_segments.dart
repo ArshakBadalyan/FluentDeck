@@ -1,5 +1,5 @@
-import 'package:untitled2/services/screen_tutorial_service.dart';
-import 'package:untitled2/ui_elements/screen_tutorial_targets.dart';
+import 'package:speakstack/services/screen_tutorial_service.dart';
+import 'package:speakstack/ui_elements/screen_tutorial_targets.dart';
 
 /// Short, on-demand replays (Profile → pick one). Auto tab tours stay unique.
 abstract final class ScreenTutorialSegmentIds {

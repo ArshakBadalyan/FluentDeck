@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/utils/speaking_item_icons.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/utils/speaking_item_icons.dart';
 
 /// Matches [MainAppBar] sub-tab styling (Decks, Library, Speak).
 TabBar buildAppStyleTabBar({
@@ -78,6 +78,7 @@ class SpeakingSelectionCard extends StatelessWidget {
     this.subtitle,
     this.score,
     this.selected = false,
+    this.isPremiumLocked = false,
     this.trailing,
     required this.onTap,
   });
@@ -87,12 +88,15 @@ class SpeakingSelectionCard extends StatelessWidget {
   final String? subtitle;
   final int? score;
   final bool selected;
+  final bool isPremiumLocked;
   final Widget? trailing;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return Opacity(
+      opacity: isPremiumLocked ? 0.55 : 1,
+      child: Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
       elevation: selected ? 2 : 0,
@@ -143,6 +147,11 @@ class SpeakingSelectionCard extends StatelessWidget {
                 ),
               ),
               if (trailing != null) trailing!,
+              if (isPremiumLocked)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Icon(Icons.lock_outline, color: Colors.grey.shade600, size: 20),
+                ),
               if (score != null)
                 Text(
                   '$score / 10',
@@ -156,6 +165,7 @@ class SpeakingSelectionCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -168,6 +178,7 @@ class SpeakingGameGridCard extends StatelessWidget {
     this.score,
     this.featured = false,
     this.selected = false,
+    this.isPremiumLocked = false,
     required this.onTap,
   });
 
@@ -176,11 +187,14 @@ class SpeakingGameGridCard extends StatelessWidget {
   final int? score;
   final bool featured;
   final bool selected;
+  final bool isPremiumLocked;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return Opacity(
+      opacity: isPremiumLocked ? 0.55 : 1,
+      child: Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
       elevation: selected ? 2 : 0,
@@ -234,6 +248,12 @@ class SpeakingGameGridCard extends StatelessWidget {
                     ),
                   ),
                 ),
+              if (isPremiumLocked)
+                const Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Icon(Icons.lock_outline, color: Colors.black45, size: 18),
+                ),
               Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -263,6 +283,7 @@ class SpeakingGameGridCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

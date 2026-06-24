@@ -1,0 +1,18 @@
+API_URL=http://localhost:1337/api
+APP_LANGUAGE=en
+
+
+ 
+
+ONESIGNAL_APP_ID=
+
+# Interstitial (Themen → topic → “Lösung” on iOS/Android only; not web).
+# The values below are Google's ALWAYS-FILL test unit IDs — use for local
+# SDK verification and replace with your real AdMob unit IDs for release.
+ADMOB_INTERSTITIAL_ID_ANDROID=ca-app-pub-3940256099942544/1033173712
+ADMOB_INTERSTITIAL_ID_IOS=ca-app-pub-3940256099942544/4411468910
+
+ADMOB_TEST_DEVICE_IDS=
+ADMOB_ENABLED=
+ADMOB_ENABLED_IOS=
+ADMOB_ENABLED_ANDROID=

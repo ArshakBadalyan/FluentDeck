@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/services/review_settings_store.dart';
-import 'package:untitled2/utils/file_download.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/services/review_settings_store.dart';
+import 'package:speakstack/utils/file_download.dart';
 
 /// Local JSON backups for flashcard collection (Phase 5B).
 class DeckBackupService {

@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled2/data/isar/flashcard_cache.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/models/flashcard_note_model.dart';
-import 'package:untitled2/models/occlusion_model.dart';
+import 'package:speakstack/data/isar/flashcard_cache.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/models/flashcard_note_model.dart';
+import 'package:speakstack/models/occlusion_model.dart';
 
 const _noteTypesKey = 'flashcard_note_types_cache_v1';
 

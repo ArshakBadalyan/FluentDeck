@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
+import 'package:speakstack/app_colors.dart';
 
 /// Shows up to [previewCount] items in a fixed-height scroll area when there
 /// are more entries, plus an optional "View all" link.

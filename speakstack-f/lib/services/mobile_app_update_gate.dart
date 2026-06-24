@@ -174,7 +174,7 @@ class MobileAppUpdateBootstrap {
 }
 
 String _fallbackPlayStoreListing() =>
-    'https://play.google.com/store/apps/details?id=io.framework7.matheapp';
+    'https://play.google.com/store/apps/details?id=com.speakstack.app';
 
 String _fallbackAppStoreListing() =>
     'https://apps.apple.com/app/id6447060725';

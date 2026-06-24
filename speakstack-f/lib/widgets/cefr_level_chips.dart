@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/placement_test_model.dart';
-import 'package:untitled2/services/english_level_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/placement_test_model.dart';
+import 'package:speakstack/services/english_level_service.dart';
 
 /// Verified placement styling (green check + light green background).
 class CefrLevelColors {

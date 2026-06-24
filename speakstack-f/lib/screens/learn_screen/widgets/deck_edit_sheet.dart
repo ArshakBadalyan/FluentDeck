@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/utils/sm2_preview.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/utils/sm2_preview.dart';
 
 /// Rename deck, edit description, set parent deck (Phase 4F / 5A).
 Future<bool?> showDeckEditSheet(

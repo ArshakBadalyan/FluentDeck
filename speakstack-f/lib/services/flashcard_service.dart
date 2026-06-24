@@ -3,6 +3,7 @@ import '../models/flashcard_model.dart';
 import '../models/flashcard_note_model.dart';
 import '../models/flashcard_stats_model.dart';
 import '../data/flashcard_offline_store.dart';
+import '../utils/strapi_response.dart';
 import 'api_service.dart';
 import 'flashcard_sync_store.dart';
 import 'review_settings_store.dart';
@@ -110,8 +111,7 @@ class FlashcardService {
       final message = _extractError(data) ?? 'Could not load decks';
       throw Exception(message);
     }
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
     return rows
         .whereType<Map>()
         .map((m) => FlashcardDeckModel.fromJson(Map<String, dynamic>.from(m)))
@@ -178,8 +178,7 @@ class FlashcardService {
     final params = <String>['limit=$limit'];
     if (deckId != null) params.add('deckId=$deckId');
     final data = await ApiService.get('flashcards/review-log?${params.join('&')}');
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
     return rows
         .whereType<Map>()
         .map((m) => FlashcardReviewLogEntry.fromJson(Map<String, dynamic>.from(m)))
@@ -219,8 +218,7 @@ class FlashcardService {
     }
     final data = await ApiService.get('flashcards/review/queue?${params.join('&')}');
     final rows = data is Map ? data['queue'] as List? : null;
-    if (rows == null) return [];
-    return rows
+    return (rows ?? [])
         .whereType<Map>()
         .map((m) => FlashcardModel.fromJson(Map<String, dynamic>.from(m)))
         .toList();
@@ -314,8 +312,7 @@ class FlashcardService {
 
   Future<List<NoteTypeModel>> fetchNoteTypes() async {
     final data = await ApiService.get('flashcards/note-types');
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
     final types =
         rows
             .whereType<Map>()
@@ -347,9 +344,9 @@ class FlashcardService {
     if (data is! Map) throw Exception('Could not create note type');
     final err = _extractError(data);
     if (err != null) throw Exception(err);
-    final row = data['data'];
-    if (row is! Map) throw Exception('Invalid note type response');
-    return NoteTypeModel.fromJson(Map<String, dynamic>.from(row));
+    final row = StrapiResponse.row(data);
+    if (row == null) throw Exception('Invalid note type response');
+    return NoteTypeModel.fromJson(row);
   }
 
   Future<NoteTypeModel> updateCustomNoteType({
@@ -363,9 +360,9 @@ class FlashcardService {
     if (data is! Map) throw Exception('Could not update note type');
     final err = _extractError(data);
     if (err != null) throw Exception(err);
-    final row = data['data'];
-    if (row is! Map) throw Exception('Invalid note type response');
-    return NoteTypeModel.fromJson(Map<String, dynamic>.from(row));
+    final row = StrapiResponse.row(data);
+    if (row == null) throw Exception('Invalid note type response');
+    return NoteTypeModel.fromJson(row);
   }
 
   Future<void> deleteCustomNoteType(int id) async {
@@ -599,8 +596,7 @@ class FlashcardService {
 
     final qs = params.isEmpty ? '' : '?${params.join('&')}';
     final data = await ApiService.get('flashcards/browse$qs');
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
     final cards =
         rows
             .whereType<Map>()

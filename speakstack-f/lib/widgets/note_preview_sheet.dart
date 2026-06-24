@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/utils/html_text_utils.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/utils/html_text_utils.dart';
 
 /// Modal preview of note fields as they would appear in review.
 class NotePreviewSheet extends StatefulWidget {

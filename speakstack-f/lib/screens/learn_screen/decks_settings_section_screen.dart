@@ -5,17 +5,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/screens/learn_screen/decks_help_screen.dart';
-import 'package:untitled2/screens/learn_screen/decks_settings_section.dart';
-import 'package:untitled2/screens/learn_screen/note_types_screen.dart';
-import 'package:untitled2/screens/learn_screen/shared_decks_screen.dart';
-import 'package:untitled2/screens/learn_screen/widgets/decks_settings_widgets.dart';
-import 'package:untitled2/services/deck_notification_service.dart';
-import 'package:untitled2/services/flashcard_export_service.dart';
-import 'package:untitled2/services/flashcard_import_service.dart';
-import 'package:untitled2/services/flashcard_sync_store.dart';
-import 'package:untitled2/services/review_settings_store.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/screens/learn_screen/decks_help_screen.dart';
+import 'package:speakstack/screens/learn_screen/decks_settings_section.dart';
+import 'package:speakstack/screens/learn_screen/note_types_screen.dart';
+import 'package:speakstack/screens/learn_screen/shared_decks_screen.dart';
+import 'package:speakstack/screens/learn_screen/widgets/decks_settings_widgets.dart';
+import 'package:speakstack/services/deck_notification_service.dart';
+import 'package:speakstack/services/flashcard_export_service.dart';
+import 'package:speakstack/services/flashcard_import_service.dart';
+import 'package:speakstack/services/flashcard_sync_store.dart';
+import 'package:speakstack/services/review_settings_store.dart';
 
 /// Detail screen for one Anki-style settings section.
 class DecksSettingsSectionScreen extends StatefulWidget {

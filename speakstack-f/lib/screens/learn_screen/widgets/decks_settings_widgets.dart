@@ -1,4 +1,4 @@
-import 'package:untitled2/app_colors.dart';
+import 'package:speakstack/app_colors.dart';
 import 'package:flutter/material.dart';
 
 Widget decksSettingsSectionHeader(String title) {

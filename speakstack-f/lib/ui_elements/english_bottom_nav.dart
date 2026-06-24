@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/services/analytics_service.dart';
-import 'package:untitled2/services/click_tracking.dart';
-import 'package:untitled2/services/interaction_haptics.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/services/analytics_service.dart';
+import 'package:speakstack/services/click_tracking.dart';
+import 'package:speakstack/services/interaction_haptics.dart';
 
 class EnglishBottomNav extends StatelessWidget {
   const EnglishBottomNav({

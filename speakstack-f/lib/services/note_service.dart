@@ -1,4 +1,5 @@
 import '../models/user_note_model.dart';
+import '../utils/strapi_response.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
 
@@ -11,8 +12,7 @@ class NoteService {
         ? '?q=${Uri.encodeComponent(query.trim())}'
         : '';
     final data = await ApiService.get('notes$q');
-    final rows = data is Map ? data['data'] as List? : null;
-    if (rows == null) return [];
+    final rows = StrapiResponse.list(data);
 
     return rows
         .whereType<Map>()

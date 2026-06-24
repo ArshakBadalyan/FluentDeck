@@ -1,30 +1,9 @@
-
-
-
-
-
-
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:untitled2/main.dart';
+import 'package:speakstack/routing/app_route_names.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-
-    await tester.pumpWidget(const MyApp());
-
-
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('AppRouteNames defines Speakstack routes', () {
+    expect(AppRouteNames.main, '/main');
+    expect(AppRouteNames.speakingSessionDetail, '/activity/speaking_session');
   });
 }

@@ -2,15 +2,15 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/models/flashcard_note_model.dart';
-import 'package:untitled2/screens/learn_screen/card_edit_screen.dart';
-import 'package:untitled2/services/card_tag_undo_store.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/utils/card_browser_utils.dart';
-import 'package:untitled2/utils/html_text_utils.dart';
-import 'package:untitled2/widgets/card_preview_sheet.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/models/flashcard_note_model.dart';
+import 'package:speakstack/screens/learn_screen/card_edit_screen.dart';
+import 'package:speakstack/services/card_tag_undo_store.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/utils/card_browser_utils.dart';
+import 'package:speakstack/utils/html_text_utils.dart';
+import 'package:speakstack/widgets/card_preview_sheet.dart';
 
 /// Card browser row ⋮ menu actions (Step 3 AnkiDroid parity).
 class CardRowActions {

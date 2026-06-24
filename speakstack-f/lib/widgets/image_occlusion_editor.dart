@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/occlusion_model.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/occlusion_model.dart';
 
 /// Draw occlusion masks on an image and edit regions (Phase 4I).
 class ImageOcclusionEditor extends StatefulWidget {

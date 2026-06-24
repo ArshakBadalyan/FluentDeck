@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:untitled2/services/analytics_service.dart';
+import 'package:speakstack/services/analytics_service.dart';
 
 /// GA4-oriented events for Ads / Firebase Analytics.
 ///

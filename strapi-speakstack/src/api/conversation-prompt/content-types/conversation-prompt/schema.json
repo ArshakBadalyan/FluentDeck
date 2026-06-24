@@ -52,6 +52,11 @@
     },
     "suggestedVocabulary": {
       "type": "json"
+    },
+    "accessMode": {
+      "type": "enumeration",
+      "enum": ["automatic", "free", "premium"],
+      "default": "automatic"
     }
   }
 }

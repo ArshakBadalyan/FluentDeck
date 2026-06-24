@@ -3,7 +3,6 @@ const utils = require("@strapi/utils");
 const {
   getAbsoluteAdminUrl,
   getAbsoluteServerUrl,
-  sanitize,
   contentTypes: { getNonWritableAttributes },
 } = utils;
 const { ApplicationError } = utils.errors;
@@ -12,13 +11,11 @@ const i18n = require("../../i18n-helper");
 i18n.init();
 
 const jwt = require("jsonwebtoken");
-const moment = require("moment-timezone");
-const constants = require("../../constants");
 
-const sanitizeUser = (user, ctx) => {
+const sanitizeUser = async (user, ctx) => {
   const { auth } = ctx.state;
   const userSchema = strapi.getModel("plugin::users-permissions.user");
-  return sanitize.contentAPI.output(user, userSchema, { auth });
+  return strapi.contentAPI.sanitize.output(user, userSchema, { auth });
 };
 
 // validation
@@ -28,36 +25,18 @@ const {
 } = require("../../../node_modules/@strapi/plugin-users-permissions/server/controllers/validation/auth");
 const crypto = require("crypto");
 const { getService } = require("../../../node_modules/@strapi/plugin-users-permissions/server/utils");
-const {
-  dateDiff,
-  getTodayAndTomorrow,
-  getServerDateFromUserDate,
-} = require("../../utils/dates");
-const { getUser } = require("../../utils/get_user");
 const { filterObjectByKeys } = require("../../utils/filter-object-by-keys");
 const { isAdmin } = require("../../utils/is-admin");
-const {
-  filterLeaderboardUsers,
-  isLeaderboardEligibleUser,
-} = require("../../utils/leaderboard-eligibility");
-const {
-  normalizeAccountType,
-  ACCOUNT_TYPES,
-} = require("../../utils/account-type");
-const {
-  resolveInstitutionForSchoolEmail,
-  registrationRequiresSchoolEmail,
-  assertSchoolEmailFormat,
-} = require("../../utils/school-email");
-const {
-  institutionInviteMatches,
-  currentCalendarYear,
-} = require("../../utils/teacher-approval");
 const {
   mergeUserIdentityHistoryIntoUpdateData,
   appendPreAnonymizeDeletionToIncoming,
   isAnonymizeDeletePayload,
 } = require("../../utils/user-identity-history");
+const {
+  findUserById,
+  updateByNumericId,
+  deleteByNumericId,
+} = require("../../utils/document-service");
 const plugins = require("../../../config/plugins");
 
 const USER_RESPONSE_EXCLUDED_KEYS = [
@@ -67,880 +46,21 @@ const USER_RESPONSE_EXCLUDED_KEYS = [
   "old_data",
 ];
 
-const utcYmd = (d = new Date()) => d.toISOString().slice(0, 10);
-
-const parseYmdParam = (s) => {
-  if (!s || typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s.trim())) {
-    return null;
-  }
-  const trimmed = s.trim();
-  const t = new Date(`${trimmed}T00:00:00.000Z`);
-  return Number.isNaN(t.getTime()) ? null : trimmed;
-};
-
-const addUtcDaysYmd = (ymd, deltaDays) => {
-  const t = new Date(`${ymd}T00:00:00.000Z`);
-  t.setUTCDate(t.getUTCDate() + deltaDays);
-  return utcYmd(t);
-};
-
-const ymdlte = (a, b) => a.localeCompare(b) <= 0;
-
-const rowDayToYmd = (day) => {
-  if (!day) return null;
-  if (day instanceof Date && !Number.isNaN(day.getTime())) return utcYmd(day);
-  const s = String(day);
-  const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
-  if (m) return m[1];
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? null : utcYmd(d);
-};
-
-function dayRangeInclusive(startYmd, endYmd) {
-  const out = [];
-  let cur = startYmd;
-  while (ymdlte(cur, endYmd)) {
-    out.push(cur);
-    cur = addUtcDaysYmd(cur, 1);
-  }
-  return out;
-}
-
-/** Inclusive ISO dates stepping by calendar days in [tz]. */
-function dayRangeInclusiveTz(startYmd, endYmd, tz) {
-  const out = [];
-  let cur = startYmd;
-  while (ymdlte(cur, endYmd)) {
-    out.push(cur);
-    cur = moment.tz(cur, "YYYY-MM-DD", tz).add(1, "days").format("YYYY-MM-DD");
-  }
-  return out;
-}
-
-function weekRangeInclusiveTz(startYmd, endYmd, tz) {
-  const out = [];
-  const first = moment.tz(startYmd, "YYYY-MM-DD", tz).startOf("isoWeek");
-  const lastWeekStart = moment
-    .tz(endYmd, "YYYY-MM-DD", tz)
-    .startOf("isoWeek");
-  let cur = first.clone();
-  while (!cur.isAfter(lastWeekStart)) {
-    out.push(cur.format("YYYY-MM-DD"));
-    cur.add(1, "week");
-  }
-  return out;
-}
-
-function monthRangeInclusiveTz(startYmd, endYmd, tz) {
-  const out = [];
-  let cur = moment.tz(startYmd, "YYYY-MM-DD", tz).startOf("month");
-  const last = moment.tz(endYmd, "YYYY-MM-DD", tz).startOf("month");
-  while (!cur.isAfter(last)) {
-    out.push(cur.format("YYYY-MM-DD"));
-    cur.add(1, "month");
-  }
-  return out;
-}
-
-function bucketKeysForGranularity(startYmd, endYmd, tz, granularity) {
-  if (granularity === "week") {
-    return weekRangeInclusiveTz(startYmd, endYmd, tz);
-  }
-  if (granularity === "month") {
-    return monthRangeInclusiveTz(startYmd, endYmd, tz);
-  }
-  return dayRangeInclusiveTz(startYmd, endYmd, tz);
-}
-
-const buildFilledSeriesTz = (startYmd, endYmd, countsByDay, tz, granularity) =>
-  bucketKeysForGranularity(startYmd, endYmd, tz, granularity).map((date) => ({
-    date,
-    count: countsByDay[date] ?? 0,
-  }));
-
-/**
- * Validates IANA before interpolating SQL; falls back safely.
- */
-const sanitizeReportingTimezone = (raw, fb) => {
-  const fallback =
-    fb && typeof fb === "string" && fb.trim().length && moment.tz.zone(fb.trim())
-      ? fb.trim()
-      : constants.DEFAULT_TIMEZONE &&
-          moment.tz.zone(constants.DEFAULT_TIMEZONE)
-        ? constants.DEFAULT_TIMEZONE
-        : "UTC";
-  if (
-    typeof raw !== "string" ||
-    raw.trim().length < 3 ||
-    !moment.tz.zone(raw.trim())
-  ) {
-    return fallback;
-  }
-  return raw.trim();
-};
-
-// Local register schema: username + password required, email optional.
-// Replaces Strapi's default validator, which marks email required.
 const registerBodySchema = yup.object().shape({
   username: yup.string().required(),
   password: yup.string().required(),
   email: yup.string().email().notRequired(),
-  account_type: yup
-    .string()
-    .oneOf([ACCOUNT_TYPES.STUDENT, ACCOUNT_TYPES.TEACHER])
-    .notRequired(),
-  institution: yup.number().integer().positive().notRequired(),
-  teacher_invite_code: yup.string().notRequired(),
 });
 
 const validateLocalRegisterBody = validateYupSchema(registerBodySchema);
 
-/** Strapi Postgres may store the learner on `user_answers` or only in the `_links` table. */
-const UA_USER_FK_UNSET = {};
-
-/** @type {string | boolean | Record<string, never>} — string = column; false = no column; sentinel = not loaded */
-let cachedUserAnswerParticipantCol = UA_USER_FK_UNSET;
-
-const resolveUserAnswerUserFkColumn = async (knex) => {
-  if (cachedUserAnswerParticipantCol !== UA_USER_FK_UNSET) {
-    return cachedUserAnswerParticipantCol === false
-      ? null
-      : /** @type {string} */ (cachedUserAnswerParticipantCol);
-  }
-  try {
-    const { rows } = await knex.raw(
-      `SELECT column_name
-       FROM information_schema.columns
-       WHERE table_schema IN ('public', current_schema())
-         AND table_name = 'user_answers'
-         AND (
-           column_name = 'users_permissions_user_id'
-           OR column_name ILIKE '%permissions%users%'
-           OR column_name ILIKE 'users_permissions%'
-         );`
-    );
-    const cols = rows.map((r) => r.column_name).filter(Boolean);
-    const preferred = cols.includes("users_permissions_user_id")
-      ? "users_permissions_user_id"
-      : cols.find((c) => /^[a-z0-9_]+$/i.test(c)) ?? null;
-    if (preferred) {
-      cachedUserAnswerParticipantCol = preferred;
-      return preferred;
-    }
-    cachedUserAnswerParticipantCol = false;
-    return null;
-  } catch (_) {
-    cachedUserAnswerParticipantCol = false;
-    return null;
-  }
-};
-
-/**
- * Links learner via `_links` (always when Strapi persists relations) or optional FK on `ua`.
- * INNER JOIN COALESCE(...) dropped answers when links were absent; EXISTS keeps all linked rows.
- * [statusSql] is literal (callers-only), e.g. `ua.status = 'correct'`.
- */
-const userAnswerBucketExpr = (granularity) =>
-  granularity === "week"
-    ? `date_trunc('week', timezone(?::text, ua.created_at))::date`
-    : granularity === "month"
-      ? `date_trunc('month', timezone(?::text, ua.created_at))::date`
-      : `(timezone(?::text, ua.created_at))::date`;
-
-const userCreatedBucketExpr = (granularity) =>
-  granularity === "week"
-    ? `date_trunc('week', timezone(?::text, up_users.created_at))::date`
-    : granularity === "month"
-      ? `date_trunc('month', timezone(?::text, up_users.created_at))::date`
-      : `(timezone(?::text, up_users.created_at))::date`;
-
-const userAnswerBucketsByGranularity = async (
-  knex,
-  reportTz,
-  startYmd,
-  endYmd,
-  fkParticipant,
-  statusSql,
-  granularity,
-) => {
-  const fkOr =
-    fkParticipant && /^[a-z0-9_]+$/i.test(fkParticipant)
-      ? `OR EXISTS (
-          SELECT 1 FROM up_users u
-          WHERE u.id = ua.${fkParticipant} AND (u.is_admin IS NOT TRUE)
-        )`
-      : "";
-  return knex.raw(
-    `SELECT ${userAnswerBucketExpr(granularity)} AS day,
-            COUNT(DISTINCT ua.id)::int AS cnt
-     FROM user_answers AS ua
-     WHERE (${statusSql})
-       AND (timezone(?::text, ua.created_at))::date BETWEEN ?::date AND ?::date
-       AND (
-         EXISTS (
-           SELECT 1
-           FROM user_answers_users_permissions_user_links AS lnk
-           INNER JOIN up_users AS u ON u.id = lnk.user_id
-           WHERE lnk.user_answer_id = ua.id
-             AND (u.is_admin IS NOT TRUE)
-         )
-         ${fkOr}
-       )
-     GROUP BY 1
-     ORDER BY 1`,
-    [reportTz, reportTz, startYmd, endYmd],
-  );
-};
-
 module.exports = (plugin) => {
-  const userFindOneDefault = plugin.controllers.user.findOne;
-  if (typeof userFindOneDefault === "function") {
-    plugin.controllers.user.findOne = async (ctx) => {
-      await userFindOneDefault(ctx);
-      const auth = ctx.state.user;
-      if (
-        ctx.body &&
-        auth &&
-        String(auth.id) === String(ctx.params.id)
-      ) {
-        const row = await strapi.db.connection
-          .select("password")
-          .from("up_users")
-          .where("id", auth.id)
-          .first();
-        ctx.body.needs_logout_credentials = !(row && row.password);
-      }
-    };
-  }
-
-  // JWT issuer
-  const issue = (payload, jwtOptions = {}) => {
-    _.defaults(jwtOptions, strapi.config.get("plugin.users-permissions.jwt"));
-    return jwt.sign(
-      _.clone(payload.toJSON ? payload.toJSON() : payload),
-      strapi.config.get("plugin.users-permissions.jwtSecret"),
-      jwtOptions
-    );
-  };
-
-  plugin.controllers.user.getUserDailyStatistics = async (ctx) => {
-    const { id: userId } = await strapi.plugins[
-      "users-permissions"
-    ].services.jwt.getToken(ctx);
-    const user = await strapi.entityService.findOne(
-      "plugin::users-permissions.user",
-      userId
-    );
-
-    const timezone = user.user_timezone || constants.DEFAULT_TIMEZONE;
-    const { today, tomorrow } = getTodayAndTomorrow(timezone);
-    let { rows } = await strapi.db.connection.raw(
-      `SELECT status, COUNT(status) FROM user_answers
-        INNER JOIN user_answers_users_permissions_user_links
-        ON user_answers.id = user_answers_users_permissions_user_links.user_answer_id
-        WHERE user_id = ${user.id}
-        AND user_answers.created_at >= '${getServerDateFromUserDate(
-          today,
-          timezone
-        )}'
-        AND user_answers.created_at < '${getServerDateFromUserDate(
-          tomorrow,
-          timezone
-        )}'
-        GROUP BY status;`
-    );
-
-    return rows;
-  };
-
-  // getting points controller
-  plugin.controllers.user.getPoints = async (ctx) => {
-    const { filters, sort } = ctx.request.query;
-
-    const leaderboardExclusion = {
-      account_type: { $ne: ACCOUNT_TYPES.TEACHER },
-      is_admin: { $ne: true },
-    };
-
-    const scopedFilters =
-      filters && filters.hasOwnProperty("institution")
-        ? {
-            $and: [
-              leaderboardExclusion,
-              {
-                institution: {
-                  place_id: {
-                    $eq: filters.institution,
-                  },
-                },
-                ...(filters.hasOwnProperty("course") && {
-                  course: {
-                    $eq: filters.course,
-                  },
-                }),
-              },
-            ],
-          }
-        : filters
-          ? { $and: [leaderboardExclusion, filters] }
-          : leaderboardExclusion;
-
-    return await strapi.entityService.findMany(
-      "plugin::users-permissions.user",
-      {
-        filters: scopedFilters,
-        sort,
-      }
-    );
-  };
-
-  // getting of user rankings
-  plugin.controllers.user.getUserRankings = async (ctx) => {
-    const userId = (
-      await strapi.plugins["users-permissions"].services.jwt.getToken(ctx)
-    ).id;
-    const user = await strapi.entityService.findOne(
-      "plugin::users-permissions.user",
-      userId,
-      {
-        populate: { institution: true },
-      }
-    );
-
-    const users = filterLeaderboardUsers(
-      await strapi.entityService.findMany(
-        "plugin::users-permissions.user",
-        {
-          populate: { institution: true },
-          sort: { points: "desc" },
-        }
-      )
-    );
-    const countryUsers = user.country
-      ? users.filter((u) => u.country === user.country)
-      : [];
-    const cityUsers = user.city
-      ? users.filter((u) => u.city === user.city)
-      : [];
-    const institutionUsers = user.institution
-      ? users.filter((u) => u.institution?.id === user.institution.id)
-      : [];
-    const courseUsers =
-      user.institution && user.course
-        ? users.filter(
-            (u) =>
-              u.institution?.id === user.institution.id &&
-              u.course === user.course
-          )
-        : [];
-    const eligible = isLeaderboardEligibleUser(user);
-    const placeIn = (list) =>
-      eligible ? list.findIndex((u) => u.id === userId) + 1 || null : null;
-
+  const originalAuthFactory = plugin.controllers.auth;
+  plugin.controllers.auth = (factoryArgs) => {
+    const auth = originalAuthFactory(factoryArgs);
     return {
-      rankings: {
-        world: {
-          my_place: placeIn(users),
-          users_amount: users.length,
-        },
-        country: {
-          my_place: placeIn(countryUsers),
-          users_amount: countryUsers.length,
-        },
-        city: {
-          my_place: placeIn(cityUsers),
-          users_amount: cityUsers.length,
-        },
-        institution: {
-          my_place: placeIn(institutionUsers),
-          users_amount: institutionUsers.length,
-        },
-        course: {
-          my_place: placeIn(courseUsers),
-          users_amount: courseUsers.length,
-        },
-      },
-    };
-  };
-
-  plugin.controllers.user.getMyAnswersStats = async (ctx) => {
-    const userId = (
-      await strapi.plugins["users-permissions"].services.jwt.getToken(ctx)
-    ).id;
-
-    const topicQuestionsCount = (
-      await strapi.entityService.findMany("api::question.question")
-    ).length;
-    const lastAnswer = (
-      await strapi.entityService.findMany("api::user-answer.user-answer", {
-        populate: {
-          users_permissions_user: {
-            fields: ["id"],
-          },
-        },
-        filters: {
-          users_permissions_user: {
-            id: {
-              $eq: userId,
-            },
-          },
-        },
-        sort: { id: "desc" },
-      })
-    )[0];
-    const allAnswersCount = (
-      await strapi.entityService.findMany("api::user-answer.user-answer", {
-        populate: {
-          users_permissions_user: {
-            fields: ["id"],
-          },
-        },
-        filters: {
-          users_permissions_user: {
-            id: {
-              $eq: userId,
-            },
-          },
-        },
-      })
-    ).length;
-    const answeredTopicQuestionsCount = (
-      await strapi.entityService.findMany("api::question.question", {
-        populate: {
-          user_answers: {
-            fields: ["id", "status", "answer", "answer_type"],
-            populate: {
-              users_permissions_user: {
-                fields: ["id"],
-              },
-            },
-            filters: {
-              $and: [
-                {
-                  users_permissions_user: {
-                    id: userId,
-                  },
-                },
-                {
-                  answer_type: {
-                    $eq: "topic",
-                  },
-                },
-                {
-                  status: {
-                    $ne: "skipped",
-                  },
-                },
-              ],
-            },
-          },
-        },
-        filters: {
-          user_answers: {
-            $and: [
-              {
-                users_permissions_user: {
-                  id: {
-                    $eq: userId,
-                  },
-                },
-              },
-              {
-                answer_type: {
-                  $eq: "topic",
-                },
-              },
-              {
-                status: {
-                  $ne: "skipped",
-                },
-              },
-            ],
-          },
-        },
-      })
-    ).length;
-
-    const getAnswersByStatus = async (status) => {
-      const answers = await strapi.entityService.findMany(
-        "api::user-answer.user-answer",
-        {
-          populate: {
-            users_permissions_user: {
-              fields: ["id"],
-            },
-          },
-          filters: {
-            users_permissions_user: {
-              id: {
-                $eq: userId,
-              },
-            },
-            status: {
-              $eq: status,
-            },
-          },
-        }
-      );
-
-      return answers.length;
-    };
-
-    const correctAnswersCount = await getAnswersByStatus("correct");
-    const wrongAnswersCount = await getAnswersByStatus("wrong");
-    const skippedAnswersCount = await getAnswersByStatus("skipped");
-
-    const topicQuestionsLeftCount =
-      topicQuestionsCount - answeredTopicQuestionsCount;
-    const answersPercent = Math.round(
-      (Number(answeredTopicQuestionsCount) / Number(topicQuestionsCount)) * 100
-    );
-    const correctAnswersPercent = Math.round(
-      (Number(correctAnswersCount) / Number(allAnswersCount)) * 100
-    );
-    const wrongAnswersPercent = Math.round(
-      (Number(wrongAnswersCount) / Number(allAnswersCount)) * 100
-    );
-    const skippedAnswersPercent =
-      100 - correctAnswersPercent - wrongAnswersPercent;
-
-    return {
-      questions_count: topicQuestionsCount,
-      questions_left_count: topicQuestionsLeftCount,
-      answers_count: answeredTopicQuestionsCount,
-      answers_percent: answersPercent,
-      correct_answers: {
-        count: correctAnswersCount,
-        percent: correctAnswersPercent,
-      },
-      wrong_answers: {
-        count: wrongAnswersCount,
-        percent: wrongAnswersPercent,
-      },
-      skipped_answers: {
-        count: skippedAnswersCount,
-        percent: skippedAnswersPercent,
-      },
-      last_update: lastAnswer?.createdAt ? dateDiff(new Date(lastAnswer?.createdAt), new Date()) : null,
-    };
-  };
-
-  // getting of user's stats
-  plugin.controllers.user.getUserStats = async (ctx) => {
-    const userId = +ctx.params.id;
-    const user = await strapi.entityService.findOne(
-      "plugin::users-permissions.user",
-      userId,
-      {
-        populate: { institution: true, user_answers: true },
-      }
-    );
-
-    // how much time user uses the application
-    const currentDate = new Date();
-    const registerDate = new Date(user.createdAt);
-    const time = (currentDate.getTime() - registerDate.getTime()) / 1000;
-    const years = Math.abs(Math.round(time / (60 * 60 * 24) / 365.25));
-    const months = Math.abs(Math.round(time / (60 * 60 * 24 * 7 * 4)));
-    const days = Math.abs(Math.round(time / (3600 * 24)));
-
-    // rank in world, country, city, institution, course
-    const users = filterLeaderboardUsers(
-      await strapi.entityService.findMany(
-        "plugin::users-permissions.user",
-        {
-          populate: { institution: true },
-          sort: { points: "desc" },
-        }
-      )
-    );
-    const countryUsers = user.country
-      ? users.filter((u) => u.country === user.country)
-      : [];
-    const cityUsers = user.city
-      ? users.filter((u) => u.city === user.city)
-      : [];
-    const institutionUsers = user.institution
-      ? users.filter((u) => u.institution?.id === user.institution.id)
-      : [];
-    const courseUsers =
-      user.institution && user.course
-        ? users.filter(
-            (u) =>
-              u.institution?.id === user.institution.id &&
-              u.course === user.course
-          )
-        : [];
-    const eligible = isLeaderboardEligibleUser(user);
-    const placeIn = (list) =>
-      eligible ? list.findIndex((u) => u.id === userId) + 1 || null : null;
-
-    // answers percentage
-    const answersCount = user.user_answers.length;
-    const correctAnswers = user.user_answers.filter(
-      (a) => a.status === "correct"
-    ).length;
-    const wrongAnswers = user.user_answers.filter(
-      (a) => a.status === "wrong"
-    ).length;
-    const skippedAnswers = user.user_answers.filter(
-      (a) => a.status === "skipped"
-    ).length;
-
-    return {
-      howMuchTime: {
-        years,
-        months,
-        days,
-      },
-      points: user.points,
-      rankings: {
-        world: placeIn(users),
-        country: placeIn(countryUsers),
-        city: placeIn(cityUsers),
-        institution: placeIn(institutionUsers),
-        course: placeIn(courseUsers),
-      },
-      answers: {
-        count: answersCount,
-        correct: correctAnswers,
-        wrong: wrongAnswers,
-        skipped: skippedAnswers,
-      },
-    };
-  };
-
-  // getting of user's status
-  plugin.controllers.user.getUserStatus = async (ctx) => {
-    const userId = (
-      await strapi.plugins["users-permissions"].services.jwt.getToken(ctx)
-    ).id;
-
-    const user = await getUser(userId);
-    const currentDate = new Date();
-    const registerDate = new Date(user.createdAt);
-
-    // get last category
-    const lastCategory = await strapi
-      .controller("api::category.category")
-      .getLastCategory(ctx);
-
-    // get past categories data
-    const pastCategories = await strapi
-      .controller("api::category.category")
-      .getPastCategories(ctx);
-    const categories = await strapi.entityService.findMany(
-      "api::category.category"
-    );
-    const dailyStatics = await strapi.plugins[
-      "users-permissions"
-    ].controllers.user.getUserDailyStatistics(ctx);
-
-    return {
-      last_quiz: lastCategory,
-      time_in_app: dateDiff(registerDate, currentDate),
-      last_update: user.user_answers[0]?.createdAt ? dateDiff(new Date(user.user_answers[0]?.createdAt), currentDate) : null,
-      points: user.points,
-      past_categories_count: pastCategories.length,
-      categories_count: categories.length,
-      daily_statics: dailyStatics,
-      past_categories_percent: Math.round(
-        (pastCategories.length / categories.length) * 100
-      ),
-    };
-  };
-
-  /** Global activity stats by reporting timezone; excludes `is_admin` learners only in aggregates. */
-  plugin.controllers.user.getAppActivityStats = async (ctx) => {
-    if (!(await isAdmin(ctx))) {
-      return ctx.badRequest(
-        null,
-        "You are not allowed to access this route",
-      );
-    }
-
-    const parseGranularity = (s) => {
-      const v = (s && String(s).toLowerCase().trim()) || "day";
-      if (v === "week" || v === "weekly") return "week";
-      if (v === "month" || v === "monthly") return "month";
-      return "day";
-    };
-
-    const granularity = parseGranularity(ctx.query.granularity);
-
-    const presetRaw =
-      ctx.query.preset != null
-        ? String(ctx.query.preset).toLowerCase().trim()
-        : "";
-    const preset =
-      presetRaw === "current_month" ||
-      presetRaw === "last_month" ||
-      presetRaw === "last_30_days"
-        ? presetRaw
-        : "";
-
-    const adminId = ctx.state.user?.id;
-    const adminRow =
-      adminId != null
-        ? await strapi.entityService.findOne(
-            "plugin::users-permissions.user",
-            adminId,
-            { fields: ["user_timezone"] },
-          )
-        : null;
-    const reportTz = sanitizeReportingTimezone(
-      undefined,
-      adminRow?.user_timezone ?? null,
-    );
-
-    let endYmd;
-    let startYmd;
-    const nowTz = moment.tz(reportTz);
-
-    if (preset === "current_month") {
-      startYmd = nowTz.clone().startOf("month").format("YYYY-MM-DD");
-      endYmd = nowTz.format("YYYY-MM-DD");
-    } else if (preset === "last_month") {
-      const last = nowTz.clone().subtract(1, "month");
-      startYmd = last.clone().startOf("month").format("YYYY-MM-DD");
-      endYmd = last.clone().endOf("month").format("YYYY-MM-DD");
-    } else if (preset === "last_30_days") {
-      endYmd = nowTz.format("YYYY-MM-DD");
-      startYmd = nowTz.clone().subtract(29, "days").format("YYYY-MM-DD");
-    } else {
-      endYmd =
-        parseYmdParam(ctx.query.end) ?? nowTz.format("YYYY-MM-DD");
-      startYmd =
-        parseYmdParam(ctx.query.start) ??
-        moment.tz(endYmd, "YYYY-MM-DD", reportTz)
-          .subtract(29, "days")
-          .format("YYYY-MM-DD");
-    }
-
-    if (startYmd > endYmd) {
-      const swap = startYmd;
-      startYmd = endYmd;
-      endYmd = swap;
-    }
-
-    const spanDays =
-      Math.round(
-        (new Date(`${endYmd}T00:00:00.000Z`).getTime() -
-          new Date(`${startYmd}T00:00:00.000Z`).getTime()) /
-          86400000,
-      ) + 1;
-    const maxSpanDays =
-      granularity === "day" ? 366 : granularity === "week" ? 730 : 1095;
-    if (spanDays > maxSpanDays) {
-      startYmd = moment
-        .tz(endYmd, "YYYY-MM-DD", reportTz)
-        .subtract(maxSpanDays - 1, "days")
-        .format("YYYY-MM-DD");
-    }
-
-    const spanDaysFinal =
-      Math.round(
-        (new Date(`${endYmd}T00:00:00.000Z`).getTime() -
-          new Date(`${startYmd}T00:00:00.000Z`).getTime()) /
-          86400000,
-      ) + 1;
-
-    const knex = strapi.db.connection;
-
-    const regRes = await knex.raw(
-      `SELECT ${userCreatedBucketExpr(granularity)} AS day,
-              COUNT(*)::int AS cnt
-       FROM up_users
-       WHERE (up_users.is_admin IS NOT TRUE)
-         AND (timezone(?::text, up_users.created_at))::date BETWEEN ?::date AND ?::date
-       GROUP BY 1
-       ORDER BY 1`,
-      [reportTz, reportTz, startYmd, endYmd],
-    );
-
-    const fkParticipant = await resolveUserAnswerUserFkColumn(knex);
-    const solvedRes = await userAnswerBucketsByGranularity(
-      knex,
-      reportTz,
-      startYmd,
-      endYmd,
-      fkParticipant,
-      "ua.status = 'correct'",
-      granularity,
-    );
-    const answeredRes = await userAnswerBucketsByGranularity(
-      knex,
-      reportTz,
-      startYmd,
-      endYmd,
-      fkParticipant,
-      "ua.status IN ('correct', 'wrong')",
-      granularity,
-    );
-
-    const regRows = regRes.rows ?? regRes;
-    const solvedRows = solvedRes.rows ?? solvedRes;
-    const answeredRows = answeredRes.rows ?? answeredRes;
-
-    const regCounts = {};
-    for (const row of regRows) {
-      const ymd = rowDayToYmd(row.day);
-      if (ymd) regCounts[ymd] = Number(row.cnt) || 0;
-    }
-    const solvedCounts = {};
-    for (const row of solvedRows) {
-      const ymd = rowDayToYmd(row.day);
-      if (ymd) solvedCounts[ymd] = Number(row.cnt) || 0;
-    }
-    const answeredCounts = {};
-    for (const row of answeredRows) {
-      const ymd = rowDayToYmd(row.day);
-      if (ymd) answeredCounts[ymd] = Number(row.cnt) || 0;
-    }
-
-    const bucketCount = bucketKeysForGranularity(
-      startYmd,
-      endYmd,
-      reportTz,
-      granularity,
-    ).length;
-
-    return {
-      timezone: reportTz,
-      granularity,
-      preset: preset || null,
-      window_days: spanDaysFinal,
-      bucket_count: bucketCount,
-      start: startYmd,
-      end: endYmd,
-      daily_registrations: buildFilledSeriesTz(
-        startYmd,
-        endYmd,
-        regCounts,
-        reportTz,
-        granularity,
-      ),
-      daily_solved_correct: buildFilledSeriesTz(
-        startYmd,
-        endYmd,
-        solvedCounts,
-        reportTz,
-        granularity,
-      ),
-      daily_exercises_answered: buildFilledSeriesTz(
-        startYmd,
-        endYmd,
-        answeredCounts,
-        reportTz,
-        granularity,
-      ),
-    };
-  };
-
-  // Strapi's default register treats email and username as one identifier pool
-  // (email may conflict with another user's username). We only compare email↔email
-  // and username↔username so a nickname may equal someone else's email string.
-  plugin.controllers.auth.register = async (ctx) => {
+      ...auth,
+      register: async (ctx) => {
     const pluginStore = await strapi.store({
       type: "plugin",
       name: "users-permissions",
@@ -951,7 +71,7 @@ module.exports = (plugin) => {
       throw new ApplicationError(i18n.__("errors.register-action-disabled"));
     }
 
-    const { register } = strapi.config.get("plugin.users-permissions");
+    const { register } = strapi.config.get("plugin::users-permissions");
     const alwaysAllowedKeys = ["username", "password", "email"];
     const userModel = strapi.contentTypes["plugin::users-permissions.user"];
     const { attributes } = userModel;
@@ -987,7 +107,6 @@ module.exports = (plugin) => {
 
     const params = {
       ..._.pick(ctx.request.body, allowedKeys),
-      teacher_invite_code: ctx.request.body?.teacher_invite_code,
       provider: "local",
     };
 
@@ -1036,88 +155,13 @@ module.exports = (plugin) => {
       );
     }
 
-    const accountType =
-      normalizeAccountType(params.account_type) || ACCOUNT_TYPES.STUDENT;
-
-    if (registrationRequiresSchoolEmail(params) && !emailNorm) {
-      throw new ApplicationError(i18n.__("errors.school-email-required"));
-    }
-
-    let institutionIdFromEmail = null;
-    if (emailNorm && registrationRequiresSchoolEmail(params)) {
-      try {
-        assertSchoolEmailFormat(emailNorm);
-      } catch (e) {
-        throw new ApplicationError(
-          i18n.__(e.code || "errors.school-email-invalid")
-        );
-      }
-
-      const resolved = await resolveInstitutionForSchoolEmail(
-        strapi,
-        emailNorm,
-        params.institution
-      );
-      if (resolved.errorKey) {
-        throw new ApplicationError(i18n.__(resolved.errorKey));
-      }
-      institutionIdFromEmail = resolved.institutionId;
-
-      if (accountType === ACCOUNT_TYPES.TEACHER) {
-        const inviteCode = params.teacher_invite_code;
-        if (!inviteCode || typeof inviteCode !== "string" || !inviteCode.trim()) {
-          throw new ApplicationError(
-            i18n.__("errors.teacher-invite-required")
-          );
-        }
-        const institution = await strapi.entityService.findOne(
-          "api::institution.institution",
-          institutionIdFromEmail,
-          {
-            fields: [
-              "id",
-              "teacher_invite_code",
-              "teacher_invite_code_year",
-            ],
-          }
-        );
-        if (!institutionInviteMatches(institution, inviteCode)) {
-          throw new ApplicationError(
-            i18n.__("errors.teacher-invite-invalid", {
-              year: currentCalendarYear(),
-            })
-          );
-        }
-      }
-    }
-
-    let assignedRole = role;
-    if (accountType === ACCOUNT_TYPES.TEACHER) {
-      const teacherRole = await strapi
-        .query("plugin::users-permissions.role")
-        .findOne({ where: { type: "teacher" } });
-      if (!teacherRole) {
-        throw new ApplicationError(i18n.__("errors.find-teacher-role"));
-      }
-      assignedRole = teacherRole;
-    }
-
-    const registerPayload = _.omit(params, [
-      "institution",
-      "teacher_invite_code",
-    ]);
+    const registerPayload = _.pick(params, allowedKeys);
 
     const newUser = {
       ...registerPayload,
-      account_type: accountType,
-      teacher_approved: false,
-      role: assignedRole.id,
+      role: role.id,
       ...(emailNorm ? { email: emailNorm } : {}),
-      ...(institutionIdFromEmail
-        ? { institution: institutionIdFromEmail }
-        : {}),
       username,
-      // Without an email there's nothing to confirm — skip confirmation flow.
       confirmed: emailNorm ? !settings.email_confirmation : true,
     };
 
@@ -1133,15 +177,13 @@ module.exports = (plugin) => {
       return ctx.send({ user: sanitizedUser });
     }
 
-    const jwt = getService("jwt").issue(_.pick(user, ["id"]));
+    const token = getService("jwt").issue(_.pick(user, ["id"]));
     return ctx.send({
-      jwt,
+      jwt: token,
       user: sanitizedUser,
     });
-  };
-
-  // register by nickname only
-  plugin.controllers.auth.registerNicknamedUser = async (ctx) => {
+      },
+      registerNicknamedUser: async (ctx) => {
     const pluginStore = await strapi.store({
       type: "plugin",
       name: "users-permissions",
@@ -1209,9 +251,8 @@ module.exports = (plugin) => {
       }
       throw new ApplicationError(error.message);
     }
-  };
-
-  plugin.controllers.auth.forgotPassword = async (ctx) => {
+      },
+      forgotPassword: async (ctx) => {
     const { email } = await validateForgotPasswordBody(ctx.request.body);
 
     const pluginStore = await strapi.store({
@@ -1287,17 +328,48 @@ module.exports = (plugin) => {
     await strapi.plugin("email").service("email").send(emailToSend);
 
     ctx.send({ ok: true });
+      },
+    };
   };
 
-  // extending of user's update() method - adding of saving course/class
-  plugin.controllers.user.update = async (ctx) => {
+  const issue = (payload, jwtOptions = {}) => {
+    _.defaults(jwtOptions, strapi.config.get("plugin::users-permissions.jwt"));
+    return jwt.sign(
+      _.clone(payload.toJSON ? payload.toJSON() : payload),
+      strapi.config.get("plugin::users-permissions.jwtSecret"),
+      jwtOptions
+    );
+  };
+
+  const originalUser = plugin.controllers.user;
+  plugin.controllers.user = () => {
+    const originalFindOne = originalUser.findOne;
+
+    return {
+      ...originalUser,
+      findOne: async (ctx) => {
+        await originalFindOne(ctx);
+        const auth = ctx.state.user;
+        if (
+          ctx.body &&
+          auth &&
+          String(auth.id) === String(ctx.params.id)
+        ) {
+          const row = await strapi.db.connection
+            .select("password")
+            .from("up_users")
+            .where("id", auth.id)
+            .first();
+          ctx.body.needs_logout_credentials = !(row && row.password);
+        }
+      },
+      update: async (ctx) => {
     const data = ctx.request.body;
     await strapi.plugins["users-permissions"].services.jwt.getToken(ctx);
 
     const requesterIsAdmin = await isAdmin(ctx);
 
     if (!requesterIsAdmin) {
-      // Prevent privilege escalation attempts.
       delete data.is_admin;
       delete data.account_type;
       delete data.teacher_approved;
@@ -1305,63 +377,6 @@ module.exports = (plugin) => {
     }
 
     const newPassword = data.password;
-    let institutionId = null;
-    let courseName = data.course?.replaceAll(" ", "").toLowerCase();
-
-    // adding of relation to the Institution model
-    if (data.institution?.name && data.institution?.place_id) {
-      const institutions = await strapi.entityService.findMany(
-        "api::institution.institution"
-      );
-      const institutionItem = institutions.find(
-        (item) => item.place_id === data.institution.place_id
-      );
-
-      if (!institutionItem) {
-        const entry = await strapi.entityService.create(
-          "api::institution.institution",
-          {
-            data: {
-              name: data.institution.name,
-              place_id: data.institution.place_id,
-            },
-          }
-        );
-
-        institutionId = entry.id;
-      } else {
-        institutionId = institutionItem.id;
-      }
-    }
-
-    // adding of course to institution
-    if (courseName) {
-      if (!data.institution?.name || !data.institution?.place_id) {
-        throw new ApplicationError(i18n.__("errors.fill-institution"));
-      }
-
-      const institutionEntry = await strapi.entityService.findOne(
-        "api::institution.institution",
-        institutionId
-      );
-
-      if (
-        !institutionEntry.courses ||
-        !institutionEntry.courses.includes(courseName)
-      ) {
-        await strapi.entityService.update(
-          "api::institution.institution",
-          institutionId,
-          {
-            data: {
-              courses: institutionEntry.courses
-                ? [...institutionEntry.courses, courseName]
-                : [courseName],
-            },
-          }
-        );
-      }
-    }
 
     if (data.username) {
       const existing = await strapi
@@ -1381,15 +396,11 @@ module.exports = (plugin) => {
     const resultData = {
       ...data,
       ...(newPassword && { password: newPassword }),
-      ...(institutionId && { institution: institutionId }),
-      ...(courseName && { course: courseName }),
     };
 
-    const existingForHistory = await strapi.entityService.findOne(
-      "plugin::users-permissions.user",
-      ctx.params.id,
-      { fields: ["email", "username", "old_data"] }
-    );
+    const existingForHistory = await findUserById(strapi, ctx.params.id, {
+      fields: ["email", "username", "old_data"]
+    });
     if (existingForHistory) {
       appendPreAnonymizeDeletionToIncoming(
         existingForHistory,
@@ -1403,49 +414,38 @@ module.exports = (plugin) => {
       }
     }
 
-    const userRawEntity = await strapi.entityService.update(
+    const userRawEntity = await updateByNumericId(
+      strapi,
       "plugin::users-permissions.user",
       ctx.params.id,
-      {
-        data: resultData,
-        populate: ["institution"],
-      }
+      resultData
     );
 
     return filterObjectByKeys(USER_RESPONSE_EXCLUDED_KEYS, userRawEntity);
-  };
-
-  const SPEAKING_RESPONSE_LANGS = ["en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"];
-  const SPEAKING_TRANSLATION_LANGS = ["none", "en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"];
-  const PRACTICE_LANGUAGE_CODES = ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ru", "hi"];
-
-  plugin.controllers.user.getSpeakingPreferences = async (ctx) => {
+      },
+      getSpeakingPreferences: async (ctx) => {
     const { id: userId } = await strapi.plugins[
       "users-permissions"
     ].services.jwt.getToken(ctx);
-    const user = await strapi.entityService.findOne(
-      "plugin::users-permissions.user",
-      userId,
-      {
-        fields: [
-          "practice_language",
-          "confirm_transcript",
-          "auto_save_corrections",
-          "response_language",
-          "translation_language",
-          "show_translations",
-          "auto_play_voice",
-          "auto_conversation",
-          "sound",
-          "type_messages_enabled",
-          "auto_start_recording",
-          "daily_reminder_enabled",
-          "daily_reminder_time",
-          "correct_sentence_goal",
-          "english_level",
-        ],
-      }
-    );
+    const user = await findUserById(strapi, userId, {
+      fields: [
+        "practice_language",
+        "confirm_transcript",
+        "auto_save_corrections",
+        "response_language",
+        "translation_language",
+        "show_translations",
+        "auto_play_voice",
+        "auto_conversation",
+        "sound",
+        "type_messages_enabled",
+        "auto_start_recording",
+        "daily_reminder_enabled",
+        "daily_reminder_time",
+        "correct_sentence_goal",
+        "english_level",
+      ],
+    });
     ctx.send({
       practice_language: user?.practice_language ?? "en",
       confirm_transcript: user?.confirm_transcript !== false,
@@ -1463,9 +463,8 @@ module.exports = (plugin) => {
       correct_sentence_goal: user?.correct_sentence_goal ?? 10,
       english_level: user?.english_level ?? null,
     });
-  };
-
-  plugin.controllers.user.updateSpeakingPreferences = async (ctx) => {
+      },
+      updateSpeakingPreferences: async (ctx) => {
     const { id: userId } = await strapi.plugins[
       "users-permissions"
     ].services.jwt.getToken(ctx);
@@ -1544,10 +543,11 @@ module.exports = (plugin) => {
     }
 
     try {
-      const updated = await strapi.entityService.update(
+      const updated = await updateByNumericId(
+        strapi,
         "plugin::users-permissions.user",
         userId,
-        { data }
+        data
       );
       ctx.send({
         practice_language: updated.practice_language ?? "en",
@@ -1569,64 +569,22 @@ module.exports = (plugin) => {
     } catch (err) {
       throw err;
     }
+      },
+      deleteNicknamedUser: async (ctx) => {
+        return deleteByNumericId(
+          strapi,
+          "plugin::users-permissions.user",
+          ctx.params.id
+        );
+      },
+    };
   };
 
-  plugin.controllers.user.deleteNicknamedUser = async (ctx) => {
-    return await strapi.entityService.delete(
-      "plugin::users-permissions.user",
-      ctx.params.id
-    );
-  };
+  const SPEAKING_RESPONSE_LANGS = ["en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"];
+  const SPEAKING_TRANSLATION_LANGS = ["none", "en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"];
+  const PRACTICE_LANGUAGE_CODES = ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ru", "hi"];
 
   plugin.routes["content-api"].routes.push(
-    {
-      method: "GET",
-      path: "/get-points",
-      handler: "user.getPoints",
-      config: {
-        prefix: "",
-      },
-    },
-    {
-      method: "GET",
-      path: "/get-stats/:id",
-      handler: "user.getUserStats",
-      config: {
-        prefix: "",
-      },
-    },
-    {
-      method: "GET",
-      path: "/get-rankings",
-      handler: "user.getUserRankings",
-      config: {
-        prefix: "",
-      },
-    },
-    {
-      method: "GET",
-      path: "/get-answers-stats",
-      handler: "user.getMyAnswersStats",
-      config: {
-        prefix: "",
-      },
-    },
-    {
-      method: "GET",
-      path: "/get-user-status",
-      handler: "user.getUserStatus",
-      config: {
-        prefix: "",
-      },
-    },
-    {
-      method: "GET",
-      path: "/admin/app-activity-stats",
-      handler: "user.getAppActivityStats",
-      config: {
-        prefix: "",
-      },
-    },
     {
       method: "POST",
       path: "/auth/local/register-nicknamed-user",

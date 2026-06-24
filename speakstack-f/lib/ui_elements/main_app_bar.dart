@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:untitled2/localization/app_localizations.dart';
+import 'package:speakstack/localization/app_localizations.dart';
 
 import '../app_colors.dart';
 import 'screen_tutorial_targets.dart';

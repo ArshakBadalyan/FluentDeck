@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/data/flashcard_offline_store.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/services/flashcard_sync_store.dart';
+import 'package:speakstack/data/flashcard_offline_store.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/services/flashcard_sync_store.dart';
 
 /// Sync state for the Decks tab indicator (Phase 5E).
 enum FlashcardSyncStatus {

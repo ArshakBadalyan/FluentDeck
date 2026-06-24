@@ -9,17 +9,14 @@ const { createCoreService } = require('@strapi/strapi').factories;
 module.exports = createCoreService('api::notification.notification', ({ strapi }) => ({
   async markAllAsRead(userId) {
     try {
-      const notifications = await strapi.entityService.findMany(
-        'api::notification.notification',
-        {
-          filters: {
-            users_permissions_user: {
-              id: userId
-            }
-          },
-          fields: ['id'],
-        }
-      );
+      const notifications = await strapi.documents('api::notification.notification').findMany({
+        filters: {
+          users_permissions_user: {
+            id: userId
+          }
+        },
+        fields: ['id'],
+      });
 
       const ids = notifications.map(n => n.id);
 

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/models/placement_test_model.dart';
-import 'package:untitled2/screens/learn_screen/placement_test_screen.dart';
-import 'package:untitled2/services/unsaved_changes_service.dart';
-import 'package:untitled2/ui_elements/dialogs/account_error_info_dialog.dart';
-import 'package:untitled2/ui_elements/modern_page_widgets.dart';
-import 'package:untitled2/widgets/cefr_level_chips.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/models/placement_test_model.dart';
+import 'package:speakstack/screens/learn_screen/placement_test_screen.dart';
+import 'package:speakstack/services/unsaved_changes_service.dart';
+import 'package:speakstack/ui_elements/dialogs/account_error_info_dialog.dart';
+import 'package:speakstack/ui_elements/modern_page_widgets.dart';
+import 'package:speakstack/widgets/cefr_level_chips.dart';
 
 import '../../screens/auth/auth_screen.dart';
 import '../../services/audio_service.dart';

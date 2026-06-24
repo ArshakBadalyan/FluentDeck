@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:untitled2/screens/learn_screen/card_browser_screen.dart';
-import 'package:untitled2/screens/learn_screen/flashcards_screen.dart';
-import 'package:untitled2/services/flashcard_sync_service.dart';
-import 'package:untitled2/services/review_settings_store.dart';
-import 'package:untitled2/ui_elements/modern_page_widgets.dart';
+import 'package:speakstack/screens/learn_screen/card_browser_screen.dart';
+import 'package:speakstack/screens/learn_screen/flashcards_screen.dart';
+import 'package:speakstack/services/flashcard_sync_service.dart';
+import 'package:speakstack/services/review_settings_store.dart';
+import 'package:speakstack/ui_elements/modern_page_widgets.dart';
 
 /// Anki-style shell: Decks | Card browser.
 class DecksShellScreen extends StatefulWidget {

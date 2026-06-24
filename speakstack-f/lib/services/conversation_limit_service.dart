@@ -1,6 +1,6 @@
-import 'package:untitled2/services/api_service.dart';
-import 'package:untitled2/services/app_feature_config_service.dart';
-import 'package:untitled2/services/auth_service.dart';
+import 'package:speakstack/services/api_service.dart';
+import 'package:speakstack/services/app_feature_config_service.dart';
+import 'package:speakstack/services/auth_service.dart';
 
 class ConversationUsageStatus {
   final bool allowed;

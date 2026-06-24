@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/screens/learn_screen/decks_settings_section.dart';
-import 'package:untitled2/screens/learn_screen/decks_settings_section_screen.dart';
-import 'package:untitled2/services/deck_backup_service.dart';
-import 'package:untitled2/services/deck_notification_service.dart';
-import 'package:untitled2/services/flashcard_sync_service.dart';
-import 'package:untitled2/services/flashcard_sync_store.dart';
-import 'package:untitled2/services/review_settings_store.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/screens/learn_screen/decks_settings_section.dart';
+import 'package:speakstack/screens/learn_screen/decks_settings_section_screen.dart';
+import 'package:speakstack/services/deck_backup_service.dart';
+import 'package:speakstack/services/deck_notification_service.dart';
+import 'package:speakstack/services/flashcard_sync_service.dart';
+import 'package:speakstack/services/flashcard_sync_store.dart';
+import 'package:speakstack/services/review_settings_store.dart';
 
 /// Anki-style Decks settings hub (Step 6).
 class DecksSettingsScreen extends StatefulWidget {

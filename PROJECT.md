@@ -26,9 +26,9 @@
 | Component | Path | Stack |
 |-----------|------|-------|
 | Mobile/Web app | `speakstack-f/` | Flutter / Dart |
-| Backend API | `strapi-speakstack/` | Strapi 4.26 / Node / PostgreSQL |
+| Backend API | `strapi-speakstack/` | Strapi 5.49 / Node 20 / PostgreSQL |
 
-Evolved from legacy **MatheApp** (`matheapp-f`). Internal names still reference it: package `untitled2`, Android ID `io.framework7.matheapp`, config `mathe_config.txt`.
+Evolved from legacy **MatheApp** (`matheapp-f`). Internal Dart package is now `speakstack`; Android ID `com.speakstack.app`.
 
 ### Monorepo Structure
 
@@ -66,23 +66,25 @@ Speakstack/
 
 ### Legacy Warning
 
-Backend has MatheApp remnants (cron jobs, teacher stats utils). Math API modules are **removed** from `src/api/`. Trust `src/api/` and this doc, not old `strapi-speakstack/README.md`.
+Backend MatheApp classroom utilities were removed. Math API modules are **removed** from `src/api/`. Trust `src/api/` and this doc, not old `strapi-speakstack/README.md` teacher/classroom sections.
 
 ---
 
 ## Quick Start
 
 ```bash
-# Backend
+# Backend (Node 20 — use nvm)
 cd strapi-speakstack
 cp .env.example .env    # fill DATABASE_*, OPENAI_API_KEY, JWT_SECRET, APP_KEYS
-yarn install && yarn develop    # http://localhost:1337
+nvm use && npm install --legacy-peer-deps && npm run develop    # http://localhost:1337
 
 # Frontend
 cd speakstack-f
-cp .env.example assets/english_config.txt    # set API_URL=http://localhost:1337/api
+cp .env.example assets/speakstack_config.txt    # set API_URL=http://localhost:1337/api
 flutter pub get && flutter run
 ```
+
+**Strapi REST format:** Flutter sends `Strapi-Response-Format: v4` by default (`STRAPI_RESPONSE_FORMAT` in config). Set `STRAPI_RESPONSE_FORMAT=v5` to use native Strapi 5 flattened REST; parsers in `lib/utils/strapi_response.dart` support both.
 
 ---
 
@@ -95,7 +97,7 @@ flutter pub get && flutter run
 | Auth | JWT in SharedPreferences, Bearer via `ApiService` |
 | Offline flashcards | Isar local DB + sync pull/push to Strapi |
 | AI | All OpenAI calls proxied through Strapi (never from client) |
-| Config | Baked at build time into `assets/english_config.txt` |
+| Config | Baked at build time: `cp .env.example assets/speakstack_config.txt` |
 
 ---
 

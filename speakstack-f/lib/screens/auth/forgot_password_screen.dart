@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/routing/app_route_names.dart';
-import 'package:untitled2/routing/mathe_page_routes.dart';
-import 'package:untitled2/screens/auth/reset_password_screen.dart';
-import 'package:untitled2/ui_elements/auth_secondary_link.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/routing/app_route_names.dart';
+import 'package:speakstack/routing/app_page_routes.dart';
+import 'package:speakstack/screens/auth/reset_password_screen.dart';
+import 'package:speakstack/ui_elements/auth_secondary_link.dart';
 import '../../services/auth_service.dart';
 import 'auth_screen.dart';
 
@@ -83,7 +83,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             if (res['status'] == 'success') {
                               Navigator.push(
                                 context,
-                                matheMaterialPageRoute(
+                                appMaterialPageRoute(
                                   name: AppRouteNames.resetPassword,
                                   builder:
                                       (_) => const ResetPasswordScreen(),
@@ -125,7 +125,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    matheMaterialPageRoute(
+                    appMaterialPageRoute(
                       name: AppRouteNames.auth,
                       builder: (_) => const AuthScreen(),
                     ),

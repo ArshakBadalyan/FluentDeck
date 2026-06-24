@@ -2,31 +2,32 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/screens/activity_screen/activity_shell_screen.dart';
-import 'package:untitled2/screens/speaking_hub/speaking_hub_screen.dart';
-import 'package:untitled2/screens/conversation_screen/conversation_history_screen.dart';
-import 'package:untitled2/screens/conversation_screen/conversation_screen.dart';
-import 'package:untitled2/screens/learn_screen/decks_shell_screen.dart';
-import 'package:untitled2/screens/learn_screen/placement_test_screen.dart';
-import 'package:untitled2/screens/library_screen/library_screen.dart';
-import 'package:untitled2/screens/profile_screen/about_us/profile_about_tab.dart';
-import 'package:untitled2/screens/profile_screen/profile_account_tab.dart';
-import 'package:untitled2/screens/profile_screen/profile_notifications_tab.dart';
-import 'package:untitled2/screens/profile_screen/profile_security_tab.dart';
-import 'package:untitled2/screens/profile_screen/profile_sound_tab.dart';
-import 'package:untitled2/screens/profile_screen/profile_settings_tab.dart';
-import 'package:untitled2/services/app_feature_config_service.dart';
-import 'package:untitled2/services/audio_service.dart';
-import 'package:untitled2/services/conversation_service.dart';
-import 'package:untitled2/services/auth_service.dart';
-import 'package:untitled2/services/main_navigation_coordinator.dart';
-import 'package:untitled2/services/notifications_service.dart';
-import 'package:untitled2/services/unsaved_changes_service.dart';
-import 'package:untitled2/services/vocabulary_service.dart';
-import 'package:untitled2/ui_elements/english_bottom_nav.dart';
-import 'package:untitled2/ui_elements/main_app_bar.dart';
-import 'package:untitled2/ui_elements/notification_panel.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/screens/activity_screen/activity_shell_screen.dart';
+import 'package:speakstack/screens/speaking_hub/speaking_hub_screen.dart';
+import 'package:speakstack/screens/conversation_screen/conversation_history_screen.dart';
+import 'package:speakstack/screens/conversation_screen/conversation_screen.dart';
+import 'package:speakstack/screens/learn_screen/decks_shell_screen.dart';
+import 'package:speakstack/screens/learn_screen/placement_test_screen.dart';
+import 'package:speakstack/screens/library_screen/library_screen.dart';
+import 'package:speakstack/screens/profile_screen/about_us/profile_about_tab.dart';
+import 'package:speakstack/screens/profile_screen/profile_account_tab.dart';
+import 'package:speakstack/screens/profile_screen/profile_notifications_tab.dart';
+import 'package:speakstack/screens/profile_screen/profile_security_tab.dart';
+import 'package:speakstack/screens/profile_screen/profile_sound_tab.dart';
+import 'package:speakstack/screens/profile_screen/profile_settings_tab.dart';
+import 'package:speakstack/services/app_feature_config_service.dart';
+import 'package:speakstack/services/audio_service.dart';
+import 'package:speakstack/services/conversation_service.dart';
+import 'package:speakstack/services/auth_service.dart';
+import 'package:speakstack/services/main_navigation_coordinator.dart';
+import 'package:speakstack/services/notifications_service.dart';
+import 'package:speakstack/utils/strapi_response.dart';
+import 'package:speakstack/services/unsaved_changes_service.dart';
+import 'package:speakstack/services/vocabulary_service.dart';
+import 'package:speakstack/ui_elements/english_bottom_nav.dart';
+import 'package:speakstack/ui_elements/main_app_bar.dart';
+import 'package:speakstack/ui_elements/notification_panel.dart';
 
 const String kPlacementPromptSeenPrefsKey = 'placement_test_prompt_seen';
 
@@ -235,9 +236,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       var count = 0;
       for (final n in list) {
         if (n is! Map) continue;
-        final read =
-            n['read'] ??
-            (n['attributes'] is Map ? (n['attributes'] as Map)['read'] : null);
+        final read = StrapiResponse.field<bool>(Map<String, dynamic>.from(n), 'read');
         if (read != true) count += 1;
       }
       setState(() => _notificationUnreadCount = count);

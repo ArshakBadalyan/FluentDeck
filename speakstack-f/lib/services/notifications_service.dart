@@ -1,3 +1,5 @@
+import 'package:speakstack/utils/strapi_response.dart';
+
 import 'api_service.dart';
 import 'token_storage.dart';
 
@@ -17,7 +19,7 @@ class NotificationsService {
     );
 
     return {
-      'data': res['data'] ?? [],
+      'data': StrapiResponse.list(res),
       'pageCount': res['meta']?['pagination']?['pageCount'] ?? 0,
     };
   }
@@ -48,10 +50,10 @@ class NotificationsService {
 
 
   static bool hasUnread(List<dynamic> notifications) {
-    return notifications.any(
-          (n) =>
-      n['attributes']?['read'] == false ||
-          n['read'] == false,
-    );
+    return notifications.any((n) {
+      if (n is! Map) return false;
+      final map = Map<String, dynamic>.from(n);
+      return StrapiResponse.field<bool>(map, 'read') == false;
+    });
   }
 }

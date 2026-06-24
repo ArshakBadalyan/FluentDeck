@@ -7,6 +7,7 @@ class SpeakingTopicModel {
   final String starterPrompt;
   final String iconKey;
   final List<String> suggestedVocabulary;
+  final bool isPremiumLocked;
 
   const SpeakingTopicModel({
     required this.id,
@@ -15,6 +16,7 @@ class SpeakingTopicModel {
     required this.starterPrompt,
     this.iconKey = '',
     this.suggestedVocabulary = const [],
+    this.isPremiumLocked = false,
   });
 
   String get referenceKey => 'topic_$id';
@@ -43,6 +45,8 @@ class SpeakingTopicModel {
       iconKey: attrs['iconKey'] as String? ?? '',
       suggestedVocabulary:
           vocab is List ? vocab.map((e) => e.toString()).toList() : const [],
+      isPremiumLocked:
+          json['isPremiumLocked'] == true || attrs['isPremiumLocked'] == true,
     );
   }
 

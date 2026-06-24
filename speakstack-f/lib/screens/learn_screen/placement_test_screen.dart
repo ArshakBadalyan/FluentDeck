@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/placement_test_model.dart';
-import 'package:untitled2/services/vocabulary_service.dart';
-import 'package:untitled2/ui_elements/primary_button.dart';
-import 'package:untitled2/widgets/cefr_level_chips.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/placement_test_model.dart';
+import 'package:speakstack/services/vocabulary_service.dart';
+import 'package:speakstack/ui_elements/primary_button.dart';
+import 'package:speakstack/widgets/cefr_level_chips.dart';
 
 class PlacementTestScreen extends StatefulWidget {
   const PlacementTestScreen({super.key});

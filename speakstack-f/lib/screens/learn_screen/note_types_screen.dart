@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_note_model.dart';
-import 'package:untitled2/screens/learn_screen/note_type_edit_screen.dart';
-import 'package:untitled2/services/flashcard_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_note_model.dart';
+import 'package:speakstack/screens/learn_screen/note_type_edit_screen.dart';
+import 'package:speakstack/services/flashcard_service.dart';
 
 /// Built-in and custom note types (Phase 5C).
 class NoteTypesScreen extends StatefulWidget {

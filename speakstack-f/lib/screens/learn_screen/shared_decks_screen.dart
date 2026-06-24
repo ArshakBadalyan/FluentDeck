@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/services/flashcard_import_service.dart';
-import 'package:untitled2/services/flashcard_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/services/flashcard_import_service.dart';
+import 'package:speakstack/services/flashcard_service.dart';
 
 /// Browse AnkiWeb and import shared decks (Phase 5I).
 class SharedDecksScreen extends StatefulWidget {

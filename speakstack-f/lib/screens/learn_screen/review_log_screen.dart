@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_stats_model.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/utils/html_text_utils.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_stats_model.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/utils/html_text_utils.dart';
 
 class ReviewLogScreen extends StatefulWidget {
   const ReviewLogScreen({super.key, this.deckId});

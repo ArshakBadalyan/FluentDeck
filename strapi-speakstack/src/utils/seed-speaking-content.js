@@ -121,35 +121,28 @@ async function seedRolePlayScenarios(strapi) {
   let updated = 0;
 
   for (const item of ROLE_PLAY_SCENARIOS) {
-    const existing = await strapi.entityService.findMany(
-      "api::conversation-prompt.conversation-prompt",
-      {
-        filters: { title: item.title },
-        limit: 1,
-      },
-    );
+    const existing = await strapi.documents("api::conversation-prompt.conversation-prompt").findMany({
+      filters: { title: item.title },
+      limit: 1,
+    });
     if (existing?.length > 0) {
       const row = existing[0];
       if (!row.iconKey && item.iconKey) {
-        await strapi.entityService.update(
-          "api::conversation-prompt.conversation-prompt",
-          row.id,
-          { data: { iconKey: item.iconKey } },
-        );
+        await strapi.documents("api::conversation-prompt.conversation-prompt").update({
+          documentId: row.documentId,
+          data: { iconKey: item.iconKey }
+        });
         updated += 1;
       }
       continue;
     }
 
-    await strapi.entityService.create(
-      "api::conversation-prompt.conversation-prompt",
-      {
-        data: {
-          ...item,
-          publishedAt: now,
-        },
+    await strapi.documents("api::conversation-prompt.conversation-prompt").create({
+      data: {
+        ...item,
+        publishedAt: now,
       },
-    );
+    });
     created += 1;
   }
 
@@ -163,25 +156,23 @@ async function seedSpeakingTopics(strapi) {
   let updated = 0;
 
   for (const item of SPEAKING_TOPICS) {
-    const existing = await strapi.entityService.findMany(
-      "api::speaking-topic.speaking-topic",
-      {
-        filters: { title: item.title },
-        limit: 1,
-      },
-    );
+    const existing = await strapi.documents("api::speaking-topic.speaking-topic").findMany({
+      filters: { title: item.title },
+      limit: 1,
+    });
     if (existing?.length > 0) {
       const row = existing[0];
       if (!row.iconKey && item.iconKey) {
-        await strapi.entityService.update("api::speaking-topic.speaking-topic", row.id, {
-          data: { iconKey: item.iconKey },
+        await strapi.documents("api::speaking-topic.speaking-topic").update({
+          documentId: row.documentId,
+          data: { iconKey: item.iconKey }
         });
         updated += 1;
       }
       continue;
     }
 
-    await strapi.entityService.create("api::speaking-topic.speaking-topic", {
+    await strapi.documents("api::speaking-topic.speaking-topic").create({
       data: {
         ...item,
         publishedAt: now,
@@ -200,25 +191,23 @@ async function seedSpeakingGames(strapi) {
   let updated = 0;
 
   for (const item of SPEAKING_GAMES) {
-    const existing = await strapi.entityService.findMany(
-      "api::speaking-game.speaking-game",
-      {
-        filters: { slug: item.slug },
-        limit: 1,
-      },
-    );
+    const existing = await strapi.documents("api::speaking-game.speaking-game").findMany({
+      filters: { slug: item.slug },
+      limit: 1,
+    });
     if (existing?.length > 0) {
       const row = existing[0];
       if (!row.iconKey && item.iconKey) {
-        await strapi.entityService.update("api::speaking-game.speaking-game", row.id, {
-          data: { iconKey: item.iconKey },
+        await strapi.documents("api::speaking-game.speaking-game").update({
+          documentId: row.documentId,
+          data: { iconKey: item.iconKey }
         });
         updated += 1;
       }
       continue;
     }
 
-    await strapi.entityService.create("api::speaking-game.speaking-game", {
+    await strapi.documents("api::speaking-game.speaking-game").create({
       data: {
         ...item,
         publishedAt: now,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/localization/app_localizations.dart';
+import 'package:speakstack/localization/app_localizations.dart';
 
 import '../../app_colors.dart';
 import '../../services/audio_service.dart';

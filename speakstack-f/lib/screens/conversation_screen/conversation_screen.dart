@@ -2,17 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/conversation_turn_model.dart';
-import 'package:untitled2/models/grammar_correction.dart';
-import 'package:untitled2/models/speaking_session_context.dart';
-import 'package:untitled2/services/conversation_limit_service.dart';
-import 'package:untitled2/services/conversation_service.dart';
-import 'package:untitled2/services/note_service.dart';
-import 'package:untitled2/services/speaking_preferences_service.dart';
-import 'package:untitled2/services/speaking_scores_service.dart';
-import 'package:untitled2/services/speaking_session_service.dart';
-import 'package:untitled2/utils/correction_text_utils.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/conversation_turn_model.dart';
+import 'package:speakstack/models/grammar_correction.dart';
+import 'package:speakstack/models/speaking_session_context.dart';
+import 'package:speakstack/services/conversation_limit_service.dart';
+import 'package:speakstack/services/conversation_service.dart';
+import 'package:speakstack/services/note_service.dart';
+import 'package:speakstack/services/speaking_preferences_service.dart';
+import 'package:speakstack/services/speaking_scores_service.dart';
+import 'package:speakstack/services/speaking_session_service.dart';
+import 'package:speakstack/utils/correction_text_utils.dart';
 
 class ConversationScreen extends StatefulWidget {
   const ConversationScreen({super.key, this.embedInShell = false});

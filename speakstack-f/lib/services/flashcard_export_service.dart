@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/utils/file_download.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/utils/file_download.dart';
 
 class FlashcardExportService {
   FlashcardExportService._();

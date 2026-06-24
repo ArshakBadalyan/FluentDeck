@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/english_main_screen.dart';
-import 'package:untitled2/localization/app_localizations.dart';
+import 'package:speakstack/english_main_screen.dart';
+import 'package:speakstack/localization/app_localizations.dart';
 import '../../routing/app_route_names.dart';
-import '../../routing/mathe_page_routes.dart';
+import '../../routing/app_page_routes.dart';
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
 import '../../ui_elements/auth_input_decoration.dart';
@@ -48,30 +48,38 @@ class _LoginFormState extends State<LoginForm> {
   Future<void> _submit() async {
     setState(() => _loading = true);
 
-    final res = await AuthService.login({
-      'identifier': _emailController.text.trim(),
-      'password': _passwordController.text,
-    });
+    try {
+      final res = await AuthService.login({
+        'identifier': _emailController.text.trim(),
+        'password': _passwordController.text,
+      });
 
-    if (!mounted) return;
-    setState(() => _loading = false);
+      if (!mounted) return;
+      setState(() => _loading = false);
 
-    if (res['status'] == 'success') {
-      AudioService().play('formSubmit');
-      Navigator.pushReplacement(
-        context,
-        matheMaterialPageRoute(
-          name: AppRouteNames.main,
-          builder: (_) => const EnglishMainScreen(initialMainIndex: 0),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            res['error']?['message'] ?? context.tr('login-register.sign-in'),
+      if (res['status'] == 'success') {
+        AudioService().play('formSubmit');
+        Navigator.pushReplacement(
+          context,
+          appMaterialPageRoute(
+            name: AppRouteNames.main,
+            builder: (_) => const EnglishMainScreen(initialMainIndex: 0),
           ),
-        ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              res['error']?['message'] ?? context.tr('login-register.sign-in'),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('errors.network'))),
       );
     }
   }
@@ -102,7 +110,7 @@ class _LoginFormState extends State<LoginForm> {
             onTap: () {
               Navigator.push(
                 context,
-                matheMaterialPageRoute(
+                appMaterialPageRoute(
                   name: AppRouteNames.forgotPassword,
                   builder: (_) => const ForgotPasswordScreen(),
                 ),

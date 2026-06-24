@@ -5,31 +5,19 @@ module.exports = {
 
   async bootstrap({ strapi }) {
     const linkPermissionToRole = async (action, roleType = "authenticated") => {
-      const knex = strapi.db.connection;
-      const now = new Date();
-      let perm = await knex("up_permissions").where({ action }).first();
-      if (!perm) {
-        const inserted = await knex("up_permissions")
-          .insert({ action, created_at: now, updated_at: now })
-          .returning("id");
-        const row = inserted?.[0];
-        const newId = row && typeof row === "object" ? row.id : row;
-        perm = { id: newId };
-      }
-      if (!perm?.id) return;
-
-      const role = await knex("up_roles").where({ type: roleType }).first();
+      const role = await strapi.db
+        .query("plugin::users-permissions.role")
+        .findOne({ where: { type: roleType } });
       if (!role?.id) return;
 
-      const link = await knex("up_permissions_role_links")
-        .where({ permission_id: perm.id, role_id: role.id })
-        .first();
-      if (!link) {
-        await knex("up_permissions_role_links").insert({
-          permission_id: perm.id,
-          role_id: role.id,
-        });
-      }
+      const existing = await strapi.db
+        .query("plugin::users-permissions.permission")
+        .findOne({ where: { action, role: role.id } });
+      if (existing) return;
+
+      await strapi.db.query("plugin::users-permissions.permission").create({
+        data: { action, role: role.id },
+      });
     };
 
     const ENGLISH_CONTENT_ACTIONS = [
@@ -39,10 +27,13 @@ module.exports = {
       "api::exercise.exercise.findOne",
       "api::conversation-prompt.conversation-prompt.find",
       "api::conversation-prompt.conversation-prompt.findOne",
+      "api::conversation-prompt.conversation-prompt.catalog",
       "api::speaking-topic.speaking-topic.find",
       "api::speaking-topic.speaking-topic.findOne",
+      "api::speaking-topic.speaking-topic.catalog",
       "api::speaking-game.speaking-game.find",
       "api::speaking-game.speaking-game.findOne",
+      "api::speaking-game.speaking-game.catalog",
       "api::speaking-session.speaking-session.completeSession",
       "api::speaking-session.speaking-session.recentHistory",
       "api::speaking-session.speaking-session.scoreMap",

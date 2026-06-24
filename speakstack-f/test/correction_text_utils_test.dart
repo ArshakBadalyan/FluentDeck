@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:untitled2/models/grammar_correction.dart';
-import 'package:untitled2/utils/correction_text_utils.dart';
+import 'package:speakstack/models/grammar_correction.dart';
+import 'package:speakstack/utils/correction_text_utils.dart';
 
 void main() {
   test('typo uses highlight span only', () {

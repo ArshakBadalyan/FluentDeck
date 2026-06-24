@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/services/flashcard_service.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/services/flashcard_service.dart';
 
 /// Create a filtered deck from a saved search query (Phase 4F).
 Future<FlashcardDeckModel?> showFilteredDeckDialog(

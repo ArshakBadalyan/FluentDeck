@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/utils/html_text_utils.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/utils/html_text_utils.dart';
 
 /// Text field with a minimal HTML formatting toolbar (Anki-style).
 class HtmlFieldEditor extends StatelessWidget {

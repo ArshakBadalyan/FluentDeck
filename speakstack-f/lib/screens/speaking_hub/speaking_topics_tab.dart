@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
+import 'package:speakstack/app_colors.dart';
 
 import '../../models/speaking_session_context.dart';
 import '../../models/speaking_topic_model.dart';
@@ -7,6 +7,7 @@ import '../../services/speaking_content_service.dart';
 import '../../services/speaking_scores_service.dart';
 import '../../services/speaking_session_service.dart';
 import '../../utils/speaking_item_icons.dart';
+import '../../utils/speaking_premium_gate.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingTopicsTab extends StatefulWidget {
@@ -43,7 +44,8 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
     });
     try {
       await SpeakingSessionService.instance.refreshScoresFromServer();
-      final allTopics = await SpeakingContentService.instance.fetchTopics();
+      final catalog = await SpeakingContentService.instance.fetchTopicsCatalog();
+      final allTopics = catalog.items;
       final scores = <String, int?>{};
       for (final topic in allTopics) {
         scores[topic.referenceKey] =
@@ -75,7 +77,8 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
       _selected =
           filtered.any((t) => t.referenceKey == _selected?.referenceKey)
               ? _selected
-              : (filtered.isNotEmpty ? filtered.first : null);
+              : firstUnlocked(filtered, (t) => t.isPremiumLocked) ??
+                  (filtered.isNotEmpty ? filtered.first : null);
     });
   }
 
@@ -136,7 +139,14 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
             ),
             score: _scoreCache[topic.referenceKey],
             selected: _selected?.referenceKey == topic.referenceKey,
-            onTap: () => setState(() => _selected = topic),
+            isPremiumLocked: topic.isPremiumLocked,
+            onTap: () {
+              if (topic.isPremiumLocked) {
+                showSpeakingPremiumSnackBar(context);
+                return;
+              }
+              setState(() => _selected = topic);
+            },
           );
         },
       ),
@@ -159,9 +169,9 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
         Expanded(child: _buildList()),
         SpeakingStartButton(
           label: 'Start Conversation',
-          enabled: _selected != null,
+          enabled: _selected != null && !_selected!.isPremiumLocked,
           onPressed:
-              _selected == null
+              _selected == null || _selected!.isPremiumLocked
                   ? null
                   : () {
                     widget.onStart(

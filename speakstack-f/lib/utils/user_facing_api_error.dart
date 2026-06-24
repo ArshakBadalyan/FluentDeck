@@ -1,9 +1,19 @@
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:speakstack/utils/api_exception.dart';
 
 /// Returns a key for [AppLocalizations] / [context.tr] — never expose [error.toString()] to users.
 String userFacingErrorLocalizationKey(Object error) {
+  if (error is ApiException) {
+    if (error.statusCode == 401 || error.statusCode == 403) {
+      return 'errors.unauthorized';
+    }
+    if (error.statusCode >= 500) {
+      return 'errors.server';
+    }
+    return 'errors.request-failed';
+  }
   if (_isLikelyNetworkError(error)) {
     return 'errors.network';
   }

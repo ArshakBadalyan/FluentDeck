@@ -9,6 +9,7 @@ class ConversationPromptModel {
   final String iconKey;
   final List<String> suggestedVocabulary;
   final bool isLocal;
+  final bool isPremiumLocked;
 
   const ConversationPromptModel({
     required this.id,
@@ -21,6 +22,7 @@ class ConversationPromptModel {
     this.iconKey = '',
     this.suggestedVocabulary = const [],
     this.isLocal = false,
+    this.isPremiumLocked = false,
   });
 
   String get referenceKey =>
@@ -53,6 +55,8 @@ class ConversationPromptModel {
       iconKey: attrs['iconKey'] as String? ?? '',
       suggestedVocabulary:
           vocab is List ? vocab.map((e) => e.toString()).toList() : const [],
+      isPremiumLocked:
+          json['isPremiumLocked'] == true || attrs['isPremiumLocked'] == true,
     );
   }
 

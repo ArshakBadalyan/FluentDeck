@@ -1,24 +1,24 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/data/decks_help_content.dart';
-import 'package:untitled2/models/flashcard_note_model.dart';
-import 'package:untitled2/models/flashcard_model.dart';
-import 'package:untitled2/screens/learn_screen/card_edit_screen.dart';
-import 'package:untitled2/services/flashcard_service.dart';
-import 'package:untitled2/utils/card_browser_utils.dart';
-import 'package:untitled2/utils/html_text_utils.dart';
-import 'package:untitled2/screens/learn_screen/widgets/filtered_deck_dialog.dart';
-import 'package:untitled2/screens/learn_screen/widgets/card_browser_options_menu.dart';
-import 'package:untitled2/screens/learn_screen/widgets/card_browser_bulk_actions.dart';
-import 'package:untitled2/screens/learn_screen/widgets/card_row_actions.dart';
-import 'package:untitled2/screens/learn_screen/widgets/decks_contextual_help.dart';
-import 'package:untitled2/services/card_tag_undo_store.dart';
-import 'package:untitled2/services/decks_help_hints_store.dart';
-import 'package:untitled2/widgets/card_preview_sheet.dart';
-import 'package:untitled2/widgets/swipe_action_backgrounds.dart';
-import 'package:untitled2/ui_elements/modern_page_widgets.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/data/decks_help_content.dart';
+import 'package:speakstack/models/flashcard_note_model.dart';
+import 'package:speakstack/models/flashcard_model.dart';
+import 'package:speakstack/screens/learn_screen/card_edit_screen.dart';
+import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/utils/card_browser_utils.dart';
+import 'package:speakstack/utils/html_text_utils.dart';
+import 'package:speakstack/screens/learn_screen/widgets/filtered_deck_dialog.dart';
+import 'package:speakstack/screens/learn_screen/widgets/card_browser_options_menu.dart';
+import 'package:speakstack/screens/learn_screen/widgets/card_browser_bulk_actions.dart';
+import 'package:speakstack/screens/learn_screen/widgets/card_row_actions.dart';
+import 'package:speakstack/screens/learn_screen/widgets/decks_contextual_help.dart';
+import 'package:speakstack/services/card_tag_undo_store.dart';
+import 'package:speakstack/services/decks_help_hints_store.dart';
+import 'package:speakstack/widgets/card_preview_sheet.dart';
+import 'package:speakstack/widgets/swipe_action_backgrounds.dart';
+import 'package:speakstack/ui_elements/modern_page_widgets.dart';
 
 class CardBrowserScreen extends StatefulWidget {
   const CardBrowserScreen({

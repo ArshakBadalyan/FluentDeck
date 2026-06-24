@@ -8,6 +8,7 @@ class SpeakingGameModel {
   final String systemPrompt;
   final String openingMessage;
   final String iconKey;
+  final bool isPremiumLocked;
 
   const SpeakingGameModel({
     required this.id,
@@ -17,6 +18,7 @@ class SpeakingGameModel {
     required this.systemPrompt,
     this.openingMessage = '',
     this.iconKey = '',
+    this.isPremiumLocked = false,
   });
 
   String get referenceKey => 'game_$slug';
@@ -39,6 +41,8 @@ class SpeakingGameModel {
       systemPrompt: attrs['systemPrompt'] as String? ?? '',
       openingMessage: attrs['openingMessage'] as String? ?? '',
       iconKey: attrs['iconKey'] as String? ?? '',
+      isPremiumLocked:
+          json['isPremiumLocked'] == true || attrs['isPremiumLocked'] == true,
     );
   }
 

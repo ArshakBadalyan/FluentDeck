@@ -6,6 +6,9 @@ class AppFeatureConfigModel {
   final int freePlacementRetakesPerMonth;
   final int freeDailyConversationTurns;
   final List<String> advancedLevelsRequiringPremium;
+  final int freeRolePlayPerCategory;
+  final List<String> freeTopicLevelGroups;
+  final bool gamesRequirePremium;
 
   const AppFeatureConfigModel({
     this.freeMaxSavedWords = 20,
@@ -15,10 +18,14 @@ class AppFeatureConfigModel {
     this.freePlacementRetakesPerMonth = 1,
     this.freeDailyConversationTurns = 10,
     this.advancedLevelsRequiringPremium = const ['B2', 'C1', 'C2'],
+    this.freeRolePlayPerCategory = 2,
+    this.freeTopicLevelGroups = const ['intermediate'],
+    this.gamesRequirePremium = false,
   });
 
   factory AppFeatureConfigModel.fromJson(Map<String, dynamic> json) {
     final advanced = json['advancedLevelsRequiringPremium'];
+    final topicGroups = json['freeTopicLevelGroups'];
     return AppFeatureConfigModel(
       freeMaxSavedWords: json['freeMaxSavedWords'] as int? ?? 20,
       freeMaxDecks: json['freeMaxDecks'] as int? ?? 3,
@@ -33,6 +40,12 @@ class AppFeatureConfigModel {
           advanced is List
               ? advanced.map((e) => e.toString()).toList()
               : const ['B2', 'C1', 'C2'],
+      freeRolePlayPerCategory: json['freeRolePlayPerCategory'] as int? ?? 2,
+      freeTopicLevelGroups:
+          topicGroups is List
+              ? topicGroups.map((e) => e.toString()).toList()
+              : const ['intermediate'],
+      gamesRequirePremium: json['gamesRequirePremium'] == true,
     );
   }
 }

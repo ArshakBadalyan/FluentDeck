@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import 'package:untitled2/services/clarity_screen_sync.dart';
+import 'package:speakstack/services/clarity_screen_sync.dart';
 
 class ClarityRouteObserver extends NavigatorObserver {
   void _apply(Route<dynamic>? route) {

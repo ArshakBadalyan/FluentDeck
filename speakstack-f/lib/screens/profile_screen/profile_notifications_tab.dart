@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'package:untitled2/app_colors.dart';
-import 'package:untitled2/localization/app_localizations.dart';
-import 'package:untitled2/models/speaking_preferences.dart';
-import 'package:untitled2/services/push_notification_analytics.dart';
-import 'package:untitled2/services/push_notification_service.dart';
-import 'package:untitled2/services/speaking_preferences_service.dart';
-import 'package:untitled2/ui_elements/modern_page_widgets.dart';
+import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/localization/app_localizations.dart';
+import 'package:speakstack/models/speaking_preferences.dart';
+import 'package:speakstack/services/push_notification_analytics.dart';
+import 'package:speakstack/services/push_notification_service.dart';
+import 'package:speakstack/services/speaking_preferences_service.dart';
+import 'package:speakstack/ui_elements/modern_page_widgets.dart';
 
 class ProfileNotificationsTab extends StatefulWidget {
   const ProfileNotificationsTab({super.key});

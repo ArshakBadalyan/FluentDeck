@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/app_colors.dart';
+import 'package:speakstack/app_colors.dart';
 
 import '../../models/speaking_game_model.dart';
 import '../../models/speaking_session_context.dart';
@@ -7,6 +7,7 @@ import '../../services/speaking_content_service.dart';
 import '../../services/speaking_session_service.dart';
 import '../../services/speaking_scores_service.dart';
 import '../../utils/speaking_item_icons.dart';
+import '../../utils/speaking_premium_gate.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingGamesTab extends StatefulWidget {
@@ -194,8 +195,15 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
             ),
             score: _scoreCache[game.referenceKey],
             featured: game.isFeatured,
+            isPremiumLocked: game.isPremiumLocked,
             selected: _selected?.referenceKey == game.referenceKey,
-            onTap: () => setState(() => _selected = game),
+            onTap: () {
+              if (game.isPremiumLocked) {
+                showSpeakingPremiumSnackBar(context);
+                return;
+              }
+              setState(() => _selected = game);
+            },
           );
         },
       ),
@@ -224,9 +232,9 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
         _buildSelectedInfo(),
         SpeakingStartButton(
           label: 'Start Game',
-          enabled: _selected != null,
+          enabled: _selected != null && !_selected!.isPremiumLocked,
           onPressed:
-              _selected == null
+              _selected == null || _selected!.isPremiumLocked
                   ? null
                   : () {
                     widget.onStart(
