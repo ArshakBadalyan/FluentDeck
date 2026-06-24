@@ -1,0 +1,59 @@
+{
+  "kind": "collectionType",
+  "collectionName": "flashcard_decks",
+  "info": {
+    "singularName": "flashcard-deck",
+    "pluralName": "flashcard-decks",
+    "displayName": "Flashcard Deck",
+    "description": "User flashcard decks including default Saved words and From speaking."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "deckSlug": {
+      "type": "string",
+      "required": true
+    },
+    "isDefault": {
+      "type": "boolean",
+      "default": false
+    },
+    "description": {
+      "type": "text"
+    },
+    "isFiltered": {
+      "type": "boolean",
+      "default": false
+    },
+    "filterQuery": {
+      "type": "json",
+      "default": null
+    },
+    "parentDeck": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::flashcard-deck.flashcard-deck"
+    },
+    "deckOptions": {
+      "type": "json",
+      "default": null
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "flashcards": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::flashcard.flashcard",
+      "mappedBy": "deck"
+    }
+  }
+}

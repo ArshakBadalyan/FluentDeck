@@ -1,0 +1,52 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_notes",
+  "info": {
+    "singularName": "user-note",
+    "pluralName": "user-notes",
+    "displayName": "User Note",
+    "description": "Personal vocabulary notes linked to catalog entries or conversation."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "word": {
+      "type": "string",
+      "required": true
+    },
+    "definition": {
+      "type": "text"
+    },
+    "exampleSentence": {
+      "type": "text"
+    },
+    "tags": {
+      "type": "json",
+      "default": []
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": ["catalog", "speaking", "manual"],
+      "default": "manual",
+      "required": true
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "vocabularyEntry": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::vocabulary-entry.vocabulary-entry"
+    },
+    "flashcards": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::flashcard.flashcard",
+      "mappedBy": "userNote"
+    }
+  }
+}

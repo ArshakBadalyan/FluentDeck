@@ -1,0 +1,1 @@
+void syncClarityScreenName(String name) {}

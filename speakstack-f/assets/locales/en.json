@@ -1,0 +1,1567 @@
+{
+  "top-bar": {
+    "questions": "questions",
+    "today-goal": "Today's Goal",
+    "notifications": "Notifications",
+    "explain-one-part-hint": "Replay screen tips for this page"
+  },
+  "messages": {
+    "slow-connection": "It looks like your internet connection is slow. Please be patient.",
+    "stable-connection": "Your internet is stable now, let's continue",
+    "no-connection-title": "No Connection",
+    "no-connection-text": "You have internet connection problem, we need to wait until it's stable."
+  },
+  "app-update": {
+    "force-title": "Update required 📲✨",
+    "force-body": "This version can’t connect properly anymore — we need you on the latest build. Tap Update and you’ll get the newest EnglishApp: faster and better than ever! 🚀",
+    "soft-title": "New update available",
+    "soft-default-body": "Cool new stuff is waiting — features, tweaks, and good vibes. Update when you can and keep improving your English. 🔥✨",
+    "update-action": "Update",
+    "later-action": "Later"
+  },
+  "buttons": {
+    "skip": "Skip",
+    "send": "Answer",
+    "next": "Next",
+    "description": "solution",
+    "wrong-answer": "wrong answer",
+    "save": "save",
+    "start": "Start",
+    "close": "Close",
+    "ok": "OK"
+  },
+  "inputs": {
+    "E-mail-address": "E-mail address",
+    "name": "Name",
+    "surname": "Surname",
+    "nickname": "Nickname",
+    "date-of-birth": "Date of birth",
+    "country": "Country",
+    "your-country": "Which country do you live?",
+    "city": "City",
+    "your-city": "In which city do you live?",
+    "educational-institution": "Educational institution",
+    "your-educational-institution": "What's the name of your school?",
+    "class/course": "Class",
+    "your-class/course": "Your class (e.g. 7a or 7.1)",
+    "class-error": "Please first fill your school name",
+    "E-mail": "E-mail",
+    "E-mail-optional": "E-mail (for password recovery)",
+    "E-mail-nickname": "E-mail or Nickname",
+    "your-email": "Your email",
+    "paste-email": "Paste the code from the email",
+    "password": "Password",
+    "enter-password": "Enter your password",
+    "enter-password-again": "Enter your password once again",
+    "confirm-password": "confirm password",
+    "new-password": "New password",
+    "confirm-new-password": "Confirm new password",
+    "enter-the-keyword": "Enter the keyword",
+    "enter-the-result": "Enter the result"
+  },
+  "popups": {
+    "leave-page-popup": {
+      "first-title": "Are you sure you want",
+      "second-title": "to leave this page ?",
+      "first-text": "If you leave this page your edited",
+      "second-text": "information will be removed",
+      "save": "Save",
+      "leave": "Leave"
+    },
+    "delete-page-popup": {
+      "first-title": "Are you sure you want",
+      "second-title": "to delete your account ?",
+      "first-text": "If you delete your account now",
+      "second-text": "you will not be able to revert this action, all your data will be deleted forever.",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "success-message-popup": {
+      "title": "Ready",
+      "got-it": "Got it"
+    },
+    "input-popup": {
+      "title": "The final result",
+      "error": "Type the numbers only"
+    }
+  },
+  "over": {
+    "points": "points",
+    "week": "week",
+    "month": "month",
+    "next": "next",
+    "prev": "prev",
+    "loading": "Loading",
+    "search": "search",
+    "class": "Class",
+    "no-search-results": "Unfortunately, there are no search results for your request. Please change your request or choose from the list below."
+  },
+  "home": {
+    "welcome": "Welcome",
+    "play-game": "Play the game",
+    "improve-your-skills": "improve your skills",
+    "be-the-first": "Be the first in the World",
+    "start-playing": "Start playing"
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "get-started": "Get started",
+    "welcome": {
+      "title": "Welcome to EnglishApp!",
+      "description": "Practice math, compete with friends and track your progress – all in one app.",
+      "bullet-1": "Thousands of exercises for grades 1 to 12",
+      "bullet-2": "Top lists and duels with your classmates",
+      "bullet-3": "Solutions and explanations for every exercise"
+    },
+    "school": {
+      "title": "Find your school",
+      "description": "Add your school so we can suggest classmates later and you'll appear in your school's leaderboard.",
+      "placeholder": "Your school's name",
+      "hint": "Optional. You can change the school later in your profile.",
+      "confirmation": "We'll automatically link your account to \"{school}\" after sign-up.",
+      "save-failed": "We couldn't automatically save your school. You can add it later in your profile."
+    },
+    "class": {
+      "title": "Which grade are you in?",
+      "description": "We'll show you exercises that match your level right from the start.",
+      "hint": "Optional. You can change your class anytime in your profile.",
+      "grade-format": "Grade {n}"
+    },
+    "themes": {
+      "title": "Try out a topic",
+      "description": "Tap a topic and solve {n} quick exercises.",
+      "pick-class": "Pick your grade first.",
+      "loading": "Loading topics…",
+      "empty": "There are no topics available for your grade yet.",
+      "error": "Topics couldn't be loaded. Please try again later."
+    },
+    "exercise": {
+      "progress": "Exercise {current} of {total}",
+      "submit": "Check",
+      "next": "Next",
+      "loading": "Loading exercise…",
+      "no-questions": "There are no exercises for this topic yet.",
+      "load-error": "Couldn't load the exercise.",
+      "feedback-correct": "Correct!",
+      "feedback-wrong": "Almost — the correct answer is highlighted.",
+      "complete-title": "Great job!",
+      "complete-description": "Sign up free to save your progress and keep practicing together with your friends.",
+      "register-cta": "Sign up now"
+    },
+    "apply-dialog": {
+      "title": "Apply your onboarding info?",
+      "description": "We noticed your profile is still missing a few details. Want to use what you entered during onboarding?",
+      "apply": "Apply",
+      "skip": "No, thanks"
+    }
+  },
+  "login-register": {
+    "sign-in": "Sign In",
+    "sign-up": "Sign Up",
+    "registration": "Registration",
+    "only-nickname": "Only nickname",
+    "remember-me": "Remember me",
+    "forgot-password": "Forgot Password ?",
+    "sign-in-using": "Sign In using",
+    "sign-up-using": "Sign Up using",
+    "google": "Google",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "apple": "Apple",
+    "dont-have-account": "Don't have an account?",
+    "already-have-account": "Already have an account?",
+    "user-cancelled-login": "User cancelled login or did not fully authorize.",
+    "user-cancelled-register": "User cancelled register or did not fully authorize.",
+    "account-type-student": "Student",
+    "account-type-teacher": "Teacher",
+    "email-invalid": "Enter a valid email address.",
+    "school-email": "School email",
+    "school-email-hint": "Use your official school address (not Gmail, Outlook, etc.).",
+    "school-email-checking": "Checking school email…",
+    "school-email-valid": "School email recognized.",
+    "school-email-invalid": "Enter a valid school email.",
+    "school-email-public": "Personal email providers are not allowed. Use your school address.",
+    "school-email-unknown": "This domain is not linked to a school yet.",
+    "school-email-pick-school": "Select your school",
+    "school-email-pick-school-required": "Please select your school to continue.",
+    "teacher-invite-code": "Teacher invite code",
+    "teacher-invite-code-hint": "Ask your school for the annual teacher code (one code per school per year)."
+  },
+  "teacher": {
+    "badge": "Teacher",
+    "approval": {
+      "pending-title": "Waiting for approval",
+      "pending-body": "Your school or a platform administrator must approve your teacher account before you can create classes or view student progress. You can still sign in and check this screen."
+    },
+    "nav": {
+      "classes": "Classes"
+    },
+    "home": {
+      "school-label": "School"
+    },
+    "classes": {
+      "create-title": "Create class",
+      "create-cta": "Create class",
+      "name-label": "Class name",
+      "grade-label": "Grade (optional)",
+      "empty-title": "No classes yet",
+      "empty-body": "Create a class and share the invite code with your students.",
+      "list-subtitle": "{count} students",
+      "list-subtitle-grade": "Grade {grade} · {count} students",
+      "detail-title": "Class",
+      "invite-code-label": "Invite code",
+      "invite-hint": "Students enter this code under Profile → Join class.",
+      "code-copied": "Invite code copied",
+      "students-title": "Students ({count})",
+      "no-students": "No students have joined yet. Share the invite code.",
+      "regenerate-code": "Generate new code",
+      "archive-title": "Archive class?",
+      "archive-body": "Students can no longer join. You can create a new class anytime.",
+      "archive-confirm": "Archive class",
+      "actions": {
+        "cancel": "Cancel",
+        "save": "Create"
+      },
+      "pending-join-title": "Join requests ({count})",
+      "leave-pending-title": "Leave requests ({count})",
+      "accept-join": "Accept",
+      "reject-join": "Reject",
+      "accept-leave": "Approve leave",
+      "deny-leave": "Deny leave",
+      "join-accepted": "Student accepted.",
+      "join-rejected": "Join request rejected.",
+      "leave-approved": "Student removed from class.",
+      "leave-denied": "Leave request denied.",
+      "remove-member": "Remove",
+      "remove-member-title": "Remove member?",
+      "remove-member-body": "This student will be removed from the class.",
+      "member-removed": "Member removed.",
+      "tab-overview": "Overview",
+      "tab-roster": "Students",
+      "tab-analytics": "Progress",
+      "tab-work": "Assignments",
+      "tab-reports": "Reports",
+      "pending-badge": "{count} pending",
+      "search-label": "Search by title",
+      "title-filter-label": "Filter by title",
+      "title-filter-all": "All classes",
+      "title-filter-clear": "Clear",
+      "title-filter-selected": "{count} selected",
+      "title-filter-done": "Done",
+      "sort-label": "Sort by",
+      "sort-name": "Name",
+      "sort-grade": "Grade",
+      "sort-students": "Students",
+      "filter-empty": "No classes match your filters."
+    },
+    "analytics": {
+      "load-error": "Could not load class analytics.",
+      "range-week": "7 days",
+      "range-month": "30 days",
+      "students": "Students in class",
+      "assignments": "Active assignments",
+      "total-answers": "Assignment answers (period)",
+      "avg-per-day": "Avg. answers per day",
+      "activity-title": "Daily assignment activity",
+      "no-assignments-hint": "No assignments yet — progress will appear here once you assign work.",
+      "assignments-progress-title": "Assignment completion",
+      "assignments-progress-empty": "No assignments in this class yet.",
+      "assignment-progress-subtitle": "{studentsDone}/{studentsTotal} students finished · {exercisesDone}/{exercisesTotal} exercises done",
+      "weak-topics-title": "Topics needing attention",
+      "weak-topics-empty": "No weak topics in this period.",
+      "weak-subtitle": "{done} of {total} students completed"
+    },
+    "assignments": {
+      "section-title": "Assignments",
+      "create-title": "New assignment",
+      "create-cta": "Assign topic",
+      "title-label": "Title",
+      "title-required": "Title is required.",
+      "topic-label": "Topic (category)",
+      "topics-label": "Topics (categories)",
+      "topics-add": "Add topics",
+      "topics-empty-hint": "No topics selected yet.",
+      "topics-loading": "Loading topics…",
+      "topics-picker-title": "Select topics",
+      "topics-required": "Please select at least one topic.",
+      "type-label": "Type",
+      "type-homework": "Homework",
+      "type-classwork": "Classwork",
+      "enforcement-label": "Mode",
+      "enforcement-info": "Informational (no lock)",
+      "enforcement-lock": "Enforced (lock topic until done)",
+      "due-label": "Due date",
+      "created": "Assignment created.",
+      "empty": "No assignments yet.",
+      "no-topics-in-class": "No topics in this grade range yet.",
+      "topics-section-other": "Other topics",
+      "no-classes-hint": "Create a class first to assign work.",
+      "progress-subtitle": "{percent}% exercises ({done}/{total})",
+      "student-progress-subtitle": "{percent}% students finished ({done}/{total})",
+      "exercise-progress-subtitle": "{percent}% exercises ({done}/{total})",
+      "overdue": "Overdue",
+      "scope-label": "What to assign",
+      "scope-whole": "Entire topic",
+      "scope-exercises": "Selected exercises",
+      "exercises-label": "Exercises",
+      "exercises-loading": "Loading exercises…",
+      "exercises-empty": "No exercises in this topic.",
+      "exercises-select-hint": "Select at least one exercise.",
+      "exercises-selected-count": "{count} selected",
+      "target-whole": "Entire topic",
+      "target-exercises": "{count} exercises",
+      "detail-title": "Assignment details",
+      "targets-title": "Topics & exercises",
+      "updated": "Assignment updated.",
+      "archived": "Assignment archived.",
+      "archive-title": "Archive assignment?",
+      "archive-body": "Students will no longer see this assignment. Progress history is kept.",
+      "archive-confirm": "Archive",
+      "load-error": "Could not load assignment.",
+      "save": "Save",
+      "topic-required": "Please select a topic."
+    },
+    "reports": {
+      "section-title": "Reports",
+      "weekly-toggle": "Weekly email report",
+      "weekly-hint": "Every Monday morning to your school email.",
+      "send-now": "Send report now",
+      "sent": "Report sent to your email."
+    },
+    "roster": {
+      "sort-label": "Sort by",
+      "sort-last-active": "Last active",
+      "sort-points": "Points",
+      "sort-username": "Name",
+      "row-subtitle": "{points} pts · Last active {lastActive}",
+      "last-active-days": "{days}d ago",
+      "inactive-badge": "Inactive",
+      "empty-title": "No students yet",
+      "empty-body": "Share your invite code so students can join this class.",
+      "copy-code-cta": "Copy invite code",
+      "search-label": "Search student",
+      "assignment-filter-label": "Filter by assignment",
+      "assignment-filter-all": "All students",
+      "completion-all": "All",
+      "completion-incomplete": "Incomplete",
+      "completion-complete": "Done",
+      "filter-empty": "No students match your filters.",
+      "assignment-done": "Done",
+      "assignment-open": "Open",
+      "snapshot-error": "Could not load student snapshot.",
+      "snapshot-points": "Experience points",
+      "snapshot-topics": "Topics completed",
+      "snapshot-today": "Today's activity",
+      "snapshot-today-breakdown": "{correct} correct · {wrong} wrong · {skipped} skipped",
+      "snapshot-goal": "Daily goal",
+      "snapshot-goal-progress": "{done} / {goal} correct today",
+      "goal-met": "Goal met",
+      "goal-not-met": "Not yet",
+      "snapshot-week-title": "Last 7 days",
+      "assignments-section": "Assigned tasks",
+      "assignments-select": "Select assignment",
+      "assignments-none": "No assignments in this class yet.",
+      "assignments-progress": "{done} / {total} exercises answered",
+      "answer-correct": "Correct",
+      "answer-wrong": "Wrong",
+      "answer-skipped": "Skipped",
+      "answer-unanswered": "Not answered",
+      "student-answer": "Student answer",
+      "solution-before-answer": "Viewed solution before answering",
+      "correct-answer": "Correct answer",
+      "class-task-stats-title": "Class task progress",
+      "class-tasks-assignments": "Assignments completed",
+      "class-tasks-assignments-hint": "Finished vs total assigned in this class",
+      "class-tasks-exercises": "Class exercises",
+      "class-tasks-exercises-hint": "{correct} correct · {wrong} wrong · {open} not answered",
+      "class-tasks-correct": "Correct",
+      "class-tasks-wrong": "Wrong",
+      "class-tasks-solution-peeks": "Early solution views",
+      "class-tasks-solution-peeks-hint": "Times this student opened a solution before answering assigned exercises",
+      "assignments-dropdown-solution-peeks-count": "{count} early solution views",
+      "assignments-solution-peeks": "{count} early solution views on this task"
+    }
+  },
+  "student": {
+    "join-class": {
+      "section-title": "My classes",
+      "title": "Join class",
+      "code-label": "Invite code",
+      "submit": "Join class",
+      "success": "You joined the class.",
+      "pending": "Request sent — waiting for teacher approval.",
+      "already-member": "You are already in this class.",
+      "leave-pending": "Leave request sent — waiting for teacher approval.",
+      "status-pending-join": "Pending approval",
+      "status-active": "Active member",
+      "status-leave-pending": "Leave pending",
+      "none": "You are not in any class yet.",
+      "teacher": "Teacher: {name}",
+      "leave": "Request to leave",
+      "leave-confirm-title": "Request to leave?",
+      "leave-confirm-body": "Your teacher must approve before you leave the class."
+    },
+    "assignments": {
+      "banner-title": "Assigned by your teacher",
+      "overdue": "overdue",
+      "locked-hint": "Some topics are locked until you finish required homework.",
+      "topic-locked": "Complete your assigned homework for this topic first.",
+      "progress-exercises": "{done}/{total} exercises done",
+      "modal-title": "Your assignments",
+      "modal-empty": "No open assignments.",
+      "icon-tooltip": "Teacher assignments",
+      "assigned-chip": "Assigned",
+      "view-all": "View all assignments",
+      "banner-summary": "{count} open — open Practice → Teacher tasks",
+      "practice-tab": "Teacher tasks",
+      "practice-empty-title": "No teacher assignments",
+      "practice-empty-body": "When your teacher assigns homework, it will appear here.",
+      "practice-intro": "View and work through assignments from your teacher.",
+      "class-tab-all": "All",
+      "class-filter-empty": "No assignments for this class yet.",
+      "filter-label": "Show",
+      "filter-all": "All",
+      "filter-completed": "Completed",
+      "filter-not-completed": "Not completed",
+      "filter-in-progress": "In progress",
+      "filter-has-wrong": "Has wrong answers",
+      "sort-label": "Sort by",
+      "sort-last-added": "Last added",
+      "sort-title-asc": "Title (A–Z)",
+      "sort-not-completed-first": "Not completed first",
+      "sort-scores": "Most correct",
+      "sort-fails": "Most wrong",
+      "sort-due-soonest": "Due date soonest",
+      "sort-overdue-first": "Overdue first",
+      "sort-progress": "Progress (highest first)",
+      "filter-sort-empty": "No assignments match this filter.",
+      "start-topic": "Start topic",
+      "start": "Start",
+      "due-label": "Due",
+      "complete-back": "Back to Teacher tasks",
+      "continue-task": "Continue assignment",
+      "flow-progress": "Working on assignment",
+      "flow-loading": "Loading next exercise…",
+      "status-summary": "{correct} correct · {wrong} wrong",
+      "status-correct": "Correct",
+      "status-wrong": "Wrong",
+      "status-skipped": "Skipped",
+      "status-open": "Not answered yet",
+      "complete-title": "Assignment complete!",
+      "complete-total": "Total exercises",
+      "complete-correct": "Correct",
+      "complete-wrong": "Wrong",
+      "tab-unlocked": "Teacher tasks is now available under Practice.",
+      "open-tab": "Open"
+    }
+  },
+  "forgot-password": {
+    "forgot-password": "Forgot Password ?",
+    "send-email": "Send email",
+    "back-to-start": "Back to start page"
+  },
+  "reset-password": {
+    "reset-password": "Reset Password",
+    "error-msg": "Password and password confirmation should match",
+    "back-to-login": "Back to login"
+  },
+  "activity": {
+    "Activity": "Activity",
+    "tabs": {
+      "My Status": "My Status",
+      "Top List": "Top List",
+      "My Answers": "My Answers",
+      "Progress": "Progress"
+    },
+    "my-status": {
+      "set-everyday-goal": "Set everyday goal",
+      "daily-goal-placeholder": "Choose a daily goal",
+      "daily-goal-card-hint": "Pick a number that feels doable — you can change it anytime.",
+      "last-quiz": "Last Quiz",
+      "experience-points": "Experience points",
+      "last-update": "Last update:",
+      "go-to-topics": "Start your journey to earn the points – go to the Topics",
+      "past-categories": "Past categories",
+      "categories-were-answered": "Categories were answered",
+      "you-are-in": "You are in EnglishApp",
+      "welcome-app": "Welcome to EnglishApp! 👋",
+      "no-goal": "No goal",
+      "today-activity": "Today’s activity",
+      "wrong": "Wrong",
+      "skipped": "Skipped",
+      "correct": "Correct",
+      "check-progress": "Check Progress",
+      "goal-set": "Your everyday goal has been set",
+      "goal-cleared": "Your daily goal has been cleared."
+    },
+    "top-list": {
+      "lists": [
+        {
+          "title": "In your Class",
+          "fieldName": "class"
+        },
+        {
+          "title": "In your School",
+          "fieldName": "school"
+        },
+        {
+          "title": "In your City",
+          "fieldName": "city"
+        },
+        {
+          "title": "In your Country",
+          "fieldName": "country"
+        },
+        {
+          "title": "In World",
+          "fieldName": "world"
+        }
+      ],
+      "place": "place",
+      "please": "Please",
+      "update": "update",
+      "your": "your",
+      "from": "from",
+      "people": "people",
+      "back-to-the-top-list": "Back to the Top List",
+      "there-is-no-any-user": "There is no any user with this username"
+    },
+    "my-answers": {
+      "summary": "Summary",
+      "questions-passed": "questions passed",
+      "of": "of",
+      "correct-answers": "correct answers",
+      "wrong-answers": "wrong answers",
+      "skipped-answers": "skipped answers"
+    },
+    "progress": {
+      "you-have-registered": "You have registered on"
+    }
+  },
+  "topics": {
+    "topics": "Topics",
+    "previous": "Previous",
+    "next": "Next",
+    "classes": "classes",
+    "grades": {
+      "1-2": "Grade 1-2",
+      "2-3": "Grade 2-3",
+      "3-4": "Grade 3-4",
+      "4-5": "Grade 4-5",
+      "5-6": "Grade 5-6",
+      "6-7": "Grade 6-7",
+      "7-8": "Grade 7-8",
+      "8-9": "Grade 8-9",
+      "9-10": "Grade 9-10",
+      "10-11": "Grade 10-11",
+      "11-12": "Grade 11-12"
+    }
+  },
+  "question": {
+    "question": "question",
+    "continue": "Continue",
+    "point": "point",
+    "start-practice": "Start Practice",
+    "back-to-categories": "Back to categories",
+    "train-topic-in-remix": "Train this topic in Themen-Mix",
+    "right-answered": "right answered",
+    "check-skipped": "Check skipped",
+    "single-skipped-text": "You have passed most of the topic but you have skipped 1 question. You can check it one more time or leave it for now.",
+    "leave-for-now": "Leave for now",
+    "your-score-on-this-topic": "Your score on this topic",
+    "will-be-update": "You have finished this topic. Your achievements will be updated soon.",
+    "skipped-first-text": "You have passed most of the topic but you have skipped",
+    "skipped-second-text": "questions. You can check them one more time or leave them for now.",
+    "exercise-solution": "Exercise solution",
+    "step-of": "Step {current} of {total}",
+    "next-mc-step": "Next step",
+    "tap-to-continue": "Tap anywhere to continue",
+    "back-step": "Back",
+    "wrong-answer-title": "Incorrect",
+    "wrong-answer-hint": "Keep going — you will get the next one.",
+    "second-answer-wrong-retry": "That result is not correct yet. You have one more try.",
+    "lesson-material": "Study material",
+    "wrong-solution-coach-1": "Peek at the exercise solution!",
+    "wrong-solution-coach-2": "Open the solution — see how it’s done.",
+    "wrong-solution-coach-3": "One tap for the solution.",
+    "wrong-solution-coach-4": "The worked solution shows the way.",
+    "wrong-solution-coach-5": "The solution can nudge you forward.",
+    "wrong-solution-coach-6": "Quick look at the method?",
+    "wrong-solution-coach-7": "Try the exercise solution.",
+    "wrong-solution-coach-8": "Worth a quick check.",
+    "wrong-solution-coach-9": "Every step is in there.",
+    "wrong-solution-coach-10": "Grab the steps here.",
+    "no-solution": "Sorry, we don't have solution right now.",
+    "multiselect-hint": "More than one answer is correct. Select all that apply.",
+    "whiteboard-button": "Whiteboard",
+    "report-flag-tooltip": "Report a problem",
+    "report-title": "Report a Problem",
+    "report-option-unreadable": "Exercise or answer options are not readable.",
+    "report-option-no-correct": "There is no correct answer.",
+    "report-option-marked-wrong": "The correct answer is marked as incorrect.",
+    "report-option-topic-mismatch": "The exercise doesn't match the topic.",
+    "report-option-several-correct": "Several answers are correct.",
+    "report-option-other": "Other.",
+    "report-details-hint": "e.g. There's a typo…",
+    "report-submit": "SUBMIT",
+    "report-cancel": "CANCEL",
+    "report-sent": "Thank you. Your report has been sent.",
+    "report-send-error": "Could not send your report. Please try again later.",
+    "report-validation": "Select at least one option or add a short note.",
+    "report-sending": "Sending…",
+    "lightbox-choose-answer": "Choose this answer",
+    "lightbox-selected": "Selected"
+  },
+  "practice": {
+    "practice": "Practice",
+    "player-vs-machine": "Player VS Machine",
+    "player-vs-friend": "Player VS Friend",
+    "play-with-friends": "Player VS Player",
+    "can-practice-with-friends": "You can practice with a student\nwho has a similar rating",
+    "practice-with-friends-questions": "Questions quantity: 10-30",
+    "try-again": "Try again",
+    "practice-with-friends-load": "We are searching for your opponent \n Please wait a bit",
+    "your-score": "Your score:",
+    "machine-score": "Machine score:",
+    "nickname-score": "{nickname} score:",
+    "friend-score": "Friend score:",
+    "friend-think": "is thinking now...",
+    "answered-all-text": "You have answered all questions",
+    "opponent-default": "Opponent",
+    "mode-scores": {
+      "10": "+10, +5, -2",
+      "20": "+20, +10, -4",
+      "30": "+30, +15, -6"
+    },
+    "questions-count": "{count} questions",
+    "your-answer": "Your answer",
+    "popup-go-topic": {
+      "Oops": "Oops!",
+      "first-text": "You need to answer at least",
+      "second-text": "questions to play against the machine. Please continue your learning on the Topics page for now.",
+      "go-to-topics": "Go to topics"
+    },
+    "no-players-popup": {
+      "title": "There is no available Player",
+      "text": "Sorry, there is no available Player at this moment 🤷‍♀️. Please try later.",
+      "go-to-practice": "Go to practice page",
+      "try-again": "Try Again"
+    },
+    "left-by-rival-popup": {
+      "title": "Oops!",
+      "text": "Your opponent has left the game. You are the winner."
+    },
+    "leave-page-popup": {
+      "first-text": "Your progress will be lost and you will lose",
+      "stay": "Stay"
+    },
+    "finish-game-popup": {
+      "save-btn-text": "New Game",
+      "leave-btn-text": "My Status",
+      "win": {
+        "title": "You have won",
+        "text": "You got {points} points"
+      },
+      "draw": {
+        "title": "You have played a draw",
+        "text": "You got {points} points"
+      },
+      "lose": {
+        "title": "You have lost",
+        "text": "You lost {points} points"
+      }
+    },
+    "result-win": "Won",
+    "result-draw": "Draw",
+    "result-lose": "Lost",
+    "remix": {
+      "tab-label": "Topics mix",
+      "session-title": "Mixed topics",
+      "pick-intro-title": "Choose topics you want to practice",
+      "pick-intro-subtitle": "Only topics you’ve finished under Topics are listed below. Select one or more, then tap Continue.",
+      "search-hint": "Search completed topics…",
+      "empty-class": "No completed topics in this class.",
+      "none-completed": "Finish at least one topic under Themen to practice here.",
+      "no-classes": "Classes could not be loaded.",
+      "load-error": "Something went wrong while loading. Pull to refresh or try again.",
+      "exercises-count": "Number of exercises: {count}",
+      "selected-count-singular": "{n} topic",
+      "selected-count-plural": "{n} topics",
+      "continue-step": "Continue",
+      "step2-title": "Selected topics",
+      "remove-topic": "Remove topic",
+      "search-empty": "No topics match your search.",
+      "class-unknown": "Class {id}",
+      "start": "Start practice",
+      "load-questions-error": "Could not load exercises. Check your connection or topic selection.",
+      "summary-score-label": "Your score for this round",
+      "summary-correct-wrong": "Correct: {correct} · Wrong: {wrong}",
+      "summary-skipped": "Skipped: {count}",
+      "summary-session-size": "Exercises in this round: {total}",
+      "done": "Done"
+    }
+  },
+  "push-prompt": {
+    "invite-title-20": "20 tasks – nice work! 💪",
+    "invite-body-20": "Want chill reminders when there’s something new or your daily goal is waiting? We’ll show the system popup next – you decide!",
+    "invite-title-200": "200 done – you’re on fire! 🚀",
+    "invite-body-200": "That’s a lot of reps! If you want, we’ll send occasional motivation & news by push. Totally optional. ✨",
+    "yes-activate": "Yes, let’s go!",
+    "not-now": "Maybe later",
+    "opened-settings-hint": "Cool! In settings, turn on notifications for EnglishApp and you’re set. ⚙️",
+    "native-denied-hint": "No worries – you can enable push anytime under Profile → Notifications. 😊",
+    "banner-title": "Turn on push?",
+    "banner-subtitle": "Get friendly tips & reminders – one tap, then the system dialog. 🔔",
+    "banner-cta": "Enable now",
+    "thank-you": "Thank you! 🎉 You’re in – we’ll only ping you when it’s worth it."
+  },
+  "screen-tutorial": {
+    "sheet": {
+      "this-page-title": "This page",
+      "this-page-subtitle": "Only areas on the screen you’re on. For navigation, header controls, and the full list — open Profile → About → Show tips.",
+      "all-tips-title": "Screen tips",
+      "all-tips-subtitle": "Everything we explain, including the bottom navigation and purple header.",
+      "no-page-tips": "There are no quick tips listed for this area."
+    },
+    "common": {
+      "skip": "Skip",
+      "next": "Next",
+      "done": "Done",
+      "back": "Back",
+      "step_counter": "Step {current} of {total}",
+      "accessibility_coach": "Guided tour overlay"
+    },
+    "shared_app_chrome": {
+      "bottom_nav": {
+        "title": "Main sections",
+        "body": "Use the bottom bar to switch between Activity, Topics, Practice, and Profile. The tab you’re on stays selected until you pick another icon."
+      },
+      "sub_tabs": {
+        "title": "Top tab strip",
+        "body": "Under the purple header, these tabs change what you see on this screen—status vs. leaderboards, class levels, practice modes, or profile areas—without leaving the main section."
+      },
+      "today_goal": {
+        "title": "Today’s goal in the header",
+        "body": "The line under the screen title shows your daily question target and how it lines up with your account goal."
+      },
+      "notifications": {
+        "title": "Notification drawer",
+        "body": "Tap the bell to open the side panel with your recent notifications and updates."
+      }
+    },
+    "shared_practice": {
+      "sub_tabs": {
+        "title": "Practice modes",
+        "body": "Switch between Remix (mixed topics), versus the machine, or versus a friend. Each tab uses the same header but different actions below."
+      }
+    },
+    "shared_profile": {
+      "main_nav": {
+        "title": "Profile in the bottom bar",
+        "body": "Open Profile from the bottom navigation to manage account, alerts, security, and app information."
+      },
+      "sub_tabs": {
+        "title": "Profile sections",
+        "body": "These tabs split long settings into Account, Notifications, Security, About, sharing, and Sound so you can jump straight to what you need."
+      }
+    },
+    "activity_status": {
+      "s1_title": "More activity stats",
+      "s1_body": "Top List, My Answers and Progress: rankings, answer breakdowns and charts for your progress and performance.",
+      "s2_title": "Daily goal",
+      "s2_body": "Set a minimum number of exercises to solve each day—helps you stay consistent."
+    },
+    "activity_top_list": {
+      "complete_title": "Leaderboards",
+      "complete_body": "Check your position within your Country, City, School or Class — tap each highlighted row.",
+      "incomplete_title": "Profile incomplete",
+      "incomplete_body": "{field} is still missing. Open Profile → Account, fill Country, City, School and Class (anything missing), then save — after that you can open each list here to see your rank."
+    },
+    "activity_answers": {
+      "s4_title": "Answer overview",
+      "s4_body": "Each gauge shows totals, correctness, skips, or mistakes aggregated from your practice history."
+    },
+    "activity_progress": {
+      "s3_title": "Week vs. month",
+      "s3_body": "Toggle the period at the top, then swipe the arrows later to revisit older weeks or months.",
+      "s4_title": "Activity chart",
+      "s4_body": "Bars encode how intensely you studied each day. Tap a spike to inspect the breakdown for that day."
+    },
+    "topics_browse": {
+      "s2_title": "Your class",
+      "s2_body": "Pick your class tab under the purple header to see the topics for that grade.",
+      "s3_title": "Search",
+      "s3_body": "Use search to find a topic by name.",
+      "s5_title": "Topic rows",
+      "s5_body": "Find each topic by checking the example exercise. Check “Lesson” if it’s available."
+    },
+    "learning_exercise": {
+      "s1_title": "Exercise (question)",
+      "s1_body": "Read the stem here—sometimes a question has extra parts; use the dots or swipe when they appear.",
+      "s2_title": "Answers",
+      "s2_body": "Tap an option (or several if checkboxes appear) and use the yellow Send button below to submit. After sending, colours show correct, incorrect, or ruled-out choices.",
+      "s3_title": "Worked solution",
+      "s3_body": "When you’re stuck or after a wrong answer, tap “Exercise solution”—it opens step-by-step help in a sheet."
+    },
+    "practice_remix_intro": {
+      "s1_title": "Topics mix (Remix)",
+      "s1_body": "Here you combine exercises from topics you have already finished in Themen.",
+      "s2_title": "Unlock the picker first",
+      "s2_body": "Finish at least two topics under Topics first. Then this tab reveals search, the list grouped by class, and Continue to build your mix."
+    },
+    "practice_remix": {
+      "s3_title": "Search past topics",
+      "s3_body": "Type to filter classes you already completed so you can combine them into a remix round.",
+      "s4_title": "Continue",
+      "s4_body": "After selecting at least one topic, tap Continue to review your choices and set how many exercises you want.",
+      "s5_title": "Topics by school class",
+      "s5_body": "The list groups topics under class headings—scroll through the sections to mix areas from another grade or track."
+    },
+    "practice_remix_configure": {
+      "s1_title": "Number of exercises",
+      "s1_body": "Drag the slider to choose how many exercises this remix round should include. Tap Start practice when you’re ready."
+    },
+    "practice_vs_machine": {
+      "s3_title": "Pick a round length",
+      "s3_body": "Each row starts an AI duel with 10, 20, or 30 questions. Your score summary appears when the round ends."
+    },
+    "practice_vs_player": {
+      "s3_title": "Start a friend duel",
+      "s3_body": "Tap Start, pick how many questions to sync, and MatcheApp pairs you for a live-style versus session."
+    },
+    "profile_account": {
+      "s3_title": "Account form",
+      "s3_body": "Scroll to update email, name, school, class, and language. Save applies everything at once; destructive actions sit at the bottom."
+    },
+    "profile_notifications": {
+      "s3_title": "Push master switch",
+      "s3_body": "Flip the toggle to opt in or out of OneSignal pushes. Status text beneath reflects the live subscription state."
+    },
+    "profile_security": {
+      "s3_title": "Password flow",
+      "s3_body": "Enter and confirm a new password, then hit Save. Visibility icons help you verify typing on small keyboards."
+    },
+    "profile_about": {
+      "s3_title": "About list",
+      "s3_body": "Open legal info, licences, release notes, or store reviews from these rows.",
+      "s4_title": "Screen tips",
+      "s4_body": "Use “Show tips” for the full tip list. Admins also see “Reset all screen tips” on this About screen to replay every guided tour from scratch."
+    },
+    "profile_share": {
+      "s3_title": "Parent email slots",
+      "s3_body": "Add up to four guardian addresses so reports can be shared responsibly. Saved entries show first; empty fields accept new mail."
+    },
+    "profile_sound": {
+      "s3_title": "Sound & volume",
+      "s3_body": "Toggle effects for feedback sounds and drag the slider to set loudness. A short sample plays when sound returns from silence."
+    },
+    "segments": {
+      "activity_answers": "Answer statistics rings",
+      "activity_progress_chart": "Progress chart",
+      "activity_progress_period": "Week / month switch",
+      "activity_top_list": "Leaderboard list & cards",
+      "chrome_bottom_nav": "Bottom navigation",
+      "chrome_notifications": "Notification bell",
+      "chrome_search": "Topic search",
+      "chrome_sub_tabs": "Tabs under the purple header",
+      "chrome_today_goal": "Today's goal line in the header",
+      "practice_machine_list": "Against the machine rounds",
+      "practice_player_start": "Play with friend — Start",
+      "practice_remix_continue": "Remix — Continue",
+      "practice_remix_exercise_count": "Remix — exercise count (slider)",
+      "practice_remix_search": "Remix topic search",
+      "practice_remix_class_topics": "Remix topics by class (list)",
+      "profile_about_list": "About & legal rows",
+      "profile_about_replay_hint": "Replay / reset tours (text)",
+      "profile_account_form": "Account form fields",
+      "profile_notifications_toggle": "Push notifications switch",
+      "profile_security_fields": "Password fields & save",
+      "profile_share_emails": "Report / parent emails",
+      "profile_sound_mixer": "Sound & volume sliders",
+      "topics_class_tabs": "Class grade tabs",
+      "topics_list": "Topic cards list",
+      "topics_search": "Search topics"
+    }
+  },
+  "profile": {
+    "profile": "Profile",
+    "tabs": [
+      "Account",
+      "Notifications",
+      "Security",
+      "About Us",
+      "Send Reports",
+      "Sound"
+    ],
+    "classes-tab": "My classes",
+    "notifications": {
+      "title": "Push Notifications",
+      "description": "Receive reminders and updates about your daily goals and progress.",
+      "push-label": "Push Notifications",
+      "status-on": "You are receiving push notifications",
+      "status-off": "Push notifications are disabled"
+    },
+    "account": {
+      "logout-warning": "Logout Warning",
+      "logout-text": "Please provide your email and password to be able to login back later. Otherwise, your account and all related data will be deleted immediately after logout. This action can't be reverted",
+      "log-out": "Log Out",
+      "delete": "Delete account",
+      "save-and-logout": "Save and logout",
+      "delete-account": "Delete account",
+      "delete-error": "Error while deleting",
+      "language": "Language",
+      "language-de": "German",
+      "language-en": "English"
+    },
+    "security": {
+      "popup-text": "Password has been changed",
+      "password-min-length": "Password must be at least 6 characters",
+      "change-error": "Error while changing password"
+    },
+    "about-us": {
+      "replay-intro-this-tab": "Show tips for this tab again",
+      "reset-intro-tours": "Reset all screen tips",
+      "reset-intro-title": "Reset all tips?",
+      "reset-intro-body": "Next time you open each main-tab screen we will show its introduction again.",
+      "reset-intro-confirm": "Reset",
+      "terms-of-services": "Terms of services",
+      "privacy": "Privacy",
+      "privacy-settings": "Privacy Settings",
+      "imprint": "Imprint",
+      "software-licenses": "Software licenses",
+      "release-notes": "Release notes",
+      "write-review": "Rate the app",
+      "app-review-title": "How do you like EnglishApp?",
+      "app-review-subtitle": "Tap the stars to choose a rating.",
+      "app-review-feedback-hint": "What could we improve? Please share details here …",
+      "app-review-open-store": "Continue in store",
+      "app-review-submit": "Send feedback",
+      "app-review-cancel": "Cancel",
+      "app-review-thanks-feedback": "Thanks for your feedback!",
+      "app-review-send-error": "Could not send. Check your connection and try again.",
+      "app-review-open-store-failed": "Could not open the store.",
+      "explain-one-part": "Explain one part…",
+      "show-tips": "Show tips…",
+      "explain-one-part-title": "Pick what to explain",
+      "explain-one-part-subtitle": "We highlight that control on screen. Options match the tab you are on now."
+    },
+    "send-reports": {
+      "introduction-text": "Share your success with your parents, teachers, and friends by email.",
+      "saved-email": "Saved emails:",
+      "parent-email": "Enter parent's email",
+      "not-saved-email": "You did not saved any parents' emails yet",
+      "add-four-email-text": "You can add no more than 4 emails, but you can edit one of the existing emails or remove it.",
+      "enter-new-email": "Please enter new E-mail",
+      "leave-popup-title": "Are you sure you want to <br> delete this E-mail ?",
+      "leave-popup-text": "If you close this popup E-mail will be not removed",
+      "email-can-not-be-empty": "Email cannot be empty",
+      "saved-successfully": "You have saved successfully",
+      "success-text": "You have successfully updated parent's email",
+      "remove-success-text": "You have successfully removed parent's email",
+      "successfully-updated": "Successfully updated",
+      "no": "No",
+      "yes": "Yes"
+    },
+    "sound": {
+      "sound": "Sound",
+      "sound-volume": "Sound Volume"
+    }
+  },
+  "notification": {
+    "there-arnt-notification": "There are no notifications yet",
+    "welcome-app": "Welcome to EnglishApp",
+    "play-more-games": "Play more games, improve your skills & be the first in the World!",
+    "mark-all-read": "Mark all as read",
+    "open-classes-hint": "Open Classes to review join or leave requests.",
+    "open-profile-hint": "Open Profile → My classes to see your class status."
+  },
+  "not-found": {
+    "title": "404 Not Found",
+    "text": "Unfortunately we couldn't find the page you are looking for, but we find some information about famous mathematician. Enjoy :).",
+    "title-offline": "No Internet",
+    "text-offline": "You don't have internet, but we find some information about famous mathematician. Enjoy :).",
+    "mathematics": [
+      {
+        "name": "Pythagoras",
+        "bio": "Vegetarian mystical leader and number-obsessive, he owes his standing as the most famous name in maths due to a theorem about right-angled triangles, although it now appears it probably predated him. He lived in a community where numbers were venerated as much for their spiritual qualities as for their mathematical ones. His elevation of numbers as the essence of the world made him the towering primogenitor of Greek mathematics, essentially the beginning of mathematics as we know it now. And, famously, he didn't eat beans.",
+        "img": "Pythagoras"
+      },
+      {
+        "name": "Euclid",
+        "bio": "Known as the 'Father of Geometry', Euclid was an ancient Greek mathematician who wrote 'The Elements', one of the most influential works in the history of mathematics, which served as a main textbook for teaching mathematics until the late 19th century.",
+        "img": "Euclid"
+      },
+      {
+        "name": "Archimedes",
+        "bio": "Archimedes of Syracuse (c. 287 – c. 212 BC) was an Ancient Greek mathematician, physicist, engineer, astronomer, and inventor from the ancient city of Syracuse in Sicily. He is generally considered to be the greatest mathematician of antiquity and one of the greatest of all time, and gave the first satisfactory explanation of the principle of the lever. He is also credited with designing innovative machines, such as his screw pump, compound pulleys, and defensive war machines to protect his native Syracuse from invasion.",
+        "img": "Archimedes"
+      },
+      {
+        "name": "Isaac Newton",
+        "bio": "Isaac Newton is one of the most famous scientists of all time, and he discovered some amazing things. He was the first to realize that white light is made up of all the colors of the rainbow. He invented calculus, the mathematics of moving things, which is used today to help us build skyscrapers and send rockets into space. He also figured out the force that pulls things to the ground – gravity. He was a strange character, who suffered from depression and rarely talked to anyone. He was also a secret alchemist, trying to turn lead into gold.",
+        "img": "Isaac"
+      },
+      {
+        "name": "Carl Friedrich Gauss",
+        "bio": "Known as the prince of mathematicians, Gauss made significant contributions to most fields of 19th century mathematics. An obsessive perfectionist, he didn't publish much of his work, preferring to rework and improve theorems first. His revolutionary discovery of non-Euclidean space (that it is mathematically consistent that parallel lines may diverge) was found in his notes after his death. During his analysis of astronomical data, he realised that measurement error produced a bell curve – and that shape is now known as a Gaussian distribution.",
+        "img": "Carl"
+      },
+      {
+        "name": "Leonhard Euler",
+        "bio": "The most prolific mathematician of all time, publishing close to 900 books. When he went blind in his late 50s his productivity in many areas increased. His famous formula `eiπ + 1 = 0`, where `e` is the mathematical constant sometimes known as Euler's number and `i` is the square root of minus one, is widely considered the most beautiful in mathematics. He later took an interest in Latin squares – grids where each row and column contains each member of a set of numbers or objects once. Without this work, we might not have had sudoku.",
+        "img": "Leonhard"
+      },
+      {
+        "name": "René Descartes",
+        "bio": "Often referred to as the 'Father of Modern Philosophy', Descartes was also a key figure in mathematics for laying the foundation for the development of calculus and for his work in analytic geometry.",
+        "img": "Descartes"
+      },
+      {
+        "name": "Blaise Pascal",
+        "bio": "Mathematician and physicist Blaise Pascal is noted for his work in the fields of probability and fluid mechanics. His inventions include the Pascaline, an early calculator, and his contributions to hydrodynamics and pressure measurement.",
+        "img": "Blaise"
+      },
+      {
+        "name": "Pierre-Simon Laplace",
+        "bio": "Laplace was a mathematician and astronomer whose work was pivotal to the development of mathematical statistics, celestial mechanics, and the theory of probability.",
+        "img": "Laplace"
+      },
+      {
+        "name": "Bernhard Riemann",
+        "bio": "Known for the Riemann Hypothesis, one of the unsolved problems in mathematics, Riemann was a key figure in analysis and differential geometry, influencing areas such as number theory.",
+        "img": "Riemann"
+      },
+      {
+        "name": "Johannes Kepler",
+        "bio": "Kepler is best known for his laws of planetary motion, which laid the groundwork for Newton's theory of universal gravitation. His contributions to astronomy made him a key figure in the 17th-century scientific revolution.",
+        "img": "Kepler"
+      },
+      {
+        "name": "Évariste Galois",
+        "bio": "Galois was a pioneering figure in the development of abstract algebra. His work laid the foundations for group theory and was fundamental to the understanding of quadratic equations.",
+        "img": "Galois"
+      },
+      {
+        "name": "David Hilbert",
+        "bio": "Hilbert was a leading figure in formalizing mathematics and developing mathematical logic. His 23 unsolved problems, presented at the International Congress of Mathematicians in 1900, set the agenda for much of 20th-century mathematics research.",
+        "img": "Hilbert"
+      },
+      {
+        "name": "Georg Cantor",
+        "bio": "Of all the great mathematicians, Cantor most perfectly fulfils the (Hollywood) stereotype that a genius for maths and mental illness are somehow inextricable. Cantor's most brilliant insight was to develop a way to talk about mathematical infinity. His set theory led to the counter-intuitive discovery that some infinities were larger than others. The result was mind-blowing. Unfortunately, he suffered mental breakdowns and was frequently hospitalised. He also became fixated on proving that the works of Shakespeare were in fact written by Francis Bacon.",
+        "img": "Georg"
+      }
+    ]
+  },
+  "common": {
+    "more-options": "More options",
+    "me": "Me",
+    "no-questions-available": "No questions available",
+    "fill-all-fields": "Please fill in all fields",
+    "app-name-left": "English",
+    "app-name-right": "App",
+    "version-prefix": "v"
+  },
+  "admin": {
+    "confirm-delete": "Tap again to confirm",
+    "generate": "Generate",
+    "review": "Review",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "delete": "Delete",
+    "done": "Done",
+    "submit": "Submit",
+    "remove": "Remove",
+    "add-exercise": "Add Exercise",
+    "number-of-questions-label": "Number of questions:",
+    "topic-name-label": "Topic name",
+    "exercise-example-label": "Exercise example {index}",
+    "correct-answer-label": "Correct answer",
+    "wrong-answers-label": "Wrong answers",
+    "second-answer-label": "Second answer",
+    "multistep-follow-correct": "Follow-up step {step} (correct)",
+    "multistep-follow-wrong": "Follow-up step {step} (wrong answers)",
+    "multistep-prompt-header": "Mode: multistep multiple choice. Match the number of wrong options on each step to the template below. Generate the full chain of steps for every new exercise.",
+    "multistep-stem-logic-line": "Flow: for follow-up step n, the visible line for the student is the correct answer from the previous step (main correct → step 1, step 1 correct → step 2, …). Options on each step must be plausible next steps from that previous correct result.",
+    "multistep-api-field-map": "API field names the model must output for each new exercise: main step: exercise, correctAnswer, wrongAnswers (array of wrongs). Follow-up 1: answer_1, wrong_answers_1. Follow-up 2: answer_2, wrong_answers_2. Follow-up 3: answer_3, wrong_answers_3. Follow-up 4: answer_4, wrong_answers_4. Do not use correctAnswer1 or wrongAnswers1 — use answer_1 and wrong_answers_1. After all steps: secondAnswer = final result only if the topic uses it (else empty).",
+    "multistep-wrong-counts-line": "Template wrong-option counts per step (your new exercises must use the same counts): {detail}",
+    "multistep-second-answer-final": "Second answer (only if the topic uses it: final result after the last step; leave empty otherwise)",
+    "generate-lesson": "Study material",
+    "lesson-generated-title": "Study material saved",
+    "lesson-generated-body": "The lesson was generated and saved for this topic. You can review it in Strapi or open it in the app.",
+    "lesson-generated-error-title": "Generation failed",
+    "lesson-generated-error-body": "The lesson could not be generated. Check your connection, admin rights, and OpenAI configuration, then try again.",
+    "open-in-strapi": "Open in Strapi",
+    "statistics": {
+      "tab-label": "Statistics",
+      "title": "App statistics",
+      "period": "{range_summary} · {granularity} · {start} — {end}",
+      "registrations-chart": "Registrations ({suffix})",
+      "answered-chart": "Exercises answered ({suffix}), correct or wrong — skips not counted",
+      "solved-chart": "Correct answers only ({suffix})",
+      "load-error": "Could not load statistics. Check admin rights or try again.",
+      "retry": "Retry",
+      "no-data": "No data for this range.",
+      "range-label": "Range",
+      "range": {
+        "last-30": "Last 30 days",
+        "current-month": "Current month",
+        "last-month": "Previous month",
+        "custom": "Custom"
+      },
+      "custom-start": "From",
+      "custom-end": "To",
+      "custom-hint": "Dates are interpreted in the server default time zone (admin profile or Europe/Berlin). Very long custom spans are clipped depending on the X-axis step.",
+      "granularity-label": "X-axis",
+      "granularity": {
+        "day": "Daily",
+        "week": "Weekly",
+        "month": "Monthly",
+        "chart-day": "daily",
+        "chart-week": "weekly",
+        "chart-month": "monthly",
+        "period-day": "daily buckets",
+        "period-week": "weekly buckets (Monday start)",
+        "period-month": "monthly buckets"
+      }
+    }
+  },
+  "search": {
+    "keywords": [
+      "Rational numbers",
+      "Multiplication",
+      "Decimal numbers",
+      "Percent",
+      "Rational",
+      "Division",
+      "Addition",
+      "Subtraction",
+      "Written methods",
+      "Compare",
+      "with carry",
+      "without carry",
+      "Commutative tasks",
+      "Money",
+      "Time",
+      "Rounding",
+      "Unit conversion",
+      "Single-digit",
+      "Parentheses",
+      "Exponents",
+      "with x",
+      "Binomial",
+      "Linear",
+      "Root",
+      "Quadratic"
+    ]
+  },
+  "privacy-content": {
+    "summary": "This privacy policy describes how EnglishApp collects, uses, and shares personal data.",
+    "intro-title": "Introduction",
+    "intro-text": "We, the EnglishApp team, take the protection of your personal data very seriously and strictly follow data protection laws. This privacy policy informs you about the type, scope, and purpose of collecting and using personal data in our mobile application EnglishApp.",
+    "collection-title": "Collection and processing of personal data",
+    "collection-text": "Using our app is generally possible without providing personal data. For certain functions, such as authentication, a username is required. Additional personal information can be provided voluntarily by the user. We store and process this data only for the purpose for which it was submitted.",
+    "cookies-title": "Cookies",
+    "cookies-text": "EnglishApp does not use cookies or similar technologies to collect personal data.",
+    "third-party-title": "Use of third-party services",
+    "third-party-text": "Our app uses various third-party services to improve functionality and optimize the user experience:",
+    "third-party-bullet-1": "Microsoft Clarity for analytics and user behavior",
+    "third-party-bullet-2": "Google Analytics for analytics and user behavior",
+    "third-party-bullet-3": "Google Places API for location information",
+    "third-party-note": "Please note that these services have their own privacy policies independent of ours.",
+    "deletion-title": "Data deletion",
+    "deletion-text": "Users who want their data removed from our application can request this through the contact form on our website.",
+    "security-title": "Security",
+    "security-text": "We implement technical and organizational security measures to protect your data against manipulation, loss, and unauthorized access.",
+    "changes-title": "Changes to this privacy policy",
+    "changes-text": "We reserve the right to update this privacy policy to always comply with current legal requirements.",
+    "contact-title": "Contact",
+    "contact-email": "info@schulmatheapp.de",
+    "contact-website": "https://schulmatheapp.de",
+    "date": "Privacy policy date: 20.04.2026"
+  },
+  "versions": [
+    {
+      "v": "2.0.9",
+      "date": "2026-05-14",
+      "changes": [
+        "Cubo helps you learn more productively.",
+        "Alternative way for training within several Topics.",
+        "Introduction screens for each page.",
+        "Bug fixes",
+        "Unsubscription for parents in email",
+        "Buttons for moving to next and previous classes",
+        "Reports about wrong exercises"
+      ]
+    },
+    {
+      "v": "2.0.8",
+      "date": "2026-05-01",
+      "changes": [
+        "Multistep exercises 🎉 (we have worked hard for it).",
+        "Multiselect exercises.",
+        "Lessons improvement.",
+        "Audio regulations.",
+        "Vibration on clicks.",
+        "Notifications about new versions.",
+        "Leaving review."
+      ]
+    },
+    {
+      "v": "2.0.7",
+      "date": "2026-04-22",
+      "changes": [
+        "Minor improvements.",
+        "Authentication logic update.",
+        "Bug fixes.",
+        "Better notifications."
+      ]
+    },
+    {
+      "v": "2.0.6",
+      "date": "2026-04-20",
+      "changes": [
+        "Categories page redesign.",
+        "Lesson for each category.",
+        "Solution improvement.",
+        "Onboarding steps.",
+        "Make E-Mail optional."
+      ]
+    },
+    {
+      "v": "2.0.5",
+      "date": "2026-04-13",
+      "changes": [
+        "We only nudge you about reminders once you’re already into learning — not on day one.",
+        "Saying yes is quicker and feels calmer, with a little thank-you when you’re done.",
+        "Daily goal: if you haven’t set one yet, you’ll see a clear “choose a goal” option instead of a guessed number; on each launch the app syncs your goal from your account so it matches the server.",
+        "Marketing improvements",
+        "Login and sign-up: clearer layout on narrow screens (stay logged in, forgot password, and account links no longer run together).",
+        "Stay logged in: tap the text label or the control to toggle it.",
+        "Timezone functionality"
+      ]
+    },
+    {
+      "v": "2.0.4",
+      "date": "2026-04-12",
+      "changes": [
+        "Visual bug fixes",
+        "Registration process improvement",
+        "Scroll on new question fix",
+        "Sweet improvements",
+        "Topics: the class tab matches the category you open or leave (Themen, search, last quiz)"
+      ]
+    },
+    {
+      "v": "2.0.3",
+      "date": "2026-04-11",
+      "changes": [
+        "Advertisements improvement",
+        "Nickname bug fix",
+        "Answers render fixes",
+        "Example questions",
+        "Search results fix"
+      ]
+    },
+    {
+      "v": "2.0.2",
+      "date": "2026-04-06",
+      "changes": [
+        "Advertisements improvement",
+        "Analytics setup"
+      ]
+    },
+    {
+      "v": "2.0.1",
+      "date": "2026-03-28",
+      "changes": [
+        "Push Notifications"
+      ]
+    },
+    {
+      "v": "2.0.0",
+      "date": "2026-03-18",
+      "changes": [
+        "Main technology change",
+        "Ads update"
+      ]
+    },
+    {
+      "v": "1.0.32",
+      "date": "2026-01-25",
+      "changes": [
+        "Second answer improvement",
+        "Packages update",
+        "Improve Ads"
+      ]
+    },
+    {
+      "v": "1.0.31",
+      "date": "2025-12-04",
+      "changes": [
+        "Style fixes",
+        "Speed improvements"
+      ]
+    },
+    {
+      "v": "1.0.27",
+      "date": "2025-02-25",
+      "changes": [
+        "Practice design update",
+        "Style fixes",
+        "Topic header update",
+        "Speed improvements",
+        "Whiteboard"
+      ]
+    },
+    {
+      "v": "1.0.26",
+      "date": "2025-01-21",
+      "changes": [
+        "Push notifications fix"
+      ]
+    },
+    {
+      "v": "1.0.25",
+      "date": "2025-01-11",
+      "changes": [
+        "Minor style changes on search popup",
+        "External links update"
+      ]
+    },
+    {
+      "v": "1.0.24",
+      "date": "2024-12-15",
+      "changes": [
+        "Page not found: fix and update.",
+        "Header and Footer update.",
+        "Push notifications fix."
+      ]
+    },
+    {
+      "v": "1.0.23",
+      "date": "2024-11-12",
+      "changes": [
+        "Popup header update.",
+        "Header and Footer fixes.",
+        "Safe Area fixes."
+      ]
+    },
+    {
+      "v": "1.0.22",
+      "date": "2024-10-12",
+      "changes": [
+        "Update About Us pages.",
+        "About Us, Logout, Search, Notifications, Solutions popups update.",
+        "Alerts windows update.",
+        "Native behavior for some popups.",
+        "Navigation style fix.",
+        "Style fixes.",
+        "Push notifications fix."
+      ]
+    },
+    {
+      "v": "1.0.21",
+      "date": "2024-09-18",
+      "changes": [
+        "Account deletion functionality.",
+        "Translations fixes.",
+        "Software updates.",
+        "Language fixes."
+      ]
+    },
+    {
+      "v": "1.0.20",
+      "date": "2024-08-01",
+      "changes": [
+        "Translations fixes.",
+        "Popup and loading animation fixes.",
+        "New topics for search.",
+        "Android version update."
+      ]
+    },
+    {
+      "v": "1.0.19",
+      "date": "2024-04-30",
+      "changes": [
+        "Make more topics visible in the class.",
+        "Open questions on last used class.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.18",
+      "date": "2024-04-13",
+      "changes": [
+        "Translation fixes.",
+        "Loading animation fixes.",
+        "Solutions on answered questions.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.17",
+      "date": "2024-03-30",
+      "changes": [
+        "Android bug fix."
+      ]
+    },
+    {
+      "v": "1.0.16",
+      "date": "2024-03-29",
+      "changes": [
+        "Performance improvements.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.15",
+      "date": "2024-03-21",
+      "changes": [
+        "Main email update.",
+        "Translations fixes",
+        "Password reset functionality update.",
+        "Loading animation improvement",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.14",
+      "date": "2024-03-19",
+      "changes": [
+        "Versions popup update.",
+        "Meta updates.",
+        "Google autocomplete minor bug fix.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.13",
+      "date": "2024-03-15",
+      "changes": [
+        "Adjust swipe length for better experience.",
+        "Clarity update.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.12",
+      "date": "2024-03-12",
+      "changes": [
+        "New template of exercises.",
+        "SMTP server fix.",
+        "Missing translations update.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.11",
+      "date": "2024-03-08",
+      "changes": [
+        "New template of exercises.",
+        "Many new exercises added."
+      ]
+    },
+    {
+      "v": "1.0.10",
+      "date": "2024-02-29",
+      "changes": [
+        "Design updates.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.9",
+      "date": "2024-02-19",
+      "changes": [
+        "Design updates.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.8",
+      "date": "2024-02-09",
+      "changes": [
+        "Design updates.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.7",
+      "date": "2024-02-02",
+      "changes": [
+        "Privacy policy update.",
+        "Creating list of used services.",
+        "Second answer logic update.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.6",
+      "date": "2024-01-18",
+      "changes": [
+        "AI implementation for exercises.",
+        "Style changes.",
+        "Bug fixes and performance improvements.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.5",
+      "date": "2024-01-18",
+      "changes": [
+        "Managing tools integration.",
+        "Notifications update.",
+        "Android build improvement.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.4",
+      "date": "2024-01-04",
+      "changes": [
+        "AI messages update.",
+        "Solutions basic logic implementation.",
+        "Emails update.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.3",
+      "date": "2023-12-18",
+      "changes": [
+        "AI basic integration.",
+        "Design fixes",
+        "Performance improvements.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.2",
+      "date": "2023-11-10",
+      "changes": [
+        "Remove unpublished exercises from the list.",
+        "Add statistics API.",
+        "Daily goals notification fixes.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.1",
+      "date": "2023-10-26",
+      "changes": [
+        "Notifications update.",
+        "Bug fixes and performance improvements.",
+        "New exercises added."
+      ]
+    },
+    {
+      "v": "1.0.0",
+      "date": "2023-10-13",
+      "changes": [
+        "Initial functionality."
+      ]
+    }
+  ]
+}

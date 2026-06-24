@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_vocabulary_progresses",
+  "info": {
+    "singularName": "user-vocabulary-progress",
+    "pluralName": "user-vocabulary-progresses",
+    "displayName": "User Vocabulary Progress",
+    "description": "Tracks words a user saved from the catalog."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "status": {
+      "type": "enumeration",
+      "enum": ["new", "learning", "known"],
+      "default": "new",
+      "required": true
+    },
+    "savedAt": {
+      "type": "datetime"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "vocabularyEntry": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::vocabulary-entry.vocabulary-entry",
+      "inversedBy": "userProgress"
+    }
+  }
+}

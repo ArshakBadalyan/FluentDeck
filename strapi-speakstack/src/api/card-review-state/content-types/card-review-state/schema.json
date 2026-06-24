@@ -1,0 +1,69 @@
+{
+  "kind": "collectionType",
+  "collectionName": "card_review_states",
+  "info": {
+    "singularName": "card-review-state",
+    "pluralName": "card-review-states",
+    "displayName": "Card Review State",
+    "description": "SM-2 spaced repetition state per flashcard."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "state": {
+      "type": "enumeration",
+      "enum": ["new", "learning", "review", "relearning"],
+      "default": "new",
+      "required": true
+    },
+    "intervalDays": {
+      "type": "float",
+      "default": 0
+    },
+    "easeFactor": {
+      "type": "float",
+      "default": 2.5
+    },
+    "dueAt": {
+      "type": "datetime"
+    },
+    "lapses": {
+      "type": "integer",
+      "default": 0
+    },
+    "repetitions": {
+      "type": "integer",
+      "default": 0
+    },
+    "learningStep": {
+      "type": "integer",
+      "default": 0
+    },
+    "lastReviewedAt": {
+      "type": "datetime"
+    },
+    "firstStudiedAt": {
+      "type": "datetime"
+    },
+    "suspended": {
+      "type": "boolean",
+      "default": false
+    },
+    "buriedUntil": {
+      "type": "datetime"
+    },
+    "flashcard": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::flashcard.flashcard",
+      "inversedBy": "reviewState"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

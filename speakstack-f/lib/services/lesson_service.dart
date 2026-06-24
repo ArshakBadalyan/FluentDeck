@@ -1,0 +1,61 @@
+import '../models/conversation_prompt_model.dart';
+import '../models/lesson_model.dart';
+import 'api_service.dart';
+
+class LessonService {
+  LessonService._();
+  static final LessonService instance = LessonService._();
+
+  Future<List<LessonModel>> fetchLessons({
+    String? level,
+    String? skillType,
+  }) async {
+    final filters = <String>[];
+    if (level != null && level.isNotEmpty) {
+      filters.add('filters[level][\$eq]=$level');
+    }
+    if (skillType != null && skillType.isNotEmpty) {
+      filters.add('filters[skillType][\$eq]=$skillType');
+    }
+    filters.add('sort=order:asc');
+    filters.add('populate=exercises');
+
+    final query = filters.isEmpty ? '' : '?${filters.join('&')}';
+    final data = await ApiService.get('lessons$query');
+    final rows = data is Map ? data['data'] as List? : null;
+    if (rows == null) return [];
+
+    return rows
+        .whereType<Map>()
+        .map((row) => LessonModel.fromJson(Map<String, dynamic>.from(row)))
+        .toList();
+  }
+
+  Future<LessonModel?> fetchLessonById(int id) async {
+    final data = await ApiService.get('lessons/$id?populate=exercises');
+    final row = data is Map ? data['data'] : null;
+    if (row is! Map) return null;
+    return LessonModel.fromJson(Map<String, dynamic>.from(row));
+  }
+
+  Future<List<ConversationPromptModel>> fetchConversationPrompts({
+    String? difficultyLevel,
+  }) async {
+    final query =
+        difficultyLevel != null && difficultyLevel.isNotEmpty
+            ? '?filters[difficultyLevel][\$eq]=$difficultyLevel&sort=id:asc'
+            : '?sort=id:asc';
+    final data = await ApiService.get('conversation-prompts$query');
+    final rows = data is Map ? data['data'] as List? : null;
+    if (rows == null) return [];
+
+    return rows
+        .whereType<Map>()
+        .map(
+          (row) => ConversationPromptModel.fromJson(
+            Map<String, dynamic>.from(row),
+          ),
+        )
+        .toList();
+  }
+}

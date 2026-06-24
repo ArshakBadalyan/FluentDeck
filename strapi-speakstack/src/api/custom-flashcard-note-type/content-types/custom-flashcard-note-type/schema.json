@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "custom_flashcard_note_types",
+  "info": {
+    "singularName": "custom-flashcard-note-type",
+    "pluralName": "custom-flashcard-note-types",
+    "displayName": "Custom Flashcard Note Type",
+    "description": "User-defined Anki-style note templates (Phase 5C)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "fields": {
+      "type": "json",
+      "default": []
+    },
+    "cardTemplates": {
+      "type": "json",
+      "default": []
+    },
+    "css": {
+      "type": "text"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

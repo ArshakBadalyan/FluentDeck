@@ -1,0 +1,78 @@
+platform :ios, '15.0'
+
+# Xcode 26 uses object version 70 which xcodeproj gem doesn't support yet.
+require 'xcodeproj'
+Xcodeproj::Constants.send(:remove_const, :COMPATIBILITY_VERSION_BY_OBJECT_VERSION)
+Xcodeproj::Constants.const_set(:COMPATIBILITY_VERSION_BY_OBJECT_VERSION, {
+  70 => 'Xcode 26.0',
+  77 => 'Xcode 16.0',
+  63 => 'Xcode 15.3',
+  60 => 'Xcode 15.0',
+  56 => 'Xcode 14.0',
+  55 => 'Xcode 13.0',
+  54 => 'Xcode 12.0',
+  53 => 'Xcode 11.4',
+  52 => 'Xcode 11.0',
+  51 => 'Xcode 10.0',
+  50 => 'Xcode 9.3',
+  48 => 'Xcode 8.0',
+  47 => 'Xcode 6.3',
+  46 => 'Xcode 3.2',
+  45 => 'Xcode 3.1',
+}.freeze)
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+target 'OneSignalNotificationServiceExtension' do
+  use_frameworks!
+  pod 'OneSignalXCFramework', '>= 5.0.0', '< 6.0'
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 13.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      end
+
+      next unless ['Release', 'Profile'].include?(config.name)
+
+      config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+      config.build_settings['GCC_GENERATE_DEBUGGING_SYMBOLS'] = 'YES'
+    end
+  end
+end

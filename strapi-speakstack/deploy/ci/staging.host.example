@@ -1,0 +1,8 @@
+# Copy to staging.host (gitignored) for local notes — values go in GitHub Secrets.
+# Staging Hetzner public IPv4 (Strapi/API), NOT production.
+STAGING_HOST=CHANGE_ME
+
+# GitHub: Settings → Secrets and variables → Actions → Secrets (not Variables for IP)
+#   STAGING_HOST     = same IPv4 as above (required — workflow uses secrets.STAGING_HOST)
+#   STAGING_SSH_KEY  = private key from keys/github-actions-staging-deploy
+# Public .pub file → VPS mathe_app_user ~/.ssh/authorized_keys (NOT GitHub)

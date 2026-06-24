@@ -1,0 +1,16 @@
+node_modules
+.tmp
+.cache
+build
+.env
+.env.staging
+.env.*
+!.env.example
+!.env.staging.example
+.git
+.gitignore
+README.md
+deploy/.env
+*.log
+coverage
+.idea

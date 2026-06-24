@@ -1,0 +1,20 @@
+{
+  "kind": "singleType",
+  "collectionName": "ai_configs",
+  "info": {
+    "singularName": "ai-config",
+    "pluralName": "ai-configs",
+    "displayName": "AI Config",
+    "description": "Placeholder single type so the AI API module loads; proxy routes live in custom.js"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "notes": {
+      "type": "text",
+      "private": true
+    }
+  }
+}

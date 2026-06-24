@@ -1,0 +1,61 @@
+{
+  "kind": "collectionType",
+  "collectionName": "card_review_logs",
+  "info": {
+    "singularName": "card-review-log",
+    "pluralName": "card-review-logs",
+    "displayName": "Card Review Log",
+    "description": "Per-answer review event for statistics (Phase 4E)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "rating": {
+      "type": "enumeration",
+      "enum": ["again", "hard", "good", "easy"],
+      "required": true
+    },
+    "durationMs": {
+      "type": "integer",
+      "default": 0
+    },
+    "intervalBefore": {
+      "type": "float",
+      "default": 0
+    },
+    "intervalAfter": {
+      "type": "float",
+      "default": 0
+    },
+    "stateBefore": {
+      "type": "string"
+    },
+    "stateAfter": {
+      "type": "string"
+    },
+    "undoSnapshot": {
+      "type": "json"
+    },
+    "reviewedAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "flashcard": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::flashcard.flashcard"
+    },
+    "deck": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::flashcard-deck.flashcard-deck"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

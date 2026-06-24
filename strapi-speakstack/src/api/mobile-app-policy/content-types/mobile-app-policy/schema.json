@@ -1,0 +1,49 @@
+{
+  "kind": "singleType",
+  "collectionName": "mobile_app_policies",
+  "info": {
+    "singularName": "mobile-app-policy",
+    "pluralName": "mobile-app-policies",
+    "displayName": "Mobile app policy",
+    "description": "Minimum app build numbers and soft-update campaign (native mobile clients only)."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "forceMinimumAndroidBuild": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "forceMinimumIosBuild": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "softSuggestBelowAndroidBuild": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "softSuggestBelowIosBuild": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "softCampaignId": {
+      "type": "string",
+      "default": ""
+    },
+    "softMessage": {
+      "type": "text"
+    },
+    "androidStoreUrl": {
+      "type": "string"
+    },
+    "iosStoreUrl": {
+      "type": "string"
+    }
+  }
+}

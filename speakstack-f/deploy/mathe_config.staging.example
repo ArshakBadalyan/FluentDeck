@@ -1,0 +1,3 @@
+# Deprecated — use repo root instead:
+#   cp .env.staging.example .env.staging
+#   cp .env.staging assets/mathe_config.txt

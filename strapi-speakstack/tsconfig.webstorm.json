@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "types/**/*.d.ts",
+    "types/generated/**/*.d.ts"
+  ]
+}

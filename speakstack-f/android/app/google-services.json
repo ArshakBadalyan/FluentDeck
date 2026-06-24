@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "749772344507",
+    "project_id": "math-project-370321",
+    "storage_bucket": "math-project-370321.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:749772344507:android:0b78462fb6a8031754ad9e",
+        "android_client_info": {
+          "package_name": "io.framework7.matheapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbKYFbpCfjnLeo2GaxZy_lqpRBTsoW35E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      },
+      "admob_app_id": "ca-app-pub-4463307428680168~1797861467"
+    }
+  ],
+  "configuration_version": "1"
+}

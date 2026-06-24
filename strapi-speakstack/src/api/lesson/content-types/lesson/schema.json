@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "lessons",
+  "info": {
+    "singularName": "lesson",
+    "pluralName": "lessons",
+    "displayName": "Lesson",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "level": {
+      "type": "enumeration",
+      "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
+      "required": true
+    },
+    "skillType": {
+      "type": "enumeration",
+      "enum": ["speaking", "grammar", "vocabulary", "listening"],
+      "required": true
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "description": {
+      "type": "richtext"
+    },
+    "exercises": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::exercise.exercise",
+      "mappedBy": "lesson"
+    }
+  }
+}

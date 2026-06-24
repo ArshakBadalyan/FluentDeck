@@ -1,0 +1,61 @@
+<svg width="138" height="39" viewBox="0 0 138 39" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <mask id="mask0_259_9218" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="138" height="39">
+        <rect width="138" height="39" fill="url(#paint0_radial_259_9218)"/>
+    </mask>
+    <g mask="url(#mask0_259_9218)">
+        <circle opacity="0.4" cx="1.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="13.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="25.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="37.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="49.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="61.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.6" cx="73.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.6" cx="85.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="97.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.8" cx="109.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.1" cx="121.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="133.5" cy="1.5" r="1.5" fill="white"/>
+        <circle opacity="0.6" cx="1.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="13.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.8" cx="25.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="37.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.1" cx="49.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="61.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="73.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="85.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="97.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="109.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.1" cx="121.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="133.5" cy="13.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="1.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="13.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="25.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.1" cx="37.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="49.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="61.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.6" cx="73.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="85.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="97.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.8" cx="109.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.6" cx="121.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="133.5" cy="25.5" r="1.5" fill="white"/>
+        <circle opacity="0.6" cx="1.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.6" cx="13.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="25.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.8" cx="37.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="49.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.2" cx="61.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.1" cx="73.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="85.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="97.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="109.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="121.5" cy="37.5" r="1.5" fill="white"/>
+        <circle opacity="0.4" cx="133.5" cy="37.5" r="1.5" fill="white"/>
+    </g>
+    <defs>
+        <radialGradient id="paint0_radial_259_9218" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(138 20) rotate(-180) scale(138 103.235)">
+            <stop stop-color="#C4C4C4" stop-opacity="0.8"/>
+            <stop offset="1" stop-color="#C4C4C4" stop-opacity="0"/>
+        </radialGradient>
+    </defs>
+</svg>

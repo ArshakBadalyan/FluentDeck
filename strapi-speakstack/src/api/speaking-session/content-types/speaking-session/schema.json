@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "speaking_sessions",
+  "info": {
+    "singularName": "speaking-session",
+    "pluralName": "speaking-sessions",
+    "displayName": "Speaking Session",
+    "description": "Completed speaking practice sessions with AI scores"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "mode": {
+      "type": "enumeration",
+      "enum": ["chat", "role_play", "topic", "game", "lesson"],
+      "required": true
+    },
+    "referenceKey": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "score": {
+      "type": "integer",
+      "required": true,
+      "min": 0,
+      "max": 10
+    },
+    "feedback": {
+      "type": "text"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "durationMinutes": {
+      "type": "integer",
+      "default": 1
+    },
+    "turnCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "completedAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

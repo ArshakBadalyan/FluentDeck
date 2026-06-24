@@ -1,0 +1,14 @@
+.git
+.gitignore
+.dart_tool
+.idea
+build
+.env
+README.md
+android
+ios
+linux
+macos
+windows
+test
+.cursorrules

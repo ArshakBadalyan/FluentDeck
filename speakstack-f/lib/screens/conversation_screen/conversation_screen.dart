@@ -1,0 +1,810 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:untitled2/app_colors.dart';
+import 'package:untitled2/models/conversation_turn_model.dart';
+import 'package:untitled2/models/grammar_correction.dart';
+import 'package:untitled2/models/speaking_session_context.dart';
+import 'package:untitled2/services/conversation_limit_service.dart';
+import 'package:untitled2/services/conversation_service.dart';
+import 'package:untitled2/services/note_service.dart';
+import 'package:untitled2/services/speaking_preferences_service.dart';
+import 'package:untitled2/services/speaking_scores_service.dart';
+import 'package:untitled2/services/speaking_session_service.dart';
+import 'package:untitled2/utils/correction_text_utils.dart';
+
+class ConversationScreen extends StatefulWidget {
+  const ConversationScreen({super.key, this.embedInShell = false});
+
+  final bool embedInShell;
+
+  @override
+  State<ConversationScreen> createState() => _ConversationScreenState();
+}
+
+class _ConversationScreenState extends State<ConversationScreen> {
+  final ConversationService _service = ConversationService.instance;
+  final TextEditingController _textController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  ConversationUsageStatus? _usage;
+
+  @override
+  void initState() {
+    super.initState();
+    _service.onStateChanged = _onServiceUpdate;
+    unawaited(_service.refreshSpeakingSettings());
+    unawaited(_service.ensureWelcomeMessageIfNeeded());
+    _loadUsage();
+  }
+
+  Future<void> _loadUsage() async {
+    final usage = await ConversationLimitService.instance.getStatus();
+    if (!mounted) return;
+    setState(() => _usage = usage);
+  }
+
+  @override
+  void dispose() {
+    if (_service.isChatActive) {
+      unawaited(_service.leaveChat());
+    }
+    if (_service.onStateChanged == _onServiceUpdate) {
+      _service.onStateChanged = null;
+    }
+    _textController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onServiceUpdate() {
+    if (!mounted) return;
+    setState(() {});
+    unawaited(_loadUsage());
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  Future<void> _onMicTap() async {
+    if (_service.isProcessing) return;
+    if (_service.isRecording) {
+      await _service.stopRecordingAndSend();
+      return;
+    }
+    await _service.startRecording();
+  }
+
+  Future<void> _onSendText() async {
+    final text = _textController.text;
+    _textController.clear();
+    await _service.sendTextMessage(text);
+  }
+
+  String _sessionBannerLabel() {
+    final ctx = _service.sessionContext;
+    if (ctx.isFreeChat) return '';
+    switch (ctx.mode) {
+      case SpeakingMode.rolePlay:
+        return 'Role-Play: ${ctx.title}';
+      case SpeakingMode.topic:
+        return 'Topic: ${ctx.title}';
+      case SpeakingMode.game:
+        return 'Game: ${ctx.title}';
+      case SpeakingMode.lesson:
+        return 'Lesson: ${ctx.title}';
+      case SpeakingMode.chat:
+        return '';
+    }
+  }
+
+  Future<void> _endSession() async {
+    final result = await _service.evaluateCurrentSession();
+    if (!mounted) return;
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not evaluate this session yet.')),
+      );
+      return;
+    }
+
+    final ctx = _service.sessionContext;
+    SpeakingSessionCompleteResult? saved;
+    try {
+      saved = await SpeakingSessionService.instance.completeSession(
+        context: ctx,
+        score: result.score,
+        feedback: result.feedback,
+        summary: result.summary,
+        turnCount: _service.turns.length,
+        startedAt:
+            _service.sessionStartedAt ??
+            _service.turns.firstOrNull?.timestamp ??
+            DateTime.now(),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Score saved locally. Sync failed: $e')),
+      );
+      if (ctx.referenceKey != null && ctx.referenceKey!.isNotEmpty) {
+        await SpeakingScoresService.instance.saveScore(
+          referenceKey: ctx.referenceKey!,
+          score: result.score,
+          title: ctx.title,
+          mode: ctx.mode,
+        );
+      }
+    }
+
+    if (!mounted) return;
+    final streakNote =
+        saved != null && saved.streakDays > 0
+            ? '\n\n${saved.streakDays} day speaking streak!'
+            : '';
+    await showDialog<void>(
+      context: context,
+      builder:
+          (dialogCtx) => AlertDialog(
+            title: Text('Score: ${result.score} / 10'),
+            content: Text('${result.feedback}$streakNote'),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('Done'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F7FA),
+      appBar:
+          widget.embedInShell
+              ? null
+              : AppBar(
+                title: const Text('English Practice'),
+                backgroundColor: AppColors.primaryPurple,
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+      body: Column(
+        children: [
+          if (_sessionBannerLabel().isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppColors.greenCorrect.withValues(alpha: 0.12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _sessionBannerLabel(),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.green.shade800,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (_service.canEvaluateSession)
+                    TextButton(
+                      onPressed:
+                          _service.isEvaluatingSession ? null : _endSession,
+                      child:
+                          _service.isEvaluatingSession
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                              : const Text('End & score'),
+                    ),
+                ],
+              ),
+            ),
+          if (_sessionBannerLabel().isEmpty && _service.canEvaluateSession)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              color: AppColors.primaryPurple.withValues(alpha: 0.06),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed:
+                      _service.isEvaluatingSession ? null : _endSession,
+                  child:
+                      _service.isEvaluatingSession
+                          ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Text('End & score session'),
+                ),
+              ),
+            ),
+          if (_service.trainingSession.isActive)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppColors.greenCorrect.withValues(alpha: 0.12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.school_outlined,
+                    size: 16,
+                    color: Colors.green.shade800,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Training: ${_service.trainingSession.sourceLabel} '
+                      '(${_service.trainingSession.words.length} words)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.green.shade800,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (_usage != null && !_usage!.isPremium)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppColors.primaryPurple.withValues(alpha: 0.08),
+              child: Text(
+                '${_usage!.remaining} of ${_usage!.dailyLimit} free conversations left today',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.primaryPurple,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          if (_service.autoConversationEnabled || _service.autoPlayVoiceEnabled)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              color: AppColors.primaryYellow.withValues(alpha: 0.18),
+              child: Text(
+                _service.autoConversationEnabled
+                    ? 'Auto-conversation on — mic and AI voice run automatically'
+                    : 'Auto-play voice on — AI replies play automatically',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          if (_service.errorMessage != null)
+            MaterialBanner(
+              content: Text(_service.errorMessage!),
+              backgroundColor: AppColors.redWrong.withValues(alpha: 0.12),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    _service.errorMessage = null;
+                    _onServiceUpdate();
+                  },
+                  child: const Text('Dismiss'),
+                ),
+              ],
+            ),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              itemCount: _service.turns.length,
+              itemBuilder: (context, index) {
+                final turn = _service.turns[index];
+                return _TurnBubble(
+                  turn: turn,
+                  showTranslations:
+                      SpeakingPreferencesService.instance.current.showTranslations,
+                  onPlayAi:
+                      turn.isUser
+                          ? null
+                          : () => _service.playAiText(turn.text),
+                  isPlayingAi: _service.isPlayingTts,
+                );
+              },
+            ),
+          ),
+          _ProcessingIndicator(
+            isProcessing: _service.isProcessing,
+            stage: _service.stage,
+            onCancel:
+                (_service.isProcessing || _service.isRecording)
+                    ? () => _service.cancelActiveOperation()
+                    : null,
+          ),
+          _InputBar(
+            isRecording: _service.isRecording,
+            isProcessing: _service.isProcessing,
+            recordingDurationLabel:
+                _service.isRecording ? _service.recordingDurationLabel : null,
+            textController: _textController,
+            onMicTap: _onMicTap,
+            onSendText: _onSendText,
+            typeMessagesEnabled: _service.typeMessagesEnabled,
+            onCancel:
+                (_service.isProcessing || _service.isRecording)
+                    ? () => _service.cancelActiveOperation()
+                    : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TurnBubble extends StatelessWidget {
+  const _TurnBubble({
+    required this.turn,
+    this.showTranslations = false,
+    this.onPlayAi,
+    this.isPlayingAi = false,
+  });
+
+  final ConversationTurnModel turn;
+  final bool showTranslations;
+  final VoidCallback? onPlayAi;
+  final bool isPlayingAi;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUser = turn.isUser;
+    final cardCorrections =
+        turn.corrections.where((correction) => correction.showsCard).toList();
+    final showInstantOkBadge =
+        isUser &&
+        turn.corrections.isEmpty &&
+        turn.text.trim().isNotEmpty;
+    final translation =
+        showTranslations ? turn.translation?.trim() : null;
+    final baseStyle = TextStyle(
+      color: isUser ? Colors.white : Colors.black87,
+      fontSize: 15,
+      height: 1.35,
+    );
+    final messageSpans =
+        isUser && turn.corrections.any((c) => c.showsInline)
+            ? buildCorrectedMessageSpans(
+              text: turn.text,
+              corrections: turn.corrections,
+              baseStyle: baseStyle,
+              errorColor:
+                  isUser ? const Color(0xFFFF8A80) : AppColors.redWrong,
+              correctionColor:
+                  isUser ? const Color(0xFF69F0AE) : AppColors.greenCorrect,
+            )
+            : [TextSpan(text: turn.text, style: baseStyle)];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment:
+            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment:
+                isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            children: [
+              if (!isUser)
+                const CircleAvatar(
+                  radius: 14,
+                  backgroundColor: AppColors.primaryPurple,
+                  child: Icon(Icons.school, size: 16, color: Colors.white),
+                ),
+              if (!isUser) const SizedBox(width: 8),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isUser ? AppColors.primaryPurple : Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: Radius.circular(isUser ? 16 : 4),
+                      bottomRight: Radius.circular(isUser ? 4 : 16),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: RichText(
+                    text: TextSpan(children: messageSpans),
+                  ),
+                ),
+              ),
+              if (showInstantOkBadge) ...[
+                const SizedBox(width: 6),
+                Container(
+                  width: 22,
+                  height: 22,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.greenCorrect.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.greenCorrect, width: 1.5),
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    size: 14,
+                    color: AppColors.greenCorrect,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (!isUser && translation != null && translation.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 44, top: 4, right: 8),
+              child: Text(
+                translation,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade700,
+                  fontStyle: FontStyle.italic,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          if (!isUser && onPlayAi != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 44, top: 4),
+              child: TextButton.icon(
+                onPressed: isPlayingAi ? null : onPlayAi,
+                icon: Icon(
+                  isPlayingAi ? Icons.volume_up : Icons.play_arrow_rounded,
+                  size: 18,
+                ),
+                label: Text(isPlayingAi ? 'Speaking…' : 'Play'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primaryPurple,
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+          if (isUser && cardCorrections.isNotEmpty)
+            ...cardCorrections.map((c) => _CorrectionCard(correction: c)),
+        ],
+      ),
+    );
+  }
+}
+
+class _CorrectionCard extends StatefulWidget {
+  const _CorrectionCard({required this.correction});
+
+  final GrammarCorrection correction;
+
+  @override
+  State<_CorrectionCard> createState() => _CorrectionCardState();
+}
+
+class _CorrectionCardState extends State<_CorrectionCard> {
+  bool _expanded = false;
+  bool _saving = false;
+  bool _saved = false;
+
+  Future<void> _saveToNotes() async {
+    if (_saving || _saved) return;
+    setState(() => _saving = true);
+    try {
+      final result = await NoteService.instance.saveFromCorrection(
+        correctedText: widget.correction.correctedText,
+        originalText: widget.correction.originalText,
+        explanation: widget.correction.explanation,
+        errorType: widget.correction.errorType,
+      );
+      if (!mounted) return;
+      if (result.ok) {
+        setState(() => _saved = true);
+        final msg =
+            result.flashcardCreated
+                ? 'Saved to notes and From speaking deck'
+                : 'Saved to notes';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.message ?? 'Could not save')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 320),
+          child: Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: () => setState(() => _expanded = !_expanded),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primaryYellow.withValues(alpha: 0.8),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.auto_fix_high,
+                          size: 16,
+                          color: AppColors.primaryPurple,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            widget.correction.correctedText,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryPurple,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          _expanded
+                              ? Icons.expand_less
+                              : Icons.expand_more,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                    if (_expanded) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'You said: ${widget.correction.originalText}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.correction.explanation,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: _saving || _saved ? null : _saveToNotes,
+                          icon: Icon(
+                            _saved ? Icons.check : Icons.bookmark_add_outlined,
+                            size: 16,
+                          ),
+                          label: Text(
+                            _saved
+                                ? 'Saved'
+                                : _saving
+                                ? 'Saving…'
+                                : 'Save to notes',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProcessingIndicator extends StatelessWidget {
+  const _ProcessingIndicator({
+    required this.isProcessing,
+    required this.stage,
+    this.onCancel,
+  });
+
+  final bool isProcessing;
+  final ConversationProcessingStage stage;
+  final VoidCallback? onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isProcessing) return const SizedBox.shrink();
+
+    final label = switch (stage) {
+      ConversationProcessingStage.transcribing => 'Listening…',
+      ConversationProcessingStage.thinking => 'Thinking…',
+      ConversationProcessingStage.speaking => 'Speaking…',
+      ConversationProcessingStage.idle => '',
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(label, style: TextStyle(color: Colors.grey.shade700)),
+          ),
+          if (onCancel != null)
+            TextButton(onPressed: onCancel, child: const Text('Cancel')),
+        ],
+      ),
+    );
+  }
+}
+
+class _InputBar extends StatelessWidget {
+  const _InputBar({
+    required this.isRecording,
+    required this.isProcessing,
+    required this.textController,
+    required this.onMicTap,
+    required this.onSendText,
+    this.recordingDurationLabel,
+    this.typeMessagesEnabled = false,
+    this.onCancel,
+  });
+
+  final bool isRecording;
+  final bool isProcessing;
+  final String? recordingDurationLabel;
+  final TextEditingController textController;
+  final VoidCallback onMicTap;
+  final VoidCallback onSendText;
+  final bool typeMessagesEnabled;
+  final VoidCallback? onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final showTextInput = typeMessagesEnabled || (kIsWeb && kDebugMode);
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            if (showTextInput)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: textController,
+                        enabled: !isProcessing && !isRecording,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => onSendText(),
+                        decoration: InputDecoration(
+                          hintText: 'Type your message…',
+                          filled: true,
+                          fillColor: const Color(0xFFF2F2F5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filled(
+                      onPressed:
+                          isProcessing || isRecording ? null : onSendText,
+                      icon: const Icon(Icons.send),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.primaryPurple,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (!showTextInput || kIsWeb)
+              Text(
+                isRecording
+                    ? 'Recording ${recordingDurationLabel ?? '00:00'} — tap to stop'
+                    : 'Tap the mic to speak',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              ),
+            if (onCancel != null) ...[
+              const SizedBox(height: 6),
+              TextButton(onPressed: onCancel, child: const Text('Cancel')),
+            ],
+            if (!showTextInput || kIsWeb) const SizedBox(height: 10),
+            if (!showTextInput || kIsWeb)
+              GestureDetector(
+                onTap: isProcessing ? null : onMicTap,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color:
+                        isRecording
+                            ? AppColors.redWrong
+                            : AppColors.primaryPurple,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryPurple.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isRecording ? Icons.stop : Icons.mic,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

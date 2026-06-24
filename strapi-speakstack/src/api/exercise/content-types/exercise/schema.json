@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "exercises",
+  "info": {
+    "singularName": "exercise",
+    "pluralName": "exercises",
+    "displayName": "Exercise",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": ["multipleChoice", "fillBlank", "speakingPrompt", "conversation"],
+      "required": true
+    },
+    "prompt": {
+      "type": "text",
+      "required": true
+    },
+    "correctAnswer": {
+      "type": "text"
+    },
+    "options": {
+      "type": "json"
+    },
+    "aiFeedbackEnabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "lesson": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::lesson.lesson",
+      "inversedBy": "exercises"
+    }
+  }
+}
