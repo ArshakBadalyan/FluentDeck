@@ -10,7 +10,6 @@ import '../services/audio_service.dart';
 import '../english_main_screen.dart';
 import '../routing/app_route_names.dart';
 import '../routing/app_page_routes.dart';
-import '../utils/debug_log.dart';
 
 typedef AppleAuthComplete = void Function(Map<String, dynamic> result);
 
@@ -42,33 +41,12 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
   }
 
   Future<void> _checkAvailability() async {
-    // #region agent log
-    debugLog(
-      'apple_sign_in_section.dart:_checkAvailability',
-      'checking apple availability',
-      hypothesisId: 'A',
-      data: {
-        'kIsWeb': kIsWeb,
-        'platform': kIsWeb ? 'web' : Platform.operatingSystem,
-      },
-    );
-    // #endregion
-
     if (kIsWeb) {
       if (mounted) setState(() => _available = false);
       return;
     }
 
     final available = await SignInWithApple.isAvailable();
-
-    // #region agent log
-    debugLog(
-      'apple_sign_in_section.dart:_checkAvailability',
-      'apple availability result',
-      hypothesisId: 'B',
-      data: {'available': available},
-    );
-    // #endregion
 
     if (mounted) {
       setState(() => _available = available);
@@ -134,21 +112,6 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
 
   @override
   Widget build(BuildContext context) {
-    // #region agent log
-    debugLog(
-      'apple_sign_in_section.dart:build',
-      'render apple section',
-      hypothesisId: 'C',
-      data: {
-        'kIsWeb': kIsWeb,
-        'available': _available,
-        'loading': _loading,
-        'enabled': widget.enabled,
-        'isSignUp': widget.isSignUp,
-      },
-    );
-    // #endregion
-
     final label = widget.isSignUp
         ? context.tr('login-register.sign-up-using')
         : context.tr('login-register.sign-in-using');
