@@ -136,6 +136,10 @@ function formatNote(row) {
     source: row.source ?? 'manual',
     createdAt: row.createdAt ?? row.created_at,
     vocabularyEntryId: entry?.id ?? null,
+    cefrLevel: entry?.cefrLevel ?? entry?.cefr_level ?? null,
+    topic: entry?.topic ?? null,
+    partOfSpeech: entry?.partOfSpeech ?? entry?.part_of_speech ?? null,
+    entryType: entry?.entryType ?? entry?.entry_type ?? null,
   };
 }
 

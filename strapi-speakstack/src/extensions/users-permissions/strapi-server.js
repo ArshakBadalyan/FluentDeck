@@ -38,6 +38,11 @@ const {
   deleteByNumericId,
 } = require("../../utils/document-service");
 const plugins = require("../../../config/plugins");
+const {
+  verifyAppleIdentityToken,
+  resolveAppleAudiences,
+  findOrCreateAppleUser,
+} = require("../../utils/apple-sign-in");
 
 const USER_RESPONSE_EXCLUDED_KEYS = [
   "confirmationToken",
@@ -183,75 +188,6 @@ module.exports = (plugin) => {
       user: sanitizedUser,
     });
       },
-      registerNicknamedUser: async (ctx) => {
-    const pluginStore = await strapi.store({
-      type: "plugin",
-      name: "users-permissions",
-    });
-
-    const settings = await pluginStore.get({
-      key: "advanced",
-    });
-
-    if (!settings.allow_register) {
-      throw new ApplicationError(i18n.__("errors.register-action-disabled"));
-    }
-
-    const params = {
-      ..._.omit(ctx.request.body, [
-        "confirmed",
-        "confirmationToken",
-        "resetPasswordToken",
-      ]),
-      provider: "local",
-      confirmed: true,
-    };
-
-    if (!params.username) {
-      throw new ApplicationError(i18n.__("errors.nickname-required"));
-    }
-
-    const role = await strapi
-      .query("plugin::users-permissions.role")
-      .findOne({ where: { type: settings.default_role } });
-
-    if (!role) {
-      throw new ApplicationError(i18n.__("errors.find-default-role"));
-    }
-
-    const user = await strapi.query("plugin::users-permissions.user").findOne({
-      where: {
-        username: {
-          $eqi: params.username,
-        },
-      },
-    });
-
-    if (user) {
-      throw new ApplicationError(i18n.__("errors.nickname-already-taken"));
-    }
-
-    params.role = role.id;
-
-    try {
-      const user = await strapi
-        .query("plugin::users-permissions.user")
-        .create({ data: params });
-
-      const sanitizedUser = await sanitizeUser(user, ctx);
-      const jwt = issue(_.pick(user, ["id"]));
-
-      return ctx.send({
-        jwt,
-        user: sanitizedUser,
-      });
-    } catch (error) {
-      if (error.code === "23505" || error.message?.includes("unique")) {
-        throw new ApplicationError(i18n.__("errors.nickname-already-taken"));
-      }
-      throw new ApplicationError(error.message);
-    }
-      },
       forgotPassword: async (ctx) => {
     const { email } = await validateForgotPasswordBody(ctx.request.body);
 
@@ -329,8 +265,76 @@ module.exports = (plugin) => {
 
     ctx.send({ ok: true });
       },
+      appleMobile: async (ctx) => {
+        const { identityToken, firstName, lastName, email } =
+          ctx.request.body ?? {};
+
+        if (!identityToken) {
+          return ctx.badRequest("Missing identityToken");
+        }
+
+        const audiences = resolveAppleAudiences();
+        if (audiences.length === 0) {
+          throw new ApplicationError("Apple Sign In is not configured");
+        }
+
+        let tokenPayload;
+        try {
+          tokenPayload = await verifyAppleIdentityToken(
+            identityToken,
+            audiences,
+          );
+        } catch (err) {
+          strapi.log.warn(`[appleMobile] token verification failed: ${err.message}`);
+          throw new ApplicationError("Invalid Apple identity token");
+        }
+
+        const appleSub = tokenPayload?.sub;
+        if (!appleSub) {
+          throw new ApplicationError("Invalid Apple identity token");
+        }
+
+        const tokenEmail = normalizeAppleEmail(tokenPayload?.email);
+        const bodyEmail = normalizeAppleEmail(email);
+        const resolvedEmail = bodyEmail || tokenEmail;
+
+        let result;
+        try {
+          result = await findOrCreateAppleUser({
+            appleSub,
+            email: resolvedEmail,
+            firstName:
+              typeof firstName === "string" ? firstName.trim() : undefined,
+            lastName:
+              typeof lastName === "string" ? lastName.trim() : undefined,
+          });
+        } catch (err) {
+          throw new ApplicationError(err.message);
+        }
+
+        const { user, isNewUser } = result;
+
+        if (user.blocked) {
+          throw new ApplicationError(
+            "Your account has been blocked by an administrator",
+          );
+        }
+
+        const sanitizedUser = await sanitizeUser(user, ctx);
+        const jwtToken = getService("jwt").issue({ id: user.id });
+
+        return ctx.send({
+          jwt: jwtToken,
+          user: sanitizedUser,
+          isNewUser,
+        });
+      },
     };
   };
+
+  function normalizeAppleEmail(value) {
+    return typeof value === "string" ? value.trim().toLowerCase() : null;
+  }
 
   const issue = (payload, jwtOptions = {}) => {
     _.defaults(jwtOptions, strapi.config.get("plugin::users-permissions.jwt"));
@@ -587,10 +591,11 @@ module.exports = (plugin) => {
   plugin.routes["content-api"].routes.push(
     {
       method: "POST",
-      path: "/auth/local/register-nicknamed-user",
-      handler: "auth.registerNicknamedUser",
+      path: "/auth/apple/mobile",
+      handler: "auth.appleMobile",
       config: {
         prefix: "",
+        auth: false,
       },
     },
     {

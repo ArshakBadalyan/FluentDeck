@@ -2,7 +2,7 @@
 
 const INITIAL_EASE = 2.5;
 const MIN_EASE = 1.3;
-const LEARNING_STEPS_MINUTES = [1, 10];
+const LEARNING_STEPS_MINUTES = [1, 6, 10];
 
 function addMinutes(date, minutes) {
   return new Date(date.getTime() + minutes * 60 * 1000);
@@ -27,7 +27,7 @@ function resolveSchedulingOptions(deckOptions) {
     lapseSteps,
     graduatingInterval:
       Math.max(1, parseFloat(String(o.graduatingIntervalDays ?? 1)) || 1),
-    easyInterval: Math.max(1, parseFloat(String(o.easyIntervalDays ?? 4)) || 4),
+    easyInterval: Math.max(1, parseFloat(String(o.easyIntervalDays ?? 5)) || 5),
     easyBonus: Math.max(1, parseFloat(String(o.easyBonus ?? 1.3)) || 1.3),
     minimumInterval:
       Math.max(1, parseFloat(String(o.minimumIntervalDays ?? 1)) || 1),
@@ -110,6 +110,39 @@ function applySm2Rating(current, rating, now = new Date(), deckOptions = null) {
   const activeSteps = state.state === 'relearning' ? lapseSteps : learningSteps;
 
   if (state.state === 'new' || state.state === 'learning' || state.state === 'relearning') {
+    if (state.state === 'new') {
+      if (again) {
+        state.state = 'learning';
+        state.learningStep = 0;
+        state.dueAt = addMinutes(now, activeSteps[0] ?? 1);
+        return state;
+      }
+      if (hard) {
+        state.state = 'learning';
+        state.learningStep = 1;
+        state.dueAt = addMinutes(now, activeSteps[1] ?? 6);
+        return state;
+      }
+      if (good) {
+        state.state = 'learning';
+        state.learningStep = Math.min(2, activeSteps.length - 1);
+        state.dueAt = addMinutes(
+          now,
+          activeSteps.length > 2 ? activeSteps[2] : activeSteps[activeSteps.length - 1] ?? 10,
+        );
+        return state;
+      }
+      if (easy) {
+        state.state = 'review';
+        state.intervalDays = easyInterval;
+        state.repetitions = 1;
+        state.easeFactor = Math.min(state.easeFactor + 0.15, 3.0);
+        state.dueAt = addDays(now, state.intervalDays);
+        state.learningStep = 0;
+        return state;
+      }
+    }
+
     if (again) {
       state.state = state.state === 'new' ? 'learning' : 'relearning';
       state.learningStep = 0;

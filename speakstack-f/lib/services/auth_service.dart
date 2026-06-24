@@ -74,14 +74,37 @@ class AuthService {
     final data = await ApiService.get('auth/$provider/callback$accessToken');
 
     if (data['error'] == null) {
-      await _storeJwtAndUser(data);
-      unawaited(sendAppInfo());
-      unawaited(EnglishLevelService.instance.syncOnAppStart());
-      await PushNotificationService.login(data['user']['id'].toString());
-      await _logAuthAnalyticsLogin(method: provider, userId: data['user']['id']);
+      await completeProviderSession(
+        Map<String, dynamic>.from(data as Map),
+        analyticsMethod: provider,
+        isNewUser: false,
+      );
       return {'status': 'success'};
     }
     return {'status': 'error', 'message': data['error']?['message']};
+  }
+
+  /// Persists JWT/user after a successful OAuth or Apple mobile auth response.
+  static Future<void> completeProviderSession(
+    Map<String, dynamic> data, {
+    required String analyticsMethod,
+    required bool isNewUser,
+  }) async {
+    await _storeJwtAndUser(data);
+    unawaited(sendAppInfo());
+    unawaited(EnglishLevelService.instance.syncOnAppStart());
+    await PushNotificationService.login(data['user']['id'].toString());
+    if (isNewUser) {
+      await _logAuthAnalyticsSignUp(
+        method: analyticsMethod,
+        userId: data['user']['id'],
+      );
+    } else {
+      await _logAuthAnalyticsLogin(
+        method: analyticsMethod,
+        userId: data['user']['id'],
+      );
+    }
   }
 
 
@@ -96,26 +119,6 @@ class AuthService {
       unawaited(EnglishLevelService.instance.syncOnAppStart());
       await PushNotificationService.login(data['user']['id'].toString());
       await _logAuthAnalyticsSignUp(method: 'password', userId: data['user']['id']);
-      return {'status': 'success'};
-    }
-    return {'status': 'error', 'error': data['error']};
-  }
-
-
-  static Future<Map<String, dynamic>> registerByNickname(
-    Map<String, dynamic> userData,
-  ) async {
-    final data = await ApiService.post(
-      'auth/local/register-nicknamed-user',
-      userData,
-    );
-
-    if (data['error'] == null) {
-      await _storeJwtAndUser(data);
-      unawaited(sendAppInfo());
-      unawaited(EnglishLevelService.instance.syncOnAppStart());
-      await PushNotificationService.login(data['user']['id'].toString());
-      await _logAuthAnalyticsSignUp(method: 'nickname', userId: data['user']['id']);
       return {'status': 'success'};
     }
     return {'status': 'error', 'error': data['error']};

@@ -7,6 +7,7 @@ import '../../services/conversation_service.dart';
 import '../conversation_screen/conversation_screen.dart';
 import 'speaking_chat_tab.dart';
 import 'speaking_games_tab.dart';
+import 'speaking_notes_tab.dart';
 import 'speaking_practice_tab.dart';
 import 'speaking_role_play_tab.dart';
 import 'speaking_topics_tab.dart';
@@ -107,6 +108,7 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
       controller: widget.tabController,
       children: [
         SpeakingChatTab(onStart: _startSession),
+        SpeakingNotesTab(onStart: _startSession),
         SpeakingPracticeTab(onStart: _startSession),
         SpeakingGamesTab(onStart: _startSession),
         SpeakingRolePlayTab(onStart: _startSession),

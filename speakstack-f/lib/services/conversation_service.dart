@@ -105,6 +105,17 @@ class ConversationService {
     );
   }
 
+  void startNotesPractice({
+    required String sessionLabel,
+    required List<ConversationTrainingWord> words,
+  }) {
+    trainingSession = ConversationTrainingSession(
+      sourceKey: 'my_notes',
+      sourceLabel: sessionLabel,
+      words: words,
+    );
+  }
+
   Future<void> cancelActiveOperation() async {
     await _stopChatAudioOnly(clearError: true);
     _notify();

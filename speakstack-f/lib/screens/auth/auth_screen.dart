@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:speakstack/localization/app_localizations.dart';
 import 'login_form.dart';
 import 'register_form.dart';
-import 'nickname_form.dart';
-import '../../ui_elements/auth_tab_switcher.dart';
 
-enum AuthMode { register, login, nickname }
+enum AuthMode { register, login }
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key, this.initialMode = AuthMode.login});
@@ -43,11 +41,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
               const SizedBox(height: 48),
-              if (_mode != AuthMode.login) ...[
-                AuthTabSwitcher(current: _mode, onChanged: _setMode),
-                const SizedBox(height: 32),
-              ],
-              const SizedBox(height: 32),
               Expanded(child: _buildForm()),
             ],
           ),
@@ -60,8 +53,6 @@ class _AuthScreenState extends State<AuthScreen> {
     switch (_mode) {
       case AuthMode.login:
         return LoginForm(onSwitch: _setMode);
-      case AuthMode.nickname:
-        return NicknameForm(onSwitch: _setMode);
       case AuthMode.register:
         return RegisterForm(onSwitch: _setMode);
     }

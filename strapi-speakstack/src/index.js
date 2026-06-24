@@ -156,6 +156,10 @@ module.exports = {
       await linkPermissionToRole(
         "plugin::users-permissions.user.getSpeakingPreferences",
       );
+      await linkPermissionToRole(
+        "plugin::users-permissions.auth.appleMobile",
+        "public",
+      );
       strapi.log.info(
         "[bootstrap] English content + AI proxy permissions linked.",
       );

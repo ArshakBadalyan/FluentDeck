@@ -7,10 +7,29 @@ class NoteService {
   NoteService._();
   static final NoteService instance = NoteService._();
 
-  Future<List<UserNoteModel>> fetchNotes({String? query}) async {
-    final q = query != null && query.trim().isNotEmpty
-        ? '?q=${Uri.encodeComponent(query.trim())}'
-        : '';
+  Future<List<UserNoteModel>> fetchNotes({
+    String? query,
+    String? source,
+    String? cefrLevel,
+    String? topic,
+  }) async {
+    final params = <String, String>{};
+    if (query != null && query.trim().isNotEmpty) {
+      params['q'] = query.trim();
+    }
+    if (source != null && source.isNotEmpty && source != 'all') {
+      params['source'] = source;
+    }
+    if (cefrLevel != null && cefrLevel.isNotEmpty && cefrLevel != 'all') {
+      params['cefrLevel'] = cefrLevel;
+    }
+    if (topic != null && topic.isNotEmpty && topic != 'all') {
+      params['topic'] = topic;
+    }
+
+    final q = params.isEmpty
+        ? ''
+        : '?${params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&')}';
     final data = await ApiService.get('notes$q');
     final rows = StrapiResponse.list(data);
 

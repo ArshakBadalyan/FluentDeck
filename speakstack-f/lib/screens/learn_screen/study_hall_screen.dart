@@ -96,7 +96,7 @@ class _StudyHallScreenState extends State<StudyHallScreen> {
           )
           .toList(),
     );
-    MainNavigationCoordinator.goToMainTab(0, subIndex: 1);
+    MainNavigationCoordinator.goToMainTab(0, subIndex: 2);
   }
 
   @override

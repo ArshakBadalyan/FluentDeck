@@ -6,6 +6,7 @@ import '../../routing/app_route_names.dart';
 import '../../routing/app_page_routes.dart';
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
+import '../../ui_elements/apple_sign_in_section.dart';
 import '../../ui_elements/auth_input_decoration.dart';
 import '../../ui_elements/auth_secondary_link.dart';
 import '../../ui_elements/primary_button.dart';
@@ -137,6 +138,10 @@ class _RegisterFormState extends State<RegisterForm> {
                   : context.tr('login-register.sign-up'),
           enabled: _isValid && !_loading,
           onPressed: _submit,
+        ),
+        AppleSignInSection(
+          isSignUp: true,
+          enabled: !_loading,
         ),
         const Spacer(),
         AuthInlineSwitchLink(

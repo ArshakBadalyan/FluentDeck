@@ -2,7 +2,7 @@ import '../models/flashcard_model.dart';
 
 const _initialEase = 2.5;
 const _minEase = 1.3;
-const _defaultLearningSteps = [1, 10];
+const _defaultLearningSteps = [1, 6, 10];
 const _defaultLapseSteps = [10];
 
 DateTime _addMinutes(DateTime date, int minutes) {
@@ -49,6 +49,56 @@ CardReviewStateModel previewAfterRating(
   final activeSteps = state == 'relearning' ? lapseSteps : learningSteps;
 
   if (state == 'new' || state == 'learning' || state == 'relearning') {
+    if (state == 'new') {
+      if (again) {
+        return _build(
+          'learning',
+          intervalDays,
+          easeFactor,
+          _addMinutes(base, learningSteps.first),
+          lapses,
+          repetitions,
+          0,
+        );
+      }
+      if (hard) {
+        return _build(
+          'learning',
+          intervalDays,
+          easeFactor,
+          _addMinutes(base, learningSteps.length > 1 ? learningSteps[1] : 6),
+          lapses,
+          repetitions,
+          1,
+        );
+      }
+      if (good) {
+        final goodMinutes = learningSteps.length > 2
+            ? learningSteps[2]
+            : learningSteps.last;
+        return _build(
+          'learning',
+          intervalDays,
+          easeFactor,
+          _addMinutes(base, goodMinutes),
+          lapses,
+          repetitions,
+          learningSteps.length > 2 ? 2 : learningSteps.length - 1,
+        );
+      }
+      if (easy) {
+        return _build(
+          'review',
+          easyInterval,
+          (easeFactor + 0.15).clamp(_initialEase, 3.0),
+          _addDays(base, easyInterval),
+          lapses,
+          1,
+          0,
+        );
+      }
+    }
+
     if (again) {
       state = state == 'new' ? 'learning' : 'relearning';
       learningStep = 0;
@@ -235,7 +285,9 @@ Map<String, String> intervalPreviewsForCard(
 String formatIntervalPreview(DateTime dueAt, DateTime now) {
   final diff = dueAt.difference(now);
   if (diff.inSeconds <= 0) return '<1m';
-  if (diff.inMinutes < 1) return '<1m';
+  if (diff.inMinutes <= 1) return '<1m';
+  if (diff.inMinutes <= 6) return '<6m';
+  if (diff.inMinutes <= 10) return '<10m';
   if (diff.inMinutes < 60) return '${diff.inMinutes}m';
   if (diff.inHours < 24) return '${diff.inHours}h';
   if (diff.inDays < 30) return '${diff.inDays}d';

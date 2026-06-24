@@ -7,6 +7,10 @@ class UserNoteModel {
   final String source;
   final DateTime? createdAt;
   final int? vocabularyEntryId;
+  final String? cefrLevel;
+  final String? topic;
+  final String? partOfSpeech;
+  final String? entryType;
 
   const UserNoteModel({
     required this.id,
@@ -17,6 +21,10 @@ class UserNoteModel {
     this.source = 'manual',
     this.createdAt,
     this.vocabularyEntryId,
+    this.cefrLevel,
+    this.topic,
+    this.partOfSpeech,
+    this.entryType,
   });
 
   String get sourceLabel {
@@ -47,6 +55,10 @@ class UserNoteModel {
               ? DateTime.tryParse(json['createdAt'].toString())
               : null,
       vocabularyEntryId: json['vocabularyEntryId'] as int?,
+      cefrLevel: json['cefrLevel'] as String?,
+      topic: json['topic'] as String?,
+      partOfSpeech: json['partOfSpeech'] as String?,
+      entryType: json['entryType'] as String?,
     );
   }
 }
