@@ -1,16 +1,16 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:untitled2/app_colors.dart';
 import 'package:untitled2/data/decks_help_content.dart';
 import 'package:untitled2/models/flashcard_model.dart';
 import 'package:untitled2/models/flashcard_stats_model.dart';
 import 'package:untitled2/services/flashcard_service.dart';
 import 'package:untitled2/services/flashcard_stats_export_service.dart';
+import 'package:untitled2/screens/learn_screen/review_log_screen.dart';
 import 'package:untitled2/screens/learn_screen/widgets/decks_contextual_help.dart';
 import 'package:untitled2/services/decks_help_hints_store.dart';
-import 'package:untitled2/utils/html_text_utils.dart';
 import 'package:untitled2/utils/statistics_labels.dart';
+import 'package:untitled2/widgets/activity_preview_list.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -319,7 +319,25 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               title: 'Review log',
               icon: Icons.history_rounded,
               subtitle: 'Recent answers',
-              child: _ReviewLogList(entries: _log),
+              child:
+                  _log.isEmpty
+                      ? const _EmptyHint(text: 'No review log entries yet.')
+                      : ActivityPreviewList(
+                        itemCount: _log.length,
+                        itemHeight: 58,
+                        itemSpacing: 8,
+                        onViewAll: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder:
+                                  (_) => ReviewLogScreen(deckId: _deckFilter),
+                            ),
+                          );
+                        },
+                        itemBuilder: (context, index) {
+                          return ReviewLogEntryTile(entry: _log[index]);
+                        },
+                      ),
             ),
           ],
         ),
@@ -1375,98 +1393,5 @@ class _IntervalBucketsChart extends StatelessWidget {
             }).toList(),
       ),
     );
-  }
-}
-
-class _ReviewLogList extends StatelessWidget {
-  const _ReviewLogList({required this.entries});
-
-  final List<FlashcardReviewLogEntry> entries;
-
-  @override
-  Widget build(BuildContext context) {
-    if (entries.isEmpty) {
-      return const _EmptyHint(text: 'No review log entries yet.');
-    }
-
-    final fmt = DateFormat('MMM d, HH:mm');
-
-    return Column(
-      children:
-          entries.take(15).map((e) {
-            final color = _ratingColor(e.rating);
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withValues(alpha: 0.18)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      e.rating[0].toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: color,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          stripHtml(e.front ?? ''),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          [
-                            e.rating,
-                            if (e.reviewedAt != null) fmt.format(e.reviewedAt!.toLocal()),
-                            if (e.durationMs > 0) '${(e.durationMs / 1000).toStringAsFixed(0)}s',
-                          ].join(' · '),
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-    );
-  }
-
-  Color _ratingColor(String rating) {
-    switch (rating) {
-      case 'again':
-        return AppColors.redWrong;
-      case 'hard':
-        return const Color(0xFFFF9800);
-      case 'good':
-        return AppColors.primaryYellow;
-      case 'easy':
-        return AppColors.greenCorrect;
-      default:
-        return Colors.grey;
-    }
   }
 }

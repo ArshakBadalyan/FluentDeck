@@ -6,6 +6,7 @@ import '../../models/speaking_topic_model.dart';
 import '../../services/speaking_content_service.dart';
 import '../../services/speaking_scores_service.dart';
 import '../../services/speaking_session_service.dart';
+import '../../utils/speaking_item_icons.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingTopicsTab extends StatefulWidget {
@@ -129,7 +130,10 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
           return SpeakingSelectionCard(
             title: topic.title,
             subtitle: _cardSubtitle(topic),
-            icon: speakingIconForKey(topic.iconKey),
+            icon: resolveSpeakingListIcon(
+              title: topic.title,
+              iconKey: topic.iconKey,
+            ),
             score: _scoreCache[topic.referenceKey],
             selected: _selected?.referenceKey == topic.referenceKey,
             onTap: () => setState(() => _selected = topic),

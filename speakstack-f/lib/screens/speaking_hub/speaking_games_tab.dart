@@ -6,6 +6,7 @@ import '../../models/speaking_session_context.dart';
 import '../../services/speaking_content_service.dart';
 import '../../services/speaking_session_service.dart';
 import '../../services/speaking_scores_service.dart';
+import '../../utils/speaking_item_icons.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingGamesTab extends StatefulWidget {
@@ -93,7 +94,15 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
         children: [
           Row(
             children: [
-              Icon(speakingIconForKey(game.iconKey), color: AppColors.primaryPurple, size: 20),
+              Icon(
+                resolveSpeakingListIcon(
+                  title: game.title,
+                  iconKey: game.iconKey,
+                  slug: game.slug,
+                ),
+                color: speakingIconAccent(game.title),
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -178,7 +187,11 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
           final game = _games[index];
           return SpeakingGameGridCard(
             title: game.title,
-            icon: speakingIconForKey(game.iconKey),
+            icon: resolveSpeakingListIcon(
+              title: game.title,
+              iconKey: game.iconKey,
+              slug: game.slug,
+            ),
             score: _scoreCache[game.referenceKey],
             featured: game.isFeatured,
             selected: _selected?.referenceKey == game.referenceKey,

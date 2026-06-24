@@ -7,6 +7,7 @@ import '../../services/custom_role_play_service.dart';
 import '../../services/speaking_content_service.dart';
 import '../../services/speaking_scores_service.dart';
 import '../../services/speaking_session_service.dart';
+import '../../utils/speaking_item_icons.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingRolePlayTab extends StatefulWidget {
@@ -242,7 +243,10 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
           return SpeakingSelectionCard(
             title: scenario.displayTitle,
             subtitle: scenario.rolesSubtitle,
-            icon: speakingIconForKey(scenario.iconKey),
+            icon: resolveSpeakingListIcon(
+              title: scenario.displayTitle,
+              iconKey: scenario.iconKey,
+            ),
             score: _scoreCache[scenario.referenceKey],
             selected: _selected?.referenceKey == scenario.referenceKey,
             trailing:

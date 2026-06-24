@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:untitled2/app_colors.dart';
+import 'package:untitled2/utils/speaking_item_icons.dart';
 
 /// Matches [MainAppBar] sub-tab styling (Decks, Library, Speak).
 TabBar buildAppStyleTabBar({
@@ -29,98 +30,43 @@ TabBar buildAppStyleTabBar({
   );
 }
 
-IconData speakingIconForKey(String key) {
-  switch (key) {
-    case 'restaurant':
-      return Icons.restaurant;
-    case 'work':
-      return Icons.work_outline;
-    case 'school':
-      return Icons.school_outlined;
-    case 'favorite':
-      return Icons.favorite_border;
-    case 'travel':
-      return Icons.flight;
-    case 'hotel':
-      return Icons.hotel;
-    case 'health':
-      return Icons.medical_services_outlined;
-    case 'shopping':
-      return Icons.shopping_bag_outlined;
-    case 'transport':
-      return Icons.local_taxi;
-    case 'social':
-      return Icons.people_outline;
-    case 'bank':
-      return Icons.account_balance;
-    case 'movie':
-      return Icons.movie_outlined;
-    case 'library':
-      return Icons.local_library_outlined;
-    case 'delivery':
-      return Icons.delivery_dining;
-    case 'customs':
-      return Icons.luggage;
-    case 'haircut':
-      return Icons.content_cut;
-    case 'return':
-      return Icons.assignment_return;
-    case 'birthday':
-      return Icons.cake_outlined;
-    case 'family':
-      return Icons.home_outlined;
-    case 'routine':
-      return Icons.alarm;
-    case 'food':
-      return Icons.fastfood_outlined;
-    case 'holiday':
-      return Icons.celebration;
-    case 'dragon':
-      return Icons.auto_stories;
-    case 'question':
-      return Icons.help_outline;
-    case 'emoji':
-      return Icons.emoji_emotions_outlined;
-    case 'detective':
-      return Icons.search;
-    case 'quill':
-      return Icons.edit_outlined;
-    case 'would_you_rather':
-      return Icons.compare_arrows;
-    case 'home':
-      return Icons.home_outlined;
-    case 'pets':
-      return Icons.pets;
-    case 'hobbies':
-      return Icons.interests_outlined;
-    case 'music':
-      return Icons.music_note_outlined;
-    case 'books':
-      return Icons.menu_book_outlined;
-    case 'sports':
-      return Icons.sports_soccer_outlined;
-    case 'weather':
-      return Icons.wb_sunny_outlined;
-    case 'fashion':
-      return Icons.checkroom_outlined;
-    case 'garden':
-      return Icons.yard_outlined;
-    case 'camping':
-      return Icons.park_outlined;
-    case 'crafts':
-      return Icons.brush_outlined;
-    case 'gaming':
-      return Icons.sports_esports_outlined;
-    case 'furniture':
-      return Icons.chair_outlined;
-    case 'amusement':
-      return Icons.attractions_outlined;
-    case 'art':
-      return Icons.palette_outlined;
-    case 'memory':
-      return Icons.history_edu_outlined;
-    default:
-      return Icons.chat_bubble_outline;
+IconData speakingIconForKey(String key) =>
+    resolveSpeakingListIcon(title: '', iconKey: key);
+
+class SpeakingListIconBadge extends StatelessWidget {
+  const SpeakingListIconBadge({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.size = 44,
+    this.iconSize = 22,
+  });
+
+  final IconData icon;
+  final String title;
+  final double size;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = speakingIconAccent(title);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: 0.18),
+            accent.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
+      ),
+      child: Icon(icon, color: accent, size: iconSize),
+    );
   }
 }
 
@@ -165,15 +111,7 @@ class SpeakingSelectionCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: AppColors.primaryPurple),
-              ),
+              SpeakingListIconBadge(icon: icon, title: title),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -300,7 +238,12 @@ class SpeakingGameGridCard extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(icon, size: 36, color: AppColors.primaryPurple),
+                    SpeakingListIconBadge(
+                      icon: icon,
+                      title: title,
+                      size: 56,
+                      iconSize: 28,
+                    ),
                     const SizedBox(height: 10),
                     Text(
                       title,

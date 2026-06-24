@@ -107,6 +107,29 @@ class _ConversationScreenState extends State<ConversationScreen> {
     }
   }
 
+  String? _compactStatusLine() {
+    final parts = <String>[];
+    final sessionLabel = _sessionBannerLabel();
+    if (sessionLabel.isNotEmpty) {
+      parts.add(sessionLabel);
+    } else if (_service.trainingSession.isActive) {
+      parts.add(
+        'Training: ${_service.trainingSession.sourceLabel} '
+        '(${_service.trainingSession.words.length} words)',
+      );
+    }
+    if (_usage != null && !_usage!.isPremium) {
+      parts.add(
+        '${_usage!.remaining}/${_usage!.dailyLimit} free today',
+      );
+    }
+    if (_service.autoConversationEnabled) {
+      parts.add('Hands-free on');
+    }
+    if (parts.isEmpty) return null;
+    return parts.join(' · ');
+  }
+
   Future<void> _endSession() async {
     final result = await _service.evaluateCurrentSession();
     if (!mounted) return;
@@ -169,6 +192,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final statusLine = _compactStatusLine();
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7FA),
       appBar:
@@ -182,25 +206,35 @@ class _ConversationScreenState extends State<ConversationScreen> {
               ),
       body: Column(
         children: [
-          if (_sessionBannerLabel().isNotEmpty)
+          if (statusLine != null || _service.canEvaluateSession)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: AppColors.greenCorrect.withValues(alpha: 0.12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              color: AppColors.primaryPurple.withValues(alpha: 0.06),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      _sessionBannerLabel(),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.green.shade800,
-                        fontWeight: FontWeight.w600,
+                  if (statusLine != null)
+                    Expanded(
+                      child: Text(
+                        statusLine,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ),
+                    )
+                  else
+                    const Spacer(),
                   if (_service.canEvaluateSession)
                     TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                       onPressed:
                           _service.isEvaluatingSession ? null : _endSession,
                       child:
@@ -213,84 +247,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
                               : const Text('End & score'),
                     ),
                 ],
-              ),
-            ),
-          if (_sessionBannerLabel().isEmpty && _service.canEvaluateSession)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              color: AppColors.primaryPurple.withValues(alpha: 0.06),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed:
-                      _service.isEvaluatingSession ? null : _endSession,
-                  child:
-                      _service.isEvaluatingSession
-                          ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Text('End & score session'),
-                ),
-              ),
-            ),
-          if (_service.trainingSession.isActive)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: AppColors.greenCorrect.withValues(alpha: 0.12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.school_outlined,
-                    size: 16,
-                    color: Colors.green.shade800,
-                  ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      'Training: ${_service.trainingSession.sourceLabel} '
-                      '(${_service.trainingSession.words.length} words)',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.green.shade800,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          if (_usage != null && !_usage!.isPremium)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: AppColors.primaryPurple.withValues(alpha: 0.08),
-              child: Text(
-                '${_usage!.remaining} of ${_usage!.dailyLimit} free conversations left today',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.primaryPurple,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          if (_service.autoConversationEnabled || _service.autoPlayVoiceEnabled)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              color: AppColors.primaryYellow.withValues(alpha: 0.18),
-              child: Text(
-                _service.autoConversationEnabled
-                    ? 'Auto-conversation on — mic and AI voice run automatically'
-                    : 'Auto-play voice on — AI replies play automatically',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
               ),
             ),
           if (_service.errorMessage != null)

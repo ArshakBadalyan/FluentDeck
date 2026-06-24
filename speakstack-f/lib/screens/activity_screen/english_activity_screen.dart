@@ -5,9 +5,12 @@ import 'package:untitled2/app_colors.dart';
 import 'package:untitled2/models/speaking_session_record_model.dart';
 import 'package:untitled2/models/user_note_model.dart';
 import 'package:untitled2/models/user_progress_model.dart';
+import 'package:untitled2/screens/activity_screen/speaking_saved_phrases_screen.dart';
+import 'package:untitled2/screens/activity_screen/speaking_session_history_screen.dart';
 import 'package:untitled2/services/note_service.dart';
 import 'package:untitled2/services/speaking_session_service.dart';
 import 'package:untitled2/services/user_progress_service.dart';
+import 'package:untitled2/widgets/activity_preview_list.dart';
 
 class EnglishActivityScreen extends StatefulWidget {
   const EnglishActivityScreen({super.key});
@@ -39,12 +42,12 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
     try {
       final results = await Future.wait([
         UserProgressService.instance.createIfMissing(),
-        SpeakingSessionService.instance.fetchRecent(limit: 10),
+        SpeakingSessionService.instance.fetchRecent(limit: 50),
         NoteService.instance.fetchNotes(),
       ]);
       final notes = results[2] as List<UserNoteModel>;
       final speakingNotes =
-          notes.where((n) => n.source == 'speaking').take(5).toList();
+          notes.where((n) => n.source == 'speaking').toList();
 
       if (!mounted) return;
       setState(() {
@@ -165,31 +168,25 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                       text:
                           'Complete a speaking session and tap End & score to see history here.',
                     )
-                  : Column(
-                      children: [
-                        ..._history.take(5).map(
-                              (session) => _HistoryCard(
-                                title: '${session.historyTitle} — ${session.modeLabel}',
-                                subtitle: _formatSessionTime(session.completedAt),
-                                score: session.score,
-                              ),
-                            ),
-                        if (_history.length > 5)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                '${_history.length} sessions total',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
+                  : ActivityPreviewList(
+                      itemCount: _history.length,
+                      itemHeight: 68,
+                      itemSpacing: 10,
+                      onViewAll: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const SpeakingSessionHistoryScreen(),
                           ),
-                      ],
+                        );
+                      },
+                      itemBuilder: (context, index) {
+                        final session = _history[index];
+                        return _HistoryCard(
+                          title: '${session.historyTitle} — ${session.modeLabel}',
+                          subtitle: _formatSessionTime(session.completedAt),
+                          score: session.score,
+                        );
+                      },
                     ),
             ),
             const SizedBox(height: 16),
@@ -201,10 +198,20 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                       text:
                           'Save corrections from speaking conversations to build your phrase list.',
                     )
-                  : Column(
-                      children: _savedPhrases
-                          .map((note) => _PhraseCard(text: note.word))
-                          .toList(),
+                  : ActivityPreviewList(
+                      itemCount: _savedPhrases.length,
+                      itemHeight: 46,
+                      itemSpacing: 8,
+                      onViewAll: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const SpeakingSavedPhrasesScreen(),
+                          ),
+                        );
+                      },
+                      itemBuilder: (context, index) {
+                        return _PhraseCard(text: _savedPhrases[index].word);
+                      },
                     ),
             ),
             const SizedBox(height: 16),
@@ -567,7 +574,6 @@ class _HistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFF4FBF6),
@@ -647,7 +653,6 @@ class _PhraseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.primaryPurple.withValues(alpha: 0.05),
