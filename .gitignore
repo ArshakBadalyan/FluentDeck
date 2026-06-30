@@ -1,3 +1,6 @@
 .DS_Store
-.cursor/
+.cursor/*
+!.cursor/skills/
+!.cursor/skills/**
+.claude/settings.local.json
 docs/

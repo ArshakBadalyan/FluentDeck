@@ -1,0 +1,203 @@
+import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/models/lesson_model.dart';
+import 'package:fluentdeck/screens/lessons_screen/lesson_detail_screen.dart';
+import 'package:fluentdeck/services/english_level_service.dart';
+import 'package:fluentdeck/services/lesson_service.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+
+class LessonsListTab extends StatefulWidget {
+  const LessonsListTab({super.key});
+
+  @override
+  State<LessonsListTab> createState() => _LessonsListTabState();
+}
+
+class _LessonsListTabState extends State<LessonsListTab> {
+  bool _loading = true;
+  String? _error;
+  String _levelFilter = EnglishLevelService.defaultLevel;
+  List<LessonModel> _lessons = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final level = await EnglishLevelService.instance.getLevel();
+      final lessons = await LessonService.instance.fetchLessons(level: level);
+      if (!mounted) return;
+      setState(() {
+        _levelFilter = level;
+        _lessons = lessons;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onLevelChanged(String? level) async {
+    if (level == null) return;
+    await EnglishLevelService.instance.setLevel(level);
+    await _load();
+  }
+
+  void _openLesson(LessonModel lesson) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LessonDetailScreen(lessonId: lesson.id),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const LessonsListSkeleton();
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_error!, textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              FilledButton(onPressed: _load, child: const Text('Retry')),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Row(
+            children: [
+              const Text('Level', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(width: 12),
+              DropdownButton<String>(
+                value: _levelFilter,
+                items:
+                    const ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+                        .map(
+                          (level) => DropdownMenuItem(
+                            value: level,
+                            child: Text(level),
+                          ),
+                        )
+                        .toList(),
+                onChanged: _onLevelChanged,
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child:
+              _lessons.isEmpty
+                  ? Center(
+                    child: Text(
+                      'No lessons yet.\nAdd lessons in Strapi admin.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  )
+                  : RefreshIndicator(
+                    onRefresh: _load,
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _lessons.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final lesson = _lessons[index];
+                        return _LessonCard(
+                          lesson: lesson,
+                          onTap: () => _openLesson(lesson),
+                        );
+                      },
+                    ),
+                  ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LessonCard extends StatelessWidget {
+  const _LessonCard({required this.lesson, required this.onTap});
+
+  final LessonModel lesson;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+                child: Text(
+                  lesson.level,
+                  style: const TextStyle(
+                    color: AppColors.primaryPurple,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lesson.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${lesson.skillType} · ${lesson.exercises.length} exercises',
+                      style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
