@@ -1,4 +1,4 @@
-API_URL=http://localhost:1337/api
+API_URL=http://localhost:1338/api
 APP_LANGUAGE=en
 
 # Google Sign In — Web OAuth client ID from Google Cloud Console (required for social login)

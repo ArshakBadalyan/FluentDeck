@@ -1,6 +1,6 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Resolves Strapi upload plugin URLs for use with [Image.network].
+/// Resolves Strapi upload plugin URLs for use with [CachedStrapiImage].
 ///
 /// [API_URL] is typically `…/api`; media paths are usually served from the
 /// same host without the `/api` suffix.

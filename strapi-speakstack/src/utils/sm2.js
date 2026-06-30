@@ -1,8 +1,9 @@
 'use strict';
 
+const { getSchedulingDefaultsSync } = require('./flashcard-scheduling-defaults');
+
 const INITIAL_EASE = 2.5;
 const MIN_EASE = 1.3;
-const LEARNING_STEPS_MINUTES = [1, 6, 10];
 
 function addMinutes(date, minutes) {
   return new Date(date.getTime() + minutes * 60 * 1000);
@@ -13,11 +14,12 @@ function addDays(date, days) {
 }
 
 function resolveSchedulingOptions(deckOptions) {
+  const globalDefaults = getSchedulingDefaultsSync();
   const o = deckOptions && typeof deckOptions === 'object' ? deckOptions : {};
   const learningSteps =
     Array.isArray(o.learningStepsMinutes) && o.learningStepsMinutes.length
       ? o.learningStepsMinutes
-      : LEARNING_STEPS_MINUTES;
+      : globalDefaults.learningStepsMinutes;
   const lapseSteps =
     Array.isArray(o.lapseStepsMinutes) && o.lapseStepsMinutes.length
       ? o.lapseStepsMinutes
@@ -27,7 +29,11 @@ function resolveSchedulingOptions(deckOptions) {
     lapseSteps,
     graduatingInterval:
       Math.max(1, parseFloat(String(o.graduatingIntervalDays ?? 1)) || 1),
-    easyInterval: Math.max(1, parseFloat(String(o.easyIntervalDays ?? 5)) || 5),
+    easyInterval: Math.max(
+      1,
+      parseFloat(String(o.easyIntervalDays ?? globalDefaults.easyIntervalDays)) ||
+        globalDefaults.easyIntervalDays,
+    ),
     easyBonus: Math.max(1, parseFloat(String(o.easyBonus ?? 1.3)) || 1.3),
     minimumInterval:
       Math.max(1, parseFloat(String(o.minimumIntervalDays ?? 1)) || 1),
@@ -257,7 +263,7 @@ function isDue(reviewState, now = new Date()) {
 
 module.exports = {
   INITIAL_EASE,
-  LEARNING_STEPS_MINUTES,
+  MIN_EASE,
   resolveSchedulingOptions,
   initialReviewState,
   formatReviewState,

@@ -15,6 +15,7 @@ import 'package:speakstack/services/flashcard_export_service.dart';
 import 'package:speakstack/services/flashcard_import_service.dart';
 import 'package:speakstack/services/flashcard_service.dart';
 import 'package:speakstack/services/flashcard_sync_service.dart';
+import 'package:speakstack/ui_elements/app_skeletons.dart';
 import 'package:speakstack/ui_elements/modern_page_widgets.dart';
 import 'package:speakstack/widgets/swipe_action_backgrounds.dart';
 
@@ -575,9 +576,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const AppPageBackground(
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return const DecksListSkeleton();
     }
 
     if (_error != null) {

@@ -58,6 +58,15 @@
     "gamesRequirePremium": {
       "type": "boolean",
       "default": false
+    },
+    "defaultLearningStepsMinutes": {
+      "type": "json",
+      "default": [2, 8, 10]
+    },
+    "defaultEasyIntervalDays": {
+      "type": "decimal",
+      "default": 5,
+      "min": 0.01
     }
   }
 }

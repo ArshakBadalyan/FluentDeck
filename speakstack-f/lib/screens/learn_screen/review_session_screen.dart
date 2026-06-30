@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/widgets/cached_strapi_image.dart';
 import 'package:speakstack/data/flashcard_offline_store.dart';
 import 'package:speakstack/models/flashcard_model.dart';
 import 'package:speakstack/services/flashcard_service.dart';
 import 'package:speakstack/services/flashcard_sync_service.dart';
+import 'package:speakstack/services/deck_scheduling_defaults.dart';
 import 'package:speakstack/utils/sm2_preview.dart';
 import 'package:speakstack/utils/card_browser_utils.dart';
 import 'package:speakstack/utils/html_text_utils.dart';
@@ -75,9 +77,9 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
 
   DeckOptionsModel _deckOptionsFor(FlashcardModel card) {
     if (card.deckId > 0) {
-      return _deckOptionsById[card.deckId] ?? const DeckOptionsModel();
+      return _deckOptionsById[card.deckId] ?? DeckSchedulingDefaults.deckOptions;
     }
-    return const DeckOptionsModel();
+    return DeckSchedulingDefaults.deckOptions;
   }
 
   void _startElapsedTimer() {
@@ -153,9 +155,11 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     if (isImage) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: ClipRRect(
+        child: CachedStrapiImage(
+          url: url,
+          height: 160,
+          fit: BoxFit.cover,
           borderRadius: BorderRadius.circular(12),
-          child: Image.network(url, height: 160, fit: BoxFit.cover),
         ),
       );
     }
@@ -193,7 +197,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
         final decks = await FlashcardService.instance.fetchDecks();
         _deckOptionsById = {
           for (final d in decks)
-            d.id: d.deckOptions ?? const DeckOptionsModel(),
+            d.id: d.deckOptions ?? DeckSchedulingDefaults.deckOptions,
         };
         queue = await FlashcardService.instance.fetchReviewQueue(
           deckId: widget.deckId,
@@ -208,7 +212,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
         final cached = await FlashcardOfflineStore.instance.loadSnapshot();
         _deckOptionsById = {
           for (final d in cached.decks)
-            d.id: d.deckOptions ?? const DeckOptionsModel(),
+            d.id: d.deckOptions ?? DeckSchedulingDefaults.deckOptions,
         };
         queue = await FlashcardService.instance.loadCachedReviewQueue(
           deckId: widget.deckId,

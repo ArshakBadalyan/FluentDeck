@@ -22,6 +22,8 @@ async function seedAppFeatureConfig(strapi) {
       freePreviewWordsPerAdvancedList: 10,
       freePlacementRetakesPerMonth: 1,
       advancedLevelsRequiringPremium: ["B2", "C1", "C2"],
+      defaultLearningStepsMinutes: [2, 8, 10],
+      defaultEasyIntervalDays: 5,
       publishedAt: now,
     },
   });

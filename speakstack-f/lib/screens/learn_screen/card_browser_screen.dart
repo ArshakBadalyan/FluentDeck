@@ -18,6 +18,7 @@ import 'package:speakstack/services/card_tag_undo_store.dart';
 import 'package:speakstack/services/decks_help_hints_store.dart';
 import 'package:speakstack/widgets/card_preview_sheet.dart';
 import 'package:speakstack/widgets/swipe_action_backgrounds.dart';
+import 'package:speakstack/ui_elements/app_skeletons.dart';
 import 'package:speakstack/ui_elements/modern_page_widgets.dart';
 
 class CardBrowserScreen extends StatefulWidget {
@@ -1227,7 +1228,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primaryPurple));
+      return const CardBrowserSkeleton();
     }
     if (_error != null) {
       return Center(

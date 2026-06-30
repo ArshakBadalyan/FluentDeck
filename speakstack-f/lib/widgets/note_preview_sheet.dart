@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/ui_elements/frosted_bottom_sheet.dart';
 import 'package:speakstack/utils/html_text_utils.dart';
 
 /// Modal preview of note fields as they would appear in review.
@@ -21,13 +22,9 @@ class NotePreviewSheet extends StatefulWidget {
     required Map<String, String> fields,
     String? mediaUrl,
   }) {
-    return showModalBottomSheet<void>(
+    return showFrostedBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder:
           (_) => NotePreviewSheet(
             noteType: noteType,

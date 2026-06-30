@@ -4,6 +4,7 @@ import 'package:speakstack/models/lesson_model.dart';
 import 'package:speakstack/screens/lessons_screen/lesson_detail_screen.dart';
 import 'package:speakstack/services/english_level_service.dart';
 import 'package:speakstack/services/lesson_service.dart';
+import 'package:speakstack/ui_elements/app_skeletons.dart';
 
 class LessonsListTab extends StatefulWidget {
   const LessonsListTab({super.key});
@@ -64,7 +65,7 @@ class _LessonsListTabState extends State<LessonsListTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LessonsListSkeleton();
     }
 
     if (_error != null) {

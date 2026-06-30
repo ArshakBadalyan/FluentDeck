@@ -1,8 +1,9 @@
+import '../services/deck_scheduling_defaults.dart';
 import '../models/flashcard_model.dart';
+import 'agent_debug_log.dart';
 
 const _initialEase = 2.5;
 const _minEase = 1.3;
-const _defaultLearningSteps = [1, 6, 10];
 const _defaultLapseSteps = [10];
 
 DateTime _addMinutes(DateTime date, int minutes) {
@@ -20,11 +21,11 @@ CardReviewStateModel previewAfterRating(
   DateTime? now,
   DeckOptionsModel? deckOptions,
 }) {
-  final opts = deckOptions ?? const DeckOptionsModel();
+  final opts = deckOptions ?? DeckSchedulingDefaults.deckOptions;
   final learningSteps =
       opts.learningStepsMinutes.isNotEmpty
           ? opts.learningStepsMinutes
-          : _defaultLearningSteps;
+          : DeckSchedulingDefaults.learningStepsMinutes;
   final lapseSteps =
       opts.lapseStepsMinutes.isNotEmpty ? opts.lapseStepsMinutes : _defaultLapseSteps;
   final graduatingInterval = opts.graduatingIntervalDays.clamp(1, 36500).toDouble();
@@ -51,6 +52,15 @@ CardReviewStateModel previewAfterRating(
   if (state == 'new' || state == 'learning' || state == 'relearning') {
     if (state == 'new') {
       if (again) {
+        // #region agent log
+        agentDebugLog('A', 'sm2_preview.dart:new-again', 'branch', {
+          'rating': rating,
+          'state': state,
+          'learningStep': learningStep,
+          'steps': learningSteps,
+          'minutes': learningSteps.first,
+        });
+        // #endregion
         return _build(
           'learning',
           intervalDays,
@@ -129,6 +139,16 @@ CardReviewStateModel previewAfterRating(
 
     if (good || hard) {
       final nextStep = learningStep + (hard ? 0 : 1);
+      // #region agent log
+      agentDebugLog('A', 'sm2_preview.dart:learning-hard-good', 'branch', {
+        'rating': rating,
+        'state': state,
+        'learningStep': learningStep,
+        'nextStep': nextStep,
+        'steps': learningSteps,
+        'activeSteps': activeSteps,
+      });
+      // #endregion
       if (nextStep >= activeSteps.length) {
         final grad =
             hard
@@ -266,7 +286,8 @@ Map<String, String> intervalPreviewsForCard(
 }) {
   final rs = card.reviewState ?? const CardReviewStateModel();
   final now = DateTime.now();
-  return {
+  final opts = deckOptions ?? DeckSchedulingDefaults.deckOptions;
+  final previews = {
     for (final rating in ['again', 'hard', 'good', 'easy'])
       rating: formatIntervalPreview(
         previewAfterRating(
@@ -279,16 +300,30 @@ Map<String, String> intervalPreviewsForCard(
         now,
       ),
   };
+  // #region agent log
+  agentDebugLog('BCDE', 'sm2_preview.dart:intervalPreviewsForCard', 'previews', {
+    'cardId': card.id,
+    'reviewState': rs.state,
+    'learningStep': rs.learningStep,
+    'deckId': card.deckId,
+    'deckSteps': opts.learningStepsMinutes,
+    'deckEasyDays': opts.easyIntervalDays,
+    'globalSteps': DeckSchedulingDefaults.learningStepsMinutes,
+    'globalEasyDays': DeckSchedulingDefaults.easyIntervalDays,
+    'previews': previews,
+  });
+  // #endregion
+  return previews;
 }
 
-/// Human-readable interval like Anki ("1m", "4d", "<1m").
+/// Human-readable interval like Anki ("<2m", "5d").
 String formatIntervalPreview(DateTime dueAt, DateTime now) {
   final diff = dueAt.difference(now);
   if (diff.inSeconds <= 0) return '<1m';
-  if (diff.inMinutes <= 1) return '<1m';
-  if (diff.inMinutes <= 6) return '<6m';
-  if (diff.inMinutes <= 10) return '<10m';
-  if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+  if (diff.inMinutes < 60) {
+    final minutes = diff.inMinutes < 1 ? 1 : diff.inMinutes;
+    return '<${minutes}m';
+  }
   if (diff.inHours < 24) return '${diff.inHours}h';
   if (diff.inDays < 30) return '${diff.inDays}d';
   if (diff.inDays < 365) return '${(diff.inDays / 30).round()}mo';

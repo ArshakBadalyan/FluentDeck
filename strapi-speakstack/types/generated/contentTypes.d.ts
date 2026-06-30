@@ -484,6 +484,16 @@ export interface ApiAppFeatureConfigAppFeatureConfig
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    defaultEasyIntervalDays: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0.01;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<5>;
+    defaultLearningStepsMinutes: Schema.Attribute.JSON &
+      Schema.Attribute.DefaultTo<[2, 8, 10]>;
     freeDailyConversationTurns: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {

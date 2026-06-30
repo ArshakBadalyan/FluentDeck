@@ -1,5 +1,14 @@
 'use strict';
 
+const {
+  BUILTIN_DEFAULTS,
+  getEnvSchedulingDefaults,
+  parseStepsList,
+  parseEasyDays,
+} = require('./flashcard-scheduling-defaults');
+
+const _envScheduling = getEnvSchedulingDefaults();
+
 const DEFAULT_CONFIG = {
   freeMaxSavedWords: 20,
   freeMaxDecks: 3,
@@ -11,6 +20,8 @@ const DEFAULT_CONFIG = {
   freeRolePlayPerCategory: 2,
   freeTopicLevelGroups: ['intermediate'],
   gamesRequirePremium: false,
+  defaultLearningStepsMinutes: _envScheduling.learningStepsMinutes,
+  defaultEasyIntervalDays: _envScheduling.easyIntervalDays,
 };
 
 async function getFeatureConfig(strapi) {
@@ -53,6 +64,15 @@ async function getFeatureConfig(strapi) {
     freeTopicLevelGroups = DEFAULT_CONFIG.freeTopicLevelGroups;
   }
 
+  const defaultLearningStepsMinutes = parseStepsList(
+    entry.defaultLearningStepsMinutes ?? entry.default_learning_steps_minutes,
+    DEFAULT_CONFIG.defaultLearningStepsMinutes,
+  );
+  const defaultEasyIntervalDays = parseEasyDays(
+    entry.defaultEasyIntervalDays ?? entry.default_easy_interval_days,
+    DEFAULT_CONFIG.defaultEasyIntervalDays,
+  );
+
   return {
     freeMaxSavedWords: pickInt('freeMaxSavedWords', 'free_max_saved_words', 20),
     freeMaxDecks: pickInt('freeMaxDecks', 'free_max_decks', 3),
@@ -85,6 +105,8 @@ async function getFeatureConfig(strapi) {
     freeTopicLevelGroups: freeTopicLevelGroups.map((v) => String(v).toLowerCase()),
     gamesRequirePremium:
       entry.gamesRequirePremium === true || entry.games_require_premium === true,
+    defaultLearningStepsMinutes,
+    defaultEasyIntervalDays,
   };
 }
 

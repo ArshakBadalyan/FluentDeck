@@ -12,6 +12,7 @@ import 'package:speakstack/screens/activity_screen/speaking_session_history_scre
 import 'package:speakstack/services/note_service.dart';
 import 'package:speakstack/services/speaking_session_service.dart';
 import 'package:speakstack/services/user_progress_service.dart';
+import 'package:speakstack/ui_elements/app_skeletons.dart';
 import 'package:speakstack/widgets/activity_preview_list.dart';
 
 class EnglishActivityScreen extends StatefulWidget {
@@ -76,10 +77,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
     final l10n = AppLocalizations.of(context);
 
     if (_loading) {
-      return const ColoredBox(
-        color: _pageBg,
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return const ActivityScreenSkeleton();
     }
 
     if (_error != null) {

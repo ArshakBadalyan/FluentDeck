@@ -5,6 +5,7 @@ import 'package:speakstack/screens/learn_screen/card_browser_screen.dart';
 import 'package:speakstack/screens/learn_screen/flashcards_screen.dart';
 import 'package:speakstack/services/flashcard_sync_service.dart';
 import 'package:speakstack/services/review_settings_store.dart';
+import 'package:speakstack/app_theme.dart';
 import 'package:speakstack/ui_elements/modern_page_widgets.dart';
 
 /// Anki-style shell: Decks | Card browser.
@@ -51,7 +52,7 @@ class DecksShellScreenState extends State<DecksShellScreen> with WidgetsBindingO
     final bg = dark ? const Color(0xFF121212) : AppPageColors.pageBg;
 
     return Theme(
-      data: dark ? ThemeData.dark(useMaterial3: false) : Theme.of(context),
+      data: dark ? AppTheme.dark : Theme.of(context),
       child: ColoredBox(
         color: bg,
         child: TabBarView(

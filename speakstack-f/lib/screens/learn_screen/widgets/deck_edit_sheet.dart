@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/ui_elements/frosted_bottom_sheet.dart';
 import 'package:speakstack/models/flashcard_model.dart';
 import 'package:speakstack/services/flashcard_service.dart';
+import 'package:speakstack/services/deck_scheduling_defaults.dart';
 import 'package:speakstack/utils/sm2_preview.dart';
 
 /// Rename deck, edit description, set parent deck (Phase 4F / 5A).
@@ -10,32 +12,25 @@ Future<bool?> showDeckEditSheet(
   required FlashcardDeckModel deck,
   required List<FlashcardDeckModel> allDecks,
 }) {
-  return showModalBottomSheet<bool>(
+  return showFrostedBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     isDismissible: true,
     enableDrag: true,
     useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
     builder: (ctx) {
-      return Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-        child: DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.82,
-          minChildSize: 0.45,
-          maxChildSize: 0.95,
-          builder: (context, scrollController) {
-            return _DeckEditSheet(
-              deck: deck,
-              allDecks: allDecks,
-              scrollController: scrollController,
-            );
-          },
-        ),
+      return DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.82,
+        minChildSize: 0.45,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) {
+          return _DeckEditSheet(
+            deck: deck,
+            allDecks: allDecks,
+            scrollController: scrollController,
+          );
+        },
       );
     },
   );
@@ -82,7 +77,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
     _nameCtrl = TextEditingController(text: widget.deck.name);
     _descCtrl = TextEditingController(text: widget.deck.description);
     _parentDeckId = widget.deck.parentDeckId;
-    final opts = widget.deck.deckOptions ?? const DeckOptionsModel();
+    final opts = widget.deck.deckOptions ?? DeckSchedulingDefaults.deckOptions;
     _newCardsCtrl = TextEditingController(text: '${opts.newCardsPerDay}');
     _maxReviewsCtrl = TextEditingController(text: '${opts.maxReviewsPerDay}');
     _leechThresholdCtrl = TextEditingController(text: '${opts.leechThreshold}');
@@ -187,7 +182,10 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
           'newCardsPerDay': int.tryParse(_newCardsCtrl.text.trim()) ?? 20,
           'maxReviewsPerDay': int.tryParse(_maxReviewsCtrl.text.trim()) ?? 200,
           'leechThreshold': int.tryParse(_leechThresholdCtrl.text.trim()) ?? 8,
-          'learningStepsMinutes': parseStepsField(_learningStepsCtrl.text, const [1, 10]),
+          'learningStepsMinutes': parseStepsField(
+            _learningStepsCtrl.text,
+            DeckSchedulingDefaults.learningStepsMinutes,
+          ),
           'lapseStepsMinutes': parseStepsField(_lapseStepsCtrl.text, const [10]),
           'graduatingIntervalDays':
               double.tryParse(_graduatingCtrl.text.trim()) ?? 1,

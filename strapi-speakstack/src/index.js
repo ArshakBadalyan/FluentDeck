@@ -210,6 +210,16 @@ module.exports = {
     }
 
     try {
+      const { refreshSchedulingDefaults } = require("./utils/flashcard-scheduling-defaults");
+      const scheduling = await refreshSchedulingDefaults(strapi);
+      strapi.log.info(
+        `[bootstrap] Flashcard scheduling defaults: steps=${scheduling.learningStepsMinutes.join(",")}m easy=${scheduling.easyIntervalDays}d`,
+      );
+    } catch (e) {
+      strapi.log.warn(`[bootstrap] flashcard scheduling defaults: ${e?.message}`);
+    }
+
+    try {
       const { seedPlacementVocabulary } = require('./utils/seed-placement-vocabulary');
       const vocabResult = await seedPlacementVocabulary(strapi);
       if (!vocabResult.skipped && vocabResult.created > 0) {

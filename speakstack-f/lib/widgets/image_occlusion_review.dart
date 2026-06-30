@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/widgets/cached_strapi_image.dart';
 import 'package:speakstack/models/occlusion_model.dart';
 
 /// Image occlusion review — one hidden mask per card (Phase 4I).
@@ -51,15 +52,14 @@ class ImageOcclusionReview extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        imageUrl,
+                      CachedStrapiImage(
+                        url: imageUrl,
                         fit: BoxFit.contain,
-                        errorBuilder:
-                            (_, __, ___) => Container(
-                              color: const Color(0xFFF2F2F5),
-                              alignment: Alignment.center,
-                              child: const Text('Could not load image'),
-                            ),
+                        errorBuilder: (context) => Container(
+                          color: const Color(0xFFF2F2F5),
+                          alignment: Alignment.center,
+                          child: const Text('Could not load image'),
+                        ),
                       ),
                       ...data.regions.asMap().entries.map((entry) {
                         final index = entry.key;

@@ -2,6 +2,7 @@
 
 const { createCoreController } = require('@strapi/strapi').factories;
 const { DEFAULT_CONFIG } = require('../../../utils/app-feature-config');
+const { parseStepsList, parseEasyDays } = require('../../../utils/flashcard-scheduling-defaults');
 
 module.exports = createCoreController(
   'api::app-feature-config.app-feature-config',
@@ -89,6 +90,14 @@ module.exports = createCoreController(
         })(),
         gamesRequirePremium:
           entry.gamesRequirePremium === true || entry.games_require_premium === true,
+        defaultLearningStepsMinutes: parseStepsList(
+          entry.defaultLearningStepsMinutes ?? entry.default_learning_steps_minutes,
+          DEFAULT_CONFIG.defaultLearningStepsMinutes,
+        ),
+        defaultEasyIntervalDays: parseEasyDays(
+          entry.defaultEasyIntervalDays ?? entry.default_easy_interval_days,
+          DEFAULT_CONFIG.defaultEasyIntervalDays,
+        ),
       };
     },
   }),

@@ -16,7 +16,8 @@ import 'package:speakstack/services/deck_notification_service.dart';
 import 'package:speakstack/services/push_notification_service.dart';
 
 import 'app_start.dart';
-import 'app_text_theme.dart';
+import 'app_theme.dart';
+import 'services/theme_settings_store.dart';
 import 'clarity_wrap.dart' if (dart.library.html) 'clarity_wrap_stub.dart';
 import 'firebase_options.dart';
 import 'services/clarity_route_observer.dart';
@@ -88,6 +89,7 @@ void main() async {
   await AudioService().ensureInitialized();
 
   await _resetThemePrefsOnce();
+  await ThemeSettingsStore.instance.load();
 
   runApp(wrapWithClarity(const MyApp()));
 }
@@ -107,17 +109,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: AppLocalizations.instance,
-      builder: (_, __) => MaterialApp(
+    return ListenableBuilder(
+      listenable: ThemeSettingsStore.instance,
+      builder: (_, __) => AnimatedBuilder(
+        animation: AppLocalizations.instance,
+        builder: (_, __) => MaterialApp(
         debugShowCheckedModeBanner: false,
         locale: AppLocalizations.instance.locale,
         home: const AppStart(),
-        theme: ThemeData(
-          fontFamily: 'Rubik',
-          textTheme: AppTextTheme.textTheme,
-          scaffoldBackgroundColor: Colors.white,
-        ),
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeSettingsStore.instance.themeMode,
         navigatorObservers: [
           AnalyticsService.instance.observer,
           AnalyticsService.instance.routeObserver,
@@ -128,6 +130,7 @@ class MyApp extends StatelessWidget {
             child: ClickTracker(child: child ?? const SizedBox.shrink()),
           );
         },
+      ),
       ),
     );
   }

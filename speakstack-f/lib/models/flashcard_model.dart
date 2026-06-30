@@ -1,4 +1,5 @@
 import 'package:speakstack/models/occlusion_model.dart';
+import 'package:speakstack/services/deck_scheduling_defaults.dart';
 
 class CardReviewStateModel {
   final int? id;
@@ -194,7 +195,7 @@ class DeckOptionsModel {
     this.newCardsPerDay = 20,
     this.maxReviewsPerDay = 200,
     this.leechThreshold = 8,
-    this.learningStepsMinutes = const [1, 6, 10],
+    this.learningStepsMinutes = const [2, 8, 10],
     this.graduatingIntervalDays = 1,
     this.easyIntervalDays = 5,
     this.easyBonus = 1.3,
@@ -203,15 +204,18 @@ class DeckOptionsModel {
   });
 
   factory DeckOptionsModel.fromJson(Map<String, dynamic>? json) {
-    if (json == null) return const DeckOptionsModel();
+    if (json == null) return DeckSchedulingDefaults.deckOptions;
+    final fallbackSteps = DeckSchedulingDefaults.learningStepsMinutes;
+    final fallbackEasy = DeckSchedulingDefaults.easyIntervalDays;
     return DeckOptionsModel(
       newCardsPerDay: json['newCardsPerDay'] as int? ?? 20,
       maxReviewsPerDay: json['maxReviewsPerDay'] as int? ?? 200,
       leechThreshold: json['leechThreshold'] as int? ?? 8,
-      learningStepsMinutes: _parseIntList(json['learningStepsMinutes'], const [1, 6, 10]),
+      learningStepsMinutes: _parseIntList(json['learningStepsMinutes'], fallbackSteps),
       graduatingIntervalDays:
           (json['graduatingIntervalDays'] as num?)?.toDouble() ?? 1,
-      easyIntervalDays: (json['easyIntervalDays'] as num?)?.toDouble() ?? 5,
+      easyIntervalDays:
+          (json['easyIntervalDays'] as num?)?.toDouble() ?? fallbackEasy,
       easyBonus: (json['easyBonus'] as num?)?.toDouble() ?? 1.3,
       lapseStepsMinutes: _parseIntList(json['lapseStepsMinutes'], const [10]),
       minimumIntervalDays:

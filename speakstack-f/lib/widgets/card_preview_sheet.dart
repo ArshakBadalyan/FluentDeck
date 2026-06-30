@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/ui_elements/frosted_bottom_sheet.dart';
 import 'package:speakstack/models/flashcard_model.dart';
 import 'package:speakstack/utils/html_text_utils.dart';
 import 'package:speakstack/utils/type_answer_utils.dart';
@@ -11,13 +12,9 @@ class CardPreviewSheet extends StatefulWidget {
   final FlashcardModel card;
 
   static Future<void> show(BuildContext context, FlashcardModel card) {
-    return showModalBottomSheet<void>(
+    return showFrostedBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (_) => CardPreviewSheet(card: card),
     );
   }

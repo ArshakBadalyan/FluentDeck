@@ -1,11 +1,13 @@
 'use strict';
 
+const { getSchedulingDefaultsSync } = require('./flashcard-scheduling-defaults');
+
 const DEFAULT_DECK_OPTIONS = {
   newCardsPerDay: 20,
   maxReviewsPerDay: 200,
-  learningStepsMinutes: [1, 10],
+  learningStepsMinutes: getSchedulingDefaultsSync().learningStepsMinutes,
   graduatingIntervalDays: 1,
-  easyIntervalDays: 4,
+  easyIntervalDays: getSchedulingDefaultsSync().easyIntervalDays,
   easyBonus: 1.3,
   lapseStepsMinutes: [10],
   minimumIntervalDays: 1,
@@ -13,16 +15,19 @@ const DEFAULT_DECK_OPTIONS = {
 };
 
 function normalizeDeckOptions(raw) {
+  const schedulingDefaults = getSchedulingDefaultsSync();
   const o = raw && typeof raw === 'object' ? raw : {};
   return {
     newCardsPerDay: parseInt(String(o.newCardsPerDay ?? DEFAULT_DECK_OPTIONS.newCardsPerDay), 10) || 20,
     maxReviewsPerDay: parseInt(String(o.maxReviewsPerDay ?? DEFAULT_DECK_OPTIONS.maxReviewsPerDay), 10) || 200,
-    learningStepsMinutes: Array.isArray(o.learningStepsMinutes)
+    learningStepsMinutes: Array.isArray(o.learningStepsMinutes) && o.learningStepsMinutes.length
       ? o.learningStepsMinutes.map((n) => parseInt(String(n), 10)).filter((n) => n > 0)
-      : DEFAULT_DECK_OPTIONS.learningStepsMinutes,
+      : schedulingDefaults.learningStepsMinutes,
     graduatingIntervalDays:
       parseFloat(String(o.graduatingIntervalDays ?? DEFAULT_DECK_OPTIONS.graduatingIntervalDays)) || 1,
-    easyIntervalDays: parseFloat(String(o.easyIntervalDays ?? DEFAULT_DECK_OPTIONS.easyIntervalDays)) || 4,
+    easyIntervalDays:
+      parseFloat(String(o.easyIntervalDays ?? schedulingDefaults.easyIntervalDays)) ||
+      schedulingDefaults.easyIntervalDays,
     easyBonus: parseFloat(String(o.easyBonus ?? DEFAULT_DECK_OPTIONS.easyBonus)) || 1.3,
     lapseStepsMinutes: Array.isArray(o.lapseStepsMinutes)
       ? o.lapseStepsMinutes.map((n) => parseInt(String(n), 10)).filter((n) => n > 0)

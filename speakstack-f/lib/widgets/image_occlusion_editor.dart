@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:speakstack/app_colors.dart';
+import 'package:speakstack/widgets/cached_strapi_image.dart';
 import 'package:speakstack/models/occlusion_model.dart';
 
 /// Draw occlusion masks on an image and edit regions (Phase 4I).
@@ -142,15 +143,14 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        widget.imageUrl,
+                      CachedStrapiImage(
+                        url: widget.imageUrl,
                         fit: BoxFit.contain,
-                        errorBuilder:
-                            (_, __, ___) => Container(
-                              color: const Color(0xFFF2F2F5),
-                              alignment: Alignment.center,
-                              child: const Text('Could not load image'),
-                            ),
+                        errorBuilder: (context) => Container(
+                          color: const Color(0xFFF2F2F5),
+                          alignment: Alignment.center,
+                          child: const Text('Could not load image'),
+                        ),
                       ),
                       ...widget.regions.map((region) {
                         final selected = region.id == _selectedId;
