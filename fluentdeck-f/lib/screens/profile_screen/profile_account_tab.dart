@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/screens/profile_screen/profile_achievements_screen.dart';
+import 'package:fluentdeck/screens/profile_screen/profile_stats_header.dart';
+import 'package:fluentdeck/services/achievement_service.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/models/placement_test_model.dart';
 import 'package:fluentdeck/screens/learn_screen/placement_test_screen.dart';
@@ -38,6 +42,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   String _selectedLanguage = 'de';
   String? _selectedEnglishLevel;
   PlacementTestResultModel? _latestPlacement;
+  AchievementSnapshot? _achievementSnapshot;
 
   bool get _hasVerifiedPlacement => _latestPlacement != null;
 
@@ -67,6 +72,11 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
       _latestPlacement = await VocabularyService.instance.fetchLatestPlacement();
     } catch (_) {}
 
+    AchievementSnapshot? achievements;
+    try {
+      achievements = await AchievementService.instance.load();
+    } catch (_) {}
+
     final res = await AuthService.getUser();
 
     if (res['status'] == 'success') {
@@ -93,7 +103,27 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
     }
 
     if (!mounted) return;
-    setState(() => _loading = false);
+    setState(() {
+      _achievementSnapshot = achievements;
+      _loading = false;
+    });
+  }
+
+  String get _displayName {
+    final parts =
+        [nameCtrl.text.trim(), surnameCtrl.text.trim()]
+            .where((p) => p.isNotEmpty)
+            .toList();
+    if (parts.isNotEmpty) return parts.join(' ');
+    final nick = nicknameCtrl.text.trim();
+    if (nick.isNotEmpty) return nick;
+    return 'Learner';
+  }
+
+  void _openAchievements() {
+    Navigator.of(context).push<void>(
+      AppSharedAxisRoute<void>(page: const ProfileAchievementsScreen()),
+    );
   }
 
   Future<void> _openPlacementTest() async {
@@ -293,45 +323,55 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppSectionCard(
-                title: 'Account',
-                icon: Icons.person_outline_rounded,
-                subtitle: 'Your personal information',
-                child: Column(
-                  children: [
-                    AppTextField(
-                      controller: emailCtrl,
-                      label: context.tr('inputs.E-mail-address'),
-                      enabled: !disableInputs,
-                      keyboardType: TextInputType.emailAddress,
-                      onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_achievementSnapshot != null)
+                  ProfileStatsHeader(
+                    snapshot: _achievementSnapshot!,
+                    displayName: _displayName,
+                    onViewAchievements: _openAchievements,
+                  ),
+                if (_achievementSnapshot != null) const SizedBox(height: 16),
+                AppFadeIn(
+                  delay: const Duration(milliseconds: 60),
+                  child: AppSectionCard(
+                    title: 'Account',
+                    icon: Icons.person_outline_rounded,
+                    subtitle: 'Your personal information',
+                    child: Column(
+                      children: [
+                        AppTextField(
+                          controller: emailCtrl,
+                          label: context.tr('inputs.E-mail-address'),
+                          enabled: !disableInputs,
+                          keyboardType: TextInputType.emailAddress,
+                          onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
+                        ),
+                        const SizedBox(height: 14),
+                        AppTextField(
+                          controller: nameCtrl,
+                          label: context.tr('inputs.name'),
+                          enabled: !disableInputs,
+                          onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
+                        ),
+                        const SizedBox(height: 14),
+                        AppTextField(
+                          controller: surnameCtrl,
+                          label: context.tr('inputs.surname'),
+                          enabled: !disableInputs,
+                          onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
+                        ),
+                        const SizedBox(height: 14),
+                        AppTextField(
+                          controller: nicknameCtrl,
+                          label: context.tr('inputs.nickname'),
+                          enabled: !disableInputs,
+                          onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 14),
-                    AppTextField(
-                      controller: nameCtrl,
-                      label: context.tr('inputs.name'),
-                      enabled: !disableInputs,
-                      onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
-                    ),
-                    const SizedBox(height: 14),
-                    AppTextField(
-                      controller: surnameCtrl,
-                      label: context.tr('inputs.surname'),
-                      enabled: !disableInputs,
-                      onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
-                    ),
-                    const SizedBox(height: 14),
-                    AppTextField(
-                      controller: nicknameCtrl,
-                      label: context.tr('inputs.nickname'),
-                      enabled: !disableInputs,
-                      onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
               const SizedBox(height: 16),
               AppSectionCard(
                 title: 'English level (CEFR)',

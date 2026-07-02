@@ -65,6 +65,8 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       TabController(length: _activitySubTabs.length, vsync: this);
   bool _speakInSession = false;
   int _notificationUnreadCount = 0;
+  /// When set before [PageController] navigation, overrides default sub-tab 0.
+  int? _pendingSubIndex;
   final GlobalKey<DecksShellScreenState> _decksShellKey = GlobalKey();
   final GlobalKey<SpeakingHubScreenState> _speakingHubKey = GlobalKey();
 
@@ -189,6 +191,10 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   void _onMainPageChanged(int index) {
     if (!mounted || index == _currentIndex) return;
     _leaveSpeakTabIfNeeded(index);
+    final tab = MainTabConfig.tabAt(index);
+    final subIndex = _pendingSubIndex ?? 0;
+    _pendingSubIndex = null;
+    _applySubIndex(tab, subIndex);
     setState(() => _currentIndex = index);
     AudioService().play('tabChange');
   }
@@ -233,15 +239,14 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     if (!mounted) return;
     final next = index.clamp(0, EnglishMainScreen.mainTabCount - 1);
     _leaveSpeakTabIfNeeded(next);
+    _pendingSubIndex = subIndex;
     if (next != _currentIndex) {
       _pageController.jumpToPage(next);
+      return;
     }
-    setState(() {
-      _currentIndex = next;
-      if (subIndex != null) {
-        _applySubIndex(MainTabConfig.tabAt(next), subIndex);
-      }
-    });
+    _pendingSubIndex = null;
+    _applySubIndex(MainTabConfig.tabAt(next), subIndex ?? 0);
+    setState(() => _currentIndex = next);
     AudioService().play('tabChange');
   }
 
@@ -259,6 +264,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     if (next < 0 || next >= MainTabConfig.tabCount) return;
     if (!await _confirmLeaveIfUnsaved()) return;
     _leaveSpeakTabIfNeeded(next);
+    _pendingSubIndex = null;
     await _pageController.animateToPage(
       next,
       duration: const Duration(milliseconds: 280),
@@ -416,6 +422,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
         currentIndex: _currentIndex,
         onTap: (index) async {
           if (index == _currentIndex) return;
+          _pendingSubIndex = null;
           if (!await _confirmLeaveIfUnsaved()) return;
           _leaveSpeakTabIfNeeded(index);
           await _pageController.animateToPage(

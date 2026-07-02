@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_text_theme.dart';
+import 'ui_elements/app_motion.dart';
 import 'ui_elements/modern_page_widgets.dart';
 
 /// Central light/dark themes seeded from the FluentDeck purple brand.
@@ -43,6 +44,7 @@ abstract final class AppTheme {
         fillColor: AppPageColors.fieldBg,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
+      pageTransitionsTheme: _pageTransitionsTheme,
     );
   }
 
@@ -87,6 +89,43 @@ abstract final class AppTheme {
         fillColor: const Color(0xFF2A2A2A),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
+      pageTransitionsTheme: _pageTransitionsTheme,
+    );
+  }
+
+  static PageTransitionsTheme get _pageTransitionsTheme {
+    return PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: _AppSharedAxisTransitionsBuilder(),
+        TargetPlatform.iOS: _AppSharedAxisTransitionsBuilder(),
+        TargetPlatform.macOS: _AppSharedAxisTransitionsBuilder(),
+        TargetPlatform.linux: _AppSharedAxisTransitionsBuilder(),
+        TargetPlatform.windows: _AppSharedAxisTransitionsBuilder(),
+        TargetPlatform.fuchsia: _AppSharedAxisTransitionsBuilder(),
+      },
+    );
+  }
+}
+
+class _AppSharedAxisTransitionsBuilder extends PageTransitionsBuilder {
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+
+    final offsetAnimation = Tween<Offset>(
+      begin: const Offset(0.06, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: animation, curve: AppMotion.curve));
+
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(position: offsetAnimation, child: child),
     );
   }
 }

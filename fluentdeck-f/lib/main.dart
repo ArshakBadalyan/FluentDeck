@@ -17,6 +17,7 @@ import 'package:fluentdeck/services/push_notification_service.dart';
 
 import 'app_start.dart';
 import 'app_theme.dart';
+import 'package:fluentdeck/ui_elements/responsive_layout.dart';
 import 'services/theme_settings_store.dart';
 import 'clarity_wrap.dart' if (dart.library.html) 'clarity_wrap_stub.dart';
 import 'firebase_options.dart';
@@ -126,8 +127,10 @@ class MyApp extends StatelessWidget {
           _clarityRouteObserver,
         ],
         builder: (context, child) {
-          return InteractionSwipeHapticsScope(
-            child: ClickTracker(child: child ?? const SizedBox.shrink()),
+          return ResponsiveShell(
+            child: InteractionSwipeHapticsScope(
+              child: ClickTracker(child: child ?? const SizedBox.shrink()),
+            ),
           );
         },
       ),
