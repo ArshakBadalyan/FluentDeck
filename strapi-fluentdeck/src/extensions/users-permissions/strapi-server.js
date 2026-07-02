@@ -171,6 +171,16 @@ module.exports = (plugin) => {
     };
 
     const user = await getService("user").add(newUser);
+
+    try {
+      const { ensureUserDefaultDecks } = require("../../../utils/flashcard-auto-create");
+      const { getOrCreateUserProgress } = require("../../../utils/user-progress-utils");
+      await ensureUserDefaultDecks(strapi, user.id);
+      await getOrCreateUserProgress(strapi, user.id);
+    } catch (err) {
+      strapi.log.error("[auth.register] default deck/progress seed failed", err);
+    }
+
     const sanitizedUser = await sanitizeUser(user, ctx);
 
     if (settings.email_confirmation && emailNorm) {

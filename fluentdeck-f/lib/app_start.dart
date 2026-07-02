@@ -11,7 +11,7 @@ import 'package:fluentdeck/services/auth_service.dart';
 import 'package:fluentdeck/services/english_level_service.dart';
 import 'package:fluentdeck/services/deck_backup_service.dart';
 import 'package:fluentdeck/services/deck_notification_service.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/push_notification_service.dart';
 import 'package:fluentdeck/services/token_storage.dart';
 import 'package:fluentdeck/services/mobile_app_update_gate.dart';
@@ -71,7 +71,7 @@ class _AppStartState extends State<AppStart> {
       syncClarityCustomUserId(userId.toString());
       unawaited(AuthService.sendAppInfo());
       unawaited(EnglishLevelService.instance.syncOnAppStart());
-      unawaited(FlashcardService.instance.syncOnAppStart());
+      unawaited(FlashcardSyncService.instance.syncOnAppStart());
       unawaited(DeckBackupService.instance.runAutoBackupIfDue());
       unawaited(DeckNotificationService.instance.syncFromSettings());
       await _initPushNotifications();

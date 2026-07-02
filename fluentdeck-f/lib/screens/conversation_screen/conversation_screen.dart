@@ -270,6 +270,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
               itemCount: _service.turns.length,
               itemBuilder: (context, index) {
                 final turn = _service.turns[index];
+                final isPlayingAi =
+                    _service.isPlayingTts && index == _service.ttsTurnIndex;
                 return _TurnBubble(
                   turn: turn,
                   showTranslations:
@@ -277,8 +279,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   onPlayAi:
                       turn.isUser
                           ? null
-                          : () => _service.playAiText(turn.text),
-                  isPlayingAi: _service.isPlayingTts,
+                          : () => _service.playAiText(turn.text, turnIndex: index),
+                  isPlayingAi: isPlayingAi,
                 );
               },
             ),
@@ -608,7 +610,9 @@ class _ProcessingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isProcessing) return const SizedBox.shrink();
+    if (!isProcessing || stage == ConversationProcessingStage.speaking) {
+      return const SizedBox.shrink();
+    }
 
     final label = switch (stage) {
       ConversationProcessingStage.transcribing => 'Listening…',

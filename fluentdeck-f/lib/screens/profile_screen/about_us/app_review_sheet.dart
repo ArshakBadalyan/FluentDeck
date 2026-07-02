@@ -189,6 +189,7 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
                 final selected = _stars != null && index <= _stars!;
                 return IconButton(
                   iconSize: 40,
+                  tooltip: '$index star${index == 1 ? '' : 's'}',
                   onPressed: () {
                     if (index >= 4) {
                       _handleHighRating(index);

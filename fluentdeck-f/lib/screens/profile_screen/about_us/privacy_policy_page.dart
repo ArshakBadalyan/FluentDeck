@@ -16,6 +16,7 @@ class PrivacyPopup extends StatelessWidget {
         title: Text(AppLocalizations.instance.t('profile.about-us.privacy')),
         leading: IconButton(
           icon: const Icon(Icons.close),
+          tooltip: 'Close',
           onPressed: () => Navigator.pop(context),
         ),
       ),

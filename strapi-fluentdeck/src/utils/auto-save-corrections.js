@@ -95,7 +95,7 @@ async function autoSaveCorrectionsFromTurn(strapi, userId, corrections) {
 
     await createNoteAndCards(strapi, userId, {
       deckId: deck.id,
-      noteType: 'Basic',
+      noteType: 'basic',
       fields: { Front: candidate.word, Back: back },
       tags: ['from-speaking', 'auto-correction'],
       createReverse: false,

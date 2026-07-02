@@ -112,7 +112,7 @@ async function processSpeakingNoteAction(strapi, userId, noteAction, options = {
 
   const result = await createNoteAndCards(strapi, userId, {
     deckId: deck.id,
-    noteType: 'Basic',
+    noteType: 'basic',
     fields,
     tags: ['from-speaking', 'auto-created'],
     createReverse: false,

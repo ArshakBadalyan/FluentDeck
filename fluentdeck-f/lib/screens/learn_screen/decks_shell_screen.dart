@@ -3,16 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/flashcards_screen.dart';
+import 'package:fluentdeck/data/flashcard_offline_store.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/app_theme.dart';
+import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Anki-style shell: Decks | Card browser.
 class DecksShellScreen extends StatefulWidget {
-  const DecksShellScreen({super.key, required this.tabController});
+  const DecksShellScreen({
+    super.key,
+    required this.tabController,
+    this.mainTabHandoff = const MainTabHandoff(),
+  });
 
   final TabController tabController;
+  final MainTabHandoff mainTabHandoff;
 
   @override
   State<DecksShellScreen> createState() => DecksShellScreenState();
@@ -31,7 +38,16 @@ class DecksShellScreenState extends State<DecksShellScreen> with WidgetsBindingO
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      unawaited(FlashcardSyncService.instance.syncNow());
+      unawaited(_syncPendingOnResume());
+    }
+  }
+
+  Future<void> _syncPendingOnResume() async {
+    final pending = await FlashcardOfflineStore.instance.pendingReviewCount();
+    if (pending > 0) {
+      await FlashcardSyncService.instance.syncNow();
+    } else {
+      await FlashcardSyncService.instance.refreshStatus();
     }
   }
 
@@ -55,9 +71,10 @@ class DecksShellScreenState extends State<DecksShellScreen> with WidgetsBindingO
       data: dark ? AppTheme.dark : Theme.of(context),
       child: ColoredBox(
         color: bg,
-        child: TabBarView(
+        child: HandoffTabBarView(
           controller: widget.tabController,
-          physics: const NeverScrollableScrollPhysics(),
+          onHandoffPrevious: widget.mainTabHandoff.onPrevious,
+          onHandoffNext: widget.mainTabHandoff.onNext,
           children: const [
             FlashcardsScreen(),
             CardBrowserScreen(embedInShell: true),

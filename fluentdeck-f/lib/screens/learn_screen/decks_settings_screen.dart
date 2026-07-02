@@ -150,16 +150,22 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
     await _load();
   }
 
+  Widget _sectionTile(DecksSettingsSection section) {
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Icon(section.icon, color: AppColors.primaryPurple),
+        title: Text(section.title),
+        subtitle: Text(section.subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _openSection(section),
+      ),
+    );
+  }
+
   Widget _buildSectionTiles() {
     final tiles = <Widget>[
-      for (final section in widget.sections)
-        ListTile(
-          leading: Icon(section.icon, color: AppColors.primaryPurple),
-          title: Text(section.title),
-          subtitle: Text(section.subtitle),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => _openSection(section),
-        ),
+      for (final section in widget.sections) _sectionTile(section),
     ];
 
     if (widget.inlineInScroll) {

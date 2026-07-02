@@ -243,7 +243,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   }
 
   Widget _wrapSwipeRow(FlashcardModel card, Widget child) {
-    if (_selectMode) return child;
+    if (_selectMode || widget.embedInShell) return child;
 
     return Dismissible(
       key: ValueKey('browser-card-${card.id}'),

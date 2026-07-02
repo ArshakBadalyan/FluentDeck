@@ -45,6 +45,7 @@ class _ReleaseNotesPopupState extends State<ReleaseNotesPopup> {
         title: Text(_title),
         leading: IconButton(
           icon: const Icon(Icons.close),
+          tooltip: 'Close',
           onPressed: () => Navigator.pop(context),
         ),
       ),

@@ -89,7 +89,12 @@ function listNoteTypes() {
 }
 
 function getNoteType(id) {
-  return NOTE_TYPES[id] ?? null;
+  if (id == null || id === '') return null;
+  const key = String(id).trim();
+  if (NOTE_TYPES[key]) return NOTE_TYPES[key];
+  const lower = key.toLowerCase();
+  if (NOTE_TYPES[lower]) return NOTE_TYPES[lower];
+  return Object.values(NOTE_TYPES).find((t) => t.name === key) ?? null;
 }
 
 function stripHtml(text) {

@@ -120,6 +120,12 @@ async function createUserNote(strapi, userId, data) {
   return { note, created: true };
 }
 
+async function ensureUserDefaultDecks(strapi, userId) {
+  for (const deck of DEFAULT_DECKS) {
+    await getOrCreateDefaultDeck(strapi, userId, deck.slug);
+  }
+}
+
 function deckSlugForSource(source) {
   if (source === 'speaking') return 'from_speaking';
   return 'saved_words';
@@ -147,6 +153,7 @@ module.exports = {
   DEFAULT_DECKS,
   userWantsAutoCreate,
   getOrCreateDefaultDeck,
+  ensureUserDefaultDecks,
   maybeCreateFlashcard,
   createUserNote,
   deckSlugForSource,

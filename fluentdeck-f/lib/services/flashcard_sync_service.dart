@@ -30,6 +30,7 @@ class FlashcardSyncService extends ChangeNotifier {
 
   FlashcardSyncStatus _status = FlashcardSyncStatus.synced;
   bool _syncing = false;
+  bool _appStartSyncDone = false;
   FlashcardSyncLog _log = const FlashcardSyncLog();
 
   FlashcardSyncStatus get status => _status;
@@ -88,6 +89,13 @@ class FlashcardSyncService extends ChangeNotifier {
       _syncing = false;
       notifyListeners();
     }
+  }
+
+  /// Full push/pull sync once per app session (cold start or after sign-in).
+  Future<void> syncOnAppStart() async {
+    if (_appStartSyncDone) return;
+    _appStartSyncDone = true;
+    await syncNow();
   }
 
   void markPending() {

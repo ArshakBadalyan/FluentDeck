@@ -7,6 +7,7 @@ import 'package:fluentdeck/clarity_user_sync.dart'
 import 'package:fluentdeck/services/analytics_service.dart';
 import 'package:fluentdeck/services/campaign_analytics.dart';
 import 'package:fluentdeck/services/english_level_service.dart';
+import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/push_notification_service.dart';
 import 'package:fluentdeck/services/token_storage.dart';
 
@@ -59,6 +60,7 @@ class AuthService {
       await _storeJwtAndUser(data);
       unawaited(sendAppInfo());
       unawaited(EnglishLevelService.instance.syncOnAppStart());
+      unawaited(FlashcardSyncService.instance.syncOnAppStart());
       await PushNotificationService.login(data['user']['id'].toString());
       await _logAuthAnalyticsLogin(method: 'email', userId: data['user']['id']);
       return {'status': 'success'};
@@ -93,6 +95,7 @@ class AuthService {
     await _storeJwtAndUser(data);
     unawaited(sendAppInfo());
     unawaited(EnglishLevelService.instance.syncOnAppStart());
+    unawaited(FlashcardSyncService.instance.syncOnAppStart());
     await PushNotificationService.login(data['user']['id'].toString());
     if (isNewUser) {
       await _logAuthAnalyticsSignUp(
@@ -117,6 +120,7 @@ class AuthService {
       await _storeJwtAndUser(data);
       unawaited(sendAppInfo());
       unawaited(EnglishLevelService.instance.syncOnAppStart());
+      unawaited(FlashcardSyncService.instance.syncOnAppStart());
       await PushNotificationService.login(data['user']['id'].toString());
       await _logAuthAnalyticsSignUp(method: 'password', userId: data['user']['id']);
       return {'status': 'success'};

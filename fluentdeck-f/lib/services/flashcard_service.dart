@@ -947,10 +947,6 @@ class FlashcardService {
     }
   }
 
-  Future<void> syncOnAppStart() async {
-    await syncAll();
-  }
-
   Future<void> cacheReviewQueue({
     required List<FlashcardModel> queue,
     int? deckId,

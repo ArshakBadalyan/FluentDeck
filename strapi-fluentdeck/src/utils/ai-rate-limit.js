@@ -2,11 +2,43 @@
 
 const { getFeatureConfig, isPremiumUser } = require('./app-feature-config');
 
+function isDailyConversationLimitDisabled(strapi) {
+  const raw = String(process.env.DISABLE_DAILY_CONVERSATION_LIMIT ?? '')
+    .trim()
+    .toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(raw)) return true;
+  if (['0', 'false', 'no', 'off'].includes(raw)) return false;
+
+  const envName = String(process.env.ENVIRONMENT ?? '').trim().toLowerCase();
+  if (envName === 'local' || envName === 'development') return true;
+
+  try {
+    if (strapi?.config?.get?.('environment') === 'development') return true;
+  } catch {
+    // ignore
+  }
+
+  return false;
+}
+
+function devUnlimitedUsage() {
+  return {
+    allowed: true,
+    usedToday: 0,
+    dailyLimit: 0,
+    isPremium: true,
+  };
+}
+
 function todayKey(now = new Date()) {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
 async function getConversationUsage(strapi, userId) {
+  if (isDailyConversationLimitDisabled(strapi)) {
+    return devUnlimitedUsage();
+  }
+
   const premium = await isPremiumUser(strapi, userId);
   const config = await getFeatureConfig(strapi);
   const dailyLimit =
@@ -44,6 +76,10 @@ async function getConversationUsage(strapi, userId) {
 }
 
 async function recordConversationTurn(strapi, userId) {
+  if (isDailyConversationLimitDisabled(strapi)) {
+    return devUnlimitedUsage();
+  }
+
   const premium = await isPremiumUser(strapi, userId);
   if (premium) {
     return getConversationUsage(strapi, userId);

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:fluentdeck/services/api_service.dart';
 import 'package:fluentdeck/services/app_feature_config_service.dart';
 import 'package:fluentdeck/services/auth_service.dart';
@@ -33,6 +35,15 @@ class ConversationLimitService {
 
   ConversationUsageStatus? _cached;
 
+  static bool get _devUnlimited => kDebugMode;
+
+  static const ConversationUsageStatus _devUnlimitedStatus = ConversationUsageStatus(
+    allowed: true,
+    usedToday: 0,
+    dailyLimit: 0,
+    isPremium: true,
+  );
+
   Future<bool> _isPremiumUser() async {
     final res = await AuthService.getUser();
     if (res['status'] == 'success' && res['user'] is Map) {
@@ -47,6 +58,11 @@ class ConversationLimitService {
   }
 
   Future<ConversationUsageStatus> getStatus({bool forceRefresh = false}) async {
+    if (_devUnlimited) {
+      _cached = _devUnlimitedStatus;
+      return _cached!;
+    }
+
     if (!forceRefresh && _cached != null) {
       return _cached!;
     }
@@ -72,6 +88,7 @@ class ConversationLimitService {
   }
 
   Future<ConversationUsageStatus> checkBeforeTurn() async {
+    if (_devUnlimited) return _devUnlimitedStatus;
     return getStatus(forceRefresh: true);
   }
 

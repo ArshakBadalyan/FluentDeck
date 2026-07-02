@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:fluentdeck/models/conversation_session_model.dart';
 import 'package:fluentdeck/services/conversation_history_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
+import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 
@@ -163,6 +164,6 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     await ConversationService.instance.loadSession(session);
     if (!mounted) return;
     Navigator.pop(context);
-    MainNavigationCoordinator.goToMainTab(0);
+    MainNavigationCoordinator.goToTab(MainTabId.speak);
   }
 }

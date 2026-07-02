@@ -1,6 +1,5 @@
 import '../services/deck_scheduling_defaults.dart';
 import '../models/flashcard_model.dart';
-import 'agent_debug_log.dart';
 
 const _initialEase = 2.5;
 const _minEase = 1.3;
@@ -52,15 +51,6 @@ CardReviewStateModel previewAfterRating(
   if (state == 'new' || state == 'learning' || state == 'relearning') {
     if (state == 'new') {
       if (again) {
-        // #region agent log
-        agentDebugLog('A', 'sm2_preview.dart:new-again', 'branch', {
-          'rating': rating,
-          'state': state,
-          'learningStep': learningStep,
-          'steps': learningSteps,
-          'minutes': learningSteps.first,
-        });
-        // #endregion
         return _build(
           'learning',
           intervalDays,
@@ -139,16 +129,6 @@ CardReviewStateModel previewAfterRating(
 
     if (good || hard) {
       final nextStep = learningStep + (hard ? 0 : 1);
-      // #region agent log
-      agentDebugLog('A', 'sm2_preview.dart:learning-hard-good', 'branch', {
-        'rating': rating,
-        'state': state,
-        'learningStep': learningStep,
-        'nextStep': nextStep,
-        'steps': learningSteps,
-        'activeSteps': activeSteps,
-      });
-      // #endregion
       if (nextStep >= activeSteps.length) {
         final grad =
             hard
@@ -286,7 +266,6 @@ Map<String, String> intervalPreviewsForCard(
 }) {
   final rs = card.reviewState ?? const CardReviewStateModel();
   final now = DateTime.now();
-  final opts = deckOptions ?? DeckSchedulingDefaults.deckOptions;
   final previews = {
     for (final rating in ['again', 'hard', 'good', 'easy'])
       rating: formatIntervalPreview(
@@ -300,19 +279,6 @@ Map<String, String> intervalPreviewsForCard(
         now,
       ),
   };
-  // #region agent log
-  agentDebugLog('BCDE', 'sm2_preview.dart:intervalPreviewsForCard', 'previews', {
-    'cardId': card.id,
-    'reviewState': rs.state,
-    'learningStep': rs.learningStep,
-    'deckId': card.deckId,
-    'deckSteps': opts.learningStepsMinutes,
-    'deckEasyDays': opts.easyIntervalDays,
-    'globalSteps': DeckSchedulingDefaults.learningStepsMinutes,
-    'globalEasyDays': DeckSchedulingDefaults.easyIntervalDays,
-    'previews': previews,
-  });
-  // #endregion
   return previews;
 }
 

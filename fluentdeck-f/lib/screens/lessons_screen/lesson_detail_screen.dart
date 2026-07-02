@@ -7,6 +7,7 @@ import 'package:fluentdeck/screens/exercises_screen/exercise_screen.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/lesson_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
+import 'package:fluentdeck/services/main_tab_config.dart';
 
 class LessonDetailScreen extends StatefulWidget {
   const LessonDetailScreen({super.key, required this.lessonId});
@@ -66,7 +67,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       openingMessage:
           'Welcome to "${lesson?.title ?? 'this lesson'}". ${exercise.prompt}',
     );
-    MainNavigationCoordinator.goToMainTab(0);
+    MainNavigationCoordinator.goToTab(MainTabId.speak);
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 

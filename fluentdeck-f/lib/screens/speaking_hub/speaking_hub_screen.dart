@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/speaking_session_context.dart';
 import '../../services/conversation_service.dart';
+import '../../ui_elements/handoff_tab_bar_view.dart';
 import '../conversation_screen/conversation_screen.dart';
 import 'speaking_chat_tab.dart';
 import 'speaking_games_tab.dart';
@@ -19,10 +20,12 @@ class SpeakingHubScreen extends StatefulWidget {
   const SpeakingHubScreen({
     super.key,
     required this.tabController,
+    this.mainTabHandoff = const MainTabHandoff(),
     this.onSessionActiveChanged,
   });
 
   final TabController tabController;
+  final MainTabHandoff mainTabHandoff;
   final ValueChanged<bool>? onSessionActiveChanged;
 
   @override
@@ -104,8 +107,10 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
       );
     }
 
-    return TabBarView(
+    return HandoffTabBarView(
       controller: widget.tabController,
+      onHandoffPrevious: widget.mainTabHandoff.onPrevious,
+      onHandoffNext: widget.mainTabHandoff.onNext,
       children: [
         SpeakingChatTab(onStart: _startSession),
         SpeakingNotesTab(onStart: _startSession),

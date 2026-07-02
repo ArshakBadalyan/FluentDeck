@@ -66,6 +66,9 @@ module.exports = createCoreController(
       const userId = await getAuthenticatedUserId(ctx, strapi);
       if (!userId) return ctx.unauthorized('Authentication required');
 
+      const { ensureUserDefaultDecks } = require('../../../utils/flashcard-auto-create');
+      await ensureUserDefaultDecks(strapi, userId);
+
       const decks = await strapi.db.query('api::flashcard-deck.flashcard-deck').findMany({
         where: { user: userId },
         populate: ['parentDeck'],

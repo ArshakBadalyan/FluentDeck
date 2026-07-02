@@ -52,7 +52,10 @@ List<_DeckRow> _orderedDeckRows(List<FlashcardDeckModel> decks) {
 }
 
 class FlashcardsScreen extends StatefulWidget {
-  const FlashcardsScreen({super.key});
+  const FlashcardsScreen({super.key, this.enableDeckSwipeActions = false});
+
+  /// When false, horizontal swipes change tabs instead of study/delete on decks.
+  final bool enableDeckSwipeActions;
 
   @override
   State<FlashcardsScreen> createState() => _FlashcardsScreenState();
@@ -88,7 +91,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       _error = null;
     });
     try {
-      await _sync.syncNow();
+      await _sync.refreshStatus();
       final decks = await FlashcardService.instance.fetchDecksWithCache();
       FlashcardStudyStats? stats;
       try {
@@ -675,6 +678,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                           (row) => _DeckListTile(
                             deck: row.deck,
                             depth: row.depth,
+                            enableSwipeActions: widget.enableDeckSwipeActions,
                             onShowOptions: () => _showDeckOptions(row.deck),
                             onStudy: () => _startReview(deckId: row.deck.id),
                             onDelete:
@@ -760,17 +764,72 @@ class _DeckListTile extends StatelessWidget {
     required this.depth,
     required this.onShowOptions,
     required this.onStudy,
+    this.enableSwipeActions = false,
     this.onDelete,
   });
 
   final FlashcardDeckModel deck;
   final int depth;
+  final bool enableSwipeActions;
   final VoidCallback onShowOptions;
   final VoidCallback onStudy;
   final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
+    final tile = Container(
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: onShowOptions,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              SizedBox(width: depth * 16.0),
+              if (deck.isFiltered) ...[
+                Icon(
+                  Icons.filter_list,
+                  size: 18,
+                  color: AppColors.primaryPurple.withValues(alpha: 0.8),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Expanded(
+                child: Text(
+                  deck.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              DeckCountButtons(
+                newCount: deck.newCount,
+                learningCount: deck.learningCount,
+                reviewCount: deck.reviewDueCount,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (!enableSwipeActions) {
+      return Padding(padding: const EdgeInsets.only(bottom: 8), child: tile);
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Dismissible(
@@ -796,54 +855,7 @@ class _DeckListTile extends StatelessWidget {
           }
           return false;
         },
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppPageColors.cardBg,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: InkWell(
-            onTap: onShowOptions,
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                children: [
-                  SizedBox(width: depth * 16.0),
-                  if (deck.isFiltered) ...[
-                    Icon(
-                      Icons.filter_list,
-                      size: 18,
-                      color: AppColors.primaryPurple.withValues(alpha: 0.8),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  Expanded(
-                    child: Text(
-                      deck.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  DeckCountButtons(
-                    newCount: deck.newCount,
-                    learningCount: deck.learningCount,
-                    reviewCount: deck.reviewDueCount,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+        child: tile,
       ),
     );
   }

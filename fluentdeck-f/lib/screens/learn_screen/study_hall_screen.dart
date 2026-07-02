@@ -5,6 +5,7 @@ import 'package:fluentdeck/models/conversation_training_session.dart';
 import 'package:fluentdeck/models/speaking_session_record_model.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
+import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/services/study_hall_service.dart';
 import 'package:fluentdeck/services/tutor_memory_service.dart';
 
@@ -96,7 +97,7 @@ class _StudyHallScreenState extends State<StudyHallScreen> {
           )
           .toList(),
     );
-    MainNavigationCoordinator.goToMainTab(0, subIndex: 2);
+    MainNavigationCoordinator.goToTab(MainTabId.speak, subIndex: 2);
   }
 
   @override

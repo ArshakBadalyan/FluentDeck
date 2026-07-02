@@ -60,23 +60,7 @@ class UserProgressService {
     required List<GrammarCorrection> corrections,
     required DateTime startedAt,
   }) async {
-    final progress = await createIfMissing();
-    final weakAreas = _mergeCorrections(progress.weakAreas, corrections);
-
-    await updateProgress(
-      UserProgressModel(
-        id: progress.id,
-        userId: progress.userId,
-        currentLevel: progress.currentLevel,
-        weakAreas: weakAreas,
-        streakDays: progress.streakDays,
-        totalSpeakingMinutes: progress.totalSpeakingMinutes,
-        perfectSentencesCount: progress.perfectSentencesCount,
-        uniqueWordsUsed: progress.uniqueWordsUsed,
-        lastPracticeAt: progress.lastPracticeAt,
-        completedExercises: progress.completedExercises,
-      ),
-    );
+    // Weak areas and speaking stats are persisted server-side in /ai/tutor.
   }
 
   Future<void> recordExerciseCompletion({

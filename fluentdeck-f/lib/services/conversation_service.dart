@@ -48,6 +48,7 @@ class ConversationService {
   SpeakingSessionContext sessionContext = SpeakingSessionContext.freeChat();
   bool isEvaluatingSession = false;
   bool isPlayingTts = false;
+  int? ttsTurnIndex;
   bool autoPlayVoiceEnabled = true;
   bool autoConversationEnabled = false;
   bool soundOnEnabled = true;
@@ -144,6 +145,7 @@ class ConversationService {
       await _ttsPlayer.stop();
     } catch (_) {}
     isPlayingTts = false;
+    ttsTurnIndex = null;
     isProcessing = false;
     stage = ConversationProcessingStage.idle;
     if (clearError) {
@@ -151,7 +153,7 @@ class ConversationService {
     }
   }
 
-  Future<void> playAiText(String text) async {
+  Future<void> playAiText(String text, {int? turnIndex}) async {
     if (!_chatActive || text.trim().isEmpty || isPlayingTts) return;
     final sessionEpoch = _chatSessionEpoch;
     if (!soundOnEnabled) {
@@ -160,22 +162,45 @@ class ConversationService {
       }
       return;
     }
+
+    var resolvedTurnIndex = turnIndex;
+    if (resolvedTurnIndex == null) {
+      for (var i = turns.length - 1; i >= 0; i--) {
+        if (!turns[i].isUser && turns[i].text == text) {
+          resolvedTurnIndex = i;
+          break;
+        }
+      }
+      if (resolvedTurnIndex == null) {
+        final lastAi = turns.lastIndexWhere((turn) => !turn.isUser);
+        if (lastAi >= 0) resolvedTurnIndex = lastAi;
+      }
+    }
+
     isPlayingTts = true;
+    ttsTurnIndex = resolvedTurnIndex;
     stage = ConversationProcessingStage.speaking;
     _notify();
     try {
-      await _playTutorReply(text, sessionEpoch: sessionEpoch);
+      await _playTutorReply(text, sessionEpoch: sessionEpoch)
+          .timeout(const Duration(seconds: 90));
+    } on TimeoutException {
+      try {
+        await _ttsPlayer.stop();
+      } catch (_) {}
     } finally {
       if (sessionEpoch != _chatSessionEpoch || !_chatActive) {
         try {
           await _ttsPlayer.stop();
         } catch (_) {}
         isPlayingTts = false;
+        ttsTurnIndex = null;
         stage = ConversationProcessingStage.idle;
         _notify();
         return;
       }
       isPlayingTts = false;
+      ttsTurnIndex = null;
       stage = ConversationProcessingStage.idle;
       _notify();
       if ((autoConversationEnabled || autoStartRecordingEnabled) && !isRecording) {
@@ -341,17 +366,18 @@ class ConversationService {
         timestamp: DateTime.now(),
       ),
     );
-    unawaited(_autoPlayOpener(opener));
+    final openerIndex = turns.length - 1;
+    unawaited(_autoPlayOpener(opener, turnIndex: openerIndex));
   }
 
-  Future<void> _autoPlayOpener(String opener) async {
+  Future<void> _autoPlayOpener(String opener, {required int turnIndex}) async {
     if (!_chatActive) return;
     final sessionEpoch = _chatSessionEpoch;
     await refreshSpeakingSettings();
     if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
     if (!soundOnEnabled) return;
     if (autoPlayVoiceEnabled || autoConversationEnabled) {
-      await playAiText(opener);
+      await playAiText(opener, turnIndex: turnIndex);
     }
   }
 
@@ -538,11 +564,18 @@ class ConversationService {
       }
       errorMessage = e.toString();
     } finally {
-      if (stage != ConversationProcessingStage.speaking) {
-        isProcessing = false;
-        stage = ConversationProcessingStage.idle;
-      }
+      _finishTurnProcessing();
       _notify();
+    }
+  }
+
+  /// Clears the "thinking/transcribing" lock. TTS uses [isPlayingTts] + [stage] separately.
+  void _finishTurnProcessing() {
+    isProcessing = false;
+    if (!isPlayingTts &&
+        (stage == ConversationProcessingStage.thinking ||
+            stage == ConversationProcessingStage.transcribing)) {
+      stage = ConversationProcessingStage.idle;
     }
   }
 
@@ -582,10 +615,7 @@ class ConversationService {
       }
       errorMessage = e.toString();
     } finally {
-      if (stage != ConversationProcessingStage.speaking) {
-        isProcessing = false;
-        stage = ConversationProcessingStage.idle;
-      }
+      _finishTurnProcessing();
       _notify();
     }
   }
@@ -624,6 +654,7 @@ class ConversationService {
       timestamp: DateTime.now(),
     );
     turns.add(aiTurn);
+    final aiTurnIndex = turns.length - 1;
 
     if (tutor.trainingNotice != null && tutor.trainingNotice!.isNotEmpty) {
       turns.add(
@@ -653,10 +684,10 @@ class ConversationService {
       startedAt: turnStarted,
     );
 
-    stage = ConversationProcessingStage.speaking;
-    _notify();
+    _finishTurnProcessing();
+
     if (autoPlayVoiceEnabled || autoConversationEnabled) {
-      await playAiText(tutor.reply);
+      await playAiText(tutor.reply, turnIndex: aiTurnIndex);
     } else if (autoStartRecordingEnabled) {
       await startRecording();
     }

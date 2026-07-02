@@ -10,7 +10,10 @@ enum _NoteSourceFilter { all, catalog, speaking, manual }
 enum _NoteSort { wordAsc, wordDesc, newest, oldest }
 
 class NotesScreen extends StatefulWidget {
-  const NotesScreen({super.key});
+  const NotesScreen({super.key, this.enableSwipeActions = false});
+
+  /// When false, horizontal swipes change tabs instead of edit/delete on rows.
+  final bool enableSwipeActions;
 
   @override
   State<NotesScreen> createState() => _NotesScreenState();
@@ -410,6 +413,82 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   Widget _noteTile(UserNoteModel note) {
+    final tile = Material(
+      color: Colors.white,
+      child: InkWell(
+        onTap: () => _openEdit(note),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            note.word,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          note.sourceLabel,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (note.definition.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        note.definition,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade800,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (!widget.enableSwipeActions)
+                PopupMenuButton<String>(
+                  padding: EdgeInsets.zero,
+                  onSelected: (action) async {
+                    if (action == 'edit') {
+                      await _openEdit(note);
+                    } else if (action == 'delete') {
+                      await _confirmDelete(note);
+                    }
+                  },
+                  itemBuilder:
+                      (_) => const [
+                        PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (!widget.enableSwipeActions) return tile;
+
     return Dismissible(
       key: ValueKey('note-${note.id}'),
       direction: DismissDirection.horizontal,
@@ -425,56 +504,7 @@ class _NotesScreenState extends State<NotesScreen> {
         }
         return false;
       },
-      child: Material(
-        color: Colors.white,
-        child: InkWell(
-          onTap: () => _openEdit(note),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        note.word,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      note.sourceLabel,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-                if (note.definition.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    note.definition,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade800,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
+      child: tile,
     );
   }
 

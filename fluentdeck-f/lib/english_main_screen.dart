@@ -6,7 +6,6 @@ import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/screens/activity_screen/activity_shell_screen.dart';
 import 'package:fluentdeck/screens/speaking_hub/speaking_hub_screen.dart';
 import 'package:fluentdeck/screens/conversation_screen/conversation_history_screen.dart';
-import 'package:fluentdeck/screens/conversation_screen/conversation_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_shell_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/placement_test_screen.dart';
 import 'package:fluentdeck/screens/library_screen/library_screen.dart';
@@ -21,11 +20,13 @@ import 'package:fluentdeck/services/audio_service.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/auth_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
+import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/services/notifications_service.dart';
 import 'package:fluentdeck/utils/strapi_response.dart';
 import 'package:fluentdeck/services/unsaved_changes_service.dart';
 import 'package:fluentdeck/services/vocabulary_service.dart';
 import 'package:fluentdeck/ui_elements/english_bottom_nav.dart';
+import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
 import 'package:fluentdeck/ui_elements/main_app_bar.dart';
 import 'package:fluentdeck/ui_elements/notification_panel.dart';
 
@@ -36,7 +37,7 @@ class EnglishMainScreen extends StatefulWidget {
 
   final int initialMainIndex;
 
-  static const mainTabCount = 5;
+  static int get mainTabCount => MainTabConfig.tabCount;
 
   @override
   State<EnglishMainScreen> createState() => EnglishMainScreenState();
@@ -50,17 +51,22 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     with TickerProviderStateMixin {
   late int _currentIndex =
       widget.initialMainIndex.clamp(0, EnglishMainScreen.mainTabCount - 1);
-  TabController? _profileTabController;
-  TabController? _decksTabController;
-  TabController? _libraryTabController;
-  TabController? _speakTabController;
-  TabController? _activityTabController;
+  late final PageController _pageController =
+      PageController(initialPage: _currentIndex);
+  late final TabController _profileTabController =
+      TabController(length: _profileSubTabs.length, vsync: this);
+  late final TabController _decksTabController =
+      TabController(length: _decksSubTabs.length, vsync: this);
+  late final TabController _libraryTabController =
+      TabController(length: _librarySubTabs.length, vsync: this);
+  late final TabController _speakTabController =
+      TabController(length: _speakSubTabs.length, vsync: this);
+  late final TabController _activityTabController =
+      TabController(length: _activitySubTabs.length, vsync: this);
   bool _speakInSession = false;
   int _notificationUnreadCount = 0;
   final GlobalKey<DecksShellScreenState> _decksShellKey = GlobalKey();
   final GlobalKey<SpeakingHubScreenState> _speakingHubKey = GlobalKey();
-
-  static const _titles = ['Speak', 'Decks', 'Library', 'Activity', 'Profile'];
 
   static const _decksSubTabs = ['Decks', 'Browser'];
 
@@ -86,11 +92,20 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     'About',
   ];
 
+  MainTabId get _currentTab => MainTabConfig.tabAt(_currentIndex);
+
+  String get _currentTitle {
+    final tab = _currentTab;
+    if (tab == MainTabId.profile) {
+      return AppLocalizations.instance.t('profile.profile');
+    }
+    return MainTabConfig.definition(tab).title;
+  }
+
   @override
   void initState() {
     super.initState();
     MainNavigationCoordinator.navigateToMainTab = setMainIndex;
-    _initProfileTabs();
     UnsavedChangesService().addListener(_onUnsavedChangesChanged);
     unawaited(_initSoundSettings());
     unawaited(_refreshNotificationUnread());
@@ -147,61 +162,44 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       MainNavigationCoordinator.navigateToMainTab = null;
     }
     UnsavedChangesService().removeListener(_onUnsavedChangesChanged);
-    _profileTabController?.dispose();
-    _decksTabController?.dispose();
-    _libraryTabController?.dispose();
-    _speakTabController?.dispose();
-    _activityTabController?.dispose();
+    _pageController.dispose();
+    _profileTabController.dispose();
+    _decksTabController.dispose();
+    _libraryTabController.dispose();
+    _speakTabController.dispose();
+    _activityTabController.dispose();
     super.dispose();
+  }
+
+  ScrollPhysics get _mainPagePhysics {
+    if (_speakInSession || UnsavedChangesService().hasUnsavedChanges) {
+      return const NeverScrollableScrollPhysics();
+    }
+    return const PageScrollPhysics();
+  }
+
+  void _leaveSpeakTabIfNeeded(int nextIndex) {
+    if (MainTabConfig.isTab(_currentIndex, MainTabId.speak) &&
+        !MainTabConfig.isTab(nextIndex, MainTabId.speak)) {
+      _speakInSession = false;
+      unawaited(ConversationService.instance.leaveChat());
+    }
+  }
+
+  void _onMainPageChanged(int index) {
+    if (!mounted || index == _currentIndex) return;
+    _leaveSpeakTabIfNeeded(index);
+    setState(() => _currentIndex = index);
+    AudioService().play('tabChange');
+  }
+
+  Future<bool> _confirmLeaveIfUnsaved() async {
+    if (!UnsavedChangesService().hasUnsavedChanges) return true;
+    return UnsavedChangesService().showConfirmDialog(context);
   }
 
   void _onUnsavedChangesChanged() {
     if (mounted) setState(() {});
-  }
-
-  void _initProfileTabs() {
-    _profileTabController?.dispose();
-    _decksTabController?.dispose();
-    _libraryTabController?.dispose();
-    _activityTabController?.dispose();
-    _speakTabController?.dispose();
-    if (_currentIndex == 4) {
-      _profileTabController = TabController(length: _profileSubTabs.length, vsync: this);
-      _decksTabController = null;
-      _libraryTabController = null;
-      _speakTabController = null;
-      _activityTabController = null;
-    } else if (_currentIndex == 1) {
-      _decksTabController = TabController(length: _decksSubTabs.length, vsync: this);
-      _profileTabController = null;
-      _libraryTabController = null;
-      _speakTabController = null;
-      _activityTabController = null;
-    } else if (_currentIndex == 2) {
-      _libraryTabController = TabController(length: _librarySubTabs.length, vsync: this);
-      _profileTabController = null;
-      _decksTabController = null;
-      _speakTabController = null;
-      _activityTabController = null;
-    } else if (_currentIndex == 0) {
-      _speakTabController = TabController(length: _speakSubTabs.length, vsync: this);
-      _profileTabController = null;
-      _decksTabController = null;
-      _libraryTabController = null;
-      _activityTabController = null;
-    } else if (_currentIndex == 3) {
-      _activityTabController = TabController(length: _activitySubTabs.length, vsync: this);
-      _profileTabController = null;
-      _decksTabController = null;
-      _libraryTabController = null;
-      _speakTabController = null;
-    } else {
-      _profileTabController = null;
-      _decksTabController = null;
-      _libraryTabController = null;
-      _speakTabController = null;
-      _activityTabController = null;
-    }
   }
 
   void _onSpeakSessionActiveChanged(bool inSession) {
@@ -211,28 +209,61 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     });
   }
 
+  void _applySubIndex(MainTabId tab, int subIndex) {
+    switch (tab) {
+      case MainTabId.speak:
+        _speakTabController.index =
+            subIndex.clamp(0, _speakSubTabs.length - 1);
+      case MainTabId.decks:
+        _decksTabController.index =
+            subIndex.clamp(0, _decksSubTabs.length - 1);
+      case MainTabId.library:
+        _libraryTabController.index =
+            subIndex.clamp(0, _librarySubTabs.length - 1);
+      case MainTabId.activity:
+        _activityTabController.index =
+            subIndex.clamp(0, _activitySubTabs.length - 1);
+      case MainTabId.profile:
+        _profileTabController.index =
+            subIndex.clamp(0, _profileSubTabs.length - 1);
+    }
+  }
+
   void setMainIndex(int index, {int? subIndex}) {
     if (!mounted) return;
-    if (_currentIndex == 0 && index != 0) {
-      unawaited(ConversationService.instance.leaveChat());
+    final next = index.clamp(0, EnglishMainScreen.mainTabCount - 1);
+    _leaveSpeakTabIfNeeded(next);
+    if (next != _currentIndex) {
+      _pageController.jumpToPage(next);
     }
     setState(() {
-      if (_currentIndex == 0 && index != 0) {
-        _speakInSession = false;
-      }
-      _currentIndex = index.clamp(0, EnglishMainScreen.mainTabCount - 1);
-      _initProfileTabs();
-      if (subIndex != null && _profileTabController != null) {
-        _profileTabController!.index = subIndex.clamp(0, _profileSubTabs.length - 1);
-      }
-      if (subIndex != null && _speakTabController != null) {
-        _speakTabController!.index = subIndex.clamp(0, _speakSubTabs.length - 1);
-      }
-      if (subIndex != null && _libraryTabController != null) {
-        _libraryTabController!.index = subIndex.clamp(0, _librarySubTabs.length - 1);
+      _currentIndex = next;
+      if (subIndex != null) {
+        _applySubIndex(MainTabConfig.tabAt(next), subIndex);
       }
     });
     AudioService().play('tabChange');
+  }
+
+  MainTabHandoff get _mainTabHandoff => MainTabHandoff(
+    onPrevious:
+        _currentIndex > 0 ? () => _goToAdjacentMainTab(-1) : null,
+    onNext:
+        _currentIndex < MainTabConfig.tabCount - 1
+            ? () => _goToAdjacentMainTab(1)
+            : null,
+  );
+
+  Future<void> _goToAdjacentMainTab(int direction) async {
+    final next = _currentIndex + direction;
+    if (next < 0 || next >= MainTabConfig.tabCount) return;
+    if (!await _confirmLeaveIfUnsaved()) return;
+    _leaveSpeakTabIfNeeded(next);
+    await _pageController.animateToPage(
+      next,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   Future<void> _refreshNotificationUnread() async {
@@ -261,58 +292,73 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     }
   }
 
-  Widget _bodyForIndex(int index) {
-    switch (index) {
-      case 0:
+  Widget _profileBody() {
+    return HandoffTabBarView(
+      controller: _profileTabController,
+      onHandoffPrevious: _mainTabHandoff.onPrevious,
+      onHandoffNext: _mainTabHandoff.onNext,
+      physics:
+          UnsavedChangesService().hasUnsavedChanges
+              ? const NeverScrollableScrollPhysics()
+              : const BouncingScrollPhysics(),
+      children: const [
+        ProfileAccountTab(),
+        ProfileSettingsTab(),
+        ProfileNotificationsTab(),
+        ProfileSoundTab(),
+        ProfileSecurityTab(),
+        ProfileAboutTab(showResetAllScreenTips: false),
+      ],
+    );
+  }
+
+  Widget _pageForTab(MainTabId tab) {
+    final handoff = _mainTabHandoff;
+    switch (tab) {
+      case MainTabId.speak:
         return SpeakingHubScreen(
           key: _speakingHubKey,
-          tabController: _speakTabController!,
+          tabController: _speakTabController,
+          mainTabHandoff: handoff,
           onSessionActiveChanged: _onSpeakSessionActiveChanged,
         );
-      case 1:
+      case MainTabId.decks:
         return DecksShellScreen(
           key: _decksShellKey,
-          tabController: _decksTabController!,
+          tabController: _decksTabController,
+          mainTabHandoff: handoff,
         );
-      case 2:
-        return LibraryScreen(tabController: _libraryTabController!);
-      case 3:
-        return ActivityShellScreen(tabController: _activityTabController!);
-      case 4:
-        return TabBarView(
-          controller: _profileTabController,
-          physics:
-              UnsavedChangesService().hasUnsavedChanges
-                  ? const NeverScrollableScrollPhysics()
-                  : null,
-          children: const [
-            ProfileAccountTab(),
-            ProfileSettingsTab(),
-            ProfileNotificationsTab(),
-            ProfileSoundTab(),
-            ProfileSecurityTab(),
-            ProfileAboutTab(showResetAllScreenTips: false),
-          ],
+      case MainTabId.library:
+        return LibraryScreen(
+          tabController: _libraryTabController,
+          mainTabHandoff: handoff,
         );
-      default:
-        return const ConversationScreen();
+      case MainTabId.activity:
+        return ActivityShellScreen(
+          tabController: _activityTabController,
+          mainTabHandoff: handoff,
+        );
+      case MainTabId.profile:
+        return _profileBody();
     }
   }
 
+  List<Widget> get _orderedPages =>
+      MainTabConfig.order.map(_pageForTab).toList(growable: false);
+
   @override
   Widget build(BuildContext context) {
-    final isProfile = _currentIndex == 4;
-    final isDecks = _currentIndex == 1;
-    final isLibrary = _currentIndex == 2;
-    final isSpeak = _currentIndex == 0;
-    final isActivity = _currentIndex == 3;
+    final tab = _currentTab;
+    final isProfile = tab == MainTabId.profile;
+    final isDecks = tab == MainTabId.decks;
+    final isLibrary = tab == MainTabId.library;
+    final isSpeak = tab == MainTabId.speak;
+    final isActivity = tab == MainTabId.activity;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: MainAppBar(
-        title:
-            isProfile
-                ? AppLocalizations.instance.t('profile.profile')
-                : _titles[_currentIndex],
+        title: _currentTitle,
         tabs:
             isProfile
                 ? _profileSubTabs.map((label) => Tab(text: label)).toList()
@@ -339,7 +385,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                 : null,
         notificationUnreadCount: _notificationUnreadCount,
         onConversationHistoryTap:
-            _currentIndex == 0
+            isSpeak
                 ? () {
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
@@ -349,7 +395,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                 }
                 : null,
         onNewConversationTap:
-            _currentIndex == 0
+            isSpeak
                 ? () async {
                   await _speakingHubKey.currentState?.startNewFreeChat();
                 }
@@ -360,26 +406,23 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
           unawaited(_refreshNotificationUnread());
         },
       ),
-      body: _bodyForIndex(_currentIndex),
+      body: PageView(
+        controller: _pageController,
+        physics: _mainPagePhysics,
+        onPageChanged: _onMainPageChanged,
+        children: _orderedPages,
+      ),
       bottomNavigationBar: EnglishBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) async {
           if (index == _currentIndex) return;
-          if (UnsavedChangesService().hasUnsavedChanges) {
-            final confirmed = await UnsavedChangesService().showConfirmDialog(
-              context,
-            );
-            if (!confirmed) return;
-          }
-          setState(() {
-            if (_currentIndex == 0 && index != 0) {
-              _speakInSession = false;
-              unawaited(ConversationService.instance.leaveChat());
-            }
-            _currentIndex = index;
-            _initProfileTabs();
-          });
-          AudioService().play('tabChange');
+          if (!await _confirmLeaveIfUnsaved()) return;
+          _leaveSpeakTabIfNeeded(index);
+          await _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+          );
         },
       ),
     );

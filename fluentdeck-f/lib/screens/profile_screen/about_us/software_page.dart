@@ -13,6 +13,7 @@ class SoftwarePage extends StatelessWidget {
         ),
         leading: IconButton(
           icon: const Icon(Icons.close),
+          tooltip: 'Close',
           onPressed: () => Navigator.pop(context),
         ),
       ),

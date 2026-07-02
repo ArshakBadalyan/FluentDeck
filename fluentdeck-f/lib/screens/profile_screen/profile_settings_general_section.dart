@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
+import 'package:fluentdeck/services/theme_settings_store.dart';
+import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Appearance and accessibility settings (stored locally, app-wide).
@@ -57,9 +60,19 @@ class _ProfileSettingsGeneralSectionState
           ),
         ),
         const SizedBox(height: 8),
+        ListenableBuilder(
+          listenable: ThemeSettingsStore.instance,
+          builder: (context, _) => AppNavRow(
+            title:
+                'App theme  ·  ${ThemeSettingsStore.instance.label(ThemeSettingsStore.instance.themeMode)}',
+            icon: Icons.palette_outlined,
+            onTap: () => _showThemeModeSheet(context),
+          ),
+        ),
+        const SizedBox(height: 4),
         AppToggleRow(
-          title: 'Dark mode',
-          subtitle: 'Use dark theme in the Decks section',
+          title: 'Dark mode (Decks)',
+          subtitle: 'Use dark theme in the Decks section, regardless of app theme',
           value: _settings.darkMode,
           onChanged: (v) => _save(_settings.copyWith(darkMode: v)),
         ),
@@ -98,6 +111,57 @@ class _ProfileSettingsGeneralSectionState
           onChanged: (v) => _save(_settings.copyWith(reviewButtonScale: v)),
         ),
       ],
+    );
+  }
+
+  Future<void> _showThemeModeSheet(BuildContext context) {
+    return showFrostedBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      builder: (sheetContext) {
+        return ListenableBuilder(
+          listenable: ThemeSettingsStore.instance,
+          builder: (context, _) => Padding(
+            padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'App theme',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                for (final mode in ThemeMode.values)
+                  RadioListTile<ThemeMode>(
+                    value: mode,
+                    groupValue: ThemeSettingsStore.instance.themeMode,
+                    onChanged: (m) {
+                      if (m != null) ThemeSettingsStore.instance.setThemeMode(m);
+                    },
+                    activeColor: AppColors.primaryPurple,
+                    title: Text(ThemeSettingsStore.instance.label(mode)),
+                  ),
+                const SizedBox(height: 4),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
