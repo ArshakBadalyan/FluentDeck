@@ -45,7 +45,7 @@ class UnsavedChangesService extends ChangeNotifier {
                       Text(
                         '${context.tr('popups.leave-page-popup.first-title')}\n${context.tr('popups.leave-page-popup.second-title')}',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: Colors.black,
@@ -57,7 +57,7 @@ class UnsavedChangesService extends ChangeNotifier {
                       Text(
                         '${context.tr('popups.leave-page-popup.first-text')}\n${context.tr('popups.leave-page-popup.second-text')}.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                           color: Colors.black87,
                           height: 1.3,
@@ -94,7 +94,7 @@ class UnsavedChangesService extends ChangeNotifier {
                                   child: Text(
                                     context.tr('popups.leave-page-popup.leave'),
                                     maxLines: 1,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: 1.2,
@@ -141,7 +141,7 @@ class UnsavedChangesService extends ChangeNotifier {
                                   child: Text(
                                     context.tr('buttons.save'),
                                     maxLines: 1,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 14,
                                       letterSpacing: 1.2,
                                       fontWeight: FontWeight.w600,

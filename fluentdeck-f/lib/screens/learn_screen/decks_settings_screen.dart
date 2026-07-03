@@ -114,7 +114,7 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
         _lastBackupLabel = DeckBackupService.instance.formatLastBackup(lastMs);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             kIsWeb
                 ? 'Backup downloaded (web stores latest in browser storage when auto-backup runs)'

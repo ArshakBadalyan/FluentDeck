@@ -637,7 +637,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
               color: AppColors.primaryPurple.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
               child: ListTile(
-                leading: Icon(Icons.image_outlined, color: AppColors.primaryPurple),
+                leading: const Icon(Icons.image_outlined, color: AppColors.primaryPurple),
                 title: const Text('Image occlusion editor'),
                 subtitle: const Text('Open the full editor to draw masks on an image'),
                 trailing: const Icon(Icons.open_in_new, size: 18),

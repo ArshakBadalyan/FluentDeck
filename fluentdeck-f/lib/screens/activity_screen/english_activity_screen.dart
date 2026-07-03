@@ -201,7 +201,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
               title: l10n.t('speaking-activity.saved-phrases.title'),
               icon: Icons.bookmark_outline_rounded,
               child: _savedPhrases.isEmpty
-                  ? _EmptyHint(
+                  ? const _EmptyHint(
                       text:
                           'Save corrections from speaking conversations to build your phrase list.',
                     )
@@ -226,7 +226,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
               title: 'Top weak areas',
               icon: Icons.insights_outlined,
               child: topWeak.isEmpty
-                  ? _EmptyHint(
+                  ? const _EmptyHint(
                       text:
                           'Have a few conversations — your tutor will track patterns here.',
                     )

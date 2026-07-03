@@ -129,7 +129,7 @@ class _StudyHallScreenState extends State<StudyHallScreen> {
         children: [
           _StatsRow(stats: _summary.stats),
           const SizedBox(height: 16),
-          _SectionHeader(
+          const _SectionHeader(
             title: 'What I remember about you',
             subtitle: 'Personal details the tutor recalls across sessions',
           ),
@@ -164,7 +164,7 @@ class _StudyHallScreenState extends State<StudyHallScreen> {
               (item) => _WordCard(word: item),
             ),
           const SizedBox(height: 20),
-          _SectionHeader(
+          const _SectionHeader(
             title: 'Recent speaking sessions',
             subtitle: 'Scores and summaries from completed practice',
           ),
@@ -179,7 +179,7 @@ class _StudyHallScreenState extends State<StudyHallScreen> {
             ),
           if (_summary.weakAreas.isNotEmpty) ...[
             const SizedBox(height: 20),
-            _SectionHeader(
+            const _SectionHeader(
               title: 'Weak areas',
               subtitle: 'Patterns from your corrections',
             ),

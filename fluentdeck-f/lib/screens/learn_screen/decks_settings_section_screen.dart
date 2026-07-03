@@ -250,7 +250,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
       if (bytes == null) throw Exception('Could not read file');
       final raw = utf8.decode(bytes);
       final decoded = jsonDecode(raw);
-      if (decoded is! Map) throw FormatException('Invalid JSON');
+      if (decoded is! Map) throw const FormatException('Invalid JSON');
       final map = Map<String, dynamic>.from(decoded);
       if (map.containsKey('cards') || map.containsKey('decks')) {
         if (!mounted) return;

@@ -107,7 +107,7 @@ class CardBrowserBulkActions {
                 ),
                 if (hasBulkUndo)
                   ListTile(
-                    leading: Icon(Icons.undo, color: AppColors.primaryPurple),
+                    leading: const Icon(Icons.undo, color: AppColors.primaryPurple),
                     title: const Text('Undo tag change'),
                     onTap: () => Navigator.pop(ctx, 'undo_tags'),
                   ),
@@ -347,7 +347,7 @@ class CardBrowserBulkActions {
       'count': selectedCards.length,
       'cards': selectedCards.map((c) => c.toJson()).toList(),
     };
-    final json = JsonEncoder.withIndent('  ').convert(payload);
+    final json = const JsonEncoder.withIndent('  ').convert(payload);
     await Share.share(json, subject: 'Flashcards export (${selectedCards.length})');
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -32,11 +32,11 @@ class DecksContextualHelpButton extends StatelessWidget {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: Row(
+            title: const Row(
               children: [
                 Icon(Icons.help_outline, color: AppColors.primaryPurple),
-                const SizedBox(width: 8),
-                const Expanded(child: Text('Quick tip')),
+                SizedBox(width: 8),
+                Expanded(child: Text('Quick tip')),
               ],
             ),
             content: Text(message),

@@ -100,7 +100,7 @@ class FlashcardExportService {
                   children: [
                     pw.Text(
                       deckNames[deckId] ?? 'Deck',
-                      style: pw.TextStyle(
+                      style: const pw.TextStyle(
                         fontSize: 9,
                         color: PdfColors.grey700,
                       ),

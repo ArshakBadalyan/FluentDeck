@@ -75,7 +75,7 @@ class _ProfileAchievementsPreviewState extends State<ProfileAchievementsPreview>
             AppScaleTap(
               onTap: widget.onViewAll,
               semanticLabel: 'View all achievements',
-              child: Text(
+              child: const Text(
                 'View all',
                 style: TextStyle(
                   color: AppColors.primaryPurple,

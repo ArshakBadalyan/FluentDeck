@@ -160,9 +160,9 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
       );
     }
     if (_games.isEmpty) {
-      return Center(
+      return const Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Text(
             'No games available yet.\nRestart Strapi or run the speaking seed script.',
             textAlign: TextAlign.center,

@@ -140,11 +140,11 @@ class ProfileSettingsTabState extends State<ProfileSettingsTab> {
             const SizedBox(height: 16),
             KeyedSubtree(
               key: _aiSpeakingKey,
-              child: AppSectionCard(
+              child: const AppSectionCard(
                 title: 'AI Speaking',
                 icon: Icons.record_voice_over_outlined,
                 subtitle: 'Tutor language, translations, and conversation flow.',
-                child: const ProfileSettingsSpeakingSection(),
+                child: ProfileSettingsSpeakingSection(),
               ),
             ),
             const SizedBox(height: 16),
@@ -188,11 +188,11 @@ class ProfileSettingsTabState extends State<ProfileSettingsTab> {
             const SizedBox(height: 16),
             KeyedSubtree(
               key: _generalKey,
-              child: AppSectionCard(
+              child: const AppSectionCard(
                 title: 'General',
                 icon: Icons.tune_rounded,
                 subtitle: 'Appearance and accessibility for the app.',
-                child: const ProfileSettingsGeneralSection(),
+                child: ProfileSettingsGeneralSection(),
               ),
             ),
             const SizedBox(height: 16),

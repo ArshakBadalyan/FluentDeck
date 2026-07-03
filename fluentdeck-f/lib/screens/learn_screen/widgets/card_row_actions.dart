@@ -256,7 +256,7 @@ class CardRowActions {
                           children: [
                             Expanded(child: Text(t.name)),
                             if (t.id == current)
-                              Icon(Icons.check, color: AppColors.primaryPurple, size: 18),
+                              const Icon(Icons.check, color: AppColors.primaryPurple, size: 18),
                           ],
                         ),
                       ),

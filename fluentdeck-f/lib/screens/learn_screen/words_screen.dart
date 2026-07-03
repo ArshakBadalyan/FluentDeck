@@ -381,7 +381,7 @@ class _WordsScreenState extends State<WordsScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.bookmark, size: 14, color: AppColors.primaryPurple),
+                        const Icon(Icons.bookmark, size: 14, color: AppColors.primaryPurple),
                         const SizedBox(width: 4),
                         Text(
                           '$saved / $saveLimit saved',
@@ -491,7 +491,7 @@ class _WordsScreenState extends State<WordsScreen> {
                         onPressed: () => setState(() => _sort = option.$1),
                         leadingIcon:
                             _sort == option.$1
-                                ? Icon(Icons.check, size: 18, color: AppColors.primaryPurple)
+                                ? const Icon(Icons.check, size: 18, color: AppColors.primaryPurple)
                                 : const SizedBox(width: 18),
                         child: Text(option.$2),
                       ),

@@ -20,9 +20,9 @@ class PrivacyPopup extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: const _PrivacyContent(),
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: _PrivacyContent(),
       ),
     );
   }

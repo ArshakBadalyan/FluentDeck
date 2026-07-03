@@ -507,7 +507,7 @@ class _CoachMarkHostState extends State<_CoachMarkHost> {
 
     Widget tourLink({required String label, required VoidCallback? onPressed}) {
       if (onPressed == null) return const SizedBox.shrink();
-      final textStyle = TextStyle(
+      final textStyle = const TextStyle(
         color: AppColors.primaryPurple,
         fontWeight: FontWeight.w600,
         fontSize: 15,

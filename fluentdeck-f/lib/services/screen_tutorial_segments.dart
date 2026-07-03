@@ -165,126 +165,126 @@ abstract final class ScreenTutorialSegmentCatalog {
 
 final Map<String, List<ScreenTutorialStep>> _segmentSteps = {
   ScreenTutorialSegmentIds.chromeBottomNav: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.shared_app_chrome.bottom_nav.title',
       bodyKey: 'screen-tutorial.shared_app_chrome.bottom_nav.body',
       targetId: ScreenTutorialTargetIds.mainBottomNav,
     ),
   ],
   ScreenTutorialSegmentIds.chromeSubTabs: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.shared_app_chrome.sub_tabs.title',
       bodyKey: 'screen-tutorial.shared_app_chrome.sub_tabs.body',
       targetId: ScreenTutorialTargetIds.mainAppBarTabs,
     ),
   ],
   ScreenTutorialSegmentIds.chromeTodayGoal: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.shared_app_chrome.today_goal.title',
       bodyKey: 'screen-tutorial.shared_app_chrome.today_goal.body',
       targetId: ScreenTutorialTargetIds.mainAppBarTodayGoal,
     ),
   ],
   ScreenTutorialSegmentIds.chromeNotifications: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.shared_app_chrome.notifications.title',
       bodyKey: 'screen-tutorial.shared_app_chrome.notifications.body',
       targetId: ScreenTutorialTargetIds.mainAppBarNotifications,
     ),
   ],
   ScreenTutorialSegmentIds.chromeSearch: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.topics_browse.s3_title',
       bodyKey: 'screen-tutorial.topics_browse.s3_body',
       targetId: ScreenTutorialTargetIds.mainAppBarSearch,
     ),
   ],
   ScreenTutorialSegmentIds.activityTopList: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.activity_top_list.complete_title',
       bodyKey: 'screen-tutorial.activity_top_list.complete_body',
       targetId: ScreenTutorialTargetIds.activityTopListBody,
     ),
   ],
   ScreenTutorialSegmentIds.activityAnswers: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.activity_answers.s4_title',
       bodyKey: 'screen-tutorial.activity_answers.s4_body',
       targetId: ScreenTutorialTargetIds.activityAnswersBody,
     ),
   ],
   ScreenTutorialSegmentIds.activityProgressPeriod: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.activity_progress.s3_title',
       bodyKey: 'screen-tutorial.activity_progress.s3_body',
       targetId: ScreenTutorialTargetIds.activityProgressPeriodPivot,
     ),
   ],
   ScreenTutorialSegmentIds.activityProgressChart: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.activity_progress.s4_title',
       bodyKey: 'screen-tutorial.activity_progress.s4_body',
       targetId: ScreenTutorialTargetIds.activityProgressDiagramPivot,
     ),
   ],
   ScreenTutorialSegmentIds.topicsClassTabs: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.topics_browse.s2_title',
       bodyKey: 'screen-tutorial.topics_browse.s2_body',
       targetId: ScreenTutorialTargetIds.mainAppBarTabs,
     ),
   ],
   ScreenTutorialSegmentIds.topicsList: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.topics_browse.s5_title',
       bodyKey: 'screen-tutorial.topics_browse.s5_body',
       targetId: ScreenTutorialTargetIds.topicsTopicListViewport,
     ),
   ],
   ScreenTutorialSegmentIds.topicsSearch: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.topics_browse.s3_title',
       bodyKey: 'screen-tutorial.topics_browse.s3_body',
       targetId: ScreenTutorialTargetIds.mainAppBarSearch,
     ),
   ],
   ScreenTutorialSegmentIds.practiceRemixSearch: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.practice_remix.s3_title',
       bodyKey: 'screen-tutorial.practice_remix.s3_body',
       targetId: ScreenTutorialTargetIds.practiceRemixSearchField,
     ),
   ],
   ScreenTutorialSegmentIds.practiceRemixClassTopics: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.practice_remix.s5_title',
       bodyKey: 'screen-tutorial.practice_remix.s5_body',
       targetId: ScreenTutorialTargetIds.practiceRemixClassGroupedList,
     ),
   ],
   ScreenTutorialSegmentIds.practiceRemixContinue: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.practice_remix.s4_title',
       bodyKey: 'screen-tutorial.practice_remix.s4_body',
       targetId: ScreenTutorialTargetIds.practiceRemixContinueCta,
     ),
   ],
   ScreenTutorialSegmentIds.practiceRemixExerciseCount: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.practice_remix_configure.s1_title',
       bodyKey: 'screen-tutorial.practice_remix_configure.s1_body',
       targetId: ScreenTutorialTargetIds.practiceRemixExerciseCount,
     ),
   ],
   ScreenTutorialSegmentIds.practiceMachineList: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.practice_vs_machine.s3_title',
       bodyKey: 'screen-tutorial.practice_vs_machine.s3_body',
       targetId: ScreenTutorialTargetIds.practiceMachineListPivot,
     ),
   ],
   ScreenTutorialSegmentIds.practicePlayerStart: [
-    ScreenTutorialStep(
+    const ScreenTutorialStep(
       titleKey: 'screen-tutorial.practice_vs_player.s3_title',
       bodyKey: 'screen-tutorial.practice_vs_player.s3_body',
       targetId: ScreenTutorialTargetIds.practicePlayerIntroStartPivot,

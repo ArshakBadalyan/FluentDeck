@@ -83,7 +83,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               Text(
                 context.tr('reset-password.reset-password'),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
               ),
 
               const SizedBox(height: 40),
@@ -92,8 +92,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 controller: _codeController,
                 decoration: InputDecoration(
                   labelText: context.tr('inputs.paste-email'),
-                  enabledBorder: UnderlineInputBorder(),
-                  focusedBorder: UnderlineInputBorder(),
+                  enabledBorder: const UnderlineInputBorder(),
+                  focusedBorder: const UnderlineInputBorder(),
                 ),
               ),
 

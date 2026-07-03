@@ -33,7 +33,7 @@ class SwipeActionBackgrounds {
       alignment: alignment,
       backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.12),
       borderRadius: borderRadius,
-      child: Icon(Icons.edit_outlined, color: AppColors.primaryPurple),
+      child: const Icon(Icons.edit_outlined, color: AppColors.primaryPurple),
     );
   }
 
@@ -45,7 +45,7 @@ class SwipeActionBackgrounds {
       alignment: alignment,
       backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.12),
       borderRadius: borderRadius,
-      child: Icon(Icons.play_arrow_rounded, color: AppColors.primaryPurple),
+      child: const Icon(Icons.play_arrow_rounded, color: AppColors.primaryPurple),
     );
   }
 

@@ -685,7 +685,7 @@ class _FilterCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.tune_rounded, size: 18, color: AppColors.primaryPurple),
+              const Icon(Icons.tune_rounded, size: 18, color: AppColors.primaryPurple),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(

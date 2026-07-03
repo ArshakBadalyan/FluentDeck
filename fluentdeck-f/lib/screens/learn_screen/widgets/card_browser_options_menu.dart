@@ -149,7 +149,7 @@ class CardBrowserOptionsMenu {
                 title: 'Filter marked',
                 trailing:
                     state.markedFilter
-                        ? Icon(Icons.check, color: AppColors.primaryPurple)
+                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
                         : null,
                 onTap: () => Navigator.pop(sheetContext, 'filter_marked'),
               ),
@@ -158,7 +158,7 @@ class CardBrowserOptionsMenu {
                 title: 'Filter suspended',
                 trailing:
                     state.suspendedFilter
-                        ? Icon(Icons.check, color: AppColors.primaryPurple)
+                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
                         : null,
                 onTap: () => Navigator.pop(sheetContext, 'filter_suspended'),
               ),
@@ -263,13 +263,13 @@ class CardBrowserOptionsMenu {
                 icon: Icons.flag_outlined,
                 title: 'Any flag',
                 trailing:
-                    current == null ? Icon(Icons.check, color: AppColors.primaryPurple) : null,
+                    current == null ? const Icon(Icons.check, color: AppColors.primaryPurple) : null,
                 onTap: () => Navigator.pop(sheetContext, -1),
               ),
               _menuTile(
                 icon: Icons.outlined_flag,
                 title: 'No flag',
-                trailing: current == 0 ? Icon(Icons.check, color: AppColors.primaryPurple) : null,
+                trailing: current == 0 ? const Icon(Icons.check, color: AppColors.primaryPurple) : null,
                 onTap: () => Navigator.pop(sheetContext, 0),
               ),
               for (final e in flagColors.entries)
@@ -279,7 +279,7 @@ class CardBrowserOptionsMenu {
                   title: 'Flag ${e.key}',
                   trailing:
                       current == e.key
-                          ? Icon(Icons.check, color: AppColors.primaryPurple)
+                          ? const Icon(Icons.check, color: AppColors.primaryPurple)
                           : null,
                   onTap: () => Navigator.pop(sheetContext, e.key),
                 ),
@@ -359,7 +359,7 @@ class CardBrowserOptionsMenu {
                   title: fieldLabel(field),
                   trailing:
                       currentField == field && currentDir != null
-                          ? Icon(Icons.check, color: AppColors.primaryPurple)
+                          ? const Icon(Icons.check, color: AppColors.primaryPurple)
                           : null,
                   onTap: () {
                     Navigator.pop(
@@ -384,7 +384,7 @@ class CardBrowserOptionsMenu {
                 title: 'Default (no sort)',
                 trailing:
                     currentField == null || currentDir == null
-                        ? Icon(Icons.check, color: AppColors.primaryPurple)
+                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
                         : null,
                 onTap: () => Navigator.pop(sheetContext, (field: null, dir: null)),
               ),
@@ -393,7 +393,7 @@ class CardBrowserOptionsMenu {
                 title: 'Ascending',
                 trailing:
                     currentDir == CardBrowserSortDir.asc
-                        ? Icon(Icons.check, color: AppColors.primaryPurple)
+                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
                         : null,
                 onTap: () => Navigator.pop(
                   sheetContext,
@@ -405,7 +405,7 @@ class CardBrowserOptionsMenu {
                 title: 'Descending',
                 trailing:
                     currentDir == CardBrowserSortDir.desc
-                        ? Icon(Icons.check, color: AppColors.primaryPurple)
+                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
                         : null,
                 onTap: () => Navigator.pop(
                   sheetContext,

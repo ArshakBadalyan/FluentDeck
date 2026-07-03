@@ -54,7 +54,7 @@ class FlashcardCardInfo {
       card:
           cardJson is Map
               ? FlashcardModel.fromJson(Map<String, dynamic>.from(cardJson))
-              : throw FormatException('Missing card'),
+              : throw const FormatException('Missing card'),
       note:
           noteJson is Map
               ? FlashcardNoteModel.fromJson(Map<String, dynamic>.from(noteJson))

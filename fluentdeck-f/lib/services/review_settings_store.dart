@@ -356,7 +356,7 @@ class ReviewSettingsStore {
 
   Future<ReviewSettings> importFromJsonString(String raw) async {
     final decoded = jsonDecode(raw);
-    if (decoded is! Map) throw FormatException('Invalid settings JSON');
+    if (decoded is! Map) throw const FormatException('Invalid settings JSON');
     final settings = ReviewSettings.fromJson(Map<String, dynamic>.from(decoded));
     await save(settings);
     return settings;

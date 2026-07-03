@@ -201,7 +201,7 @@ class _AchievementTile extends StatelessWidget {
               ),
               const Spacer(),
               if (unlocked)
-                Icon(Icons.check_circle, size: 18, color: AppColors.greenCorrect)
+                const Icon(Icons.check_circle, size: 18, color: AppColors.greenCorrect)
               else
                 Icon(Icons.lock_outline, size: 16, color: Colors.grey.shade400),
             ],

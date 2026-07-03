@@ -184,7 +184,7 @@ class _HelpSectionTileState extends State<_HelpSectionTile> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('• ', style: TextStyle(color: AppColors.primaryPurple)),
+                            const Text('• ', style: TextStyle(color: AppColors.primaryPurple)),
                             Expanded(
                               child: Text(
                                 b,

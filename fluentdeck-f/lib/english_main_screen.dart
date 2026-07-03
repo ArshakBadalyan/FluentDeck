@@ -19,6 +19,7 @@ import 'package:fluentdeck/services/app_feature_config_service.dart';
 import 'package:fluentdeck/services/audio_service.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/auth_service.dart';
+import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/services/notifications_service.dart';
@@ -412,11 +413,18 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
           unawaited(_refreshNotificationUnread());
         },
       ),
-      body: PageView(
-        controller: _pageController,
-        physics: _mainPagePhysics,
-        onPageChanged: _onMainPageChanged,
-        children: _orderedPages,
+      body: Column(
+        children: [
+          const _OfflineSyncBanner(),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              physics: _mainPagePhysics,
+              onPageChanged: _onMainPageChanged,
+              children: _orderedPages,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: EnglishBottomNav(
         currentIndex: _currentIndex,
@@ -432,6 +440,60 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
           );
         },
       ),
+    );
+  }
+}
+
+/// App-wide banner shown whenever [FlashcardSyncService] can't reach the API.
+class _OfflineSyncBanner extends StatelessWidget {
+  const _OfflineSyncBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: FlashcardSyncService.instance,
+      builder: (context, _) {
+        final offline =
+            FlashcardSyncService.instance.status == FlashcardSyncStatus.offline;
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: offline
+              ? Container(
+                  width: double.infinity,
+                  color: Colors.grey.shade700,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: SafeArea(
+                    bottom: false,
+                    top: false,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.cloud_off_outlined,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "You're offline — some features may be limited",
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

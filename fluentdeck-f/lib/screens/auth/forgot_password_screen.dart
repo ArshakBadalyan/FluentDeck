@@ -38,7 +38,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
               Text(
                 context.tr('forgot-password.forgot-password'),
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
                 textAlign: TextAlign.center,
               ),
 
@@ -112,7 +112,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   child: Text(
                     context.tr('forgot-password.send-email'),
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
               ),
