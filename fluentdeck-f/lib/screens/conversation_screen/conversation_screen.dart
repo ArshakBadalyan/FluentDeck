@@ -13,6 +13,7 @@ import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/services/speaking_scores_service.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/utils/correction_text_utils.dart';
+import 'package:fluentdeck/utils/vocabulary_highlight_utils.dart';
 
 class ConversationScreen extends StatefulWidget {
   const ConversationScreen({super.key, this.embedInShell = false});
@@ -34,7 +35,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
     super.initState();
     _service.onStateChanged = _onServiceUpdate;
     unawaited(_service.refreshSpeakingSettings());
-    unawaited(_service.ensureWelcomeMessageIfNeeded());
     _loadUsage();
   }
 
@@ -88,6 +88,29 @@ class _ConversationScreenState extends State<ConversationScreen> {
     final text = _textController.text;
     _textController.clear();
     await _service.sendTextMessage(text);
+  }
+
+  Future<void> _saveChatSelection(String selected, String sourceSentence) async {
+    final trimmed = selected.trim();
+    if (trimmed.isEmpty) return;
+
+    final result = await NoteService.instance.saveChatHighlight(
+      selectedText: trimmed,
+      sourceSentence: sourceSentence,
+    );
+
+    if (!mounted) return;
+    if (result.ok) {
+      final msg =
+          result.flashcardCreated
+              ? 'Saved to notes and From speaking deck'
+              : 'Saved to notes';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.message ?? 'Could not save')),
+      );
+    }
   }
 
   String _sessionBannerLabel() {
@@ -276,11 +299,16 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   turn: turn,
                   showTranslations:
                       SpeakingPreferencesService.instance.current.showTranslations,
+                  vocabularyHighlights:
+                      turn.isUser
+                          ? const []
+                          : _service.sessionContext.suggestedVocabulary,
                   onPlayAi:
                       turn.isUser
                           ? null
                           : () => _service.playAiText(turn.text, turnIndex: index),
                   isPlayingAi: isPlayingAi,
+                  onSaveSelection: _saveChatSelection,
                 );
               },
             ),
@@ -317,14 +345,18 @@ class _TurnBubble extends StatelessWidget {
   const _TurnBubble({
     required this.turn,
     this.showTranslations = false,
+    this.vocabularyHighlights = const [],
     this.onPlayAi,
     this.isPlayingAi = false,
+    this.onSaveSelection,
   });
 
   final ConversationTurnModel turn;
   final bool showTranslations;
+  final List<String> vocabularyHighlights;
   final VoidCallback? onPlayAi;
   final bool isPlayingAi;
+  final void Function(String selected, String sourceSentence)? onSaveSelection;
 
   @override
   Widget build(BuildContext context) {
@@ -352,6 +384,12 @@ class _TurnBubble extends StatelessWidget {
                   isUser ? const Color(0xFFFF8A80) : AppColors.redWrong,
               correctionColor:
                   isUser ? const Color(0xFF69F0AE) : AppColors.greenCorrect,
+            )
+            : !isUser && vocabularyHighlights.isNotEmpty
+            ? buildVocabularyHighlightSpans(
+              text: turn.text,
+              vocabulary: vocabularyHighlights,
+              baseStyle: baseStyle,
             )
             : [TextSpan(text: turn.text, style: baseStyle)];
 
@@ -394,8 +432,39 @@ class _TurnBubble extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: RichText(
-                    text: TextSpan(children: messageSpans),
+                  child: SelectableText.rich(
+                    TextSpan(children: messageSpans),
+                    style: baseStyle,
+                    contextMenuBuilder: (context, editableTextState) {
+                      final value = editableTextState.textEditingValue;
+                      final selection = value.selection;
+                      final selectedText =
+                          selection.isValid && !selection.isCollapsed
+                              ? value.text
+                                  .substring(selection.start, selection.end)
+                                  .trim()
+                              : '';
+
+                      final items = <ContextMenuButtonItem>[
+                        ...editableTextState.contextMenuButtonItems,
+                      ];
+                      if (selectedText.isNotEmpty && onSaveSelection != null) {
+                        items.add(
+                          ContextMenuButtonItem(
+                            onPressed: () {
+                              ContextMenuController.removeAny();
+                              onSaveSelection!(selectedText, turn.text);
+                            },
+                            label: 'Save to deck',
+                          ),
+                        );
+                      }
+
+                      return AdaptiveTextSelectionToolbar.buttonItems(
+                        anchors: editableTextState.contextMenuAnchors,
+                        buttonItems: items,
+                      );
+                    },
                   ),
                 ),
               ),

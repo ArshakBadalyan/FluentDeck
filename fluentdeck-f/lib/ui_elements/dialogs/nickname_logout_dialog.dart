@@ -218,6 +218,7 @@ class _NicknameLogoutDialogState extends State<NicknameLogoutDialog> {
             child: IconButton(
               icon: const Icon(Icons.close, size: 22),
               color: Colors.black54,
+              tooltip: 'Close',
               onPressed: _busy ? null : () => Navigator.of(context).pop(),
             ),
           ),

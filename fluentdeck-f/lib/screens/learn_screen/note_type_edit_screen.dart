@@ -305,6 +305,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
             const Text('Req', style: TextStyle(fontSize: 12)),
             IconButton(
               icon: const Icon(Icons.delete_outline, size: 20),
+              tooltip: 'Remove field',
               onPressed: () => _removeField(index),
             ),
           ],
@@ -339,6 +340,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20),
+                  tooltip: 'Remove template',
                   onPressed: () => _removeTemplate(index),
                 ),
               ],

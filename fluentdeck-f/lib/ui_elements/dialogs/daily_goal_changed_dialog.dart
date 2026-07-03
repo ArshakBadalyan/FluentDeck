@@ -78,6 +78,7 @@ class DailyGoalChangedDialog extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.close, size: 22),
               color: Colors.black54,
+              tooltip: 'Close',
               onPressed: () {
                 Navigator.of(context).pop();
               },

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_achievements_screen.dart';
+import 'package:fluentdeck/screens/profile_screen/profile_achievements_navigation.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_stats_header.dart';
 import 'package:fluentdeck/services/achievement_service.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
@@ -120,11 +120,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
     return 'Learner';
   }
 
-  void _openAchievements() {
-    Navigator.of(context).push<void>(
-      AppSharedAxisRoute<void>(page: const ProfileAchievementsScreen()),
-    );
-  }
+  void _openAchievements() => openProfileAchievements(context);
 
   Future<void> _openPlacementTest() async {
     final result = await Navigator.of(context).push<PlacementTestResultModel>(

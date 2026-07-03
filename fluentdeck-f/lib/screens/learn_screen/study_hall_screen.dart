@@ -356,6 +356,7 @@ class _MemoryCard extends StatelessWidget {
         subtitle: Text(fact.category),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline),
+          tooltip: 'Delete',
           onPressed: onDelete,
         ),
       ),

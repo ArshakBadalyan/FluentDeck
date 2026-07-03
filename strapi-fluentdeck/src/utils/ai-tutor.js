@@ -222,6 +222,7 @@ function buildTutorUserPrompt({
   weakAreas,
   trainingSession,
   trainingStarted,
+  sessionStart,
   sessionContext,
   speakingPreferences,
   deckCatalogBlock = '',
@@ -250,6 +251,8 @@ function buildTutorUserPrompt({
   let userBlock = `Conversation so far:\n${conversationBlock}\n\nUser's latest message:\n${message}`;
   if (trainingStarted && trainingSession?.active) {
     userBlock += `\n\n[System: user just started vocabulary training from "${trainingSession.sourceLabel}". Respond by teaching the first listed word — do not ask what deck names mean.]`;
+  } else if (sessionStart) {
+    userBlock += '\n\n[System: the user just opened this speaking session. Open with a short, engaging first message based on the session context — do not wait for them to speak first.]';
   }
 
   return { system, user: userBlock };
@@ -423,6 +426,7 @@ async function getTutorReply({
   weakAreas,
   trainingSession,
   trainingStarted,
+  sessionStart,
   sessionContext,
   speakingPreferences,
   deckCatalogBlock,
@@ -438,6 +442,7 @@ async function getTutorReply({
     weakAreas,
     trainingSession,
     trainingStarted,
+    sessionStart,
     sessionContext,
     speakingPreferences,
     deckCatalogBlock,

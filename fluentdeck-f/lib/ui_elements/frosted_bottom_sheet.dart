@@ -46,17 +46,18 @@ class FrostedSheetSurface extends StatelessWidget {
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: fill,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            border: Border(
-              top: BorderSide(
-                color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.65),
+        child: Material(
+          color: fill,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.65),
+                ),
               ),
             ),
+            child: child,
           ),
-          child: child,
         ),
       ),
     );

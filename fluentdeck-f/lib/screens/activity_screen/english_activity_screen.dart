@@ -12,7 +12,9 @@ import 'package:fluentdeck/screens/activity_screen/speaking_session_history_scre
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/services/user_progress_service.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/activity_preview_list.dart';
 
 class EnglishActivityScreen extends StatefulWidget {
@@ -28,8 +30,6 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
   List<SpeakingSessionRecord> _history = [];
   List<UserNoteModel> _savedPhrases = [];
   String? _error;
-
-  static const _pageBg = Color(0xFFF7F5FB);
 
   @override
   void initState() {
@@ -81,8 +81,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
     }
 
     if (_error != null) {
-      return ColoredBox(
-        color: _pageBg,
+      return AppPageBackground(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -111,14 +110,14 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
         : topWeak.map((e) => e.count).reduce((a, b) => a > b ? a : b);
     final topWeakMaxY = (topWeakMaxCount + 1).toDouble();
 
-    return ColoredBox(
-      color: _pageBg,
-      child: RefreshIndicator(
-        onRefresh: _load,
-        color: AppColors.primaryPurple,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          children: [
+    return AppPageBackground(
+      child: AppFadeIn(
+        child: RefreshIndicator(
+          onRefresh: _load,
+          color: AppColors.primaryPurple,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: [
             _StreakHero(streakDays: progress.streakDays, l10n: l10n),
             const SizedBox(height: 16),
             Row(
@@ -347,6 +346,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

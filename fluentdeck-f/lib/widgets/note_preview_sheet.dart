@@ -67,6 +67,7 @@ class _NotePreviewSheetState extends State<NotePreviewSheet> {
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),
+                  tooltip: 'Close',
                   onPressed: () => Navigator.pop(context),
                 ),
               ],

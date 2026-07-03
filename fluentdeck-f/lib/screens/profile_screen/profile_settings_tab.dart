@@ -4,6 +4,9 @@ import 'package:fluentdeck/models/user_note_model.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/placement_test_screen.dart';
 import 'package:fluentdeck/services/note_service.dart';
+import 'package:fluentdeck/screens/profile_screen/profile_achievements_navigation.dart';
+import 'package:fluentdeck/screens/profile_screen/profile_achievements_preview.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 import 'profile_settings_general_section.dart';
@@ -124,6 +127,17 @@ class ProfileSettingsTabState extends State<ProfileSettingsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            AppFadeIn(
+              child: AppSectionCard(
+                title: 'Progress & achievements',
+                icon: Icons.emoji_events_outlined,
+                subtitle: 'Badges earned from speaking, reviews, and lessons.',
+                child: ProfileAchievementsPreview(
+                  onViewAll: () => openProfileAchievements(context),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             KeyedSubtree(
               key: _aiSpeakingKey,
               child: AppSectionCard(

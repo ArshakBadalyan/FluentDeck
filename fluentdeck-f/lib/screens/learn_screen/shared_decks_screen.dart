@@ -145,6 +145,7 @@ class _SharedDecksScreenState extends State<SharedDecksScreen> {
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.search),
+                        tooltip: 'Search',
                         onPressed: _search,
                       ),
                     ),

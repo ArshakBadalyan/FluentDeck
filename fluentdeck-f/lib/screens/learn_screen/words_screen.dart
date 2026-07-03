@@ -243,6 +243,7 @@ class _WordsScreenState extends State<WordsScreen> {
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.close),
+                        tooltip: 'Close',
                         onPressed: () => Navigator.pop(ctx, false),
                       ),
                     ],

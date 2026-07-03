@@ -64,10 +64,11 @@ class _NotificationPanelState extends State<NotificationPanel> {
     final hasUnread = NotificationsService.hasUnread(_items);
 
     return SafeArea(
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.80,
+      child: Material(
         color: Colors.white,
-        child: Column(
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.80,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
@@ -113,6 +114,7 @@ class _NotificationPanelState extends State<NotificationPanel> {
                         ),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
+                        tooltip: 'Close',
                         onPressed: () {
                           Navigator.of(context).pop();
                           widget.onChanged?.call();
@@ -172,6 +174,7 @@ class _NotificationPanelState extends State<NotificationPanel> {
           ],
         ),
       ),
+    ),
     );
   }
 }

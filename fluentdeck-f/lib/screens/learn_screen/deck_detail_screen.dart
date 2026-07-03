@@ -141,6 +141,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.play_arrow),
+            tooltip: 'Start review',
             onPressed:
                 () => Navigator.of(context).push(
                   MaterialPageRoute<void>(

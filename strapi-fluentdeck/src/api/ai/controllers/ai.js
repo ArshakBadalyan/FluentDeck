@@ -151,6 +151,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       history,
       trainingSession: clientTrainingSession,
       sessionContext,
+      sessionStart,
     } = ctx.request.body ?? {};
     if (!message || typeof message !== "string" || !message.trim()) {
       return ctx.badRequest("message is required");
@@ -167,6 +168,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
           clientTrainingSession,
         );
       const deckCatalog = await loadUserDeckCatalog(strapi, userId);
+      const openingSession = sessionStart === true;
       const result = await getTutorReply({
         message: message.trim(),
         history: Array.isArray(history) ? history : [],
@@ -174,7 +176,9 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         weakAreas,
         tutorMemory,
         trainingSession: trainingSession?.active ? trainingSession : null,
-        trainingStarted: !!trainingStarted,
+        trainingStarted:
+          !!trainingStarted || (openingSession && !!trainingSession?.active),
+        sessionStart: openingSession,
         sessionContext:
           sessionContext && typeof sessionContext === "object"
             ? sessionContext

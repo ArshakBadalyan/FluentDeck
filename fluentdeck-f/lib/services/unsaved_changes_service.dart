@@ -163,6 +163,7 @@ class UnsavedChangesService extends ChangeNotifier {
                   child: IconButton(
                     onPressed: () => Navigator.pop(context, false),
                     icon: const Icon(Icons.close, color: Colors.grey, size: 20),
+                    tooltip: 'Close',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),

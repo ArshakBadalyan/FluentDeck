@@ -87,6 +87,19 @@ class NoteService {
     return _parseSaveResult(data);
   }
 
+  /// Saves a phrase the user highlighted in the speaking chat.
+  Future<SaveNoteResult> saveChatHighlight({
+    required String selectedText,
+    String? sourceSentence,
+  }) async {
+    return saveFromCorrection(
+      correctedText: selectedText,
+      originalText: sourceSentence,
+      explanation: 'Saved from speaking chat',
+      errorType: 'highlight',
+    );
+  }
+
   Future<bool> updateNote({
     required int id,
     String? word,

@@ -83,6 +83,7 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
                     IconButton(
                       onPressed: _exitSession,
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      tooltip: 'Exit session',
                     ),
                     Expanded(
                       child: Text(

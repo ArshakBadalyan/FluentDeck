@@ -362,7 +362,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     final isActivity = tab == MainTabId.activity;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: MainAppBar(
         title: _currentTitle,
         tabs:

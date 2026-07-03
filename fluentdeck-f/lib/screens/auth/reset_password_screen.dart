@@ -110,6 +110,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     icon: Icon(
                       _obscure1 ? Icons.visibility_off : Icons.visibility,
                     ),
+                    tooltip: _obscure1 ? 'Show password' : 'Hide password',
                     onPressed: () => setState(() => _obscure1 = !_obscure1),
                   ),
                 ),
@@ -128,6 +129,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     icon: Icon(
                       _obscure2 ? Icons.visibility_off : Icons.visibility,
                     ),
+                    tooltip: _obscure2 ? 'Show password' : 'Hide password',
                     onPressed: () => setState(() => _obscure2 = !_obscure2),
                   ),
                 ),

@@ -8,6 +8,31 @@ class AppPageColors {
   static const pageBg = Color(0xFFF7F5FB);
   static const cardBg = Colors.white;
   static const fieldBg = Color(0xFFF2F2F5);
+
+  static Color pageBgOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.surface
+          : pageBg;
+
+  static Color cardBgOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).cardColor
+          : cardBg;
+
+  static Color fieldBgOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.surfaceContainerHighest
+          : fieldBg;
+
+  static Color subtleBorderOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.05);
+
+  static Color subtitleOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.white.withValues(alpha: 0.65)
+          : Colors.grey.shade600;
 }
 
 class AppPageBackground extends StatelessWidget {
@@ -18,7 +43,10 @@ class AppPageBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(color: color ?? AppPageColors.pageBg, child: child);
+    return ColoredBox(
+      color: color ?? AppPageColors.pageBgOf(context),
+      child: child,
+    );
   }
 }
 
@@ -42,52 +70,69 @@ class AppSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: AppPageColors.cardBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+    final cardBg = AppPageColors.cardBgOf(context);
+    final borderColor = AppPageColors.subtleBorderOf(context);
+
+    return Material(
+      color: cardBg,
+      elevation: 0,
+      shadowColor: Colors.black.withValues(
+        alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 20, color: AppColors.primaryPurple),
-                const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: borderColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        width: double.infinity,
+        padding: padding,
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
               ),
-              if (trailing != null) trailing!,
-            ],
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitle!,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
-          const SizedBox(height: 14),
-          child,
-        ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 20, color: AppColors.primaryPurple),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (trailing != null) trailing!,
+              ],
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle!,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppPageColors.subtitleOf(context),
+                ),
+              ),
+            ],
+            const SizedBox(height: 14),
+            child,
+          ],
+        ),
       ),
     );
   }

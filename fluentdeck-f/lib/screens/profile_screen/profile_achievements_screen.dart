@@ -5,6 +5,7 @@ import 'package:fluentdeck/services/achievement_service.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/loading_overlay.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/responsive_layout.dart';
 
 /// Full achievement grid with progress (Phase 3).
 class ProfileAchievementsScreen extends StatefulWidget {
@@ -37,7 +38,7 @@ class _ProfileAchievementsScreenState extends State<ProfileAchievementsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppPageColors.pageBg,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         title: const Text('Achievements'),
         centerTitle: false,
@@ -67,8 +68,10 @@ class _ProfileAchievementsScreenState extends State<ProfileAchievementsScreen> {
                             padding: const EdgeInsets.only(top: 16),
                             sliver: SliverGrid(
                               gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: ResponsiveContent.gridCrossAxisCount(
+                                      context,
+                                    ),
                                     mainAxisSpacing: 12,
                                     crossAxisSpacing: 12,
                                     childAspectRatio: 0.88,
@@ -110,9 +113,9 @@ class _SummaryBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppPageColors.cardBg,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,10 +156,12 @@ class _AchievementTile extends StatelessWidget {
     final unlocked = status.unlocked;
     final progressLabel = '${status.current}/${def.target}';
 
-    return Container(
+    return Semantics(
+      label: '${def.title}, ${unlocked ? "unlocked" : "locked"}, $progressLabel',
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppPageColors.cardBg,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color:
@@ -243,6 +248,7 @@ class _AchievementTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

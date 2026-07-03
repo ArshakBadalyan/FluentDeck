@@ -19,7 +19,6 @@ import 'conversation_limit_service.dart';
 import 'conversation_history_service.dart';
 import 'speaking_preferences_service.dart';
 import 'tts_cache_service.dart';
-
 enum ConversationProcessingStage {
   idle,
   transcribing,
@@ -154,31 +153,64 @@ class ConversationService {
   }
 
   Future<void> playAiText(String text, {int? turnIndex}) async {
-    if (!_chatActive || text.trim().isEmpty || isPlayingTts) return;
+    if (turnIndex != null) {
+      await speakAiTurns([turnIndex]);
+      return;
+    }
+    if (!_chatActive || text.trim().isEmpty) return;
+    final index = turns.lastIndexWhere((turn) => !turn.isUser && turn.text == text);
+    if (index >= 0) {
+      await speakAiTurns([index]);
+    }
+  }
+
+  /// Speaks every listed AI turn in order (main reply, notices, etc.).
+  Future<void> speakAiTurns(
+    List<int> turnIndices, {
+    bool startMicAfter = false,
+  }) async {
+    if (!_chatActive || turnIndices.isEmpty) return;
+
     final sessionEpoch = _chatSessionEpoch;
+
     if (!soundOnEnabled) {
-      if (autoConversationEnabled || autoStartRecordingEnabled) {
+      if (startMicAfter &&
+          (autoConversationEnabled || autoStartRecordingEnabled) &&
+          !isRecording) {
         await startRecording();
       }
       return;
     }
 
-    var resolvedTurnIndex = turnIndex;
-    if (resolvedTurnIndex == null) {
-      for (var i = turns.length - 1; i >= 0; i--) {
-        if (!turns[i].isUser && turns[i].text == text) {
-          resolvedTurnIndex = i;
-          break;
-        }
-      }
-      if (resolvedTurnIndex == null) {
-        final lastAi = turns.lastIndexWhere((turn) => !turn.isUser);
-        if (lastAi >= 0) resolvedTurnIndex = lastAi;
-      }
+    for (final index in turnIndices) {
+      if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+      if (index < 0 || index >= turns.length) continue;
+      final turn = turns[index];
+      if (turn.isUser || turn.text.trim().isEmpty) continue;
+      await _playAiTextAtTurn(index, sessionEpoch: sessionEpoch);
     }
 
+    if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+    final shouldStartMic =
+        startMicAfter &&
+        (autoConversationEnabled || autoStartRecordingEnabled) &&
+        !isRecording;
+    if (shouldStartMic) {
+      await startRecording();
+    }
+  }
+
+  Future<void> _playAiTextAtTurn(
+    int turnIndex, {
+    required int sessionEpoch,
+  }) async {
+    if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+    if (turnIndex < 0 || turnIndex >= turns.length) return;
+    final text = turns[turnIndex].text;
+    if (text.trim().isEmpty) return;
+
     isPlayingTts = true;
-    ttsTurnIndex = resolvedTurnIndex;
+    ttsTurnIndex = turnIndex;
     stage = ConversationProcessingStage.speaking;
     _notify();
     try {
@@ -203,9 +235,6 @@ class ConversationService {
       ttsTurnIndex = null;
       stage = ConversationProcessingStage.idle;
       _notify();
-      if ((autoConversationEnabled || autoStartRecordingEnabled) && !isRecording) {
-        await startRecording();
-      }
     }
   }
 
@@ -325,10 +354,7 @@ class ConversationService {
     sessionStartedAt = DateTime.now();
     turns.clear();
 
-    _seedOpeningMessage(
-      context: context,
-      openingMessage: openingMessage,
-    );
+    unawaited(_bootstrapSessionOpening(openingMessageOverride: openingMessage));
 
     errorMessage = null;
     isEvaluatingSession = false;
@@ -342,11 +368,111 @@ class ConversationService {
 
     _chatActive = true;
     await refreshSpeakingSettings();
-    _seedOpeningMessage(context: sessionContext);
+    _seedStaticOpening(context: sessionContext);
     _notify();
   }
 
-  void _seedOpeningMessage({
+  Future<void> _bootstrapSessionOpening({
+    String? openingMessageOverride,
+  }) async {
+    final sessionEpoch = _chatSessionEpoch;
+    await refreshSpeakingSettings();
+    if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+
+    final shouldGenerate =
+        trainingSession.isActive || !sessionContext.isFreeChat;
+
+    if (!shouldGenerate) {
+      _seedStaticOpening(
+        context: sessionContext,
+        openingMessage: openingMessageOverride,
+      );
+      _notify();
+      return;
+    }
+
+    isProcessing = true;
+    stage = ConversationProcessingStage.thinking;
+    _notify();
+
+    try {
+      final tutor = await _fetchSessionOpeningReply();
+      if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+
+      final aiTurn = ConversationTurnModel(
+        speaker: 'ai',
+        text: tutor.reply,
+        translation: tutor.translation,
+        timestamp: DateTime.now(),
+      );
+      turns.add(aiTurn);
+      final aiTurnIndex = turns.length - 1;
+      trainingSession = tutor.trainingSession;
+
+      isProcessing = false;
+      stage = ConversationProcessingStage.idle;
+      _notify();
+
+      unawaited(
+        speakAiTurns(
+          [aiTurnIndex],
+          startMicAfter:
+              autoStartRecordingEnabled || autoConversationEnabled,
+        ),
+      );
+    } catch (e, st) {
+      debugPrint('_bootstrapSessionOpening failed: $e\n$st');
+      isProcessing = false;
+      stage = ConversationProcessingStage.idle;
+      _seedStaticOpening(
+        context: sessionContext,
+        openingMessage: openingMessageOverride,
+      );
+      _notify();
+    }
+  }
+
+  Future<
+    ({
+      String reply,
+      String? translation,
+      ConversationTrainingSession trainingSession,
+    })
+  >
+  _fetchSessionOpeningReply() async {
+    final body = <String, dynamic>{
+      'message': "Let's begin.",
+      'history': <Map<String, String>>[],
+      'sessionStart': true,
+      'sessionContext': sessionContext.toJson(),
+    };
+    if (trainingSession.isActive) {
+      body['trainingSession'] = trainingSession.toJson();
+    }
+
+    final data = await ApiService.post('ai/tutor', body);
+    if (data is Map && data['limitReached'] == true) {
+      throw Exception('Daily conversation limit reached');
+    }
+    if (data is Map && data['error'] != null) {
+      throw Exception(data['error']['message']?.toString() ?? 'Tutor failed');
+    }
+    if (data is! Map) {
+      throw Exception('Unexpected tutor response');
+    }
+
+    return (
+      reply: _sanitizeTutorReply(data['reply']?.toString() ?? ''),
+      translation: _sanitizeTranslation(_optionalString(data['translation'])),
+      trainingSession: ConversationTrainingSession.fromJson(
+        data['trainingSession'] is Map
+            ? Map<String, dynamic>.from(data['trainingSession'] as Map)
+            : null,
+      ),
+    );
+  }
+
+  void _seedStaticOpening({
     required SpeakingSessionContext context,
     String? openingMessage,
   }) {
@@ -367,18 +493,12 @@ class ConversationService {
       ),
     );
     final openerIndex = turns.length - 1;
-    unawaited(_autoPlayOpener(opener, turnIndex: openerIndex));
-  }
-
-  Future<void> _autoPlayOpener(String opener, {required int turnIndex}) async {
-    if (!_chatActive) return;
-    final sessionEpoch = _chatSessionEpoch;
-    await refreshSpeakingSettings();
-    if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
-    if (!soundOnEnabled) return;
-    if (autoPlayVoiceEnabled || autoConversationEnabled) {
-      await playAiText(opener, turnIndex: turnIndex);
-    }
+    unawaited(
+      speakAiTurns(
+        [openerIndex],
+        startMicAfter: autoStartRecordingEnabled || autoConversationEnabled,
+      ),
+    );
   }
 
   String _defaultOpening(SpeakingSessionContext context) {
@@ -655,6 +775,7 @@ class ConversationService {
     );
     turns.add(aiTurn);
     final aiTurnIndex = turns.length - 1;
+    final speakIndices = <int>[aiTurnIndex];
 
     if (tutor.trainingNotice != null && tutor.trainingNotice!.isNotEmpty) {
       turns.add(
@@ -664,6 +785,7 @@ class ConversationService {
           timestamp: DateTime.now(),
         ),
       );
+      speakIndices.add(turns.length - 1);
     }
 
     if (tutor.noteMessage != null && tutor.noteMessage!.isNotEmpty) {
@@ -674,6 +796,7 @@ class ConversationService {
           timestamp: DateTime.now(),
         ),
       );
+      speakIndices.add(turns.length - 1);
     }
 
     trainingSession = tutor.trainingSession;
@@ -686,11 +809,12 @@ class ConversationService {
 
     _finishTurnProcessing();
 
-    if (autoPlayVoiceEnabled || autoConversationEnabled) {
-      await playAiText(tutor.reply, turnIndex: aiTurnIndex);
-    } else if (autoStartRecordingEnabled) {
-      await startRecording();
-    }
+    unawaited(
+      speakAiTurns(
+        speakIndices,
+        startMicAfter: autoStartRecordingEnabled || autoConversationEnabled,
+      ),
+    );
     await ConversationLimitService.instance.recordTurn();
     await _persistActiveSession();
   }

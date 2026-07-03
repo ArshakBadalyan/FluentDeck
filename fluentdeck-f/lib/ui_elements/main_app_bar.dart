@@ -81,6 +81,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
             key: ScreenTutorialKeys.mainAppBarSearch,
             icon: const Icon(Icons.search, size: 26),
             color: Colors.white,
+            tooltip: 'Search',
             onPressed: onSearchTap,
           ),
         if (onAssignmentsTap != null)
@@ -112,6 +113,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                 padding: EdgeInsets.only(right: onAssignmentsTap != null ? 12 : 24),
                 child: IconButton(
                   key: ScreenTutorialKeys.mainAppBarNotifications,
+                  tooltip: 'Notifications',
                   icon: Badge(
                     isLabelVisible: notificationUnreadCount > 0,
                     label: Text(

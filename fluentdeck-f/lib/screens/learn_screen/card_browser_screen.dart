@@ -629,6 +629,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.refresh, size: 18),
                   visualDensity: VisualDensity.compact,
+                  tooltip: 'Refresh',
                   onPressed: _load,
                 ),
                 filled: true,
@@ -731,7 +732,11 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
             decoration: InputDecoration(
               hintText: 'Search cards…',
               prefixIcon: const Icon(Icons.search),
-              suffixIcon: IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Refresh',
+                onPressed: _load,
+              ),
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
