@@ -15,6 +15,8 @@ import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/utils/correction_text_utils.dart';
 import 'package:fluentdeck/utils/vocabulary_highlight_utils.dart';
 
+import 'save_word_meaning_sheet.dart';
+
 class ConversationScreen extends StatefulWidget {
   const ConversationScreen({super.key, this.embedInShell = false});
 
@@ -94,9 +96,18 @@ class _ConversationScreenState extends State<ConversationScreen> {
     final trimmed = selected.trim();
     if (trimmed.isEmpty) return;
 
-    final result = await NoteService.instance.saveChatHighlight(
+    final sheetResult = await showSaveWordMeaningSheet(
+      context: context,
       selectedText: trimmed,
       sourceSentence: sourceSentence,
+    );
+    if (sheetResult == null || !mounted) return;
+
+    final result = await NoteService.instance.saveChatHighlight(
+      selectedText: sheetResult.phrase,
+      sourceSentence: sourceSentence,
+      meaning: sheetResult.meaning,
+      exampleSentence: sheetResult.example,
     );
 
     if (!mounted) return;
@@ -341,7 +352,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 }
 
-class _TurnBubble extends StatelessWidget {
+class _TurnBubble extends StatefulWidget {
   const _TurnBubble({
     required this.turn,
     this.showTranslations = false,
@@ -359,8 +370,43 @@ class _TurnBubble extends StatelessWidget {
   final void Function(String selected, String sourceSentence)? onSaveSelection;
 
   @override
+  State<_TurnBubble> createState() => _TurnBubbleState();
+}
+
+class _TurnBubbleState extends State<_TurnBubble> {
+  String? _selectedText;
+
+  ConversationTurnModel get turn => widget.turn;
+  bool get isUser => turn.isUser;
+
+  void _onSelectionChanged(
+    TextSelection selection,
+    SelectionChangedCause? cause,
+  ) {
+    if (!selection.isValid || selection.isCollapsed) {
+      if (_selectedText != null) {
+        setState(() => _selectedText = null);
+      }
+      return;
+    }
+
+    final text = turn.text;
+    final end = selection.end.clamp(0, text.length);
+    final start = selection.start.clamp(0, end);
+    final selected = text.substring(start, end).trim();
+    final next = selected.isEmpty ? null : selected;
+    if (next != _selectedText) {
+      setState(() => _selectedText = next);
+    }
+  }
+
+  void _openSaveSheet(String phrase) {
+    widget.onSaveSelection?.call(phrase, turn.text);
+    setState(() => _selectedText = null);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isUser = turn.isUser;
     final cardCorrections =
         turn.corrections.where((correction) => correction.showsCard).toList();
     final showInstantOkBadge =
@@ -368,7 +414,7 @@ class _TurnBubble extends StatelessWidget {
         turn.corrections.isEmpty &&
         turn.text.trim().isNotEmpty;
     final translation =
-        showTranslations ? turn.translation?.trim() : null;
+        widget.showTranslations ? turn.translation?.trim() : null;
     final baseStyle = TextStyle(
       color: isUser ? Colors.white : Colors.black87,
       fontSize: 15,
@@ -385,10 +431,10 @@ class _TurnBubble extends StatelessWidget {
               correctionColor:
                   isUser ? const Color(0xFF69F0AE) : AppColors.greenCorrect,
             )
-            : !isUser && vocabularyHighlights.isNotEmpty
+            : !isUser && widget.vocabularyHighlights.isNotEmpty
             ? buildVocabularyHighlightSpans(
               text: turn.text,
-              vocabulary: vocabularyHighlights,
+              vocabulary: widget.vocabularyHighlights,
               baseStyle: baseStyle,
             )
             : [TextSpan(text: turn.text, style: baseStyle)];
@@ -432,39 +478,77 @@ class _TurnBubble extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: SelectableText.rich(
-                    TextSpan(children: messageSpans),
-                    style: baseStyle,
-                    contextMenuBuilder: (context, editableTextState) {
-                      final value = editableTextState.textEditingValue;
-                      final selection = value.selection;
-                      final selectedText =
-                          selection.isValid && !selection.isCollapsed
-                              ? value.text
-                                  .substring(selection.start, selection.end)
-                                  .trim()
-                              : '';
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(
+                          right: widget.onSaveSelection != null ? 28 : 0,
+                        ),
+                        child: SelectableText.rich(
+                          TextSpan(children: messageSpans),
+                          style: baseStyle,
+                          onSelectionChanged: _onSelectionChanged,
+                          contextMenuBuilder: (context, editableTextState) {
+                            final value = editableTextState.textEditingValue;
+                            final selection = value.selection;
+                            final selectedText =
+                                selection.isValid && !selection.isCollapsed
+                                    ? value.text
+                                        .substring(selection.start, selection.end)
+                                        .trim()
+                                    : '';
 
-                      final items = <ContextMenuButtonItem>[
-                        ...editableTextState.contextMenuButtonItems,
-                      ];
-                      if (selectedText.isNotEmpty && onSaveSelection != null) {
-                        items.add(
-                          ContextMenuButtonItem(
-                            onPressed: () {
-                              ContextMenuController.removeAny();
-                              onSaveSelection!(selectedText, turn.text);
-                            },
-                            label: 'Save to deck',
+                            final items = <ContextMenuButtonItem>[
+                              ...editableTextState.contextMenuButtonItems,
+                            ];
+                            if (selectedText.isNotEmpty &&
+                                widget.onSaveSelection != null) {
+                              items.add(
+                                ContextMenuButtonItem(
+                                  onPressed: () {
+                                    ContextMenuController.removeAny();
+                                    _openSaveSheet(selectedText);
+                                  },
+                                  label: 'Save to deck',
+                                ),
+                              );
+                            }
+
+                            return AdaptiveTextSelectionToolbar.buttonItems(
+                              anchors: editableTextState.contextMenuAnchors,
+                              buttonItems: items,
+                            );
+                          },
+                        ),
+                      ),
+                      if (widget.onSaveSelection != null)
+                        Positioned(
+                          top: -6,
+                          right: -6,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: IconButton(
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 32,
+                                minHeight: 32,
+                              ),
+                              tooltip: 'Save to deck',
+                              icon: Icon(
+                                Icons.bookmark_add_outlined,
+                                size: 20,
+                                color:
+                                    isUser
+                                        ? Colors.white.withValues(alpha: 0.9)
+                                        : AppColors.primaryPurple,
+                              ),
+                              onPressed: () => _openSaveSheet(turn.text.trim()),
+                            ),
                           ),
-                        );
-                      }
-
-                      return AdaptiveTextSelectionToolbar.buttonItems(
-                        anchors: editableTextState.contextMenuAnchors,
-                        buttonItems: items,
-                      );
-                    },
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -488,6 +572,33 @@ class _TurnBubble extends StatelessWidget {
               ],
             ],
           ),
+          if (_selectedText != null && widget.onSaveSelection != null)
+            Padding(
+              padding: EdgeInsets.only(
+                left: isUser ? 0 : 44,
+                top: 6,
+                right: isUser ? 0 : 8,
+              ),
+              child: Align(
+                alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                child: FilledButton.tonalIcon(
+                  onPressed: () => _openSaveSheet(_selectedText!),
+                  icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+                  label: Text('Save "$_selectedText"'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primaryPurple.withValues(
+                      alpha: 0.12,
+                    ),
+                    foregroundColor: AppColors.primaryPurple,
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           if (!isUser && translation != null && translation.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(left: 44, top: 4, right: 8),
@@ -501,16 +612,16 @@ class _TurnBubble extends StatelessWidget {
                 ),
               ),
             ),
-          if (!isUser && onPlayAi != null)
+          if (!isUser && widget.onPlayAi != null)
             Padding(
               padding: const EdgeInsets.only(left: 44, top: 4),
               child: TextButton.icon(
-                onPressed: isPlayingAi ? null : onPlayAi,
+                onPressed: widget.isPlayingAi ? null : widget.onPlayAi,
                 icon: Icon(
-                  isPlayingAi ? Icons.volume_up : Icons.play_arrow_rounded,
+                  widget.isPlayingAi ? Icons.volume_up : Icons.play_arrow_rounded,
                   size: 18,
                 ),
-                label: Text(isPlayingAi ? 'Speaking…' : 'Play'),
+                label: Text(widget.isPlayingAi ? 'Speaking…' : 'Play'),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primaryPurple,
                   padding: EdgeInsets.zero,

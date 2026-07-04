@@ -43,6 +43,11 @@ const {
   resolveAppleAudiences,
   findOrCreateAppleUser,
 } = require("../../utils/apple-sign-in");
+const {
+  verifyGoogleIdToken,
+  resolveGoogleAudiences,
+  findOrCreateGoogleUser,
+} = require("../../utils/google-sign-in");
 
 const USER_RESPONSE_EXCLUDED_KEYS = [
   "confirmationToken",
@@ -340,6 +345,71 @@ module.exports = (plugin) => {
           isNewUser,
         });
       },
+      googleMobile: async (ctx) => {
+        const { idToken, firstName, lastName, email } =
+          ctx.request.body ?? {};
+
+        if (!idToken) {
+          return ctx.badRequest("Missing idToken");
+        }
+
+        const audiences = resolveGoogleAudiences();
+        if (audiences.length === 0) {
+          throw new ApplicationError("Google Sign In is not configured");
+        }
+
+        let tokenPayload;
+        try {
+          tokenPayload = await verifyGoogleIdToken(idToken, audiences);
+        } catch (err) {
+          strapi.log.warn(`[googleMobile] token verification failed: ${err.message}`);
+          throw new ApplicationError("Invalid Google ID token");
+        }
+
+        const googleSub = tokenPayload?.sub;
+        if (!googleSub) {
+          throw new ApplicationError("Invalid Google ID token");
+        }
+
+        const tokenEmail = normalizeAppleEmail(tokenPayload?.email);
+        const bodyEmail = normalizeAppleEmail(email);
+        const resolvedEmail = bodyEmail || tokenEmail;
+
+        let result;
+        try {
+          result = await findOrCreateGoogleUser({
+            googleSub,
+            email: resolvedEmail,
+            firstName:
+              typeof firstName === "string"
+                ? firstName.trim()
+                : tokenPayload?.given_name,
+            lastName:
+              typeof lastName === "string"
+                ? lastName.trim()
+                : tokenPayload?.family_name,
+          });
+        } catch (err) {
+          throw new ApplicationError(err.message);
+        }
+
+        const { user, isNewUser } = result;
+
+        if (user.blocked) {
+          throw new ApplicationError(
+            "Your account has been blocked by an administrator",
+          );
+        }
+
+        const sanitizedUser = await sanitizeUser(user, ctx);
+        const jwtToken = getService("jwt").issue({ id: user.id });
+
+        return ctx.send({
+          jwt: jwtToken,
+          user: sanitizedUser,
+          isNewUser,
+        });
+      },
     };
   };
 
@@ -389,6 +459,7 @@ module.exports = (plugin) => {
       delete data.account_type;
       delete data.teacher_approved;
       delete data.is_institution_admin;
+      delete data.special;
     }
 
     const newPassword = data.password;
@@ -604,6 +675,15 @@ module.exports = (plugin) => {
       method: "POST",
       path: "/auth/apple/mobile",
       handler: "auth.appleMobile",
+      config: {
+        prefix: "",
+        auth: false,
+      },
+    },
+    {
+      method: "POST",
+      path: "/auth/google/mobile",
+      handler: "auth.googleMobile",
       config: {
         prefix: "",
         auth: false,

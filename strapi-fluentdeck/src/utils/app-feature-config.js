@@ -6,6 +6,10 @@ const {
   parseStepsList,
   parseEasyDays,
 } = require('./flashcard-scheduling-defaults');
+const {
+  getUserSubscription,
+  computeIsPremiumFromSubscription,
+} = require('./subscription-utils');
 
 const _envScheduling = getEnvSchedulingDefaults();
 
@@ -111,11 +115,16 @@ async function getFeatureConfig(strapi) {
   };
 }
 
+/** `special` is a manual admin-granted override (comps, testing). Everyone
+ * else's premium status is driven by an active, unexpired subscription. */
 async function isPremiumUser(strapi, userId) {
   const user = await strapi.db.query('plugin::users-permissions.user').findOne({
     where: { id: userId },
   });
-  return user?.special === true;
+  if (user?.special === true) return true;
+
+  const subscription = await getUserSubscription(strapi, userId);
+  return computeIsPremiumFromSubscription(subscription);
 }
 
 async function countSavedWords(strapi, userId) {

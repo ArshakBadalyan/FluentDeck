@@ -7,6 +7,7 @@ import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/user_facing_api_error.dart';
 import '../../ui_elements/apple_sign_in_section.dart';
+import '../../ui_elements/google_sign_in_section.dart';
 import '../../ui_elements/auth_input_decoration.dart';
 import '../../ui_elements/auth_secondary_link.dart';
 import '../../ui_elements/primary_button.dart';
@@ -139,6 +140,11 @@ class _LoginFormState extends State<LoginForm> {
           onPressed: _submit,
         ),
         AppleSignInSection(
+          isSignUp: false,
+          enabled: !_loading,
+        ),
+        const SizedBox(height: 12),
+        GoogleSignInSection(
           isSignUp: false,
           enabled: !_loading,
         ),

@@ -190,6 +190,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       correctedText,
       explanation,
       errorType = 'grammar',
+      exampleSentence: exampleFromBody,
     } = ctx.request.body ?? {};
 
     if (!correctedText || !String(correctedText).trim()) {
@@ -199,13 +200,20 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const allowed = await canAddNote(strapi, userId);
     if (!allowed.ok) return ctx.forbidden(allowed.reason);
 
+    const isHighlight = String(errorType).trim().toLowerCase() === 'highlight';
     const word = String(correctedText).trim();
     const definition =
       explanation?.trim() ||
-      (originalText ? `Instead of "${originalText}"` : 'From conversation practice');
-    const exampleSentence = originalText
-      ? `You said: ${originalText}`
-      : '';
+      (isHighlight
+        ? 'Saved from speaking chat'
+        : originalText
+          ? `Instead of "${originalText}"`
+          : 'From conversation practice');
+    const exampleSentence = isHighlight
+      ? String(exampleFromBody ?? '').trim()
+      : originalText
+        ? `You said: ${originalText}`
+        : '';
 
     const tags = ['speaking', errorType].filter(Boolean);
 
@@ -221,7 +229,8 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       word: note.word,
       definition: note.definition,
       exampleSentence: note.exampleSentence,
-      explanation: originalText ? `You said: ${originalText}` : '',
+      explanation:
+        isHighlight || !originalText ? '' : `You said: ${originalText}`,
       deckSlug: 'from_speaking',
       noteId: note.id,
     });

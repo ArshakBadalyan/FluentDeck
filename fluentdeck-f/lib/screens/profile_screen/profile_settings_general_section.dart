@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/services/theme_settings_store.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
@@ -18,10 +19,12 @@ class _ProfileSettingsGeneralSectionState
     extends State<ProfileSettingsGeneralSection> {
   bool _loading = true;
   ReviewSettings _settings = const ReviewSettings();
+  late String _selectedLanguage;
 
   @override
   void initState() {
     super.initState();
+    _selectedLanguage = AppLocalizations.instance.language;
     _load();
   }
 
@@ -39,6 +42,12 @@ class _ProfileSettingsGeneralSectionState
     await ReviewSettingsStore.instance.save(next);
   }
 
+  Future<void> _changeLanguage(String? value) async {
+    if (value == null || value == _selectedLanguage) return;
+    setState(() => _selectedLanguage = value);
+    await AppLocalizations.instance.setLanguage(value);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -51,6 +60,31 @@ class _ProfileSettingsGeneralSectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          context.tr('profile.account.language'),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          initialValue: _selectedLanguage,
+          decoration: appDropdownDecoration(context.tr('profile.account.language')),
+          items: [
+            DropdownMenuItem(
+              value: 'de',
+              child: Text(context.tr('profile.account.language-de')),
+            ),
+            DropdownMenuItem(
+              value: 'en',
+              child: Text(context.tr('profile.account.language-en')),
+            ),
+          ],
+          onChanged: _changeLanguage,
+        ),
+        const SizedBox(height: 16),
         Text(
           'Appearance',
           style: TextStyle(

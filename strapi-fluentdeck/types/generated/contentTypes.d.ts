@@ -1350,6 +1350,53 @@ export interface ApiStudyHallStudyHall extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiSubscriptionSubscription
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'subscriptions';
+  info: {
+    description: 'Per-user premium subscription state, verified against Apple/Google.';
+    displayName: 'Subscription';
+    pluralName: 'subscriptions';
+    singularName: 'subscription';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    autoRenewing: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    currentPeriodEnd: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    lastEventPayload: Schema.Attribute.JSON;
+    lastVerifiedAt: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::subscription.subscription'
+    > &
+      Schema.Attribute.Private;
+    originalTransactionId: Schema.Attribute.String;
+    platform: Schema.Attribute.Enumeration<['ios', 'android']> &
+      Schema.Attribute.Required;
+    productId: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    purchaseToken: Schema.Attribute.Text;
+    subscriptionStatus: Schema.Attribute.Enumeration<
+      ['active', 'expired', 'cancelled', 'grace_period', 'billing_retry']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'active'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
 export interface ApiUserNoteUserNote extends Struct.CollectionTypeSchema {
   collectionName: 'user_notes';
   info: {
@@ -2190,6 +2237,7 @@ declare module '@strapi/strapi' {
       'api::speaking-session.speaking-session': ApiSpeakingSessionSpeakingSession;
       'api::speaking-topic.speaking-topic': ApiSpeakingTopicSpeakingTopic;
       'api::study-hall.study-hall': ApiStudyHallStudyHall;
+      'api::subscription.subscription': ApiSubscriptionSubscription;
       'api::user-note.user-note': ApiUserNoteUserNote;
       'api::user-progress.user-progress': ApiUserProgressUserProgress;
       'api::user-vocabulary-progress.user-vocabulary-progress': ApiUserVocabularyProgressUserVocabularyProgress;

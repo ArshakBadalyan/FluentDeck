@@ -140,7 +140,11 @@ module.exports = {
       "api::ai.ai.tutor",
       "api::ai.ai.tts",
       "api::ai.ai.evaluateSession",
+      "api::ai.ai.wordMeaning",
       "api::study-hall.study-hall.summary",
+      "api::subscription.subscription.status",
+      "api::subscription.subscription.verifyApple",
+      "api::subscription.subscription.verifyGoogle",
     ];
 
     try {
@@ -158,6 +162,10 @@ module.exports = {
       );
       await linkPermissionToRole(
         "plugin::users-permissions.auth.appleMobile",
+        "public",
+      );
+      await linkPermissionToRole(
+        "plugin::users-permissions.auth.googleMobile",
         "public",
       );
       strapi.log.info(

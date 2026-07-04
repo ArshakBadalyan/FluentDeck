@@ -102,3 +102,19 @@ class SaveNoteResult {
     this.message,
   });
 }
+
+class WordMeaningResult {
+  final bool ok;
+  final String definition;
+  final String example;
+  final bool premiumRequired;
+  final String? message;
+
+  const WordMeaningResult({
+    required this.ok,
+    this.definition = '',
+    this.example = '',
+    this.premiumRequired = false,
+    this.message,
+  });
+}

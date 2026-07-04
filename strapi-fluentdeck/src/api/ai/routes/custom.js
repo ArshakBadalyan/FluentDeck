@@ -35,5 +35,10 @@ module.exports = {
       path: "/ai/evaluate-session",
       handler: "ai.evaluateSession",
     },
+    {
+      method: "POST",
+      path: "/ai/word-meaning",
+      handler: "ai.wordMeaning",
+    },
   ],
 };

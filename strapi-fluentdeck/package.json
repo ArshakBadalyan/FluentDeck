@@ -15,6 +15,7 @@
     "test": "yarn test:apkg && yarn test:queue && yarn test:speaking-premium"
   },
   "dependencies": {
+    "@apple/app-store-server-library": "^3.1.0",
     "@strapi/plugin-users-permissions": "5.49.0",
     "@strapi/provider-email-nodemailer": "5.49.0",
     "@strapi/provider-upload-aws-s3": "5.49.0",
@@ -22,6 +23,7 @@
     "adm-zip": "^0.5.16",
     "better-sqlite3": "12.8.0",
     "fzstd": "^0.1.1",
+    "google-auth-library": "^10.9.0",
     "i18n": "^0.15.1",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.43",

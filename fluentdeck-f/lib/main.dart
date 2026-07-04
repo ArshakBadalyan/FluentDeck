@@ -14,6 +14,7 @@ import 'package:fluentdeck/services/audio_service.dart';
 import 'package:fluentdeck/services/interaction_haptics.dart';
 import 'package:fluentdeck/services/deck_notification_service.dart';
 import 'package:fluentdeck/services/push_notification_service.dart';
+import 'package:fluentdeck/services/subscription_service.dart';
 
 import 'app_start.dart';
 import 'app_theme.dart';
@@ -86,6 +87,7 @@ void main() async {
 
   await PushNotificationService.initialize();
   await DeckNotificationService.instance.initialize();
+  await SubscriptionService.instance.initialize();
 
   await AudioService().ensureInitialized();
 

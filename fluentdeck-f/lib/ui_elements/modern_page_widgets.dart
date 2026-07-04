@@ -57,6 +57,7 @@ class AppSectionCard extends StatelessWidget {
     required this.child,
     this.icon,
     this.subtitle,
+    this.subtitleWidget,
     this.trailing,
     this.padding = const EdgeInsets.all(18),
   });
@@ -65,6 +66,7 @@ class AppSectionCard extends StatelessWidget {
   final Widget child;
   final IconData? icon;
   final String? subtitle;
+  final Widget? subtitleWidget;
   final Widget? trailing;
   final EdgeInsets padding;
 
@@ -119,15 +121,16 @@ class AppSectionCard extends StatelessWidget {
                 if (trailing != null) trailing!,
               ],
             ),
-            if (subtitle != null) ...[
+            if (subtitleWidget != null || subtitle != null) ...[
               const SizedBox(height: 4),
-              Text(
-                subtitle!,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppPageColors.subtitleOf(context),
-                ),
-              ),
+              subtitleWidget ??
+                  Text(
+                    subtitle!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppPageColors.subtitleOf(context),
+                    ),
+                  ),
             ],
             const SizedBox(height: 14),
             child,

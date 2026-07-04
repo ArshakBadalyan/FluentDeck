@@ -15,6 +15,7 @@ import 'package:fluentdeck/screens/profile_screen/profile_notifications_tab.dart
 import 'package:fluentdeck/screens/profile_screen/profile_security_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_sound_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_settings_tab.dart';
+import 'package:fluentdeck/screens/profile_screen/profile_subscription_tab.dart';
 import 'package:fluentdeck/services/app_feature_config_service.dart';
 import 'package:fluentdeck/services/audio_service.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
@@ -103,6 +104,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   final _profileSubTabs = const [
     'Account',
     'Settings',
+    'Subscription',
     'Notifications',
     'Sound',
     'Security',
@@ -342,6 +344,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       children: const [
         ProfileAccountTab(),
         ProfileSettingsTab(),
+        ProfileSubscriptionTab(),
         ProfileNotificationsTab(),
         ProfileSoundTab(),
         ProfileSecurityTab(),

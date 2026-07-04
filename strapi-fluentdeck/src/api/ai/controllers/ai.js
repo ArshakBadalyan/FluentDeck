@@ -29,6 +29,8 @@ const {
   processMemoryUpdate,
   deleteMemoryFact,
 } = require("../../../utils/tutor-memory");
+const { generateWordMeaning } = require("../../../utils/word-meaning");
+const { isPremiumUser } = require("../../../utils/app-feature-config");
 
 async function getAuthenticatedUserId(ctx, strapi) {
   const token = await strapi.plugins["users-permissions"].services.jwt.getToken(
@@ -294,6 +296,42 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     } catch (error) {
       strapi.log.error("[ai.evaluateSession]", error);
       return ctx.internalServerError("Session evaluation failed");
+    }
+  },
+
+  async wordMeaning(ctx) {
+    const userId = await getAuthenticatedUserId(ctx, strapi);
+    if (!userId) {
+      return ctx.unauthorized("Authentication required");
+    }
+
+    const premium = await isPremiumUser(strapi, userId);
+    if (!premium) {
+      ctx.status = 402;
+      ctx.body = {
+        error: {
+          status: 402,
+          name: "PremiumRequired",
+          message: "Generating a word meaning with AI is a premium feature.",
+        },
+      };
+      return;
+    }
+
+    const { word, context } = ctx.request.body ?? {};
+    if (!word || !String(word).trim()) {
+      return ctx.badRequest("word is required");
+    }
+
+    try {
+      const result = await generateWordMeaning({
+        word: String(word).trim(),
+        context: context ? String(context).trim() : undefined,
+      });
+      ctx.body = result;
+    } catch (error) {
+      strapi.log.error("[ai.wordMeaning]", error);
+      return ctx.internalServerError("Could not generate word meaning");
     }
   },
 

@@ -1,4 +1,5 @@
 import '../models/user_note_model.dart';
+import '../utils/api_exception.dart';
 import '../utils/strapi_response.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
@@ -76,28 +77,76 @@ class NoteService {
     String? originalText,
     String? explanation,
     String? errorType,
+    String? exampleSentence,
   }) async {
     final data = await ApiService.post('notes/from-correction', {
       'correctedText': correctedText,
       'originalText': originalText,
       'explanation': explanation,
       'errorType': errorType,
+      if (exampleSentence != null && exampleSentence.trim().isNotEmpty)
+        'exampleSentence': exampleSentence.trim(),
     });
 
     return _parseSaveResult(data);
   }
 
-  /// Saves a phrase the user highlighted in the speaking chat.
+  /// Saves a phrase the user highlighted in the speaking chat, with the
+  /// meaning they typed or generated via AI (falls back to a placeholder
+  /// if left blank).
   Future<SaveNoteResult> saveChatHighlight({
     required String selectedText,
     String? sourceSentence,
+    String? meaning,
+    String? exampleSentence,
   }) async {
     return saveFromCorrection(
       correctedText: selectedText,
       originalText: sourceSentence,
-      explanation: 'Saved from speaking chat',
+      explanation:
+          (meaning != null && meaning.trim().isNotEmpty)
+              ? meaning.trim()
+              : 'Saved from speaking chat',
+      exampleSentence: exampleSentence,
       errorType: 'highlight',
     );
+  }
+
+  /// Generates a short definition + example for a word/expression via AI.
+  /// Premium-only server-side — only call this when the button is shown
+  /// (i.e. the caller already knows the user is premium).
+  Future<WordMeaningResult> generateWordMeaning({
+    required String word,
+    String? context,
+  }) async {
+    try {
+      final data = await ApiService.post('ai/word-meaning', {
+        'word': word,
+        if (context != null && context.isNotEmpty) 'context': context,
+      });
+      if (data is Map && data['definition'] != null) {
+        return WordMeaningResult(
+          ok: true,
+          definition: data['definition'].toString(),
+          example: data['example']?.toString() ?? '',
+        );
+      }
+      return const WordMeaningResult(
+        ok: false,
+        message: 'Could not generate a meaning.',
+      );
+    } on ApiException catch (e) {
+      return WordMeaningResult(
+        ok: false,
+        premiumRequired: e.statusCode == 402,
+        message: e.message,
+      );
+    } catch (_) {
+      return const WordMeaningResult(
+        ok: false,
+        message: 'Could not generate a meaning.',
+      );
+    }
   }
 
   Future<bool> updateNote({

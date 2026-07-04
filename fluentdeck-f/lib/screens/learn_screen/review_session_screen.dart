@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/services/admob_service.dart';
+import 'package:fluentdeck/services/subscription_service.dart';
 import 'package:fluentdeck/widgets/cached_strapi_image.dart';
 import 'package:fluentdeck/data/flashcard_offline_store.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
@@ -46,6 +48,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   Offset? _panStart;
   Timer? _elapsedTimer;
   Map<int, DeckOptionsModel> _deckOptionsById = const {};
+  final InterstitialAdManager _adManager = InterstitialAdManager();
 
   @override
   void dispose() {
@@ -53,6 +56,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     WakelockPlus.disable();
     _audioPlayer.dispose();
     _typeAnswerCtrl.dispose();
+    _adManager.dispose();
     super.dispose();
   }
 
@@ -184,6 +188,17 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
       }
     });
     _loadQueue();
+    if (!SubscriptionService.instance.cachedStatus.isPremium) {
+      _adManager.load();
+    }
+  }
+
+  /// Free users see an interstitial after finishing a review session — a
+  /// natural break point, not shown for an empty ("no cards due") session.
+  Future<void> _maybeShowAdOnComplete() async {
+    final status = await SubscriptionService.instance.fetchStatus();
+    if (status.isPremium || !mounted) return;
+    _adManager.show();
   }
 
   Future<void> _loadQueue() async {
@@ -322,6 +337,8 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
         _cardShownAt = DateTime.now();
         _startElapsedTimer();
         await _maybeAutoplayAudio(_queue[nextIndex]);
+      } else if (!_startedEmpty) {
+        unawaited(_maybeShowAdOnComplete());
       }
     } catch (e) {
       if (!mounted) return;

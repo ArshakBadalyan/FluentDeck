@@ -6,7 +6,9 @@ import 'package:fluentdeck/services/achievement_service.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/models/placement_test_model.dart';
+import 'package:fluentdeck/models/user_note_model.dart';
 import 'package:fluentdeck/screens/learn_screen/placement_test_screen.dart';
+import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/unsaved_changes_service.dart';
 import 'package:fluentdeck/ui_elements/dialogs/account_error_info_dialog.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
@@ -16,6 +18,9 @@ import '../../screens/auth/auth_screen.dart';
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/english_level_service.dart';
+import '../../services/main_navigation_coordinator.dart';
+import '../../services/main_tab_config.dart';
+import '../../services/subscription_service.dart';
 import '../../services/vocabulary_service.dart';
 import '../../ui_elements/dialogs/account_info_save_dialog.dart';
 import '../../ui_elements/dialogs/nickname_logout_dialog.dart';
@@ -39,10 +44,11 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   bool _saving = false;
   bool _processing = false;
   bool _needsLogoutCredentials = false;
-  String _selectedLanguage = 'de';
   String? _selectedEnglishLevel;
   PlacementTestResultModel? _latestPlacement;
   AchievementSnapshot? _achievementSnapshot;
+  SubscriptionStatus _subscriptionStatus = SubscriptionStatus.none;
+  StudySettingsModel? _studySettings;
 
   bool get _hasVerifiedPlacement => _latestPlacement != null;
 
@@ -66,8 +72,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   }
 
   Future<void> _loadUser() async {
-    _selectedLanguage = AppLocalizations.instance.language;
-
     try {
       _latestPlacement = await VocabularyService.instance.fetchLatestPlacement();
     } catch (_) {}
@@ -75,6 +79,14 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
     AchievementSnapshot? achievements;
     try {
       achievements = await AchievementService.instance.load();
+    } catch (_) {}
+
+    try {
+      _subscriptionStatus = await SubscriptionService.instance.fetchStatus();
+    } catch (_) {}
+
+    try {
+      _studySettings = await NoteService.instance.fetchStudySettings();
     } catch (_) {}
 
     final res = await AuthService.getUser();
@@ -141,14 +153,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
     if (level == _selectedEnglishLevel) return;
     setState(() => _selectedEnglishLevel = level);
     UnsavedChangesService().hasUnsavedChanges = true;
-  }
-
-  Future<void> _changeLanguage(String? value) async {
-    if (value == null || value == _selectedLanguage) return;
-    setState(() => _selectedLanguage = value);
-    await AppLocalizations.instance.setLanguage(value);
-    if (!mounted) return;
-    setState(() {});
   }
 
   Future<bool> _saveProfile({bool showSuccessDialog = true}) async {
@@ -328,6 +332,55 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                     onViewAchievements: _openAchievements,
                   ),
                 if (_achievementSnapshot != null) const SizedBox(height: 16),
+                AppSectionCard(
+                  title: 'FluentDeck Premium',
+                  icon: Icons.workspace_premium_outlined,
+                  subtitleWidget: Text.rich(
+                    TextSpan(
+                      text: 'Current plan: ',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppPageColors.subtitleOf(context),
+                      ),
+                      children: [
+                        TextSpan(
+                          text:
+                              _subscriptionStatus.isPremium
+                                  ? (kFluentDeckPlans
+                                          .where(
+                                            (p) =>
+                                                p.productId ==
+                                                _subscriptionStatus.productId,
+                                          )
+                                          .firstOrNull
+                                          ?.title ??
+                                      'Premium')
+                                  : 'Free',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color:
+                                _subscriptionStatus.isPremium
+                                    ? AppColors.primaryPurple
+                                    : AppPageColors.subtitleOf(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  child: AppNavRow(
+                    title:
+                        _subscriptionStatus.isPremium
+                            ? 'Manage subscription'
+                            : 'Upgrade to Premium',
+                    icon: Icons.workspace_premium_rounded,
+                    onTap:
+                        () => MainNavigationCoordinator.goToTab(
+                          MainTabId.profile,
+                          subIndex: kProfileSubscriptionTabIndex,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 AppFadeIn(
                   delay: const Duration(milliseconds: 60),
                   child: AppSectionCard(
@@ -440,26 +493,23 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              AppSectionCard(
-                title: context.tr('profile.account.language'),
-                icon: Icons.language_outlined,
-                child: DropdownButtonFormField<String>(
-                  initialValue: _selectedLanguage,
-                  decoration: appDropdownDecoration(context.tr('profile.account.language')),
-                  items: [
-                    DropdownMenuItem(
-                      value: 'de',
-                      child: Text(context.tr('profile.account.language-de')),
+              if (_studySettings != null) ...[
+                const SizedBox(height: 16),
+                AppSectionCard(
+                  title: 'Saved words',
+                  icon: Icons.bookmark_outline_rounded,
+                  subtitle: 'Words and corrections saved to your decks',
+                  child: Text(
+                    _studySettings!.noteLimit == null
+                        ? '${_studySettings!.noteCount} notes saved (premium)'
+                        : '${_studySettings!.noteCount} / ${_studySettings!.noteLimit} notes saved',
+                    style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
                     ),
-                    DropdownMenuItem(
-                      value: 'en',
-                      child: Text(context.tr('profile.account.language-en')),
-                    ),
-                  ],
-                  onChanged: disableInputs ? null : _changeLanguage,
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 20),
               PrimaryButton(
                 text:
