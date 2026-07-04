@@ -39,6 +39,11 @@
       "type": "enumeration",
       "enum": ["automatic", "free", "premium"],
       "default": "automatic"
+    },
+    "isVisible": {
+      "type": "boolean",
+      "default": true,
+      "required": true
     }
   }
 }

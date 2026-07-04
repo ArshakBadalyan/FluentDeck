@@ -45,7 +45,7 @@ class LessonService {
         difficultyLevel != null && difficultyLevel.isNotEmpty
             ? '?filters[difficultyLevel][\$eq]=$difficultyLevel&sort=id:asc'
             : '?sort=id:asc';
-    final data = await ApiService.get('conversation-prompts$query');
+    final data = await ApiService.get('speaking-role-plays$query');
     final rows = StrapiResponse.list(data);
 
     return rows

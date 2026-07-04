@@ -67,6 +67,10 @@
       "type": "decimal",
       "default": 5,
       "min": 0.01
+    },
+    "hiddenSpeakingTabs": {
+      "type": "json",
+      "default": []
     }
   }
 }

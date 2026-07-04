@@ -729,6 +729,96 @@ const ROLE_PLAY_SCENARIOS = [
       order: 57,
     },
   ),
+  rolePlay(
+    "Introducing yourself to a classmate",
+    "It's your first day in an English class. Say your name, where you're from, and one thing you like.",
+    {
+      difficultyLevel: "A1",
+      category: "daily_life",
+      userRole: "New student",
+      tutorRole: "Classmate",
+      iconKey: "social",
+      order: 58,
+      suggestedVocabulary: ["my name is", "I'm from", "nice to meet you", "I like"],
+    },
+  ),
+  rolePlay(
+    "Buying a coffee",
+    "You are at a small coffee shop. Order a drink, say the size you want, and pay.",
+    {
+      difficultyLevel: "A1",
+      category: "daily_life",
+      userRole: "Customer",
+      tutorRole: "Barista",
+      iconKey: "food",
+      order: 59,
+      suggestedVocabulary: ["small", "medium", "large", "to go", "how much"],
+    },
+  ),
+  rolePlay(
+    "Asking for directions on the street",
+    "You are lost in a new city. Stop someone and ask how to get to a nearby place.",
+    {
+      difficultyLevel: "A1",
+      category: "travel",
+      userRole: "Tourist",
+      tutorRole: "Local resident",
+      iconKey: "travel",
+      order: 60,
+      suggestedVocabulary: ["excuse me", "turn left", "turn right", "straight ahead", "near"],
+    },
+  ),
+  rolePlay(
+    "Taking a TOEFL speaking test",
+    "Simulate a TOEFL independent speaking task: answer a prompt with a clear opinion, reasons, and an example in under two minutes.",
+    {
+      difficultyLevel: "B2",
+      category: "language_testing",
+      userRole: "Test taker",
+      tutorRole: "Examiner",
+      iconKey: "school",
+      order: 61,
+    },
+  ),
+  rolePlay(
+    "Attending a university admissions interview",
+    "You are interviewing for a place at a university. Discuss your goals, strengths, and why you chose this program.",
+    {
+      difficultyLevel: "C1",
+      category: "language_testing",
+      userRole: "Applicant",
+      tutorRole: "Admissions officer",
+      iconKey: "school",
+      order: 62,
+      suggestedVocabulary: ["motivation", "strengths", "long-term goal", "program", "background"],
+    },
+  ),
+  rolePlay(
+    "Debating a controversial topic with a skeptic",
+    "Argue your position on a nuanced issue while a skeptical partner challenges your reasoning and pushes back with counterarguments.",
+    {
+      difficultyLevel: "C2",
+      category: "language_testing",
+      userRole: "Debater",
+      tutorRole: "Skeptic",
+      iconKey: "school",
+      order: 63,
+      suggestedVocabulary: ["on the contrary", "that said", "a valid point, but", "the evidence suggests"],
+    },
+  ),
+  rolePlay(
+    "Giving a TED-style talk on a topic you care about",
+    "Deliver a short persuasive talk on a topic you're passionate about, then take unscripted questions from the audience.",
+    {
+      difficultyLevel: "C2",
+      category: "career",
+      userRole: "Speaker",
+      tutorRole: "Audience member",
+      iconKey: "work",
+      order: 64,
+      suggestedVocabulary: ["imagine", "the takeaway is", "to illustrate", "in closing"],
+    },
+  ),
 ];
 
 const INTERMEDIATE_TOPIC_TITLES = [
@@ -767,6 +857,9 @@ const INTERMEDIATE_TOPIC_TITLES = [
   "Amusement Parks",
   "Cars and Driving",
   "Friendship",
+  "Mental Health and Wellbeing",
+  "Remote Work",
+  "Board Games",
 ];
 
 const ADVANCED_TOPIC_TITLES = [
@@ -806,6 +899,9 @@ const ADVANCED_TOPIC_TITLES = [
   "Pop Culture",
   "Charities",
   "Self Improvement",
+  "Cryptocurrency and Investing",
+  "Streaming Services",
+  "Minimalism",
 ];
 
 const EXPERT_TOPIC_TITLES = [
@@ -838,6 +934,9 @@ const EXPERT_TOPIC_TITLES = [
   "Censorship",
   "Human Rights",
   "Automation",
+  "Climate Policy",
+  "Quantum Computing",
+  "Media Literacy",
 ];
 
 const TOPIC_ICON_KEYS = {
@@ -897,4 +996,6 @@ module.exports = {
   ROLE_PLAY_SCENARIOS,
   SPEAKING_TOPICS,
   LEGACY_CATEGORY_MAP,
+  rolePlay,
+  topic,
 };

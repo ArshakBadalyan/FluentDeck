@@ -554,6 +554,7 @@ export interface ApiAppFeatureConfigAppFeatureConfig
       Schema.Attribute.DefaultTo<['intermediate']>;
     gamesRequirePremium: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
+    hiddenSpeakingTabs: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -666,59 +667,6 @@ export interface ApiCardReviewStateCardReviewState
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-  };
-}
-
-export interface ApiConversationPromptConversationPrompt
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'conversation_prompts';
-  info: {
-    description: 'Role-play scenarios for speaking practice';
-    displayName: 'Conversation Prompt';
-    pluralName: 'conversation-prompts';
-    singularName: 'conversation-prompt';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    accessMode: Schema.Attribute.Enumeration<['automatic', 'free', 'premium']> &
-      Schema.Attribute.DefaultTo<'automatic'>;
-    category: Schema.Attribute.Enumeration<
-      [
-        'daily_life',
-        'career',
-        'travel',
-        'relationships',
-        'language_testing',
-        'custom',
-      ]
-    > &
-      Schema.Attribute.DefaultTo<'daily_life'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    difficultyLevel: Schema.Attribute.Enumeration<
-      ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-    > &
-      Schema.Attribute.Required;
-    iconKey: Schema.Attribute.String;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::conversation-prompt.conversation-prompt'
-    > &
-      Schema.Attribute.Private;
-    order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    publishedAt: Schema.Attribute.DateTime;
-    scenario: Schema.Attribute.Text & Schema.Attribute.Required;
-    suggestedVocabulary: Schema.Attribute.JSON;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
-    tutorRole: Schema.Attribute.String;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    userRole: Schema.Attribute.String;
   };
 }
 
@@ -1186,6 +1134,9 @@ export interface ApiSpeakingGameSpeakingGame
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
     iconKey: Schema.Attribute.String;
+    isVisible: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1201,6 +1152,77 @@ export interface ApiSpeakingGameSpeakingGame
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSpeakingRolePlaySpeakingRolePlay
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'speaking_role_plays';
+  info: {
+    description: 'Curated role-play scenarios for speaking practice (never mixed with user-submitted custom scenarios, which stay client-side)';
+    displayName: 'Speaking Role Play';
+    pluralName: 'speaking-role-plays';
+    singularName: 'speaking-role-play';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    accessMode: Schema.Attribute.Enumeration<['automatic', 'free', 'premium']> &
+      Schema.Attribute.DefaultTo<'automatic'>;
+    category: Schema.Attribute.Enumeration<
+      [
+        'daily_life',
+        'career',
+        'travel',
+        'relationships',
+        'language_testing',
+        'business',
+        'health',
+        'education',
+        'technology',
+        'finance',
+        'housing',
+        'emergencies',
+        'customer_service',
+        'entertainment',
+        'social',
+        'debate',
+        'storytelling',
+        'fantasy',
+        'survival',
+        'mystery',
+        'science_fiction',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'daily_life'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    difficultyLevel: Schema.Attribute.Enumeration<
+      ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+    > &
+      Schema.Attribute.Required;
+    iconKey: Schema.Attribute.String;
+    isVisible: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::speaking-role-play.speaking-role-play'
+    > &
+      Schema.Attribute.Private;
+    order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    scenario: Schema.Attribute.Text & Schema.Attribute.Required;
+    suggestedVocabulary: Schema.Attribute.JSON;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    tutorRole: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    userRole: Schema.Attribute.String;
   };
 }
 
@@ -1276,6 +1298,9 @@ export interface ApiSpeakingTopicSpeakingTopic
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     iconKey: Schema.Attribute.String;
+    isVisible: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
     levelGroup: Schema.Attribute.Enumeration<
       ['intermediate', 'advanced', 'expert']
     > &
@@ -2151,7 +2176,6 @@ declare module '@strapi/strapi' {
       'api::app-feature-config.app-feature-config': ApiAppFeatureConfigAppFeatureConfig;
       'api::card-review-log.card-review-log': ApiCardReviewLogCardReviewLog;
       'api::card-review-state.card-review-state': ApiCardReviewStateCardReviewState;
-      'api::conversation-prompt.conversation-prompt': ApiConversationPromptConversationPrompt;
       'api::custom-flashcard-note-type.custom-flashcard-note-type': ApiCustomFlashcardNoteTypeCustomFlashcardNoteType;
       'api::exercise.exercise': ApiExerciseExercise;
       'api::flashcard-deck.flashcard-deck': ApiFlashcardDeckFlashcardDeck;
@@ -2162,6 +2186,7 @@ declare module '@strapi/strapi' {
       'api::notification.notification': ApiNotificationNotification;
       'api::placement-test-result.placement-test-result': ApiPlacementTestResultPlacementTestResult;
       'api::speaking-game.speaking-game': ApiSpeakingGameSpeakingGame;
+      'api::speaking-role-play.speaking-role-play': ApiSpeakingRolePlaySpeakingRolePlay;
       'api::speaking-session.speaking-session': ApiSpeakingSessionSpeakingSession;
       'api::speaking-topic.speaking-topic': ApiSpeakingTopicSpeakingTopic;
       'api::study-hall.study-hall': ApiStudyHallStudyHall;

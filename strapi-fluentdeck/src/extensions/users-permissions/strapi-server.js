@@ -167,6 +167,7 @@ module.exports = (plugin) => {
       role: role.id,
       ...(emailNorm ? { email: emailNorm } : {}),
       username,
+      provider,
       confirmed: emailNorm ? !settings.email_confirmation : true,
     };
 

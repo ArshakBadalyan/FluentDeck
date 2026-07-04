@@ -6,7 +6,7 @@ const {
   getSpeakingPremiumContext,
   readCategory,
 } = require('../../../utils/speaking-premium-access');
-const { formatConversationPrompt } = require('../../../utils/speaking-catalog-format');
+const { formatSpeakingRolePlay } = require('../../../utils/speaking-catalog-format');
 
 async function getAuthenticatedUserId(ctx, strapi) {
   try {
@@ -18,7 +18,7 @@ async function getAuthenticatedUserId(ctx, strapi) {
 }
 
 module.exports = createCoreController(
-  'api::conversation-prompt.conversation-prompt',
+  'api::speaking-role-play.speaking-role-play',
   ({ strapi }) => ({
     async catalog(ctx) {
       const userId = await getAuthenticatedUserId(ctx, strapi);
@@ -26,9 +26,9 @@ module.exports = createCoreController(
       const category = ctx.query?.category ? String(ctx.query.category) : 'all';
 
       const allRows = await strapi.db
-        .query('api::conversation-prompt.conversation-prompt')
+        .query('api::speaking-role-play.speaking-role-play')
         .findMany({
-          where: { publishedAt: { $notNull: true } },
+          where: { publishedAt: { $notNull: true }, isVisible: { $ne: false } },
           orderBy: [{ order: 'asc' }, { id: 'asc' }],
         });
 
@@ -40,7 +40,7 @@ module.exports = createCoreController(
 
       ctx.body = {
         data: filtered.map(({ row, isPremiumLocked, accessMode }) =>
-          formatConversationPrompt(row, { isPremiumLocked, accessMode }),
+          formatSpeakingRolePlay(row, { isPremiumLocked, accessMode }),
         ),
         isPremium: premiumCtx.isPremium,
         rules: {

@@ -22,6 +22,7 @@ const DEFAULT_CONFIG = {
   gamesRequirePremium: false,
   defaultLearningStepsMinutes: _envScheduling.learningStepsMinutes,
   defaultEasyIntervalDays: _envScheduling.easyIntervalDays,
+  hiddenSpeakingTabs: [],
 };
 
 async function getFeatureConfig(strapi) {

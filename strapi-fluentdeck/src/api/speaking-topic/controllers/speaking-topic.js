@@ -26,7 +26,7 @@ module.exports = createCoreController(
         ? String(ctx.query.levelGroup)
         : null;
 
-      const where = { publishedAt: { $notNull: true } };
+      const where = { publishedAt: { $notNull: true }, isVisible: { $ne: false } };
       if (levelGroup) {
         where.levelGroup = levelGroup;
       }
@@ -39,7 +39,7 @@ module.exports = createCoreController(
       const allRows = levelGroup
         ? rows
         : await strapi.db.query('api::speaking-topic.speaking-topic').findMany({
-            where: { publishedAt: { $notNull: true } },
+            where: { publishedAt: { $notNull: true }, isVisible: { $ne: false } },
             orderBy: [{ order: 'asc' }, { id: 'asc' }],
           });
 

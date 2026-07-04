@@ -24,7 +24,7 @@ module.exports = createCoreController(
       const premiumCtx = await getSpeakingPremiumContext(strapi, userId);
 
       const rows = await strapi.db.query('api::speaking-game.speaking-game').findMany({
-        where: { publishedAt: { $notNull: true } },
+        where: { publishedAt: { $notNull: true }, isVisible: { $ne: false } },
         orderBy: [{ order: 'asc' }, { id: 'asc' }],
       });
 

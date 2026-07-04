@@ -5,7 +5,7 @@ function readVocab(row) {
   return Array.isArray(vocab) ? vocab : [];
 }
 
-function formatConversationPrompt(row, { isPremiumLocked, accessMode }) {
+function formatSpeakingRolePlay(row, { isPremiumLocked, accessMode }) {
   return {
     id: row.id,
     title: row.title ?? '',
@@ -52,7 +52,7 @@ function formatSpeakingGame(row, { isPremiumLocked, accessMode }) {
 }
 
 module.exports = {
-  formatConversationPrompt,
+  formatSpeakingRolePlay,
   formatSpeakingTopic,
   formatSpeakingGame,
 };

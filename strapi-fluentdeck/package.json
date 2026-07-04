@@ -4,8 +4,8 @@
   "version": "2.0.9",
   "description": "FluentDeck English learning API (Strapi)",
   "scripts": {
-    "develop": "strapi develop",
-    "start": "strapi start",
+    "develop": "node scripts/ensure-migrations-baseline.js && strapi develop",
+    "start": "node scripts/ensure-migrations-baseline.js && strapi start",
     "build": "strapi build",
     "heroku-postbuild": "strapi build",
     "strapi": "strapi",

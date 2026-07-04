@@ -54,18 +54,26 @@ class AuthService {
   static Future<Map<String, dynamic>> login(
     Map<String, dynamic> userData,
   ) async {
-    final data = await ApiService.post('auth/local', userData);
+    try {
+      final data = await ApiService.post('auth/local', userData);
 
-    if (data['error'] == null) {
-      await _storeJwtAndUser(data);
-      unawaited(sendAppInfo());
-      unawaited(EnglishLevelService.instance.syncOnAppStart());
-      unawaited(FlashcardSyncService.instance.syncOnAppStart());
-      await PushNotificationService.login(data['user']['id'].toString());
-      await _logAuthAnalyticsLogin(method: 'email', userId: data['user']['id']);
-      return {'status': 'success'};
+      if (data['error'] == null) {
+        await _storeJwtAndUser(data);
+        unawaited(sendAppInfo());
+        unawaited(EnglishLevelService.instance.syncOnAppStart());
+        unawaited(FlashcardSyncService.instance.syncOnAppStart());
+        await PushNotificationService.login(data['user']['id'].toString());
+        await _logAuthAnalyticsLogin(method: 'email', userId: data['user']['id']);
+        return {'status': 'success'};
+      }
+      return {'status': 'error', 'error': data['error']};
+    } catch (e, st) {
+      debugPrint('AuthService.login failed: $e\n$st');
+      return {
+        'status': 'error',
+        'messageKey': userFacingErrorLocalizationKey(e),
+      };
     }
-    return {'status': 'error', 'error': data['error']};
   }
 
 
@@ -114,18 +122,26 @@ class AuthService {
   static Future<Map<String, dynamic>> register(
     Map<String, dynamic> userData,
   ) async {
-    final data = await ApiService.post('auth/local/register', userData);
+    try {
+      final data = await ApiService.post('auth/local/register', userData);
 
-    if (data['error'] == null) {
-      await _storeJwtAndUser(data);
-      unawaited(sendAppInfo());
-      unawaited(EnglishLevelService.instance.syncOnAppStart());
-      unawaited(FlashcardSyncService.instance.syncOnAppStart());
-      await PushNotificationService.login(data['user']['id'].toString());
-      await _logAuthAnalyticsSignUp(method: 'password', userId: data['user']['id']);
-      return {'status': 'success'};
+      if (data['error'] == null) {
+        await _storeJwtAndUser(data);
+        unawaited(sendAppInfo());
+        unawaited(EnglishLevelService.instance.syncOnAppStart());
+        unawaited(FlashcardSyncService.instance.syncOnAppStart());
+        await PushNotificationService.login(data['user']['id'].toString());
+        await _logAuthAnalyticsSignUp(method: 'password', userId: data['user']['id']);
+        return {'status': 'success'};
+      }
+      return {'status': 'error', 'error': data['error']};
+    } catch (e, st) {
+      debugPrint('AuthService.register failed: $e\n$st');
+      return {
+        'status': 'error',
+        'messageKey': userFacingErrorLocalizationKey(e),
+      };
     }
-    return {'status': 'error', 'error': data['error']};
   }
 
 

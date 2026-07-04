@@ -29,6 +29,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
     ('travel', 'Travel'),
     ('relationships', 'Relationships'),
     ('language_testing', 'Language testing'),
+    ('business', 'Business'),
   ];
 
   int _filterIndex = 0;

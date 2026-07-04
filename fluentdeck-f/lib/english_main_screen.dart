@@ -60,7 +60,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       TabController(length: _decksSubTabs.length, vsync: this);
   late final TabController _libraryTabController =
       TabController(length: _librarySubTabs.length, vsync: this);
-  late final TabController _speakTabController =
+  late TabController _speakTabController =
       TabController(length: _speakSubTabs.length, vsync: this);
   late final TabController _activityTabController =
       TabController(length: _activitySubTabs.length, vsync: this);
@@ -75,14 +75,28 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
 
   static const _activitySubTabs = ['Speaking', 'Decks'];
 
-  static const _speakSubTabs = [
-    'Chat',
-    'My Notes',
-    'Deck Words',
-    'Games',
-    'Role-Play',
-    'Topics',
+  static const _speakSubTabDefs = [
+    ('chat', 'Chat'),
+    ('notes', 'My Notes'),
+    ('practice', 'Deck Words'),
+    ('games', 'Games'),
+    ('roleplay', 'Role-Play'),
+    ('topics', 'Topics'),
   ];
+
+  /// Falls back to showing every tab if config hides all of them (misconfiguration guard).
+  List<(String, String)> get _visibleSpeakSubTabDefs {
+    final hidden = AppFeatureConfigService.instance.config.hiddenSpeakingTabs;
+    final visible =
+        _speakSubTabDefs.where((tab) => !hidden.contains(tab.$1)).toList();
+    return visible.isEmpty ? _speakSubTabDefs : visible;
+  }
+
+  List<String> get _speakSubTabIds =>
+      _visibleSpeakSubTabDefs.map((tab) => tab.$1).toList();
+
+  List<String> get _speakSubTabs =>
+      _visibleSpeakSubTabDefs.map((tab) => tab.$2).toList();
 
   static const _librarySubTabs = ['Words', 'My Notes', 'Study Hall', 'Lessons'];
 
@@ -118,7 +132,24 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   Future<void> _initLearnFeatures() async {
     await AppFeatureConfigService.instance.fetch();
     if (!mounted) return;
+    _syncSpeakTabController();
     await _maybePromptPlacementTest();
+  }
+
+  /// Recreates the Speak sub-tab controller if config hid/unhid tabs after cold start.
+  void _syncSpeakTabController() {
+    final newLength = _speakSubTabs.length;
+    if (_speakTabController.length == newLength) return;
+    final oldController = _speakTabController;
+    final clampedIndex = oldController.index.clamp(0, newLength - 1);
+    setState(() {
+      _speakTabController = TabController(
+        length: newLength,
+        vsync: this,
+        initialIndex: clampedIndex,
+      );
+    });
+    oldController.dispose();
   }
 
   Future<void> _maybePromptPlacementTest() async {
@@ -326,6 +357,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
         return SpeakingHubScreen(
           key: _speakingHubKey,
           tabController: _speakTabController,
+          visibleTabIds: _speakSubTabIds,
           mainTabHandoff: handoff,
           onSessionActiveChanged: _onSpeakSessionActiveChanged,
         );

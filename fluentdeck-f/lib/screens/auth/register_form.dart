@@ -10,6 +10,7 @@ import '../../ui_elements/apple_sign_in_section.dart';
 import '../../ui_elements/auth_input_decoration.dart';
 import '../../ui_elements/auth_secondary_link.dart';
 import '../../ui_elements/primary_button.dart';
+import '../../utils/user_facing_api_error.dart';
 import 'auth_screen.dart';
 
 class RegisterForm extends StatefulWidget {
@@ -82,24 +83,30 @@ class _RegisterFormState extends State<RegisterForm> {
         _loading = false;
         _submitLocked = false;
       });
+      final messageKey = res['messageKey'] as String?;
       final apiMessage = res['error'] is Map
           ? res['error']['message']?.toString()
           : null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            (apiMessage != null && apiMessage.isNotEmpty)
-                ? apiMessage
-                : context.tr('login-register.sign-up'),
+            messageKey != null
+                ? context.tr(messageKey)
+                : (apiMessage != null && apiMessage.isNotEmpty)
+                    ? apiMessage
+                    : context.tr('login-register.sign-up'),
           ),
         ),
       );
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _loading = false;
           _submitLocked = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr(userFacingErrorLocalizationKey(e)))),
+        );
       }
     }
   }

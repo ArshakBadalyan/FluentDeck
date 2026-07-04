@@ -1,11 +1,11 @@
 {
   "kind": "collectionType",
-  "collectionName": "conversation_prompts",
+  "collectionName": "speaking_role_plays",
   "info": {
-    "singularName": "conversation-prompt",
-    "pluralName": "conversation-prompts",
-    "displayName": "Conversation Prompt",
-    "description": "Role-play scenarios for speaking practice"
+    "singularName": "speaking-role-play",
+    "pluralName": "speaking-role-plays",
+    "displayName": "Speaking Role Play",
+    "description": "Curated role-play scenarios for speaking practice (never mixed with user-submitted custom scenarios, which stay client-side)"
   },
   "options": {
     "draftAndPublish": true
@@ -33,7 +33,22 @@
         "travel",
         "relationships",
         "language_testing",
-        "custom"
+        "business",
+        "health",
+        "education",
+        "technology",
+        "finance",
+        "housing",
+        "emergencies",
+        "customer_service",
+        "entertainment",
+        "social",
+        "debate",
+        "storytelling",
+        "fantasy",
+        "survival",
+        "mystery",
+        "science_fiction"
       ],
       "default": "daily_life"
     },
@@ -57,6 +72,11 @@
       "type": "enumeration",
       "enum": ["automatic", "free", "premium"],
       "default": "automatic"
+    },
+    "isVisible": {
+      "type": "boolean",
+      "default": true,
+      "required": true
     }
   }
 }

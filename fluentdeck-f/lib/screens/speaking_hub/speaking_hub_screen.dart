@@ -22,11 +22,23 @@ class SpeakingHubScreen extends StatefulWidget {
     required this.tabController,
     this.mainTabHandoff = const MainTabHandoff(),
     this.onSessionActiveChanged,
+    this.visibleTabIds = const [
+      'chat',
+      'notes',
+      'practice',
+      'games',
+      'roleplay',
+      'topics',
+    ],
   });
 
   final TabController tabController;
   final MainTabHandoff mainTabHandoff;
   final ValueChanged<bool>? onSessionActiveChanged;
+
+  /// Must stay in the same order/id-set as `_speakSubTabDefs` in
+  /// EnglishMainScreenState so tab-strip labels line up with these children.
+  final List<String> visibleTabIds;
 
   @override
   State<SpeakingHubScreen> createState() => SpeakingHubScreenState();
@@ -108,18 +120,24 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
       );
     }
 
+    final allTabs = <String, Widget>{
+      'chat': SpeakingChatTab(onStart: _startSession),
+      'notes': SpeakingNotesTab(onStart: _startSession),
+      'practice': SpeakingPracticeTab(onStart: _startSession),
+      'games': SpeakingGamesTab(onStart: _startSession),
+      'roleplay': SpeakingRolePlayTab(onStart: _startSession),
+      'topics': SpeakingTopicsTab(onStart: _startSession),
+    };
+
     return HandoffTabBarView(
       controller: widget.tabController,
       onHandoffPrevious: widget.mainTabHandoff.onPrevious,
       onHandoffNext: widget.mainTabHandoff.onNext,
-      children: [
-        SpeakingChatTab(onStart: _startSession),
-        SpeakingNotesTab(onStart: _startSession),
-        SpeakingPracticeTab(onStart: _startSession),
-        SpeakingGamesTab(onStart: _startSession),
-        SpeakingRolePlayTab(onStart: _startSession),
-        SpeakingTopicsTab(onStart: _startSession),
-      ],
+      children:
+          widget.visibleTabIds
+              .map((id) => allTabs[id])
+              .whereType<Widget>()
+              .toList(),
     );
   }
 }

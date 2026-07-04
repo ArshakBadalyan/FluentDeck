@@ -5,6 +5,7 @@ import '../../routing/app_route_names.dart';
 import '../../routing/app_page_routes.dart';
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
+import '../../utils/user_facing_api_error.dart';
 import '../../ui_elements/apple_sign_in_section.dart';
 import '../../ui_elements/auth_input_decoration.dart';
 import '../../ui_elements/auth_secondary_link.dart';
@@ -68,10 +69,13 @@ class _LoginFormState extends State<LoginForm> {
           ),
         );
       } else {
+        final messageKey = res['messageKey'] as String?;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              res['error']?['message'] ?? context.tr('login-register.sign-in'),
+              messageKey != null
+                  ? context.tr(messageKey)
+                  : res['error']?['message'] ?? context.tr('login-register.sign-in'),
             ),
           ),
         );
@@ -80,7 +84,7 @@ class _LoginFormState extends State<LoginForm> {
       if (!mounted) return;
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('errors.network'))),
+        SnackBar(content: Text(context.tr(userFacingErrorLocalizationKey(e)))),
       );
     }
   }

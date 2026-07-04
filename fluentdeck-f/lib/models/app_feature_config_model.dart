@@ -11,6 +11,7 @@ class AppFeatureConfigModel {
   final bool gamesRequirePremium;
   final List<int> defaultLearningStepsMinutes;
   final double defaultEasyIntervalDays;
+  final List<String> hiddenSpeakingTabs;
 
   const AppFeatureConfigModel({
     this.freeMaxSavedWords = 20,
@@ -25,6 +26,7 @@ class AppFeatureConfigModel {
     this.gamesRequirePremium = false,
     this.defaultLearningStepsMinutes = const [2, 8, 10],
     this.defaultEasyIntervalDays = 5,
+    this.hiddenSpeakingTabs = const [],
   });
 
   factory AppFeatureConfigModel.fromJson(Map<String, dynamic> json) {
@@ -54,7 +56,13 @@ class AppFeatureConfigModel {
       defaultLearningStepsMinutes: _parseSteps(steps),
       defaultEasyIntervalDays:
           (json['defaultEasyIntervalDays'] as num?)?.toDouble() ?? 5,
+      hiddenSpeakingTabs: _parseHiddenTabs(json['hiddenSpeakingTabs']),
     );
+  }
+
+  static List<String> _parseHiddenTabs(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw.map((e) => e.toString()).toList();
   }
 
   static List<int> _parseSteps(dynamic raw) {

@@ -4,8 +4,8 @@ module.exports = {
   routes: [
     {
       method: 'GET',
-      path: '/conversation-prompts/catalog',
-      handler: 'conversation-prompt.catalog',
+      path: '/speaking-role-plays/catalog',
+      handler: 'speaking-role-play.catalog',
       config: {
         auth: false,
         policies: [],

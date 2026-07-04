@@ -98,6 +98,18 @@ module.exports = createCoreController(
           entry.defaultEasyIntervalDays ?? entry.default_easy_interval_days,
           DEFAULT_CONFIG.defaultEasyIntervalDays,
         ),
+        hiddenSpeakingTabs: (() => {
+          let tabs =
+            entry.hiddenSpeakingTabs ?? entry.hidden_speaking_tabs ?? DEFAULT_CONFIG.hiddenSpeakingTabs;
+          if (typeof tabs === 'string') {
+            try {
+              tabs = JSON.parse(tabs);
+            } catch {
+              tabs = DEFAULT_CONFIG.hiddenSpeakingTabs;
+            }
+          }
+          return Array.isArray(tabs) ? tabs : DEFAULT_CONFIG.hiddenSpeakingTabs;
+        })(),
       };
     },
   }),

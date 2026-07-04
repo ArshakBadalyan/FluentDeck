@@ -72,7 +72,7 @@ class SpeakingContentService {
   }) async {
     final query =
         category != null && category.isNotEmpty ? '?category=$category' : '';
-    final data = await ApiService.get('conversation-prompts/catalog$query');
+    final data = await ApiService.get('speaking-role-plays/catalog$query');
     final remote =
         _catalogRows(data)
             .map((row) => ConversationPromptModel.fromJson(row))
