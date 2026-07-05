@@ -20,7 +20,6 @@ import 'package:fluentdeck/widgets/card_preview_sheet.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/hoverable_input_field.dart';
 
 class CardBrowserScreen extends StatefulWidget {
   const CardBrowserScreen({
@@ -150,7 +149,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        HoverableInputField(child: child),
+        child,
       ],
     );
   }
@@ -479,31 +478,29 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  HoverableInputField(
-                    child: TextField(
-                      controller: ctrl,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: 'e.g. verbs',
-                        prefixIcon: const Icon(Icons.tag_rounded, size: 20),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
-                        ),
+                  TextField(
+                    controller: ctrl,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. verbs',
+                      prefixIcon: const Icon(Icons.tag_rounded, size: 20),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
                       ),
-                      onSubmitted: (_) => Navigator.pop(ctx, true),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+                      ),
                     ),
+                    onSubmitted: (_) => Navigator.pop(ctx, true),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -687,21 +684,20 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       child: Row(
         children: [
           Expanded(
-            child: HoverableInputField(
-              child: TextField(
-                controller: _searchCtrl,
-                style: const TextStyle(fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Search cards…',
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.refresh, size: 18),
-                    visualDensity: VisualDensity.compact,
-                    tooltip: 'Refresh',
-                    onPressed: _load,
+            child: TextField(
+              controller: _searchCtrl,
+              style: const TextStyle(fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Search cards…',
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+                prefixIcon: const Icon(Icons.search, size: 20),
+                prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.refresh, size: 18),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Refresh',
+                  onPressed: _load,
                 ),
                 filled: true,
                 fillColor: Colors.white,
@@ -719,7 +715,6 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 ),
               ),
               onSubmitted: (_) => _load(),
-            ),
             ),
           ),
           IconButton(
@@ -799,51 +794,47 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
             ),
             const SizedBox(height: 8),
           ],
-          HoverableInputField(
-            child: TextField(
-              controller: _searchCtrl,
-              decoration: InputDecoration(
-                hintText: 'Search cards…',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh',
-                  onPressed: _load,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
-                ),
+          TextField(
+            controller: _searchCtrl,
+            decoration: InputDecoration(
+              hintText: 'Search cards…',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Refresh',
+                onPressed: _load,
               ),
-              onSubmitted: (_) => _load(),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
+              ),
             ),
+            onSubmitted: (_) => _load(),
           ),
           const SizedBox(height: 8),
-          HoverableInputField(
-            child: TextField(
-              controller: _tagCtrl,
-              decoration: InputDecoration(
-                hintText: 'Filter by tag…',
-                prefixIcon: const Icon(Icons.label_outline),
-                filled: true,
-                fillColor: AppPageColors.fieldBg,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
+          TextField(
+            controller: _tagCtrl,
+            decoration: InputDecoration(
+              hintText: 'Filter by tag…',
+              prefixIcon: const Icon(Icons.label_outline),
+              filled: true,
+              fillColor: AppPageColors.fieldBg,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
               ),
-              onSubmitted: (_) => _load(),
             ),
+            onSubmitted: (_) => _load(),
           ),
         ],
       ),
@@ -1002,7 +993,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 children: [
                   Text(label, style: fieldLabelStyle),
                   const SizedBox(height: 8),
-                  HoverableInputField(child: field),
+                  field,
                 ],
               );
             }

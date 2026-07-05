@@ -3,7 +3,6 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
-import 'package:fluentdeck/widgets/hoverable_input_field.dart';
 
 /// Create a filtered deck from a saved search query (Phase 4F).
 Future<FlashcardDeckModel?> showFilteredDeckDialog(
@@ -269,64 +268,56 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
             children: [
               _labeledField(
                 'Deck name',
-                HoverableInputField(
-                  child: TextField(
-                    controller: _nameCtrl,
-                    autofocus: true,
-                    decoration: _fieldDecoration(hint: 'e.g. Hard French verbs'),
-                  ),
+                TextField(
+                  controller: _nameCtrl,
+                  autofocus: true,
+                  decoration: _fieldDecoration(hint: 'e.g. Hard French verbs'),
                 ),
               ),
               const SizedBox(height: 16),
               _labeledField(
                 'Search text',
-                HoverableInputField(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    decoration: _fieldDecoration(
-                      hint: 'Match text on the front or back',
-                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                    ),
-                    onChanged: (_) => setState(() {}),
+                TextField(
+                  controller: _searchCtrl,
+                  decoration: _fieldDecoration(
+                    hint: 'Match text on the front or back',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
                   ),
+                  onChanged: (_) => setState(() {}),
                 ),
               ),
               const SizedBox(height: 16),
               _labeledField(
                 'Tag contains',
-                HoverableInputField(
-                  child: TextField(
-                    controller: _tagCtrl,
-                    decoration: _fieldDecoration(
-                      hint: 'e.g. verbs',
-                      prefixIcon: const Icon(Icons.sell_outlined, size: 20),
-                    ),
-                    onChanged: (_) => setState(() {}),
+                TextField(
+                  controller: _tagCtrl,
+                  decoration: _fieldDecoration(
+                    hint: 'e.g. verbs',
+                    prefixIcon: const Icon(Icons.sell_outlined, size: 20),
                   ),
+                  onChanged: (_) => setState(() {}),
                 ),
               ),
               const SizedBox(height: 16),
               _labeledField(
                 'Source deck',
-                HoverableInputField(
-                  child: DropdownButtonFormField<int?>(
-                    initialValue: _sourceDeckId,
-                    isExpanded: true,
-                    decoration: _fieldDecoration(),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('Any deck'),
+                DropdownButtonFormField<int?>(
+                  initialValue: _sourceDeckId,
+                  isExpanded: true,
+                  decoration: _fieldDecoration(),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('Any deck'),
+                    ),
+                    ...realDecks.map(
+                      (d) => DropdownMenuItem<int?>(
+                        value: d.id,
+                        child: Text(d.name, overflow: TextOverflow.ellipsis),
                       ),
-                      ...realDecks.map(
-                        (d) => DropdownMenuItem<int?>(
-                          value: d.id,
-                          child: Text(d.name, overflow: TextOverflow.ellipsis),
-                        ),
-                      ),
-                    ],
-                    onChanged: (v) => setState(() => _sourceDeckId = v),
-                  ),
+                    ),
+                  ],
+                  onChanged: (v) => setState(() => _sourceDeckId = v),
                 ),
               ),
               const SizedBox(height: 16),

@@ -11,7 +11,6 @@ import 'package:fluentdeck/widgets/html_field_editor.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
 import 'package:fluentdeck/widgets/image_occlusion_editor.dart';
 import 'package:fluentdeck/widgets/note_preview_sheet.dart';
-import 'package:fluentdeck/widgets/hoverable_input_field.dart';
 
 /// Add / edit note screen.
 class CardEditScreen extends StatefulWidget {
@@ -682,11 +681,9 @@ class _CardEditScreenState extends State<CardEditScreen> {
             if (widget.sheetMode)
               _labeledField(
                 'Tags (comma-separated)',
-                HoverableInputField(
-                  child: TextField(
-                    controller: _tagsCtrl,
-                    decoration: _filledDecoration(),
-                  ),
+                TextField(
+                  controller: _tagsCtrl,
+                  decoration: _filledDecoration(),
                 ),
               )
             else
@@ -784,21 +781,19 @@ class _CardEditScreenState extends State<CardEditScreen> {
             final ctrl = _maskLabelCtrls[region.id]!;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: HoverableInputField(
-                child: TextField(
-                  controller: ctrl,
-                  decoration: InputDecoration(
-                    labelText: 'Mask ${region.id}',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-                    ),
+              child: TextField(
+                controller: ctrl,
+                decoration: InputDecoration(
+                  labelText: 'Mask ${region.id}',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
                   ),
                 ),
               ),
@@ -892,11 +887,9 @@ class _CardEditScreenState extends State<CardEditScreen> {
         Row(
           children: [
             Expanded(
-              child: HoverableInputField(
-                child: TextField(
-                  controller: _mediaCtrl,
-                  decoration: _filledDecoration(),
-                ),
+              child: TextField(
+                controller: _mediaCtrl,
+                decoration: _filledDecoration(),
               ),
             ),
             const SizedBox(width: 8),
@@ -917,11 +910,9 @@ class _CardEditScreenState extends State<CardEditScreen> {
       children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
-        HoverableInputField(
-          child: TextField(
-            controller: controller,
-            decoration: _inputDecoration(),
-          ),
+        TextField(
+          controller: controller,
+          decoration: _inputDecoration(),
         ),
       ],
     );
