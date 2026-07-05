@@ -3,7 +3,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 
 /// Text field with a minimal HTML formatting toolbar.
-class HtmlFieldEditor extends StatefulWidget {
+class HtmlFieldEditor extends StatelessWidget {
   const HtmlFieldEditor({
     super.key,
     required this.label,
@@ -20,48 +20,36 @@ class HtmlFieldEditor extends StatefulWidget {
   final bool required;
 
   @override
-  State<HtmlFieldEditor> createState() => _HtmlFieldEditorState();
-}
-
-class _HtmlFieldEditorState extends State<HtmlFieldEditor> {
-  bool _isHovered = false;
-
-  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.required ? '${widget.label} *' : widget.label,
+          required ? '$label *' : label,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        MouseRegion(
-          onEnter: (_) => setState(() => _isHovered = true),
-          onExit: (_) => setState(() => _isHovered = false),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _isHovered ? AppColors.primaryPurple : Colors.grey.shade200,
-                width: _isHovered ? 1.5 : 1,
-              ),
-            ),
-            child: Column(
-              children: [
-                _Toolbar(controller: widget.controller),
-                TextField(
-                  controller: widget.controller,
-                  maxLines: widget.maxLines,
-                  decoration: InputDecoration(
-                    hintText: widget.hint,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                  ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200, width: 1),
+          ),
+          child: Column(
+            children: [
+              _Toolbar(controller: controller),
+              TextField(
+                controller: controller,
+                maxLines: maxLines,
+                decoration: InputDecoration(
+                  hintText: hint,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
