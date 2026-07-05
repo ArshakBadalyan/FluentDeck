@@ -165,11 +165,15 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
       hintText: hint,
       prefixIcon: prefixIcon,
       filled: true,
-      fillColor: const Color(0xFFF2F2F5),
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -421,8 +425,9 @@ class _StateChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryPurple : const Color(0xFFF2F2F5),
+          color: selected ? AppColors.primaryPurple : Colors.white,
           borderRadius: BorderRadius.circular(10),
+          border: !selected ? Border.all(color: Colors.grey.shade200, width: 1) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -476,7 +476,7 @@ module.exports = createCoreController(
 
       const cards = await strapi.db.query('api::flashcard.flashcard').findMany({
         where,
-        populate: ['deck'],
+        populate: ['deck', 'flashcardNote'],
       });
 
       const now = new Date();

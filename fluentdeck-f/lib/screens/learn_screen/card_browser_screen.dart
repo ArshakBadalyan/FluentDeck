@@ -485,11 +485,15 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                       hintText: 'e.g. verbs',
                       prefixIcon: const Icon(Icons.tag_rounded, size: 20),
                       filled: true,
-                      fillColor: const Color(0xFFF2F2F5),
+                      fillColor: Colors.white,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
+                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -965,11 +969,15 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
           builder: (ctx, setSheetState) {
             InputDecoration filledDecoration() => InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFF2F2F5),
+              fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
               ),
             );
 

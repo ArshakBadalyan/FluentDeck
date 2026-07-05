@@ -19,6 +19,7 @@ import 'package:fluentdeck/services/flashcard_import_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_store.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Detail screen for one Decks settings section.
 class DecksSettingsSectionScreen extends StatefulWidget {
@@ -525,28 +526,49 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
 
   List<Widget> _reviewing() {
     return [
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Tap to reveal answer'),
+      AppToggleRow(
+        title: 'Tap to reveal answer',
         value: _settings.tapToReveal,
-        activeThumbColor: AppColors.primaryPurple,
         onChanged: (v) => _save(_settings.copyWith(tapToReveal: v)),
       ),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Show interval previews'),
-        subtitle: const Text('Display “1m”, “4d”, etc. on rating buttons'),
+      AppToggleRow(
+        title: 'Show interval previews',
+        subtitle: 'Display “1m”, “4d”, etc. on rating buttons',
         value: _settings.showIntervalPreviews,
-        activeThumbColor: AppColors.primaryPurple,
         onChanged: (v) => _save(_settings.copyWith(showIntervalPreviews: v)),
       ),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Show Hard button'),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.orangeHard.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.trending_down_rounded,
+              size: 16,
+              color: AppColors.orangeHard,
+            ),
+          ),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'Rating buttons',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      AppToggleRow(
+        title: 'Show Hard button',
+        subtitle: 'Adds a fourth rating between Again and Good',
         value: _settings.showHardButton,
-        activeThumbColor: AppColors.primaryPurple,
         onChanged: (v) => _save(_settings.copyWith(showHardButton: v)),
       ),
+      const SizedBox(height: 6),
       decksSettingsLabelField('Again button label', _settings.labelAgain, (v) {
         _save(_settings.copyWith(labelAgain: v));
       }),
@@ -560,58 +582,73 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
       decksSettingsLabelField('Easy button label', _settings.labelEasy, (v) {
         _save(_settings.copyWith(labelEasy: v));
       }),
-      const SizedBox(height: 12),
+      const SizedBox(height: 16),
       decksSettingsSectionHeader('Leeches'),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Leech auto-suspend'),
-        subtitle: const Text('Notify when a card is auto-suspended'),
+      AppToggleRow(
+        title: 'Leech auto-suspend',
+        subtitle: 'Notify when a card is auto-suspended',
         value: _settings.leechAutoSuspend,
-        activeThumbColor: AppColors.primaryPurple,
         onChanged: (v) => _save(_settings.copyWith(leechAutoSuspend: v)),
       ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Leech threshold'),
-        subtitle: Slider(
-          value: _settings.leechThreshold.toDouble(),
-          min: 4,
-          max: 20,
-          divisions: 16,
-          label: '${_settings.leechThreshold} lapses',
-          onChanged: (v) => _save(_settings.copyWith(leechThreshold: v.round())),
-        ),
+      const SizedBox(height: 4),
+      Text('Leech threshold', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+      Row(
+        children: [
+          Expanded(
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppColors.primaryPurple,
+                thumbColor: AppColors.primaryPurple,
+                overlayColor: AppColors.primaryPurple.withValues(alpha: 0.15),
+              ),
+              child: Slider(
+                value: _settings.leechThreshold.toDouble(),
+                min: 4,
+                max: 20,
+                divisions: 16,
+                label: '${_settings.leechThreshold} lapses',
+                onChanged: (v) => _save(_settings.copyWith(leechThreshold: v.round())),
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primaryPurple.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '${_settings.leechThreshold}',
+              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryPurple),
+            ),
+          ),
+        ],
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 16),
       decksSettingsSectionHeader('Daily reminder'),
       if (kIsWeb)
         decksSettingsNote('Daily reminders are available on Android and iOS only.'),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Daily review reminder'),
-        subtitle: Text(
-          _settings.reviewReminderEnabled
-              ? 'At ${_timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute)}'
-              : 'Off',
-        ),
+      AppToggleRow(
+        title: 'Daily review reminder',
+        subtitle:
+            _settings.reviewReminderEnabled
+                ? 'At ${_timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute)}'
+                : 'Off',
         value: _settings.reviewReminderEnabled,
-        activeThumbColor: AppColors.primaryPurple,
+        enabled: !kIsWeb,
         onChanged:
             kIsWeb
                 ? null
                 : (v) => _save(_settings.copyWith(reviewReminderEnabled: v)),
       ),
-      if (_settings.reviewReminderEnabled && !kIsWeb)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Reminder time'),
-          trailing: TextButton(
-            onPressed: _pickReminderTime,
-            child: Text(
-              _timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute),
-            ),
-          ),
+      if (_settings.reviewReminderEnabled && !kIsWeb) ...[
+        const SizedBox(height: 8),
+        decksSettingsPickerTile(
+          title: 'Reminder time',
+          valueLabel: _timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute),
+          onTap: _pickReminderTime,
         ),
+      ],
     ];
   }
 

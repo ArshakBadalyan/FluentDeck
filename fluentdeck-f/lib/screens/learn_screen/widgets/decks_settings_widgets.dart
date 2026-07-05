@@ -3,10 +3,23 @@ import 'package:flutter/material.dart';
 
 Widget decksSettingsSectionHeader(String title) {
   return Padding(
-    padding: const EdgeInsets.only(bottom: 8, top: 4),
-    child: Text(
-      title,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+    padding: const EdgeInsets.only(bottom: 10, top: 4),
+    child: Row(
+      children: [
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(
+            color: AppColors.primaryPurple,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+      ],
     ),
   );
 }
@@ -17,14 +30,28 @@ Widget decksSettingsLabelField(
   ValueChanged<String> onSave,
 ) {
   return Padding(
-    padding: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.only(bottom: 10),
     child: TextFormField(
       key: ValueKey('$label-$value'),
       initialValue: value,
       decoration: InputDecoration(
         labelText: label,
-        border: const OutlineInputBorder(),
         isDense: true,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+        ),
       ),
       onFieldSubmitted: onSave,
     ),
@@ -34,9 +61,18 @@ Widget decksSettingsLabelField(
 Widget decksSettingsNote(String text) {
   return Padding(
     padding: const EdgeInsets.only(top: 8),
-    child: Text(
-      text,
-      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade500),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+        ),
+      ],
     ),
   );
 }
@@ -47,11 +83,58 @@ Widget decksSettingsPickerTile({
   required String valueLabel,
   required VoidCallback onTap,
 }) {
-  return ListTile(
-    contentPadding: EdgeInsets.zero,
-    title: Text(title),
-    subtitle: subtitle,
-    trailing: TextButton(onPressed: onTap, child: Text(valueLabel)),
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 3),
+                    DefaultTextStyle.merge(
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                      child: subtitle,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  valueLabel,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primaryPurple,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                const Icon(Icons.chevron_right_rounded, color: AppColors.primaryPurple, size: 20),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
   );
 }
 

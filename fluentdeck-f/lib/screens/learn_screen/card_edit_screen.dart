@@ -786,10 +786,14 @@ class _CardEditScreenState extends State<CardEditScreen> {
                 decoration: InputDecoration(
                   labelText: 'Mask ${region.id}',
                   filled: true,
-                  fillColor: const Color(0xFFF2F2F5),
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
                   ),
                 ),
               ),
@@ -836,11 +840,15 @@ class _CardEditScreenState extends State<CardEditScreen> {
     return InputDecoration(
       prefixIcon: prefixIcon,
       filled: true,
-      fillColor: const Color(0xFFF2F2F5),
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Default readable width for phone/tablet/web layouts.
-const double kResponsiveMaxWidth = 720;
+const double kResponsiveMaxWidth = 1080;
 
 /// Tablet portrait uses full width; wider viewports center at [kResponsiveMaxWidth].
 const double kResponsiveTabletMaxWidth = 840;
