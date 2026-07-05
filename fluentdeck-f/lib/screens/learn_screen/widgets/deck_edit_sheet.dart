@@ -5,6 +5,7 @@ import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/deck_scheduling_defaults.dart';
 import 'package:fluentdeck/utils/sm2_preview.dart';
+import 'package:fluentdeck/widgets/hoverable_input_field.dart';
 
 /// Rename deck, edit description, set parent deck (Phase 4F / 5A).
 Future<bool?> showDeckEditSheet(
@@ -168,10 +169,12 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
   Widget _numberField(String label, TextEditingController controller, {String? hint}) {
     return _labeledField(
       label,
-      TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: _fieldDecoration().copyWith(hintText: hint),
+      HoverableInputField(
+        child: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: _fieldDecoration().copyWith(hintText: hint),
+        ),
       ),
     );
   }
@@ -328,9 +331,11 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
               if (_canRename)
                 _labeledField(
                   'Name',
-                  TextField(
-                    controller: _nameCtrl,
-                    decoration: _fieldDecoration(),
+                  HoverableInputField(
+                    child: TextField(
+                      controller: _nameCtrl,
+                      decoration: _fieldDecoration(),
+                    ),
                   ),
                 )
               else
@@ -344,33 +349,37 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
               const SizedBox(height: 12),
               _labeledField(
                 'Description',
-                TextField(
-                  controller: _descCtrl,
-                  maxLines: 2,
-                  decoration: _fieldDecoration(),
+                HoverableInputField(
+                  child: TextField(
+                    controller: _descCtrl,
+                    maxLines: 2,
+                    decoration: _fieldDecoration(),
+                  ),
                 ),
               ),
               if (_canNest) ...[
                 const SizedBox(height: 12),
                 _labeledField(
                   'Parent deck',
-                  DropdownButtonFormField<int?>(
-                    value: _safeParentDeckId,
-                    isExpanded: true,
-                    decoration: _fieldDecoration(),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('None (top level)'),
-                      ),
-                      ..._parentOptions.map(
-                        (d) => DropdownMenuItem<int?>(
-                          value: d.id,
-                          child: Text(d.name),
+                  HoverableInputField(
+                    child: DropdownButtonFormField<int?>(
+                      value: _safeParentDeckId,
+                      isExpanded: true,
+                      decoration: _fieldDecoration(),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('None (top level)'),
                         ),
-                      ),
-                    ],
-                    onChanged: (v) => setState(() => _parentDeckId = v),
+                        ..._parentOptions.map(
+                          (d) => DropdownMenuItem<int?>(
+                            value: d.id,
+                            child: Text(d.name),
+                          ),
+                        ),
+                      ],
+                      onChanged: (v) => setState(() => _parentDeckId = v),
+                    ),
                   ),
                 ),
               ],
@@ -418,17 +427,21 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
                   const SizedBox(height: 12),
                   _labeledField(
                     'Learning steps (minutes)',
-                    TextField(
-                      controller: _learningStepsCtrl,
-                      decoration: _fieldDecoration().copyWith(hintText: '1, 10'),
+                    HoverableInputField(
+                      child: TextField(
+                        controller: _learningStepsCtrl,
+                        decoration: _fieldDecoration().copyWith(hintText: '1, 10'),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   _labeledField(
                     'Lapse steps (minutes)',
-                    TextField(
-                      controller: _lapseStepsCtrl,
-                      decoration: _fieldDecoration().copyWith(hintText: '10'),
+                    HoverableInputField(
+                      child: TextField(
+                        controller: _lapseStepsCtrl,
+                        decoration: _fieldDecoration().copyWith(hintText: '10'),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
