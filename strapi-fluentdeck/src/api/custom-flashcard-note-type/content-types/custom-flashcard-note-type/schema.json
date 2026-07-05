@@ -5,7 +5,7 @@
     "singularName": "custom-flashcard-note-type",
     "pluralName": "custom-flashcard-note-types",
     "displayName": "Custom Flashcard Note Type",
-    "description": "User-defined Anki-style note templates (Phase 5C)."
+    "description": "User-defined note templates."
   },
   "options": {
     "draftAndPublish": false
@@ -26,6 +26,10 @@
     },
     "css": {
       "type": "text"
+    },
+    "themeId": {
+      "type": "string",
+      "default": "classic"
     },
     "user": {
       "type": "relation",

@@ -4,7 +4,7 @@ enum DeckCountKind { newCards, learning, review }
 
 enum DeckCountButtonSize { compact, large }
 
-/// AnkiDroid-style deck counts: blue = new, red = learning, green = review.
+/// Deck counts: blue = new, red = learning, green = review.
 class DeckCountButtons extends StatelessWidget {
   const DeckCountButtons({
     super.key,

@@ -14,7 +14,7 @@ function getOpenAIClient() {
   return new OpenAI({ apiKey });
 }
 
-const SYSTEM_PROMPT = `You write flashcard back-of-card text for an English learning app (Anki-style decks).
+const SYSTEM_PROMPT = `You write flashcard back-of-card text for an English learning app.
 Given a word or expression (and optionally the sentence it appeared in, for context only), reply with EXACTLY two lines:
 
 DEFINITION: <brief dictionary gloss, 5–12 words max. No long explanations. Use simple A2–B1 English. For verbs start with "To …"; for nouns/adjectives use a short phrase.>

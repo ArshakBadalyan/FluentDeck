@@ -33,7 +33,7 @@ class FlashcardEmptyCardsResult {
   }
 }
 
-/// Collection maintenance checks (AnkiDroid Check menu).
+/// Collection maintenance checks.
 class FlashcardMaintenanceService {
   FlashcardMaintenanceService._();
   static final FlashcardMaintenanceService instance = FlashcardMaintenanceService._();

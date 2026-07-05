@@ -30,9 +30,9 @@ const decksHelpSections = <DecksHelpSection>[
     ],
     bullets: [
       'Cloud icon — synced, pending upload, or offline',
-      'Globe icon — browse AnkiWeb and import shared decks',
+      'Globe icon — browse and import shared decks',
       'Upload / download icons — import or export your collection',
-      'Settings — Anki-style sections: General, Reviewing, Sync, Appearance, Backups, and more',
+      'Settings — organized into sections: General, Reviewing, Sync, Appearance, Backups, and more',
     ],
   ),
   DecksHelpSection(
@@ -55,12 +55,12 @@ const decksHelpSections = <DecksHelpSection>[
     id: 'import',
     title: 'Import & export',
     paragraphs: [
-      'Import supports CSV, plain-text (.txt), JSON backups, and Anki packages (.apkg). Export supports CSV, PDF, JSON, and APKG.',
+      'Import supports CSV, plain-text (.txt), JSON backups, and deck packages (.apkg). Export supports CSV, PDF, JSON, and APKG.',
     ],
     bullets: [
       'Import — tap upload on the deck list; choose format and target deck',
       'APKG — optionally import scheduling (due dates and intervals)',
-      'AnkiWeb — tap the globe icon, browse ankiweb.net, paste deck ID or download URL',
+      'Shared decks — tap the globe icon to browse and import community decks',
       'Backup — Decks settings → Back up now (JSON); Restore from backup to merge',
       'Export — download icon on deck list; pick format and optional deck scope',
     ],
@@ -110,7 +110,7 @@ const decksHelpSections = <DecksHelpSection>[
     id: 'cloud-sync',
     title: 'Cloud sync',
     paragraphs: [
-      'Your collection syncs to your account on our server (not AnkiWeb). Study offline anytime; ratings queue locally and upload when you sync.',
+      'Your collection syncs to your account on our server. Study offline anytime; ratings queue locally and upload when you sync.',
     ],
     bullets: [
       'Sync indicator — green = up to date, orange = pending reviews, grey = offline',
@@ -147,15 +147,15 @@ const decksFaqItems = <DecksFaqItem>[
         'Per-deck options control learning steps, daily limits, and graduating intervals.',
   ),
   DecksFaqItem(
-    question: 'How do I import an Anki deck (.apkg)?',
+    question: 'How do I import a deck package (.apkg)?',
     answer:
         'Tap the upload icon on the deck list → choose APKG. Optionally import scheduling to keep due dates. '
         'Media and note types are mapped to the closest built-in or custom types.',
   ),
   DecksFaqItem(
-    question: 'How do I get decks from AnkiWeb?',
+    question: 'How do I find shared decks?',
     answer:
-        'Tap the globe icon → Browse AnkiWeb. Find a deck in your browser, then paste the deck ID or full download URL (with ?tk= token) and tap Download and import.',
+        'Tap the globe icon on the deck list to open the shared decks page in your browser. Once you have a deck file, come back and use "Import a file" to bring it into the app.',
   ),
   DecksFaqItem(
     question: 'Can I study offline?',

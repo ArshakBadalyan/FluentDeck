@@ -171,7 +171,7 @@ Future<void> showFlashcardImportSheet(
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Import review scheduling (.apkg)'),
-                    subtitle: const Text('Preserve due dates and intervals from Anki'),
+                    subtitle: const Text('Preserve due dates and intervals from the source deck'),
                     value: importScheduling,
                     onChanged: (v) => setLocal(() => importScheduling = v),
                   ),
@@ -205,7 +205,7 @@ Future<void> showFlashcardImportSheet(
                   ListTile(
                     leading: const Icon(Icons.description_outlined),
                     title: const Text('Import TXT'),
-                    subtitle: const Text('Anki plain-text (#deck:, tab-separated)'),
+                    subtitle: const Text('Plain text (#deck:, tab-separated)'),
                     onTap: () async {
                       Navigator.pop(ctx);
                       try {
@@ -230,8 +230,8 @@ Future<void> showFlashcardImportSheet(
                   ),
                   ListTile(
                     leading: const Icon(Icons.archive_outlined),
-                    title: const Text('Import Anki .apkg'),
-                    subtitle: const Text('Deck package from Anki / AnkiDroid'),
+                    title: const Text('Import deck package (.apkg)'),
+                    subtitle: const Text('Compatible with common flashcard apps'),
                     onTap: () async {
                       Navigator.pop(ctx);
                       try {

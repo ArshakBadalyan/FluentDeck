@@ -10,7 +10,7 @@ import 'package:fluentdeck/app_theme.dart';
 import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
-/// Anki-style shell: Decks | Card browser.
+/// Decks shell: Decks | Card browser.
 class DecksShellScreen extends StatefulWidget {
   const DecksShellScreen({
     super.key,

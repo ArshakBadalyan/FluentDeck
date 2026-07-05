@@ -7,6 +7,8 @@ import '../../services/custom_role_play_service.dart';
 import '../../services/speaking_content_service.dart';
 import '../../services/speaking_scores_service.dart';
 import '../../services/speaking_session_service.dart';
+import '../../ui_elements/frosted_bottom_sheet.dart';
+import '../../ui_elements/modern_page_widgets.dart';
 import '../../utils/speaking_item_icons.dart';
 import '../../utils/speaking_premium_gate.dart';
 import '../../widgets/speaking_hub_widgets.dart';
@@ -114,86 +116,20 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
   }
 
   Future<void> _showCreateDialog() async {
-    final titleController = TextEditingController();
-    final userRoleController = TextEditingController(text: 'Customer');
-    final tutorRoleController = TextEditingController(text: 'Shop assistant');
-    final situationController = TextEditingController();
-
-    final created = await showDialog<bool>(
+    final result = await showFrostedBottomSheet<_RolePlayDraft>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Create custom role-play'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(labelText: 'Title'),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  TextField(
-                    controller: userRoleController,
-                    decoration: const InputDecoration(labelText: 'My role'),
-                  ),
-                  TextField(
-                    controller: tutorRoleController,
-                    decoration: const InputDecoration(labelText: "Tutor's role"),
-                  ),
-                  TextField(
-                    controller: situationController,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: const InputDecoration(labelText: 'Situation'),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Save'),
-              ),
-            ],
-          ),
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) => const _CreateRolePlaySheet(),
     );
 
-    if (created != true || !mounted) {
-      titleController.dispose();
-      userRoleController.dispose();
-      tutorRoleController.dispose();
-      situationController.dispose();
-      return;
-    }
-
-    final title = titleController.text.trim();
-    final userRole = userRoleController.text.trim();
-    final tutorRole = tutorRoleController.text.trim();
-    final situation = situationController.text.trim();
-
-    titleController.dispose();
-    userRoleController.dispose();
-    tutorRoleController.dispose();
-    situationController.dispose();
-
-    if (title.isEmpty || situation.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title and situation are required')),
-      );
-      return;
-    }
+    if (result == null || !mounted) return;
 
     final prompt = await CustomRolePlayService.instance.create(
-      title: title,
-      userRole: userRole,
-      tutorRole: tutorRole,
-      situation: situation,
+      title: result.title,
+      userRole: result.userRole,
+      tutorRole: result.tutorRole,
+      situation: result.situation,
     );
     if (!mounted) return;
     setState(() => _filterIndex = _filters.indexWhere((f) => f.$1 == 'custom'));
@@ -318,6 +254,211 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
                   },
         ),
       ],
+    );
+  }
+}
+
+class _RolePlayDraft {
+  const _RolePlayDraft({
+    required this.title,
+    required this.userRole,
+    required this.tutorRole,
+    required this.situation,
+  });
+
+  final String title;
+  final String userRole;
+  final String tutorRole;
+  final String situation;
+}
+
+class _CreateRolePlaySheet extends StatefulWidget {
+  const _CreateRolePlaySheet();
+
+  @override
+  State<_CreateRolePlaySheet> createState() => _CreateRolePlaySheetState();
+}
+
+class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _userRoleController;
+  late final TextEditingController _tutorRoleController;
+  late final TextEditingController _situationController;
+  String? _titleError;
+  String? _situationError;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController();
+    _userRoleController = TextEditingController(text: 'Customer');
+    _tutorRoleController = TextEditingController(text: 'Shop assistant');
+    _situationController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _userRoleController.dispose();
+    _tutorRoleController.dispose();
+    _situationController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final title = _titleController.text.trim();
+    final situation = _situationController.text.trim();
+    setState(() {
+      _titleError = title.isEmpty ? 'Give your role-play a title' : null;
+      _situationError = situation.isEmpty ? 'Describe the situation' : null;
+    });
+    if (_titleError != null || _situationError != null) return;
+
+    Navigator.pop(
+      context,
+      _RolePlayDraft(
+        title: title,
+        userRole: _userRoleController.text.trim(),
+        tutorRole: _tutorRoleController.text.trim(),
+        situation: situation,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 6),
+            child: Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 12, 4),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: AppColors.primaryPurple,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Create custom role-play',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Rubik',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppTextField(
+                    controller: _titleController,
+                    label: 'Title',
+                    hint: 'e.g. Ordering coffee',
+                    textCapitalization: TextCapitalization.sentences,
+                    errorText: _titleError,
+                    onChanged: (_) {
+                      if (_titleError != null) setState(() => _titleError = null);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: AppTextField(
+                          controller: _userRoleController,
+                          label: 'My role',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppTextField(
+                          controller: _tutorRoleController,
+                          label: "Tutor's role",
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  AppTextField(
+                    controller: _situationController,
+                    label: 'Situation',
+                    hint: 'What happens in this conversation?',
+                    minLines: 3,
+                    maxLines: 5,
+                    textCapitalization: TextCapitalization.sentences,
+                    errorText: _situationError,
+                    onChanged: (_) {
+                      if (_situationError != null) {
+                        setState(() => _situationError = null);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _save,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text('Create role-play'),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

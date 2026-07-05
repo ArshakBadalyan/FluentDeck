@@ -21,7 +21,7 @@ class CardBrowserOptionsState {
   });
 }
 
-/// AnkiDroid-style card browser overflow menu (Step 2 parity).
+/// Card browser overflow menu.
 class CardBrowserOptionsMenu {
   static Future<T?> _showSheet<T>(
     BuildContext context, {
@@ -328,7 +328,7 @@ class CardBrowserOptionsMenu {
     }
   }
 
-  /// Anki-style sort picker: field + ascending/descending/default.
+  /// Sort picker: field + ascending/descending/default.
   static Future<({CardBrowserSortField? field, CardBrowserSortDir? dir})?> showDisplayOrderSheet(
     BuildContext context, {
     required CardBrowserSortField? currentField,

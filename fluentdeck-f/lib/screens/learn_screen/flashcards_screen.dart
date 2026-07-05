@@ -265,8 +265,8 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.public_outlined),
-                  title: const Text('Get shared decks'),
-                  subtitle: const Text('Browse AnkiWeb and import .apkg decks'),
+                  title: const Text('Shared decks'),
+                  subtitle: const Text('Browse community decks or import a deck file'),
                   onTap: () => Navigator.pop(ctx, 'shared'),
                 ),
                 const SizedBox(height: 8),
@@ -371,8 +371,8 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.archive_outlined),
-                    title: const Text('Anki .apkg'),
-                    subtitle: const Text('Open in Anki or AnkiDroid'),
+                    title: const Text('Deck package (.apkg)'),
+                    subtitle: const Text('Compatible with common flashcard apps'),
                     onTap: () => Navigator.pop(ctx, 'apkg'),
                   ),
                   ListTile(

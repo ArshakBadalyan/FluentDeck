@@ -131,10 +131,6 @@
       "enum": ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ru", "hi"],
       "default": "en"
     },
-    "confirm_transcript": {
-      "type": "boolean",
-      "default": true
-    },
     "auto_save_corrections": {
       "type": "boolean",
       "default": true
@@ -178,6 +174,14 @@
       "type": "string"
     },
     "ai_turns_count": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "correct_sentences_today_date": {
+      "type": "string"
+    },
+    "correct_sentences_today_count": {
       "type": "integer",
       "default": 0,
       "min": 0

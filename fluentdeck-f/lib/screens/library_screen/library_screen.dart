@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/screens/learn_screen/notes_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/study_hall_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/words_screen.dart';
-import 'package:fluentdeck/screens/lessons_screen/lessons_list_tab.dart';
 import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
 
 class LibraryScreen extends StatelessWidget {
@@ -25,7 +24,6 @@ class LibraryScreen extends StatelessWidget {
         WordsScreen(),
         NotesScreen(),
         StudyHallScreen(),
-        LessonsListTab(),
       ],
     );
   }

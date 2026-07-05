@@ -282,7 +282,7 @@ Map<String, String> intervalPreviewsForCard(
   return previews;
 }
 
-/// Human-readable interval like Anki ("<2m", "5d").
+/// Human-readable interval, e.g. "<2m", "5d".
 String formatIntervalPreview(DateTime dueAt, DateTime now) {
   final diff = dueAt.difference(now);
   if (diff.inSeconds <= 0) return '<1m';

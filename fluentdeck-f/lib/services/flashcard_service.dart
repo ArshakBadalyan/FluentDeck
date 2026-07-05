@@ -66,32 +66,6 @@ class FlashcardCardInfo {
   }
 }
 
-class AnkiWebSearchResult {
-  final String query;
-  final bool apiAvailable;
-  final String message;
-  final String? suggestedDeckId;
-  final String browseUrl;
-
-  const AnkiWebSearchResult({
-    this.query = '',
-    this.apiAvailable = false,
-    this.message = '',
-    this.suggestedDeckId,
-    this.browseUrl = 'https://ankiweb.net/shared/decks/',
-  });
-
-  factory AnkiWebSearchResult.fromJson(Map<String, dynamic> json) {
-    return AnkiWebSearchResult(
-      query: json['query']?.toString() ?? '',
-      apiAvailable: json['apiAvailable'] == true,
-      message: json['message']?.toString() ?? '',
-      suggestedDeckId: json['suggestedDeckId']?.toString(),
-      browseUrl: json['browseUrl']?.toString() ?? 'https://ankiweb.net/shared/decks/',
-    );
-  }
-}
-
 class FlashcardService {
   FlashcardService._();
   static final FlashcardService instance = FlashcardService._();
@@ -822,43 +796,6 @@ class FlashcardService {
       lastSkipped: local.lastSkipped,
       serverCursor: local.serverCursor ?? data['lastPullAt']?.toString(),
     );
-  }
-
-  Future<AnkiWebSearchResult> searchAnkiWeb(String query) async {
-    final data = await ApiService.get(
-      'flashcards/ankiweb/search',
-      query: query.trim().isEmpty ? null : {'q': query.trim()},
-    );
-    if (data is! Map) {
-      throw Exception('AnkiWeb search failed');
-    }
-    final err = _extractError(data);
-    if (err != null) throw Exception(err);
-    return AnkiWebSearchResult.fromJson(Map<String, dynamic>.from(data));
-  }
-
-  Future<FlashcardImportResult> importFromAnkiWeb({
-    String? deckId,
-    String? downloadUrl,
-    String? tk,
-    String? username,
-    String? password,
-    bool createDecks = true,
-    int? defaultDeckId,
-    bool importScheduling = false,
-  }) async {
-    final data = await ApiService.post('flashcards/ankiweb/download', {
-      if (deckId != null && deckId.trim().isNotEmpty) 'deckId': deckId.trim(),
-      if (downloadUrl != null && downloadUrl.trim().isNotEmpty)
-        'downloadUrl': downloadUrl.trim(),
-      if (tk != null && tk.trim().isNotEmpty) 'tk': tk.trim(),
-      if (username != null && username.trim().isNotEmpty) 'username': username.trim(),
-      if (password != null && password.isNotEmpty) 'password': password,
-      'createDecks': createDecks,
-      if (defaultDeckId != null) 'defaultDeckId': defaultDeckId,
-      'importScheduling': importScheduling,
-    });
-    return FlashcardImportResult.fromJson(data);
   }
 
   Future<({int applied, int skipped})> syncPushPending() async {

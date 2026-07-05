@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Anki-style Decks settings sections (Step 6).
+/// Decks settings sections.
 enum DecksSettingsSection {
   general,
   newStudyScreen,

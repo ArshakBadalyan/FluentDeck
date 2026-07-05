@@ -24,7 +24,7 @@ void wrapHtmlSelection(
   );
 }
 
-/// Insert Anki-style inline LaTeX delimiters around the selection.
+/// Insert inline LaTeX delimiters around the selection.
 void wrapLatexInline(TextEditingController controller) {
   wrapHtmlSelection(controller, r'\(', r'\)');
 }
@@ -194,7 +194,7 @@ Alignment _blockAlign(TextAlign align) {
   }
 }
 
-/// Lightweight renderer for basic Anki-style HTML (b, i, u, span color) and LaTeX.
+/// Lightweight renderer for basic HTML (b, i, u, span color) and LaTeX.
 class BasicHtmlText extends StatelessWidget {
   const BasicHtmlText({
     super.key,

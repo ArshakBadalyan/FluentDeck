@@ -9,7 +9,7 @@ import 'package:fluentdeck/services/flashcard_service.dart';
 
 enum BulkTagMode { add, remove, replace }
 
-/// Card browser bulk selection actions (Step 4 AnkiDroid parity).
+/// Card browser bulk selection actions.
 class CardBrowserBulkActions {
   CardBrowserBulkActions({
     required this.context,

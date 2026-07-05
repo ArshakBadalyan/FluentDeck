@@ -307,6 +307,10 @@ class AppTextField extends StatelessWidget {
     this.onChanged,
     this.suffixIcon,
     this.keyboardType,
+    this.minLines,
+    this.maxLines = 1,
+    this.textCapitalization = TextCapitalization.none,
+    this.errorText,
   });
 
   final TextEditingController controller;
@@ -317,6 +321,10 @@ class AppTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final Widget? suffixIcon;
   final TextInputType? keyboardType;
+  final int? minLines;
+  final int? maxLines;
+  final TextCapitalization textCapitalization;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -340,8 +348,12 @@ class AppTextField extends StatelessWidget {
           enabled: enabled,
           onChanged: onChanged,
           keyboardType: keyboardType,
+          minLines: minLines,
+          maxLines: maxLines,
+          textCapitalization: textCapitalization,
           decoration: InputDecoration(
             hintText: hint,
+            errorText: errorText,
             filled: true,
             fillColor: AppPageColors.fieldBg,
             isDense: true,
@@ -358,6 +370,10 @@ class AppTextField extends StatelessWidget {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: AppColors.redWrong.withValues(alpha: 0.6)),
             ),
           ),
         ),

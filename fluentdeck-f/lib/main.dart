@@ -18,6 +18,7 @@ import 'package:fluentdeck/services/subscription_service.dart';
 
 import 'app_start.dart';
 import 'app_theme.dart';
+import 'package:fluentdeck/ui_elements/app_scroll_behavior.dart';
 import 'package:fluentdeck/ui_elements/responsive_layout.dart';
 import 'services/theme_settings_store.dart';
 import 'clarity_wrap.dart' if (dart.library.html) 'clarity_wrap_stub.dart';
@@ -118,6 +119,7 @@ class MyApp extends StatelessWidget {
         animation: AppLocalizations.instance,
         builder: (_, __) => MaterialApp(
         debugShowCheckedModeBanner: false,
+        scrollBehavior: const AppScrollBehavior(),
         locale: AppLocalizations.instance.locale,
         home: const AppStart(),
         theme: AppTheme.light,

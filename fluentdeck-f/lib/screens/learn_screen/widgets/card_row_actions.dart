@@ -12,7 +12,7 @@ import 'package:fluentdeck/utils/card_browser_utils.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/widgets/card_preview_sheet.dart';
 
-/// Card browser row ⋮ menu actions (Step 3 AnkiDroid parity).
+/// Card browser row ⋮ menu actions.
 class CardRowActions {
   CardRowActions({
     required this.context,

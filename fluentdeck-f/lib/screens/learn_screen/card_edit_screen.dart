@@ -11,7 +11,7 @@ import 'package:fluentdeck/models/occlusion_model.dart';
 import 'package:fluentdeck/widgets/image_occlusion_editor.dart';
 import 'package:fluentdeck/widgets/note_preview_sheet.dart';
 
-/// Anki-style add / edit note screen (Phase 4C).
+/// Add / edit note screen.
 class CardEditScreen extends StatefulWidget {
   const CardEditScreen({
     super.key,

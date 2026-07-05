@@ -5,7 +5,7 @@
     "singularName": "flashcard",
     "pluralName": "flashcards",
     "displayName": "Flashcard",
-    "description": "Generated study card from a flashcard note (Anki card template)."
+    "description": "Generated study card from a flashcard note's card template."
   },
   "options": {
     "draftAndPublish": false

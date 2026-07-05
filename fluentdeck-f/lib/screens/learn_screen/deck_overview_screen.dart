@@ -8,7 +8,7 @@ import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/deck_count_buttons.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/deck_edit_sheet.dart';
 
-/// Deck overview — opened by tapping deck name or count buttons (AnkiDroid pattern).
+/// Deck overview — opened by tapping deck name or count buttons.
 class DeckOverviewScreen extends StatefulWidget {
   const DeckOverviewScreen({
     super.key,

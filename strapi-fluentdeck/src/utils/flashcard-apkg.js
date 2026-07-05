@@ -36,7 +36,7 @@ function extractCollectionSqlite(buffer) {
   throw new Error('Unsupported .apkg collection format (expected SQLite or zstd-compressed anki21)');
 }
 
-function mapAnkiModelToNoteType(model) {
+function mapImportedModelToNoteType(model) {
   if (model?.type === 1) return 'cloze';
   const name = String(model?.name ?? '').toLowerCase();
   if (name.includes('cloze')) return 'cloze';
@@ -59,51 +59,51 @@ function buildFieldsMap(model, fieldValues) {
   return fields;
 }
 
-function ankiCardToReviewState(ankiCard, colCrt) {
-  const queue = ankiCard.queue ?? 0;
-  const factor = (ankiCard.factor ?? 2500) / 1000;
+function importedCardToReviewState(sourceCard, colCrt) {
+  const queue = sourceCard.queue ?? 0;
+  const factor = (sourceCard.factor ?? 2500) / 1000;
   const now = new Date();
 
   if (queue === -1) {
-    return { state: 'review', suspended: true, intervalDays: ankiCard.ivl ?? 0, easeFactor: factor, dueAt: now, repetitions: ankiCard.reps ?? 0, lapses: ankiCard.lapses ?? 0, learningStep: 0 };
+    return { state: 'review', suspended: true, intervalDays: sourceCard.ivl ?? 0, easeFactor: factor, dueAt: now, repetitions: sourceCard.reps ?? 0, lapses: sourceCard.lapses ?? 0, learningStep: 0 };
   }
 
-  if (queue === 0 || ankiCard.type === 0) {
-    return { state: 'new', intervalDays: 0, easeFactor: factor, dueAt: now, repetitions: 0, lapses: ankiCard.lapses ?? 0, learningStep: 0 };
+  if (queue === 0 || sourceCard.type === 0) {
+    return { state: 'new', intervalDays: 0, easeFactor: factor, dueAt: now, repetitions: 0, lapses: sourceCard.lapses ?? 0, learningStep: 0 };
   }
 
   if (queue === 1 || queue === 3) {
     let dueAt = now;
-    if (ankiCard.due > 1_000_000_000) {
-      dueAt = new Date(ankiCard.due * 1000);
-    } else if (ankiCard.due > 0) {
-      dueAt = new Date(now.getTime() + ankiCard.due * 60 * 1000);
+    if (sourceCard.due > 1_000_000_000) {
+      dueAt = new Date(sourceCard.due * 1000);
+    } else if (sourceCard.due > 0) {
+      dueAt = new Date(now.getTime() + sourceCard.due * 60 * 1000);
     }
     return {
       state: queue === 3 ? 'relearning' : 'learning',
       intervalDays: 0,
       easeFactor: factor,
       dueAt,
-      repetitions: ankiCard.reps ?? 0,
-      lapses: ankiCard.lapses ?? 0,
+      repetitions: sourceCard.reps ?? 0,
+      lapses: sourceCard.lapses ?? 0,
       learningStep: 0,
     };
   }
 
   if (queue === 2) {
     let dueAt = now;
-    if (ankiCard.due > 1_000_000_000) {
-      dueAt = new Date(ankiCard.due * 1000);
-    } else if (colCrt && ankiCard.due > 0) {
-      dueAt = new Date((colCrt + ankiCard.due * 86400) * 1000);
+    if (sourceCard.due > 1_000_000_000) {
+      dueAt = new Date(sourceCard.due * 1000);
+    } else if (colCrt && sourceCard.due > 0) {
+      dueAt = new Date((colCrt + sourceCard.due * 86400) * 1000);
     }
     return {
       state: 'review',
-      intervalDays: ankiCard.ivl ?? 0,
+      intervalDays: sourceCard.ivl ?? 0,
       easeFactor: factor,
       dueAt,
-      repetitions: ankiCard.reps ?? 0,
-      lapses: ankiCard.lapses ?? 0,
+      repetitions: sourceCard.reps ?? 0,
+      lapses: sourceCard.lapses ?? 0,
       learningStep: 0,
     };
   }
@@ -111,7 +111,7 @@ function ankiCardToReviewState(ankiCard, colCrt) {
   return null;
 }
 
-function reviewStateToAnkiCard(review, colCrt) {
+function reviewStateToImportedCard(review, colCrt) {
   const rs = review ?? {};
   const ease = Math.round((rs.easeFactor ?? 2.5) * 1000);
   const now = Math.floor(Date.now() / 1000);
@@ -604,7 +604,7 @@ async function readApkgRows(apkgPath, { strapi, importScheduling = false } = {})
       const fieldValues = String(note.flds ?? '').split(FIELD_SEP);
       const fieldsMap = buildFieldsMap(model, fieldValues);
 
-      const noteType = mapAnkiModelToNoteType(model);
+      const noteType = mapImportedModelToNoteType(model);
       const isCloze = noteType === 'cloze';
       let frontRaw = isCloze
         ? fieldsMap.Text ?? fieldsMap.text ?? fieldValues[0] ?? ''
@@ -647,7 +647,7 @@ async function readApkgRows(apkgPath, { strapi, importScheduling = false } = {})
       const primaryCard = noteCards.sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0))[0];
       const scheduling =
         importScheduling && primaryCard
-          ? ankiCardToReviewState(primaryCard, colCrt)
+          ? importedCardToReviewState(primaryCard, colCrt)
           : null;
 
       const importFields = isCloze
@@ -664,7 +664,7 @@ async function readApkgRows(apkgPath, { strapi, importScheduling = false } = {})
         mediaUrl: noteMediaUrl,
         preserveHtml: preserveHtml && (/<[a-z]/i.test(front) || /<[a-z]/i.test(back)),
         scheduling,
-        ankiModelName: model?.name ?? '',
+        sourceModelName: model?.name ?? '',
       });
     }
 
@@ -771,29 +771,29 @@ async function buildApkgBuffer(strapi, userId, { deckId = null } = {}) {
     const colCrt = nowSecs();
 
     const deckIdMap = new Map();
-    let nextDeckAnkiId = 1;
-    const ankiDecks = {};
+    let nextExportDeckId = 1;
+    const decksById = {};
 
     for (const deck of decks) {
       if (deckId != null && deck.id !== deckId) continue;
-      deckIdMap.set(deck.id, nextDeckAnkiId);
-      ankiDecks[String(nextDeckAnkiId)] = {
+      deckIdMap.set(deck.id, nextExportDeckId);
+      decksById[String(nextExportDeckId)] = {
         ...defaultDecksJson(deck.name)['1'],
-        id: nextDeckAnkiId,
+        id: nextExportDeckId,
         name: deck.name,
         mod: nowSecs(),
       };
-      nextDeckAnkiId += 1;
+      nextExportDeckId += 1;
     }
 
     if (!deckIdMap.size) {
       deckIdMap.set(0, 1);
-      ankiDecks['1'] = defaultDecksJson(exportDeckName)['1'];
+      decksById['1'] = defaultDecksJson(exportDeckName)['1'];
     }
 
     db.prepare('UPDATE col SET models = ?, decks = ?').run(
       JSON.stringify(basicModelJson()),
-      JSON.stringify(ankiDecks),
+      JSON.stringify(decksById),
     );
 
     const insertNote = db.prepare(`
@@ -808,7 +808,7 @@ async function buildApkgBuffer(strapi, userId, { deckId = null } = {}) {
     let noteId = nowSecs() * 1000;
     let cardId = noteId;
 
-    const noteAnkiIds = new Map();
+    const noteIdByKey = new Map();
     const mediaMap = {};
     const refToFilename = new Map();
     let mediaIndex = 0;
@@ -837,8 +837,8 @@ async function buildApkgBuffer(strapi, userId, { deckId = null } = {}) {
         card.flashcard_note ??
         `legacy-${card.id}-${card.front}-${card.back}`;
 
-      let ankiNoteId = noteAnkiIds.get(noteKey);
-      if (ankiNoteId == null) {
+      let exportNoteId = noteIdByKey.get(noteKey);
+      if (exportNoteId == null) {
         const isCloze = card.cardType === 'cloze';
         const mid = isCloze ? CLOZE_MODEL_ID : BASIC_MODEL_ID;
         const front = exportHtml(card.front ?? '');
@@ -853,11 +853,11 @@ async function buildApkgBuffer(strapi, userId, { deckId = null } = {}) {
         const csum = fieldChecksum(stripHtml(front));
 
         noteId += 1;
-        ankiNoteId = noteId;
-        noteAnkiIds.set(noteKey, ankiNoteId);
+        exportNoteId = noteId;
+        noteIdByKey.set(noteKey, exportNoteId);
 
         insertNote.run(
-          ankiNoteId,
+          exportNoteId,
           randomGuid(),
           mid,
           nowSecs(),
@@ -872,16 +872,16 @@ async function buildApkgBuffer(strapi, userId, { deckId = null } = {}) {
       }
 
       const sourceDeckId = card.deck?.id ?? card.deck ?? 0;
-      const ankiDeckId = deckIdMap.get(sourceDeckId) ?? 1;
+      const exportDeckId = deckIdMap.get(sourceDeckId) ?? 1;
 
       const reviewRow = reviewByCardId.get(card.id);
-      const scheduling = reviewStateToAnkiCard(reviewRow, colCrt);
+      const scheduling = reviewStateToImportedCard(reviewRow, colCrt);
 
       cardId += 1;
       insertCard.run(
         cardId,
-        ankiNoteId,
-        ankiDeckId,
+        exportNoteId,
+        exportDeckId,
         card.templateOrdinal ?? 0,
         nowSecs(),
         0,
@@ -927,7 +927,7 @@ module.exports = {
   buildApkgBuffer,
   readApkgRows,
   extractCollectionSqlite,
-  mapAnkiModelToNoteType,
-  ankiCardToReviewState,
-  reviewStateToAnkiCard,
+  mapImportedModelToNoteType,
+  importedCardToReviewState,
+  reviewStateToImportedCard,
 };

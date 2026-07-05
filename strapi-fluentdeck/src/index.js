@@ -91,8 +91,6 @@ module.exports = {
       "api::flashcard-deck.flashcard-deck.syncPull",
       "api::flashcard-deck.flashcard-deck.syncPush",
       "api::flashcard-deck.flashcard-deck.syncStatus",
-      "api::flashcard-deck.flashcard-deck.ankiwebSearch",
-      "api::flashcard-deck.flashcard-deck.ankiwebDownload",
       "api::flashcard-deck.flashcard-deck.browseCards",
       "api::flashcard-deck.flashcard-deck.suspendCard",
       "api::flashcard-deck.flashcard-deck.unsuspendCard",

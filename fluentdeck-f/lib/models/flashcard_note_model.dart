@@ -7,6 +7,7 @@ class NoteTypeModel {
   final List<String> cardTemplateNames;
   final List<NoteTypeCardTemplateModel> cardTemplates;
   final String css;
+  final String themeId;
   final bool available;
   final bool isCustom;
 
@@ -17,6 +18,7 @@ class NoteTypeModel {
     this.cardTemplateNames = const [],
     this.cardTemplates = const [],
     this.css = '',
+    this.themeId = 'classic',
     this.available = true,
     this.isCustom = false,
   });
@@ -61,6 +63,7 @@ class NoteTypeModel {
           templates.map((t) => t.name).toList(),
       cardTemplates: templates,
       css: json['css'] as String? ?? '',
+      themeId: json['themeId'] as String? ?? 'classic',
       available: json['available'] != false,
       isCustom: json['isCustom'] == true,
     );
@@ -71,6 +74,7 @@ class NoteTypeModel {
     'fields': fields.map((f) => f.toJson()).toList(),
     'cardTemplates': cardTemplates.map((t) => t.toJson()).toList(),
     if (css.isNotEmpty) 'css': css,
+    'themeId': themeId,
   };
 
   Map<String, dynamic> toJson() => {
@@ -80,6 +84,7 @@ class NoteTypeModel {
     'cardTemplateNames': cardTemplateNames,
     'cardTemplates': cardTemplates.map((t) => t.toJson()).toList(),
     'css': css,
+    'themeId': themeId,
     'available': available,
     'isCustom': isCustom,
   };

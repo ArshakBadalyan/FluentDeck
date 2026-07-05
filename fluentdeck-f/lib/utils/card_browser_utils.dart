@@ -70,7 +70,7 @@ String cardTypeLabel(String cardType) {
   }
 }
 
-/// Anki-style flag colors (1–7). 0 = none.
+/// Flag colors (1–7). 0 = none.
 const Map<int, Color> flagColors = {
   1: Color(0xFFE53935),
   2: Color(0xFFFB8C00),

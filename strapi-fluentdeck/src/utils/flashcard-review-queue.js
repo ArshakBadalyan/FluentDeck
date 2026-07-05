@@ -3,7 +3,7 @@
 const { isDue } = require('./sm2');
 
 /**
- * Include review cards due within learn-ahead window (Anki-style).
+ * Include review cards due within the learn-ahead window.
  */
 function isDueWithLearnAhead(review, now, learnAheadMinutes = 0) {
   if (!review) return false;

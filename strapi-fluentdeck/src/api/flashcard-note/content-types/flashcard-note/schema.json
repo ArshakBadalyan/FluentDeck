@@ -5,7 +5,7 @@
     "singularName": "flashcard-note",
     "pluralName": "flashcard-notes",
     "displayName": "Flashcard Note",
-    "description": "Anki-style note — one note generates one or more flashcards."
+    "description": "A note — generates one or more flashcards."
   },
   "options": {
     "draftAndPublish": false

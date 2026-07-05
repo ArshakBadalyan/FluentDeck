@@ -8,11 +8,11 @@ class SpeakingPreferences {
   final bool soundOn;
   final bool typeMessagesEnabled;
   final bool autoStartRecording;
-  final bool confirmTranscript;
   final bool autoSaveCorrections;
   final bool dailyReminderEnabled;
   final String dailyReminderTime;
   final int correctSentenceGoal;
+  final int correctSentencesToday;
   final String? englishLevel;
 
   const SpeakingPreferences({
@@ -25,11 +25,11 @@ class SpeakingPreferences {
     this.soundOn = true,
     this.typeMessagesEnabled = false,
     this.autoStartRecording = false,
-    this.confirmTranscript = true,
     this.autoSaveCorrections = true,
     this.dailyReminderEnabled = false,
     this.dailyReminderTime = '09:00',
     this.correctSentenceGoal = 10,
+    this.correctSentencesToday = 0,
     this.englishLevel,
   });
 
@@ -87,11 +87,11 @@ class SpeakingPreferences {
       soundOn: user['sound_on'] as bool? ?? user['sound'] as bool? ?? true,
       typeMessagesEnabled: user['type_messages_enabled'] == true,
       autoStartRecording: user['auto_start_recording'] == true,
-      confirmTranscript: user['confirm_transcript'] as bool? ?? true,
       autoSaveCorrections: user['auto_save_corrections'] as bool? ?? true,
       dailyReminderEnabled: user['daily_reminder_enabled'] == true,
       dailyReminderTime: user['daily_reminder_time'] as String? ?? '09:00',
       correctSentenceGoal: user['correct_sentence_goal'] as int? ?? 10,
+      correctSentencesToday: user['correct_sentences_today'] as int? ?? 0,
       englishLevel: user['english_level'] as String?,
     );
   }
@@ -99,7 +99,6 @@ class SpeakingPreferences {
   Map<String, dynamic> toUpdatePayload() {
     return {
       'practice_language': practiceLanguage,
-      'confirm_transcript': confirmTranscript,
       'auto_save_corrections': autoSaveCorrections,
       'response_language': responseLanguage,
       'translation_language': showTranslations ? translationLanguage : 'none',

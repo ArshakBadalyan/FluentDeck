@@ -89,7 +89,7 @@ function endOfLocalDay(now = new Date()) {
 }
 
 /**
- * Anki-style scheduling with Again / Hard / Good / Easy.
+ * Spaced-repetition scheduling with Again / Hard / Good / Easy.
  * @param {object} deckOptions - normalized deck options (learning steps, intervals, etc.)
  */
 function applySm2Rating(current, rating, now = new Date(), deckOptions = null) {

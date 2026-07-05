@@ -87,16 +87,6 @@ module.exports = {
     },
     {
       method: 'GET',
-      path: '/flashcards/ankiweb/search',
-      handler: 'flashcard-deck.ankiwebSearch',
-    },
-    {
-      method: 'POST',
-      path: '/flashcards/ankiweb/download',
-      handler: 'flashcard-deck.ankiwebDownload',
-    },
-    {
-      method: 'GET',
       path: '/flashcards/browse',
       handler: 'flashcard-deck.browseCards',
     },

@@ -9,7 +9,7 @@ import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_store.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
 
-/// Anki-style Decks settings hub (Step 6).
+/// Decks settings hub.
 class DecksSettingsScreen extends StatefulWidget {
   const DecksSettingsScreen({
     super.key,

@@ -16,8 +16,9 @@ import 'package:fluentdeck/services/flashcard_export_service.dart';
 import 'package:fluentdeck/services/flashcard_import_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_store.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
+import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 
-/// Detail screen for one Anki-style settings section.
+/// Detail screen for one Decks settings section.
 class DecksSettingsSectionScreen extends StatefulWidget {
   const DecksSettingsSectionScreen({
     super.key,
@@ -104,13 +105,95 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
     );
   }
 
+  static String _hourLabel(int hour) {
+    final period = hour < 12 ? 'AM' : 'PM';
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    return '$displayHour $period';
+  }
+
   Future<void> _pickNextDayStart() async {
-    final picked = await showTimePicker(
+    final picked = await showFrostedBottomSheet<int>(
       context: context,
-      initialTime: TimeOfDay(hour: _settings.nextDayStartHour, minute: 0),
+      builder: (ctx) {
+        var selected = _settings.nextDayStartHour;
+        return StatefulBuilder(
+          builder: (ctx, setLocal) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      'Start of next day',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Cards due before this time still count as "today". Affects daily limits and stats — deck limits are set per deck.',
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.35),
+                    ),
+                    const SizedBox(height: 18),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: List.generate(24, (hour) {
+                        final isSelected = hour == selected;
+                        return ChoiceChip(
+                          label: Text(_hourLabel(hour)),
+                          selected: isSelected,
+                          onSelected: (_) => setLocal(() => selected = hour),
+                          selectedColor: AppColors.primaryPurple.withValues(alpha: 0.15),
+                          labelStyle: TextStyle(
+                            color: isSelected ? AppColors.primaryPurple : Colors.black87,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                          side: BorderSide(
+                            color: isSelected ? AppColors.primaryPurple : Colors.grey.shade300,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(ctx, selected),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primaryPurple,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text('Done'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
     if (picked == null) return;
-    await _save(_settings.copyWith(nextDayStartHour: picked.hour));
+    await _save(_settings.copyWith(nextDayStartHour: picked));
   }
 
   Future<void> _pickGesture(
@@ -332,13 +415,11 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
 
   List<Widget> _general() {
     return [
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Start of next day'),
-        subtitle: Text(
-          'Day rolls over at ${_settings.nextDayStartHour.toString().padLeft(2, '0')}:00',
-        ),
-        trailing: TextButton(onPressed: _pickNextDayStart, child: const Text('Change')),
+      decksSettingsPickerTile(
+        title: 'Start of next day',
+        subtitle: Text('Day rolls over at ${_hourLabel(_settings.nextDayStartHour)}'),
+        valueLabel: 'Change',
+        onTap: _pickNextDayStart,
       ),
       decksSettingsNote(
         'Affects daily limits and “today” statistics. Deck limits are set per deck.',
@@ -346,8 +427,8 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
       const SizedBox(height: 12),
       ListTile(
         contentPadding: EdgeInsets.zero,
-        title: const Text('Get shared decks'),
-        subtitle: const Text('Browse AnkiWeb and import .apkg decks'),
+        title: const Text('Shared decks'),
+        subtitle: const Text('Browse community decks or import a deck file'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
           final imported = await Navigator.of(context).push<bool>(
@@ -363,7 +444,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
       ListTile(
         contentPadding: EdgeInsets.zero,
         title: const Text('Manage note types'),
-        subtitle: const Text('Built-in Anki-style note templates'),
+        subtitle: const Text('Built-in and custom note templates'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
           Navigator.of(context).push(
@@ -538,7 +619,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                 : const Icon(Icons.sync),
         onTap: widget.syncing ? null : widget.onSyncNow,
       ),
-      decksSettingsNote('Syncs to your account on our server (not AnkiWeb).'),
+      decksSettingsNote('Syncs to your account on our server.'),
     ];
   }
 
@@ -624,7 +705,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         }),
       ],
       decksSettingsNote(
-        'Defaults match AnkiDroid: swipe left = Again, swipe right = Good, swipe up = reveal.',
+        'Defaults: swipe left = Again, swipe right = Good, swipe up = reveal.',
       ),
     ];
   }

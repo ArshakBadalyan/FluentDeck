@@ -1,7 +1,7 @@
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/flashcard_stats_model.dart';
 
-/// Anki-style scope and range labels for Statistics (Step 5).
+/// Scope and range labels for Statistics.
 class StatisticsLabels {
   StatisticsLabels._();
 

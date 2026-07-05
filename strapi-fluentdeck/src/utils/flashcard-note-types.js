@@ -1,8 +1,8 @@
 'use strict';
 
 /**
- * Built-in Anki-style note types. HTML templates are applied in Phase 4H;
- * Phase 4B stores rendered front/back on each generated card.
+ * Built-in note types. HTML templates are applied when notes are created;
+ * rendered front/back is stored on each generated card.
  */
 
 const NOTE_TYPE_IDS = [

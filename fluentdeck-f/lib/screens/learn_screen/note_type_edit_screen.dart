@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/models/card_style_preset.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
-/// Create or edit a user-defined note type (Phase 5C).
+/// Create or edit a user-defined note type. No HTML/CSS in sight — pick what
+/// information each note stores (fields) and a ready-made visual look
+/// (style). The front/back card layout is generated automatically: the first
+/// field is the question, the rest appear on the answer side.
 class NoteTypeEditScreen extends StatefulWidget {
   const NoteTypeEditScreen({super.key, this.existing});
 
@@ -17,9 +22,8 @@ class NoteTypeEditScreen extends StatefulWidget {
 
 class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
   final _nameCtrl = TextEditingController();
-  final _cssCtrl = TextEditingController();
   late List<_FieldRow> _fields;
-  late List<_TemplateRow> _templates;
+  late String _selectedThemeId;
   bool _saving = false;
   String? _error;
 
@@ -28,7 +32,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
     super.initState();
     final existing = widget.existing;
     _nameCtrl.text = existing?.name ?? '';
-    _cssCtrl.text = existing?.css ?? '';
+    _selectedThemeId = existing?.themeId ?? CardStylePreset.all.first.id;
     _fields =
         existing != null && existing.fields.isNotEmpty
             ? existing.fields
@@ -38,84 +42,59 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
               _FieldRow(name: 'Front', required: true),
               _FieldRow(name: 'Back', required: true),
             ];
-    _templates =
-        existing != null && existing.cardTemplates.isNotEmpty
-            ? existing.cardTemplates
-                .map(
-                  (t) => _TemplateRow(
-                    name: t.name,
-                    qfmt: t.qfmt,
-                    afmt: t.afmt,
-                  ),
-                )
-                .toList()
-            : [
-              _TemplateRow(
-                name: 'Card 1',
-                qfmt: '{{Front}}',
-                afmt: '{{FrontSide}}<hr id="answer">{{Back}}',
-              ),
-            ];
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _cssCtrl.dispose();
     for (final f in _fields) {
       f.dispose();
-    }
-    for (final t in _templates) {
-      t.dispose();
     }
     super.dispose();
   }
 
+  /// The card layout is always front → answer: the first field is the
+  /// question, every other field is revealed underneath on the back.
+  NoteTypeCardTemplateModel _generateTemplate(List<NoteTypeFieldModel> fields) {
+    final first = fields.first.name;
+    final rest = fields.skip(1).map((f) => '{{${f.name}}}').join('<br>');
+    return NoteTypeCardTemplateModel(
+      name: 'Card 1',
+      ordinal: 0,
+      qfmt: '{{$first}}',
+      afmt: rest.isEmpty ? '{{FrontSide}}' : '{{FrontSide}}<hr id="answer">$rest',
+    );
+  }
+
   NoteTypeModel _buildDraft() {
+    final fields =
+        _fields
+            .map(
+              (f) => NoteTypeFieldModel(
+                name: f.nameCtrl.text.trim(),
+                required: f.required,
+              ),
+            )
+            .where((f) => f.name.isNotEmpty)
+            .toList();
+    final preset = CardStylePreset.byId(_selectedThemeId);
+
     return NoteTypeModel(
       id: widget.existing?.id ?? '',
       name: _nameCtrl.text.trim(),
-      fields:
-          _fields
-              .map(
-                (f) => NoteTypeFieldModel(
-                  name: f.nameCtrl.text.trim(),
-                  required: f.required,
-                ),
-              )
-              .where((f) => f.name.isNotEmpty)
-              .toList(),
-      cardTemplates:
-          _templates
-              .asMap()
-              .entries
-              .map(
-                (e) => NoteTypeCardTemplateModel(
-                  name: e.value.nameCtrl.text.trim().isEmpty
-                      ? 'Card ${e.key + 1}'
-                      : e.value.nameCtrl.text.trim(),
-                  ordinal: e.key,
-                  qfmt: e.value.qfmtCtrl.text,
-                  afmt: e.value.afmtCtrl.text,
-                ),
-              )
-              .toList(),
-      css: _cssCtrl.text.trim(),
+      fields: fields,
+      cardTemplates: fields.isEmpty ? const [] : [_generateTemplate(fields)],
+      css: preset.toCss(),
+      themeId: preset.id,
       isCustom: true,
     );
   }
 
   String? _validate() {
-    if (_nameCtrl.text.trim().isEmpty) return 'Name is required';
+    if (_nameCtrl.text.trim().isEmpty) return 'Give this type a name';
     final fieldNames = _fields.map((f) => f.nameCtrl.text.trim()).where((n) => n.isNotEmpty);
     if (fieldNames.isEmpty) return 'Add at least one field';
     if (fieldNames.length != fieldNames.toSet().length) return 'Field names must be unique';
-    if (_templates.isEmpty) return 'Add at least one card template';
-    for (final t in _templates) {
-      if (t.qfmtCtrl.text.trim().isEmpty || t.afmtCtrl.text.trim().isEmpty) {
-        return 'Each template needs front and back formats';
-      }
-    }
     return null;
   }
 
@@ -163,148 +142,138 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
     });
   }
 
-  void _addTemplate() {
-    setState(
-      () => _templates.add(
-        _TemplateRow(
-          name: 'Card ${_templates.length + 1}',
-          qfmt: '{{Front}}',
-          afmt: '{{FrontSide}}<hr id="answer">{{Back}}',
-        ),
-      ),
-    );
-  }
-
-  void _removeTemplate(int index) {
-    if (_templates.length <= 1) return;
-    setState(() {
-      _templates[index].dispose();
-      _templates.removeAt(index);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBgOf(context),
         foregroundColor: Colors.black,
         elevation: 0,
         title: Text(widget.isEditing ? 'Edit note type' : 'New note type'),
         actions: [
-          TextButton(
-            onPressed: _saving ? null : _save,
-            child:
-                _saving
-                    ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                    : const Text('Save'),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: _saving ? null : _save,
+              style: TextButton.styleFrom(foregroundColor: AppColors.primaryPurple),
+              child:
+                  _saving
+                      ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Text('Save', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (_error != null) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(_error!, style: TextStyle(color: Colors.red.shade800)),
-            ),
-            const SizedBox(height: 12),
-          ],
-          TextField(
-            controller: _nameCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Name',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _sectionHeader('Fields', onAdd: _addField),
-          const SizedBox(height: 8),
-          ..._fields.asMap().entries.map((e) => _fieldTile(e.key, e.value)),
-          const SizedBox(height: 20),
-          _sectionHeader('Card templates', onAdd: _addTemplate),
-          const SizedBox(height: 4),
-          Text(
-            'Use {{FieldName}} placeholders. {{FrontSide}} shows the question on the back.',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 8),
-          ..._templates.asMap().entries.map((e) => _templateTile(e.key, e.value)),
-          const SizedBox(height: 20),
-          ExpansionTile(
-            tilePadding: EdgeInsets.zero,
-            title: const Text('CSS (optional)', style: TextStyle(fontWeight: FontWeight.w600)),
-            children: [
-              TextField(
-                controller: _cssCtrl,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText: '.card { font-size: 18px; }',
-                  border: OutlineInputBorder(),
+      body: AppPageBackground(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (_error != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.redWrong.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.redWrong.withValues(alpha: 0.25)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline_rounded, size: 18, color: AppColors.redWrong),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: AppColors.redWrong, fontSize: 13),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 12),
             ],
-          ),
-        ],
+            AppSectionCard(
+              title: 'Name',
+              icon: Icons.label_outline_rounded,
+              child: AppTextField(
+                controller: _nameCtrl,
+                hint: 'e.g. Vocabulary, Grammar point',
+              ),
+            ),
+            const SizedBox(height: 16),
+            AppSectionCard(
+              title: 'What does each card show?',
+              icon: Icons.view_column_outlined,
+              subtitle: 'The first field is the question; the rest appear when you reveal the answer',
+              trailing: _AddButton(onPressed: _addField),
+              child: Column(
+                children: [
+                  for (final entry in _fields.asMap().entries) ...[
+                    if (entry.key > 0) const SizedBox(height: 8),
+                    _fieldTile(entry.key, entry.value),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            AppSectionCard(
+              title: 'Card style',
+              icon: Icons.palette_outlined,
+              subtitle: 'Pick a look — applied to every card of this type',
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  for (final preset in CardStylePreset.all) _themeSwatch(preset),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-
-  Widget _sectionHeader(String title, {required VoidCallback onAdd}) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-        ),
-        TextButton.icon(
-          onPressed: onAdd,
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add'),
-          style: TextButton.styleFrom(foregroundColor: AppColors.primaryPurple),
-        ),
-      ],
     );
   }
 
   Widget _fieldTile(int index, _FieldRow row) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+    return Builder(
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: AppPageColors.fieldBgOf(context),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        padding: const EdgeInsets.fromLTRB(14, 4, 6, 4),
         child: Row(
           children: [
             Expanded(
               child: TextField(
                 controller: row.nameCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Field name',
+                  hintText: 'Field name',
                   border: InputBorder.none,
+                  isDense: true,
                 ),
               ),
             ),
-            Checkbox(
-              value: row.required,
-              activeColor: AppColors.primaryPurple,
-              onChanged: (v) => setState(() => row.required = v == true),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Required',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+                Switch(
+                  value: row.required,
+                  activeThumbColor: AppColors.primaryPurple,
+                  onChanged: (v) => setState(() => row.required = v),
+                ),
+              ],
             ),
-            const Text('Req', style: TextStyle(fontSize: 12)),
             IconButton(
-              icon: const Icon(Icons.delete_outline, size: 20),
+              icon: Icon(Icons.close_rounded, size: 18, color: Colors.grey.shade500),
               tooltip: 'Remove field',
               onPressed: () => _removeField(index),
             ),
@@ -314,58 +283,78 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
     );
   }
 
-  Widget _templateTile(int index, _TemplateRow row) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: row.nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Template name',
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20),
-                  tooltip: 'Remove template',
-                  onPressed: () => _removeTemplate(index),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: row.qfmtCtrl,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Front (qfmt)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: row.afmtCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Back (afmt)',
-                border: OutlineInputBorder(),
-              ),
+  Widget _themeSwatch(CardStylePreset preset) {
+    final selected = preset.id == _selectedThemeId;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedThemeId = preset.id),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 96,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color: preset.backgroundColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? AppColors.primaryPurple : Colors.black.withValues(alpha: 0.08),
+            width: selected ? 2.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color:
+                  selected
+                      ? AppColors.primaryPurple.withValues(alpha: 0.25)
+                      : Colors.black.withValues(alpha: 0.04),
+              blurRadius: selected ? 10 : 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Aa',
+              style: TextStyle(
+                color: preset.textColor,
+                fontSize: preset.fontSize * 0.8,
+                fontWeight: preset.fontWeight,
+                fontFamily: 'Rubik',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(width: 28, height: 2.5, color: preset.accentColor),
+            const SizedBox(height: 8),
+            Text(
+              preset.label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? AppColors.primaryPurple : preset.textColor,
+              ),
+            ),
+            if (selected) ...[
+              const SizedBox(height: 4),
+              const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.primaryPurple),
+            ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _AddButton extends StatelessWidget {
+  const _AddButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.add_rounded, size: 18),
+      label: const Text('Add'),
+      style: TextButton.styleFrom(foregroundColor: AppColors.primaryPurple),
     );
   }
 }
@@ -377,21 +366,4 @@ class _FieldRow {
   bool required;
 
   void dispose() => nameCtrl.dispose();
-}
-
-class _TemplateRow {
-  _TemplateRow({String name = '', String qfmt = '', String afmt = ''})
-    : nameCtrl = TextEditingController(text: name),
-      qfmtCtrl = TextEditingController(text: qfmt),
-      afmtCtrl = TextEditingController(text: afmt);
-
-  final TextEditingController nameCtrl;
-  final TextEditingController qfmtCtrl;
-  final TextEditingController afmtCtrl;
-
-  void dispose() {
-    nameCtrl.dispose();
-    qfmtCtrl.dispose();
-    afmtCtrl.dispose();
-  }
 }

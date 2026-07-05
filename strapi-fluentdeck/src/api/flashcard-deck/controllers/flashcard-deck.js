@@ -26,7 +26,6 @@ const { cardMatchesFilter } = require('../../../utils/flashcard-browse-filter');
 const { importCsv, importTxt } = require('../../../utils/flashcard-import');
 const { importApkgFile, buildApkgBuffer } = require('../../../utils/flashcard-apkg');
 const { pullSyncData, getSyncMeta, setSyncMeta } = require('../../../utils/flashcard-cloud-sync');
-const { searchSharedDecks, importSharedDeck } = require('../../../utils/flashcard-ankiweb');
 const {
   runFullCheck,
   checkDatabaseIntegrity,
@@ -861,37 +860,6 @@ module.exports = createCoreController(
         lastPushAt: meta.lastPushAt,
         serverTime: new Date().toISOString(),
       };
-    },
-
-    async ankiwebSearch(ctx) {
-      const userId = await getAuthenticatedUserId(ctx, strapi);
-      if (!userId) return ctx.unauthorized('Authentication required');
-
-      const q = ctx.query?.q ?? ctx.query?.query ?? '';
-      ctx.body = searchSharedDecks(q);
-    },
-
-    async ankiwebDownload(ctx) {
-      const userId = await getAuthenticatedUserId(ctx, strapi);
-      if (!userId) return ctx.unauthorized('Authentication required');
-
-      const body = ctx.request.body ?? {};
-      try {
-        const result = await importSharedDeck(strapi, userId, {
-          deckId: body.deckId,
-          downloadUrl: body.downloadUrl ?? body.url,
-          tk: body.tk,
-          username: body.username,
-          password: body.password,
-          createDecks: body.createDecks !== false,
-          defaultDeckId: body.deckId ? parseInt(String(body.defaultDeckId), 10) || null : null,
-          importScheduling: body.importScheduling === true,
-        });
-        ctx.body = { ok: true, ...result };
-      } catch (err) {
-        strapi.log.error('[flashcards.ankiwebDownload]', err);
-        return ctx.badRequest(err.message ?? 'AnkiWeb import failed');
-      }
     },
 
     async syncPush(ctx) {

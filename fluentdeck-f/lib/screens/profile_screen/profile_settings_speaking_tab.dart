@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/english_level_service.dart';
@@ -274,6 +275,11 @@ class _ProfileSettingsSpeakingSectionState
             );
           },
         ),
+        const SizedBox(height: 8),
+        _CorrectSentenceProgress(
+          today: _speakingPrefs.correctSentencesToday,
+          goal: _speakingPrefs.correctSentenceGoal,
+        ),
         if (_speakingPrefs.showTranslations) ...[
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
@@ -308,6 +314,54 @@ class _ProfileSettingsSpeakingSectionState
             padding: EdgeInsets.only(top: 8),
             child: LinearProgressIndicator(minHeight: 2),
           ),
+      ],
+    );
+  }
+}
+
+/// Shows progress toward today's "correct sentence goal" — resets daily.
+class _CorrectSentenceProgress extends StatelessWidget {
+  const _CorrectSentenceProgress({required this.today, required this.goal});
+
+  final int today;
+  final int goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final safeGoal = goal <= 0 ? 1 : goal;
+    final progress = (today / safeGoal).clamp(0.0, 1.0);
+    final reached = today >= safeGoal;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Today',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+            Text(
+              '$today / $goal correct sentences',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: reached ? AppColors.greenCorrect : Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 6,
+            backgroundColor: Colors.grey.shade200,
+            color: reached ? AppColors.greenCorrect : AppColors.primaryPurple,
+          ),
+        ),
       ],
     );
   }

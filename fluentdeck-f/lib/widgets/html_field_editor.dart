@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 
-/// Text field with a minimal HTML formatting toolbar (Anki-style).
+/// Text field with a minimal HTML formatting toolbar.
 class HtmlFieldEditor extends StatelessWidget {
   const HtmlFieldEditor({
     super.key,

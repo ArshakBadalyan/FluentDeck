@@ -37,7 +37,7 @@ Future<void> showFlashcardCheckResultDialog(
   );
 }
 
-/// AnkiDroid-style deck list overflow menu (Step 1 parity).
+/// Deck list overflow menu.
 class DecksOverflowMenu {
   static Future<void> show(
     BuildContext context, {

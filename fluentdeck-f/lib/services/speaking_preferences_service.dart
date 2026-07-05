@@ -82,11 +82,11 @@ extension SpeakingPreferencesCopy on SpeakingPreferences {
     bool? soundOn,
     bool? typeMessagesEnabled,
     bool? autoStartRecording,
-    bool? confirmTranscript,
     bool? autoSaveCorrections,
     bool? dailyReminderEnabled,
     String? dailyReminderTime,
     int? correctSentenceGoal,
+    int? correctSentencesToday,
     String? englishLevel,
   }) {
     return SpeakingPreferences(
@@ -99,11 +99,11 @@ extension SpeakingPreferencesCopy on SpeakingPreferences {
       soundOn: soundOn ?? this.soundOn,
       typeMessagesEnabled: typeMessagesEnabled ?? this.typeMessagesEnabled,
       autoStartRecording: autoStartRecording ?? this.autoStartRecording,
-      confirmTranscript: confirmTranscript ?? this.confirmTranscript,
       autoSaveCorrections: autoSaveCorrections ?? this.autoSaveCorrections,
       dailyReminderEnabled: dailyReminderEnabled ?? this.dailyReminderEnabled,
       dailyReminderTime: dailyReminderTime ?? this.dailyReminderTime,
       correctSentenceGoal: correctSentenceGoal ?? this.correctSentenceGoal,
+      correctSentencesToday: correctSentencesToday ?? this.correctSentencesToday,
       englishLevel: englishLevel ?? this.englishLevel,
     );
   }

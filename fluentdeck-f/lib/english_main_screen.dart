@@ -99,7 +99,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   List<String> get _speakSubTabs =>
       _visibleSpeakSubTabDefs.map((tab) => tab.$2).toList();
 
-  static const _librarySubTabs = ['Words', 'My Notes', 'Study Hall', 'Lessons'];
+  static const _librarySubTabs = ['Words', 'My Notes', 'Study Hall'];
 
   final _profileSubTabs = const [
     'Account',

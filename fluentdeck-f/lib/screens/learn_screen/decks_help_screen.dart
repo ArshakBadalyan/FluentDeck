@@ -107,7 +107,7 @@ class _GuideTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          'Learn how Decks works — study, import, sync, and review like Anki.',
+          'Learn how Decks works — study, import, sync, and review flashcards.',
           style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
         ),
         const SizedBox(height: 12),

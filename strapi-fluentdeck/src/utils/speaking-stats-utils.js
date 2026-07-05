@@ -2,6 +2,36 @@
 
 const WORD_BANK_CAP = 5000;
 const { getOrCreateUserProgress, mergeWeakAreas } = require('./user-progress-utils');
+const { todayKey } = require('./ai-rate-limit');
+
+/**
+ * Reads (and, if `increment`, bumps) the user's daily "correct sentence" count
+ * against their `correct_sentence_goal` — resets automatically when the stored
+ * date differs from today, mirroring the ai_turns_count daily-limit pattern.
+ */
+async function getOrIncrementDailyCorrectCount(strapi, userId, increment) {
+  const userRow = await strapi.db.query('plugin::users-permissions.user').findOne({
+    where: { id: userId },
+    select: ['correct_sentences_today_count', 'correct_sentences_today_date'],
+  });
+  const today = todayKey();
+  const storedDate = userRow?.correct_sentences_today_date ?? '';
+  let count = Number(userRow?.correct_sentences_today_count ?? 0);
+  if (storedDate !== today) {
+    count = 0;
+  }
+  if (increment) {
+    count += 1;
+    await strapi.db.query('plugin::users-permissions.user').update({
+      where: { id: userId },
+      data: {
+        correct_sentences_today_count: count,
+        correct_sentences_today_date: today,
+      },
+    });
+  }
+  return count;
+}
 
 function extractWords(text) {
   if (!text || typeof text !== "string") return [];
@@ -51,16 +81,24 @@ async function recordSpeakingTurnStats(strapi, userId, { userText, corrections }
     },
   });
 
+  const correctSentencesToday = await getOrIncrementDailyCorrectCount(
+    strapi,
+    userId,
+    perfectDelta === 1,
+  );
+
   return {
     perfectSentencesCount,
     uniqueWordsUsed,
     newWords,
     isPerfectSentence: perfectDelta === 1,
     weakAreas,
+    correctSentencesToday,
   };
 }
 
 module.exports = {
   extractWords,
   recordSpeakingTurnStats,
+  getOrIncrementDailyCorrectCount,
 };

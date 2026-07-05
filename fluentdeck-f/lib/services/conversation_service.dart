@@ -165,29 +165,28 @@ class ConversationService {
   }
 
   /// Speaks every listed AI turn in order (main reply, notices, etc.).
+  ///
+  /// [isAutomatic] marks a call that's triggered automatically after the tutor
+  /// replies (vs. the user explicitly tapping to replay a turn) — only those
+  /// calls are gated by [autoPlayVoiceEnabled].
   Future<void> speakAiTurns(
     List<int> turnIndices, {
     bool startMicAfter = false,
+    bool isAutomatic = false,
   }) async {
     if (!_chatActive || turnIndices.isEmpty) return;
 
     final sessionEpoch = _chatSessionEpoch;
+    final audioEnabled = soundOnEnabled && (!isAutomatic || autoPlayVoiceEnabled);
 
-    if (!soundOnEnabled) {
-      if (startMicAfter &&
-          (autoConversationEnabled || autoStartRecordingEnabled) &&
-          !isRecording) {
-        await startRecording();
+    if (audioEnabled) {
+      for (final index in turnIndices) {
+        if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+        if (index < 0 || index >= turns.length) continue;
+        final turn = turns[index];
+        if (turn.isUser || turn.text.trim().isEmpty) continue;
+        await _playAiTextAtTurn(index, sessionEpoch: sessionEpoch);
       }
-      return;
-    }
-
-    for (final index in turnIndices) {
-      if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
-      if (index < 0 || index >= turns.length) continue;
-      final turn = turns[index];
-      if (turn.isUser || turn.text.trim().isEmpty) continue;
-      await _playAiTextAtTurn(index, sessionEpoch: sessionEpoch);
     }
 
     if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
@@ -418,6 +417,7 @@ class ConversationService {
           [aiTurnIndex],
           startMicAfter:
               autoStartRecordingEnabled || autoConversationEnabled,
+          isAutomatic: true,
         ),
       );
     } catch (e, st) {
@@ -497,6 +497,7 @@ class ConversationService {
       speakAiTurns(
         [openerIndex],
         startMicAfter: autoStartRecordingEnabled || autoConversationEnabled,
+        isAutomatic: true,
       ),
     );
   }
@@ -813,6 +814,7 @@ class ConversationService {
       speakAiTurns(
         speakIndices,
         startMicAfter: autoStartRecordingEnabled || autoConversationEnabled,
+        isAutomatic: true,
       ),
     );
     await ConversationLimitService.instance.recordTurn();

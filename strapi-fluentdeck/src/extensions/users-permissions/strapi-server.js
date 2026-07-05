@@ -48,6 +48,9 @@ const {
   resolveGoogleAudiences,
   findOrCreateGoogleUser,
 } = require("../../utils/google-sign-in");
+const {
+  getOrIncrementDailyCorrectCount,
+} = require("../../utils/speaking-stats-utils");
 
 const USER_RESPONSE_EXCLUDED_KEYS = [
   "confirmationToken",
@@ -516,7 +519,6 @@ module.exports = (plugin) => {
     const user = await findUserById(strapi, userId, {
       fields: [
         "practice_language",
-        "confirm_transcript",
         "auto_save_corrections",
         "response_language",
         "translation_language",
@@ -532,9 +534,13 @@ module.exports = (plugin) => {
         "english_level",
       ],
     });
+    const correctSentencesToday = await getOrIncrementDailyCorrectCount(
+      strapi,
+      userId,
+      false,
+    );
     ctx.send({
       practice_language: user?.practice_language ?? "en",
-      confirm_transcript: user?.confirm_transcript !== false,
       auto_save_corrections: user?.auto_save_corrections !== false,
       response_language: user?.response_language ?? "en",
       translation_language: user?.translation_language ?? "none",
@@ -547,6 +553,7 @@ module.exports = (plugin) => {
       daily_reminder_enabled: user?.daily_reminder_enabled === true,
       daily_reminder_time: user?.daily_reminder_time ?? "09:00",
       correct_sentence_goal: user?.correct_sentence_goal ?? 10,
+      correct_sentences_today: correctSentencesToday,
       english_level: user?.english_level ?? null,
     });
       },
@@ -562,9 +569,6 @@ module.exports = (plugin) => {
         return ctx.badRequest("Invalid practice_language");
       }
       data.practice_language = body.practice_language;
-    }
-    if (body.confirm_transcript != null) {
-      data.confirm_transcript = body.confirm_transcript === true;
     }
     if (body.auto_save_corrections != null) {
       data.auto_save_corrections = body.auto_save_corrections === true;
@@ -637,7 +641,6 @@ module.exports = (plugin) => {
       );
       ctx.send({
         practice_language: updated.practice_language ?? "en",
-        confirm_transcript: updated.confirm_transcript !== false,
         auto_save_corrections: updated.auto_save_corrections !== false,
         response_language: updated.response_language,
         translation_language: updated.translation_language,

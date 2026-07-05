@@ -44,6 +44,7 @@ function formatCustomNoteTypeForApi(row) {
     cardTemplates,
     cardTemplateNames: cardTemplates.map((t) => t.name),
     css: row.css ?? '',
+    themeId: row.themeId ?? 'classic',
     isCustom: true,
     available: true,
   };
@@ -152,6 +153,7 @@ async function createCustomNoteType(strapi, userId, payload) {
       fields,
       cardTemplates,
       css: payload?.css ?? '',
+      themeId: String(payload?.themeId ?? 'classic'),
       user: userId,
     },
   });
@@ -179,6 +181,7 @@ async function updateCustomNoteType(strapi, userId, id, payload) {
     data.cardTemplates = normalizeCardTemplates(payload.cardTemplates);
   }
   if (payload?.css !== undefined) data.css = String(payload.css ?? '');
+  if (payload?.themeId !== undefined) data.themeId = String(payload.themeId ?? 'classic');
 
   const row = await strapi.db.query('api::custom-flashcard-note-type.custom-flashcard-note-type').update({
     where: { id },

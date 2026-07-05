@@ -674,7 +674,7 @@ export interface ApiCustomFlashcardNoteTypeCustomFlashcardNoteType
   extends Struct.CollectionTypeSchema {
   collectionName: 'custom_flashcard_note_types';
   info: {
-    description: 'User-defined Anki-style note templates (Phase 5C).';
+    description: 'User-defined note templates.';
     displayName: 'Custom Flashcard Note Type';
     pluralName: 'custom-flashcard-note-types';
     singularName: 'custom-flashcard-note-type';
@@ -697,6 +697,7 @@ export interface ApiCustomFlashcardNoteTypeCustomFlashcardNoteType
       Schema.Attribute.Private;
     name: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
+    themeId: Schema.Attribute.String & Schema.Attribute.DefaultTo<'classic'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -797,7 +798,7 @@ export interface ApiFlashcardNoteFlashcardNote
   extends Struct.CollectionTypeSchema {
   collectionName: 'flashcard_notes';
   info: {
-    description: 'Anki-style note \u2014 one note generates one or more flashcards.';
+    description: 'A note \u2014 generates one or more flashcards.';
     displayName: 'Flashcard Note';
     pluralName: 'flashcard-notes';
     singularName: 'flashcard-note';
@@ -858,7 +859,7 @@ export interface ApiFlashcardNoteFlashcardNote
 export interface ApiFlashcardFlashcard extends Struct.CollectionTypeSchema {
   collectionName: 'flashcards';
   info: {
-    description: 'Generated study card from a flashcard note (Anki card template).';
+    description: "Generated study card from a flashcard note's card template.";
     displayName: 'Flashcard';
     pluralName: 'flashcards';
     singularName: 'flashcard';
@@ -2082,8 +2083,6 @@ export interface PluginUsersPermissionsUser
     auto_start_recording: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    confirm_transcript: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<true>;
     confirmationToken: Schema.Attribute.String & Schema.Attribute.Private;
     confirmed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     correct_sentence_goal: Schema.Attribute.Integer &
@@ -2095,6 +2094,15 @@ export interface PluginUsersPermissionsUser
         number
       > &
       Schema.Attribute.DefaultTo<10>;
+    correct_sentences_today_count: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    correct_sentences_today_date: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
