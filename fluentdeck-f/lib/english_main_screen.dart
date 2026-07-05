@@ -1,14 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/screens/activity_screen/activity_shell_screen.dart';
 import 'package:fluentdeck/screens/speaking_hub/speaking_hub_screen.dart';
 import 'package:fluentdeck/screens/conversation_screen/conversation_history_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_shell_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/placement_test_screen.dart';
-import 'package:fluentdeck/screens/library_screen/library_screen.dart';
 import 'package:fluentdeck/screens/profile_screen/about_us/profile_about_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_account_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_notifications_tab.dart';
@@ -26,13 +23,11 @@ import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/services/notifications_service.dart';
 import 'package:fluentdeck/utils/strapi_response.dart';
 import 'package:fluentdeck/services/unsaved_changes_service.dart';
-import 'package:fluentdeck/services/vocabulary_service.dart';
 import 'package:fluentdeck/ui_elements/english_bottom_nav.dart';
 import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
 import 'package:fluentdeck/ui_elements/main_app_bar.dart';
 import 'package:fluentdeck/ui_elements/notification_panel.dart';
 
-const String kPlacementPromptSeenPrefsKey = 'placement_test_prompt_seen';
 
 class EnglishMainScreen extends StatefulWidget {
   const EnglishMainScreen({super.key, this.initialMainIndex = 0});
@@ -59,8 +54,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       TabController(length: _profileSubTabs.length, vsync: this);
   late final TabController _decksTabController =
       TabController(length: _decksSubTabs.length, vsync: this);
-  late final TabController _libraryTabController =
-      TabController(length: _librarySubTabs.length, vsync: this);
   late TabController _speakTabController =
       TabController(length: _speakSubTabs.length, vsync: this);
   late final TabController _activityTabController =
@@ -99,8 +92,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   List<String> get _speakSubTabs =>
       _visibleSpeakSubTabDefs.map((tab) => tab.$2).toList();
 
-  static const _librarySubTabs = ['Words', 'My Notes', 'Study Hall'];
-
   final _profileSubTabs = const [
     'Account',
     'Settings',
@@ -135,7 +126,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     await AppFeatureConfigService.instance.fetch();
     if (!mounted) return;
     _syncSpeakTabController();
-    await _maybePromptPlacementTest();
   }
 
   /// Recreates the Speak sub-tab controller if config hid/unhid tabs after cold start.
@@ -154,44 +144,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     oldController.dispose();
   }
 
-  Future<void> _maybePromptPlacementTest() async {
-    final latest = await VocabularyService.instance.fetchLatestPlacement();
-    if (!mounted) return;
-    if (latest != null) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool(kPlacementPromptSeenPrefsKey) == true) return;
-    await prefs.setBool(kPlacementPromptSeenPrefsKey, true);
-    if (!mounted) return;
-
-    final takeTest = await showDialog<bool>(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Find your level'),
-            content: const Text(
-              'Take a quick vocabulary test (~2 min) to get your CEFR level and a suggested study setup.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Later'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Start test'),
-              ),
-            ],
-          ),
-    );
-
-    if (takeTest == true && mounted) {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const PlacementTestScreen()),
-      );
-    }
-  }
-
   @override
   void dispose() {
     if (MainNavigationCoordinator.navigateToMainTab == setMainIndex) {
@@ -201,7 +153,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     _pageController.dispose();
     _profileTabController.dispose();
     _decksTabController.dispose();
-    _libraryTabController.dispose();
     _speakTabController.dispose();
     _activityTabController.dispose();
     super.dispose();
@@ -257,9 +208,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       case MainTabId.decks:
         _decksTabController.index =
             subIndex.clamp(0, _decksSubTabs.length - 1);
-      case MainTabId.library:
-        _libraryTabController.index =
-            subIndex.clamp(0, _librarySubTabs.length - 1);
       case MainTabId.activity:
         _activityTabController.index =
             subIndex.clamp(0, _activitySubTabs.length - 1);
@@ -370,11 +318,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
           tabController: _decksTabController,
           mainTabHandoff: handoff,
         );
-      case MainTabId.library:
-        return LibraryScreen(
-          tabController: _libraryTabController,
-          mainTabHandoff: handoff,
-        );
       case MainTabId.activity:
         return ActivityShellScreen(
           tabController: _activityTabController,
@@ -393,7 +336,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     final tab = _currentTab;
     final isProfile = tab == MainTabId.profile;
     final isDecks = tab == MainTabId.decks;
-    final isLibrary = tab == MainTabId.library;
     final isSpeak = tab == MainTabId.speak;
     final isActivity = tab == MainTabId.activity;
 
@@ -406,8 +348,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                 ? _profileSubTabs.map((label) => Tab(text: label)).toList()
                 : isDecks
                 ? _decksSubTabs.map((label) => Tab(text: label)).toList()
-                : isLibrary
-                ? _librarySubTabs.map((label) => Tab(text: label)).toList()
                 : isActivity
                 ? _activitySubTabs.map((label) => Tab(text: label)).toList()
                 : isSpeak && !_speakInSession
@@ -418,8 +358,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                 ? _profileTabController
                 : isDecks
                 ? _decksTabController
-                : isLibrary
-                ? _libraryTabController
                 : isActivity
                 ? _activityTabController
                 : isSpeak && !_speakInSession

@@ -347,7 +347,14 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     }
 
     try {
-      const audioBuffer = await synthesizeSpeech(text.trim());
+      const { findUserById } = require("../../../utils/document-service");
+      const user = await findUserById(strapi, userId, {
+        fields: ["tutor_voice"],
+      });
+      const audioBuffer = await synthesizeSpeech(
+        text.trim(),
+        user?.tutor_voice
+      );
       ctx.body = {
         audioBase64: audioBuffer.toString("base64"),
         contentType: "audio/mpeg",

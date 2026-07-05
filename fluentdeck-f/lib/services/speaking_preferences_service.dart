@@ -88,6 +88,7 @@ extension SpeakingPreferencesCopy on SpeakingPreferences {
     int? correctSentenceGoal,
     int? correctSentencesToday,
     String? englishLevel,
+    String? tutorVoice,
   }) {
     return SpeakingPreferences(
       practiceLanguage: practiceLanguage ?? this.practiceLanguage,
@@ -105,6 +106,7 @@ extension SpeakingPreferencesCopy on SpeakingPreferences {
       correctSentenceGoal: correctSentenceGoal ?? this.correctSentenceGoal,
       correctSentencesToday: correctSentencesToday ?? this.correctSentencesToday,
       englishLevel: englishLevel ?? this.englishLevel,
+      tutorVoice: tutorVoice ?? this.tutorVoice,
     );
   }
 }

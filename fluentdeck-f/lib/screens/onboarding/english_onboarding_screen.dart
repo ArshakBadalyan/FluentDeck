@@ -20,7 +20,6 @@ class EnglishOnboardingScreen extends StatefulWidget {
 
 class _EnglishOnboardingScreenState extends State<EnglishOnboardingScreen> {
   String? _selectedLevel;
-  bool _showPlacementPrompt = false;
 
   @override
   void initState() {
@@ -52,44 +51,7 @@ class _EnglishOnboardingScreenState extends State<EnglishOnboardingScreen> {
   }
 
   void _onLevelSelected(String? level) {
-    if (level == null) {
-      setState(() {
-        _selectedLevel = null;
-        _showPlacementPrompt = false;
-      });
-      return;
-    }
-
-    setState(() {
-      _selectedLevel = level;
-      _showPlacementPrompt = true;
-    });
-
-    _showPlacementTestDialog(level);
-  }
-
-  Future<void> _showPlacementTestDialog(String level) async {
-    await showDialog<void>(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Verify your level'),
-            content: Text(
-              'After you sign up, take the quick placement test (~2 min) to '
-              'verify $level. Your verified level will be locked until you retake the test.\n\n'
-              'Tap the level again if you prefer to skip for now.',
-            ),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primaryPurple,
-                ),
-                child: const Text('Got it'),
-              ),
-            ],
-          ),
-    );
+    setState(() => _selectedLevel = level);
   }
 
   @override
@@ -134,41 +96,6 @@ class _EnglishOnboardingScreenState extends State<EnglishOnboardingScreen> {
                 onLevelSelected: _onLevelSelected,
                 allowDeselect: true,
               ),
-              if (_showPlacementPrompt && _selectedLevel != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryPurple.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.primaryPurple.withValues(alpha: 0.18),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.quiz_outlined,
-                        size: 20,
-                        color: AppColors.primaryPurple.withValues(alpha: 0.85),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Pass the placement test after sign up to verify $_selectedLevel. '
-                          'Tap $_selectedLevel again to unselect and continue without a level.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            height: 1.4,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
               const Spacer(),
               PrimaryButton(
                 text: 'Get started',

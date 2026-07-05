@@ -9,6 +9,7 @@ class AppColors {
 
   static const Color greenCorrect = Color(0xFF2EE66B);
   static const Color redWrong     = Color(0xFFE53935);
+  static const Color orangeHard   = Color(0xFFFF8F3D);
   static const Color greySkipped  = Color(0xFF9E9E9E);
 
   static const Color axisBlack    = Colors.black;

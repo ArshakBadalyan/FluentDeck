@@ -5,7 +5,7 @@ const {
   getAbsoluteServerUrl,
   contentTypes: { getNonWritableAttributes },
 } = utils;
-const { ApplicationError } = utils.errors;
+const { ApplicationError, ForbiddenError } = utils.errors;
 const i18n = require("../../i18n-helper");
 
 i18n.init();
@@ -453,9 +453,13 @@ module.exports = (plugin) => {
       },
       update: async (ctx) => {
     const data = ctx.request.body;
-    await strapi.plugins["users-permissions"].services.jwt.getToken(ctx);
+    const authToken = await strapi.plugins["users-permissions"].services.jwt.getToken(ctx);
 
     const requesterIsAdmin = await isAdmin(ctx);
+
+    if (!requesterIsAdmin && String(authToken?.id) !== String(ctx.params.id)) {
+      throw new ForbiddenError("You can only update your own account.");
+    }
 
     if (!requesterIsAdmin) {
       delete data.is_admin;
@@ -463,6 +467,21 @@ module.exports = (plugin) => {
       delete data.teacher_approved;
       delete data.is_institution_admin;
       delete data.special;
+    }
+
+    if (data.english_level != null) {
+      if (!ENGLISH_LEVELS.includes(data.english_level)) {
+        return ctx.badRequest("Invalid english_level");
+      }
+      if (!requesterIsAdmin && PREMIUM_ENGLISH_LEVELS.includes(data.english_level)) {
+        const { isPremiumUser } = require("../../utils/app-feature-config");
+        const premium = await isPremiumUser(strapi, ctx.params.id);
+        if (!premium) {
+          return ctx.forbidden(
+            "B2 and above are only available on Premium. Upgrade to unlock advanced levels."
+          );
+        }
+      }
     }
 
     const newPassword = data.password;
@@ -532,6 +551,7 @@ module.exports = (plugin) => {
         "daily_reminder_time",
         "correct_sentence_goal",
         "english_level",
+        "tutor_voice",
       ],
     });
     const correctSentencesToday = await getOrIncrementDailyCorrectCount(
@@ -555,6 +575,7 @@ module.exports = (plugin) => {
       correct_sentence_goal: user?.correct_sentence_goal ?? 10,
       correct_sentences_today: correctSentencesToday,
       english_level: user?.english_level ?? null,
+      tutor_voice: user?.tutor_voice ?? "nova",
     });
       },
       updateSpeakingPreferences: async (ctx) => {
@@ -621,11 +642,34 @@ module.exports = (plugin) => {
       data.correct_sentence_goal = Math.round(goal);
     }
     if (body.english_level != null) {
-      const levels = ["A1", "A2", "B1", "B2", "C1", "C2"];
-      if (!levels.includes(body.english_level)) {
+      if (!ENGLISH_LEVELS.includes(body.english_level)) {
         return ctx.badRequest("Invalid english_level");
       }
+      if (PREMIUM_ENGLISH_LEVELS.includes(body.english_level)) {
+        const { isPremiumUser } = require("../../utils/app-feature-config");
+        const premium = await isPremiumUser(strapi, userId);
+        if (!premium) {
+          return ctx.forbidden(
+            "B2 and above are only available on Premium. Upgrade to unlock advanced levels."
+          );
+        }
+      }
       data.english_level = body.english_level;
+    }
+    if (body.tutor_voice != null) {
+      if (!TUTOR_VOICES.includes(body.tutor_voice)) {
+        return ctx.badRequest("Invalid tutor_voice");
+      }
+      if (!FREE_TUTOR_VOICES.includes(body.tutor_voice)) {
+        const { isPremiumUser } = require("../../utils/app-feature-config");
+        const premium = await isPremiumUser(strapi, userId);
+        if (!premium) {
+          return ctx.forbidden(
+            "This voice is only available on Premium. Upgrade to unlock more tutor voices."
+          );
+        }
+      }
+      data.tutor_voice = body.tutor_voice;
     }
 
     if (Object.keys(data).length === 0) {
@@ -670,8 +714,12 @@ module.exports = (plugin) => {
   };
 
   const SPEAKING_RESPONSE_LANGS = ["en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"];
-  const SPEAKING_TRANSLATION_LANGS = ["none", "en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"];
+  const SPEAKING_TRANSLATION_LANGS = ["none", "en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru", "ar", "hy", "ko", "tr", "uk"];
   const PRACTICE_LANGUAGE_CODES = ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ru", "hi"];
+  const TUTOR_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"];
+  const FREE_TUTOR_VOICES = ["nova", "onyx"];
+  const ENGLISH_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+  const PREMIUM_ENGLISH_LEVELS = ["B2", "C1", "C2"];
 
   plugin.routes["content-api"].routes.push(
     {

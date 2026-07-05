@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 
 /// Create a filtered deck from a saved search query (Phase 4F).
 Future<FlashcardDeckModel?> showFilteredDeckDialog(
@@ -9,35 +10,62 @@ Future<FlashcardDeckModel?> showFilteredDeckDialog(
   Map<String, dynamic>? initialFilter,
   List<FlashcardDeckModel> decks = const [],
 }) {
-  return showDialog<FlashcardDeckModel>(
+  return showFrostedBottomSheet<FlashcardDeckModel>(
     context: context,
-    builder: (ctx) => _FilteredDeckDialog(
-      initialFilter: initialFilter ?? const {},
-      decks: decks,
-    ),
+    isScrollControlled: true,
+    isDismissible: true,
+    enableDrag: true,
+    useSafeArea: true,
+    builder: (ctx) {
+      return DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.82,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) {
+          return _FilteredDeckSheet(
+            initialFilter: initialFilter ?? const {},
+            decks: decks,
+            scrollController: scrollController,
+          );
+        },
+      );
+    },
   );
 }
 
-class _FilteredDeckDialog extends StatefulWidget {
-  const _FilteredDeckDialog({
+class _FilteredDeckSheet extends StatefulWidget {
+  const _FilteredDeckSheet({
     required this.initialFilter,
     required this.decks,
+    required this.scrollController,
   });
 
   final Map<String, dynamic> initialFilter;
   final List<FlashcardDeckModel> decks;
+  final ScrollController scrollController;
 
   @override
-  State<_FilteredDeckDialog> createState() => _FilteredDeckDialogState();
+  State<_FilteredDeckSheet> createState() => _FilteredDeckSheetState();
 }
 
-class _FilteredDeckDialogState extends State<_FilteredDeckDialog> {
+class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _searchCtrl;
   late final TextEditingController _tagCtrl;
   int? _sourceDeckId;
   String _state = '';
   bool _saving = false;
+
+  static const _stateOptions = [
+    ('', 'Any state', Icons.all_inclusive_rounded),
+    ('new', 'New', Icons.fiber_new_rounded),
+    ('learning', 'Learning', Icons.school_outlined),
+    ('review', 'Review', Icons.refresh_rounded),
+    ('relearning', 'Relearning', Icons.replay_rounded),
+    ('suspended', 'Suspended', Icons.pause_circle_outline_rounded),
+    ('buried', 'Buried', Icons.archive_outlined),
+  ];
 
   @override
   void initState() {
@@ -97,8 +125,11 @@ class _FilteredDeckDialogState extends State<_FilteredDeckDialog> {
       }
       parts.add('deck ${match?.name ?? _sourceDeckId}');
     }
-    if (_state.isNotEmpty) parts.add('state $_state');
-    if (parts.isEmpty) return 'All cards (no filters)';
+    if (_state.isNotEmpty) {
+      final label = _stateOptions.firstWhere((s) => s.$1 == _state).$2;
+      parts.add('state $label');
+    }
+    if (parts.isEmpty) return 'All cards — no filters applied yet';
     return parts.join(' · ');
   }
 
@@ -106,7 +137,7 @@ class _FilteredDeckDialogState extends State<_FilteredDeckDialog> {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Name is required')),
+        const SnackBar(content: Text('Give this deck a name')),
       );
       return;
     }
@@ -129,116 +160,286 @@ class _FilteredDeckDialogState extends State<_FilteredDeckDialog> {
     }
   }
 
+  InputDecoration _fieldDecoration({String? hint, Widget? prefixIcon}) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: prefixIcon,
+      filled: true,
+      fillColor: const Color(0xFFF2F2F5),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+      ),
+    );
+  }
+
+  TextStyle get _labelStyle => TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: Colors.grey.shade700,
+  );
+
+  Widget _labeledField(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: _labelStyle),
+        const SizedBox(height: 8),
+        field,
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final realDecks =
         widget.decks.where((d) => !d.isFiltered).toList()
           ..sort((a, b) => a.name.compareTo(b.name));
 
-    return AlertDialog(
-      title: const Text('Create filtered deck'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Filtered decks study cards matching a search across your collection.',
-              style: TextStyle(fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Deck name',
-                border: OutlineInputBorder(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 10, bottom: 6),
+          child: Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _searchCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Search text',
-                border: OutlineInputBorder(),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Close',
+                onPressed: _saving ? null : () => Navigator.pop(context),
               ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _tagCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Tag contains',
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<int?>(
-              initialValue: _sourceDeckId,
-              decoration: const InputDecoration(
-                labelText: 'Source deck',
-                border: OutlineInputBorder(),
-              ),
-              items: [
-                const DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text('Any deck'),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                ...realDecks.map(
-                  (d) => DropdownMenuItem<int?>(
-                    value: d.id,
-                    child: Text(d.name),
+                child: const Icon(
+                  Icons.filter_list_rounded,
+                  color: AppColors.primaryPurple,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Create filtered deck',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      'Study cards matching a saved search',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            controller: widget.scrollController,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            children: [
+              _labeledField(
+                'Deck name',
+                TextField(
+                  controller: _nameCtrl,
+                  autofocus: true,
+                  decoration: _fieldDecoration(hint: 'e.g. Hard French verbs'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _labeledField(
+                'Search text',
+                TextField(
+                  controller: _searchCtrl,
+                  decoration: _fieldDecoration(
+                    hint: 'Match text on the front or back',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
                   ),
+                  onChanged: (_) => setState(() {}),
                 ),
-              ],
-              onChanged: (v) => setState(() => _sourceDeckId = v),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _state.isEmpty ? '' : _state,
-              decoration: const InputDecoration(
-                labelText: 'Card state',
-                border: OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: '', child: Text('Any state')),
-                DropdownMenuItem(value: 'new', child: Text('New')),
-                DropdownMenuItem(value: 'learning', child: Text('Learning')),
-                DropdownMenuItem(value: 'review', child: Text('Review')),
-                DropdownMenuItem(value: 'relearning', child: Text('Relearning')),
-                DropdownMenuItem(value: 'suspended', child: Text('Suspended')),
-                DropdownMenuItem(value: 'buried', child: Text('Buried')),
-              ],
-              onChanged: (v) => setState(() => _state = v ?? ''),
+              const SizedBox(height: 16),
+              _labeledField(
+                'Tag contains',
+                TextField(
+                  controller: _tagCtrl,
+                  decoration: _fieldDecoration(
+                    hint: 'e.g. verbs',
+                    prefixIcon: const Icon(Icons.sell_outlined, size: 20),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _labeledField(
+                'Source deck',
+                DropdownButtonFormField<int?>(
+                  initialValue: _sourceDeckId,
+                  isExpanded: true,
+                  decoration: _fieldDecoration(),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('Any deck'),
+                    ),
+                    ...realDecks.map(
+                      (d) => DropdownMenuItem<int?>(
+                        value: d.id,
+                        child: Text(d.name, overflow: TextOverflow.ellipsis),
+                      ),
+                    ),
+                  ],
+                  onChanged: (v) => setState(() => _sourceDeckId = v),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Card state', style: _labelStyle),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final option in _stateOptions)
+                    _StateChip(
+                      label: option.$2,
+                      icon: option.$3,
+                      selected: _state == option.$1,
+                      onTap: () => setState(() => _state = option.$1),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryPurple.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primaryPurple),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _filterSummary(),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            12 + MediaQuery.paddingOf(context).bottom,
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _saving ? null : _create,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              child: _saving
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Create deck', style: TextStyle(fontWeight: FontWeight.w700)),
             ),
-            const SizedBox(height: 12),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StateChip extends StatelessWidget {
+  const _StateChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryPurple : const Color(0xFFF2F2F5),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: selected ? Colors.white : Colors.grey.shade700),
+            const SizedBox(width: 6),
             Text(
-              _filterSummary(),
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: selected ? Colors.white : Colors.grey.shade800,
+              ),
             ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _saving ? null : _create,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.primaryPurple,
-            foregroundColor: Colors.white,
-          ),
-          child: _saving
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Create'),
-        ),
-      ],
     );
   }
 }

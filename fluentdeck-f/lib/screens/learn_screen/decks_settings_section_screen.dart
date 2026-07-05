@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPicker;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:fluentdeck/app_colors.dart';
@@ -116,6 +118,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
       context: context,
       builder: (ctx) {
         var selected = _settings.nextDayStartHour;
+        final controller = FixedExtentScrollController(initialItem: selected);
         return StatefulBuilder(
           builder: (ctx, setLocal) {
             return SafeArea(
@@ -145,31 +148,62 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                       'Cards due before this time still count as "today". Affects daily limits and stats — deck limits are set per deck.',
                       style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.35),
                     ),
-                    const SizedBox(height: 18),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: List.generate(24, (hour) {
-                        final isSelected = hour == selected;
-                        return ChoiceChip(
-                          label: Text(_hourLabel(hour)),
-                          selected: isSelected,
-                          onSelected: (_) => setLocal(() => selected = hour),
-                          selectedColor: AppColors.primaryPurple.withValues(alpha: 0.15),
-                          labelStyle: TextStyle(
-                            color: isSelected ? AppColors.primaryPurple : Colors.black87,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          ),
-                          side: BorderSide(
-                            color: isSelected ? AppColors.primaryPurple : Colors.grey.shade300,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        );
-                      }),
+                    const SizedBox(height: 12),
+                    Text(
+                      _hourLabel(selected),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryPurple,
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 4),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        IgnorePointer(
+                          child: Container(
+                            height: 44,
+                            margin: const EdgeInsets.symmetric(horizontal: 24),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryPurple.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.primaryPurple.withValues(alpha: 0.25),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 200,
+                          child: CupertinoPicker(
+                            scrollController: controller,
+                            itemExtent: 44,
+                            diameterRatio: 1.1,
+                            selectionOverlay: const SizedBox.shrink(),
+                            onSelectedItemChanged: (index) {
+                              HapticFeedback.selectionClick();
+                              setLocal(() => selected = index);
+                            },
+                            children: List.generate(24, (hour) {
+                              final isSelected = hour == selected;
+                              return Center(
+                                child: Text(
+                                  _hourLabel(hour),
+                                  style: TextStyle(
+                                    fontSize: isSelected ? 20 : 17,
+                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                    color: isSelected ? Colors.black87 : Colors.grey.shade500,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(

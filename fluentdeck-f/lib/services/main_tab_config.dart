@@ -7,7 +7,6 @@ enum MainTabId {
   activity,
   decks,
   speak,
-  library,
   profile;
 
   static MainTabId? tryParse(String raw) {
@@ -40,7 +39,6 @@ class MainTabConfig {
     MainTabId.activity,
     MainTabId.decks,
     MainTabId.speak,
-    MainTabId.library,
     MainTabId.profile,
   ];
 
@@ -105,15 +103,6 @@ class MainTabConfig {
           iconBuilder:
               (active) =>
                   Icon(Icons.style_outlined, color: _iconColor(active)),
-        );
-      case MainTabId.library:
-        return MainTabDefinition(
-          id: id,
-          title: 'Library',
-          navLabel: 'Library',
-          iconBuilder:
-              (active) =>
-                  Icon(Icons.menu_book_outlined, color: _iconColor(active)),
         );
       case MainTabId.activity:
         return MainTabDefinition(

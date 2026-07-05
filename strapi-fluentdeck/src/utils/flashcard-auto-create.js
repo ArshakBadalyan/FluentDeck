@@ -92,7 +92,7 @@ async function maybeCreateFlashcard(strapi, userId, payload) {
 }
 
 async function createUserNote(strapi, userId, data) {
-  const { word, definition, exampleSentence, tags, source, vocabularyEntryId } = data;
+  const { word, definition, exampleSentence, tags, source } = data;
 
   const noteData = {
     word,
@@ -102,16 +102,6 @@ async function createUserNote(strapi, userId, data) {
     source: source ?? 'manual',
     user: userId,
   };
-
-  if (vocabularyEntryId) {
-    noteData.vocabularyEntry = vocabularyEntryId;
-    const existing = await strapi.db.query('api::user-note.user-note').findOne({
-      where: { user: userId, vocabularyEntry: vocabularyEntryId },
-    });
-    if (existing) {
-      return { note: existing, created: false };
-    }
-  }
 
   const note = await strapi.db.query('api::user-note.user-note').create({
     data: noteData,
@@ -132,7 +122,6 @@ function deckSlugForSource(source) {
 }
 
 function formatNote(row) {
-  const entry = row.vocabularyEntry ?? row.vocabulary_entry;
   return {
     id: row.id,
     word: row.word,
@@ -141,11 +130,6 @@ function formatNote(row) {
     tags: row.tags ?? [],
     source: row.source ?? 'manual',
     createdAt: row.createdAt ?? row.created_at,
-    vocabularyEntryId: entry?.id ?? null,
-    cefrLevel: entry?.cefrLevel ?? entry?.cefr_level ?? null,
-    topic: entry?.topic ?? null,
-    partOfSpeech: entry?.partOfSpeech ?? entry?.part_of_speech ?? null,
-    entryType: entry?.entryType ?? entry?.entry_type ?? null,
   };
 }
 

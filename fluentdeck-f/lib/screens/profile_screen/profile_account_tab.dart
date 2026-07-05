@@ -5,9 +5,7 @@ import 'package:fluentdeck/screens/profile_screen/profile_stats_header.dart';
 import 'package:fluentdeck/services/achievement_service.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/models/placement_test_model.dart';
 import 'package:fluentdeck/models/user_note_model.dart';
-import 'package:fluentdeck/screens/learn_screen/placement_test_screen.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/unsaved_changes_service.dart';
 import 'package:fluentdeck/ui_elements/dialogs/account_error_info_dialog.dart';
@@ -21,7 +19,6 @@ import '../../services/english_level_service.dart';
 import '../../services/main_navigation_coordinator.dart';
 import '../../services/main_tab_config.dart';
 import '../../services/subscription_service.dart';
-import '../../services/vocabulary_service.dart';
 import '../../ui_elements/dialogs/account_info_save_dialog.dart';
 import '../../ui_elements/dialogs/nickname_logout_dialog.dart';
 import '../../ui_elements/loading_overlay.dart';
@@ -45,12 +42,9 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   bool _processing = false;
   bool _needsLogoutCredentials = false;
   String? _selectedEnglishLevel;
-  PlacementTestResultModel? _latestPlacement;
   AchievementSnapshot? _achievementSnapshot;
   SubscriptionStatus _subscriptionStatus = SubscriptionStatus.none;
   StudySettingsModel? _studySettings;
-
-  bool get _hasVerifiedPlacement => _latestPlacement != null;
 
   @override
   void initState() {
@@ -72,10 +66,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   }
 
   Future<void> _loadUser() async {
-    try {
-      _latestPlacement = await VocabularyService.instance.fetchLatestPlacement();
-    } catch (_) {}
-
     AchievementSnapshot? achievements;
     try {
       achievements = await AchievementService.instance.load();
@@ -100,17 +90,12 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
       nicknameCtrl.text = (u['username'] ?? '').toString();
       _needsLogoutCredentials = u['needs_logout_credentials'] == true;
 
-      if (_latestPlacement != null) {
-        _selectedEnglishLevel = _latestPlacement!.suggestedLevel;
+      if (EnglishLevelService.levels.contains((u['english_level'] ?? '').toString())) {
+        _selectedEnglishLevel = (u['english_level'] ?? '').toString();
       } else {
-        final englishLevel = (u['english_level'] ?? '').toString();
-        if (EnglishLevelService.levels.contains(englishLevel)) {
-          _selectedEnglishLevel = englishLevel;
-        } else {
-          final local = await EnglishLevelService.instance.getLevel();
-          _selectedEnglishLevel =
-              EnglishLevelService.levels.contains(local) ? local : null;
-        }
+        final local = await EnglishLevelService.instance.getLevel();
+        _selectedEnglishLevel =
+            EnglishLevelService.levels.contains(local) ? local : null;
       }
     }
 
@@ -134,22 +119,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
 
   void _openAchievements() => openProfileAchievements(context);
 
-  Future<void> _openPlacementTest() async {
-    final result = await Navigator.of(context).push<PlacementTestResultModel>(
-      MaterialPageRoute(builder: (_) => const PlacementTestScreen()),
-    );
-    if (result != null && mounted) {
-      setState(() {
-        _latestPlacement = result;
-        _selectedEnglishLevel = result.suggestedLevel;
-      });
-      await EnglishLevelService.instance.applyLevelLocally(result.suggestedLevel);
-      UnsavedChangesService().hasUnsavedChanges = false;
-    }
-  }
-
   void _changeEnglishLevel(String? level) {
-    if (_hasVerifiedPlacement) return;
     if (level == _selectedEnglishLevel) return;
     setState(() => _selectedEnglishLevel = level);
     UnsavedChangesService().hasUnsavedChanges = true;
@@ -167,10 +137,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
       'username': nicknameCtrl.text.trim(),
     };
 
-    final levelToSave =
-        _hasVerifiedPlacement
-            ? _latestPlacement!.suggestedLevel
-            : _selectedEnglishLevel;
+    final levelToSave = _selectedEnglishLevel;
     if (levelToSave != null && EnglishLevelService.levels.contains(levelToSave)) {
       body['english_level'] = levelToSave;
     }
@@ -425,72 +392,10 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
               AppSectionCard(
                 title: 'English level (CEFR)',
                 icon: Icons.school_outlined,
-                subtitle:
-                    _hasVerifiedPlacement
-                        ? 'Verified level — retake the test to change it'
-                        : 'Select a level or take the placement test to verify',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CefrLevelChips(
-                      selectedLevel: _selectedEnglishLevel,
-                      verifiedLevel: _latestPlacement?.suggestedLevel,
-                      onLevelSelected:
-                          disableInputs || _hasVerifiedPlacement
-                              ? null
-                              : _changeEnglishLevel,
-                    ),
-                    if (_hasVerifiedPlacement) ...[
-                      const SizedBox(height: 16),
-                      VerifiedPlacementCard(result: _latestPlacement!),
-                    ] else if (_selectedEnglishLevel != null) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange.shade100),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.info_outline, size: 18, color: Colors.orange.shade800),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'Take the placement test to verify $_selectedEnglishLevel and lock your level.',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  height: 1.35,
-                                  color: Colors.orange.shade900,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: disableInputs ? null : _openPlacementTest,
-                        icon: Icon(
-                          _hasVerifiedPlacement ? Icons.replay_outlined : Icons.quiz_outlined,
-                          size: 18,
-                        ),
-                        label: Text(
-                          _hasVerifiedPlacement ? 'Retake level test' : 'Take level test',
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                subtitle: 'Select your current level',
+                child: CefrLevelChips(
+                  selectedLevel: _selectedEnglishLevel,
+                  onLevelSelected: disableInputs ? null : _changeEnglishLevel,
                 ),
               ),
               if (_studySettings != null) ...[

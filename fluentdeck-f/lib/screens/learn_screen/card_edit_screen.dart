@@ -5,6 +5,7 @@ import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/widgets/html_field_editor.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
@@ -452,9 +453,9 @@ class _CardEditScreenState extends State<CardEditScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBgOf(context),
         foregroundColor: Colors.black,
         elevation: 0,
         title: Text(widget.isEditing ? 'Edit note' : 'Add note'),
@@ -465,13 +466,13 @@ class _CardEditScreenState extends State<CardEditScreen> {
             onPressed: _loading || _saving ? null : _preview,
           ),
           IconButton(
-            icon: const Icon(Icons.check),
+            icon: const Icon(Icons.check_rounded, color: AppColors.primaryPurple),
             tooltip: 'Save',
             onPressed: _saving || _loading ? null : _save,
           ),
         ],
       ),
-      body: _buildBody(),
+      body: AppPageBackground(child: _buildBody()),
     );
   }
 
@@ -612,11 +613,20 @@ class _CardEditScreenState extends State<CardEditScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade200),
               ),
-              child: Text(
-                'Offline mode — using cached decks and note types. Saving requires a connection.',
-                style: TextStyle(fontSize: 13, color: Colors.orange.shade900),
+              child: Row(
+                children: [
+                  Icon(Icons.cloud_off_rounded, size: 18, color: Colors.orange.shade800),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Offline mode — using cached decks and note types. Saving requires a connection.',
+                      style: TextStyle(fontSize: 12, color: Colors.orange.shade900),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -648,24 +658,20 @@ class _CardEditScreenState extends State<CardEditScreen> {
             const SizedBox(height: 16),
             ..._buildFieldEditors(),
             if (_showReverseOption) ...[
-              const SizedBox(height: 8),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Create reverse card'),
-                subtitle: const Text('Also add Back → Front card'),
+              const SizedBox(height: 12),
+              AppToggleRow(
+                title: 'Create reverse card',
+                subtitle: 'Also add Back → Front card',
                 value: _createReverse,
-                activeThumbColor: AppColors.primaryPurple,
                 onChanged: (v) => setState(() => _createReverse = v),
               ),
             ],
             if (!widget.isEditing) ...[
-              const SizedBox(height: 4),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Pin front field'),
-                subtitle: const Text('Keep front text after saving for the next note'),
+              const SizedBox(height: 8),
+              AppToggleRow(
+                title: 'Pin front field',
+                subtitle: 'Keep front text after saving for the next note',
                 value: _pinFront,
-                activeThumbColor: AppColors.primaryPurple,
                 onChanged: (v) => setState(() => _pinFront = v),
               ),
             ],
@@ -705,11 +711,17 @@ class _CardEditScreenState extends State<CardEditScreen> {
                 ? _selectedDeckId
                 : (_decks.isNotEmpty ? _decks.first.id : null),
         isExpanded: true,
-        decoration: _filledDecoration(),
+        icon: Icon(Icons.expand_more_rounded, color: Colors.grey.shade600),
+        decoration: _filledDecoration(
+          prefixIcon: const Icon(Icons.folder_outlined, size: 20),
+        ),
         items:
             _decks
                 .map(
-                  (d) => DropdownMenuItem(value: d.id, child: Text(d.name)),
+                  (d) => DropdownMenuItem(
+                    value: d.id,
+                    child: Text(d.name, overflow: TextOverflow.ellipsis),
+                  ),
                 )
                 .toList(),
         onChanged: (v) => setState(() => _selectedDeckId = v),
@@ -727,10 +739,18 @@ class _CardEditScreenState extends State<CardEditScreen> {
                 ? _noteType
                 : (_noteTypes.isNotEmpty ? _noteTypes.first.id : 'basic'),
         isExpanded: true,
-        decoration: _filledDecoration(),
+        icon: Icon(Icons.expand_more_rounded, color: Colors.grey.shade600),
+        decoration: _filledDecoration(
+          prefixIcon: const Icon(Icons.style_outlined, size: 20),
+        ),
         items:
             _noteTypes
-                .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name)))
+                .map(
+                  (t) => DropdownMenuItem(
+                    value: t.id,
+                    child: Text(t.name, overflow: TextOverflow.ellipsis),
+                  ),
+                )
                 .toList(),
         onChanged: _onNoteTypeChanged,
       ),
@@ -812,14 +832,19 @@ class _CardEditScreenState extends State<CardEditScreen> {
     return _fieldCtrls.putIfAbsent(name, () => TextEditingController());
   }
 
-  InputDecoration _filledDecoration() {
+  InputDecoration _filledDecoration({Widget? prefixIcon}) {
     return InputDecoration(
+      prefixIcon: prefixIcon,
       filled: true,
       fillColor: const Color(0xFFF2F2F5),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
       ),
     );
   }

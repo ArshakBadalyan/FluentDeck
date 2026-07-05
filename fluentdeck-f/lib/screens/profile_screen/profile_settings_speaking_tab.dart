@@ -4,7 +4,9 @@ import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/english_level_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
+import 'package:fluentdeck/services/subscription_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 import 'package:fluentdeck/widgets/cefr_level_chips.dart';
 
 /// AI Speaking section for Profile → Settings (no outer scroll view).
@@ -20,6 +22,7 @@ class _ProfileSettingsSpeakingSectionState
     extends State<ProfileSettingsSpeakingSection> {
   bool _loading = true;
   bool _saving = false;
+  bool _isPremium = false;
   SpeakingPreferences _speakingPrefs = const SpeakingPreferences();
 
   @override
@@ -34,9 +37,11 @@ class _ProfileSettingsSpeakingSectionState
       final speakingPrefs = await SpeakingPreferencesService.instance.load(
         forceRefresh: true,
       );
+      final status = await SubscriptionService.instance.fetchStatus();
       if (!mounted) return;
       setState(() {
         _speakingPrefs = speakingPrefs;
+        _isPremium = status.isPremium;
         _loading = false;
       });
     } catch (_) {
@@ -44,6 +49,11 @@ class _ProfileSettingsSpeakingSectionState
       setState(() => _loading = false);
     }
   }
+
+  bool _voiceLocked(String voiceId) =>
+      !_isPremium && !SpeakingPreferences.freeVoiceIds.contains(voiceId);
+
+  static const _premiumOnlyLevels = {'B2', 'C1', 'C2'};
 
   Future<void> _saveSpeakingPreferences(SpeakingPreferences next) async {
     setState(() {
@@ -145,6 +155,46 @@ class _ProfileSettingsSpeakingSectionState
                   },
         ),
         const SizedBox(height: 16),
+        DropdownButtonFormField<String>(
+          initialValue: _speakingPrefs.tutorVoice,
+          decoration: appDropdownDecoration('Tutor voice'),
+          items:
+              SpeakingPreferences.voiceOptions.entries
+                  .map(
+                    (entry) => DropdownMenuItem(
+                      value: entry.key,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(entry.value),
+                          if (_voiceLocked(entry.key)) ...[
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.lock_outline_rounded,
+                              size: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+          onChanged:
+              _saving
+                  ? null
+                  : (value) {
+                    if (value == null) return;
+                    if (_voiceLocked(value)) {
+                      showSpeakingPremiumSnackBar(context);
+                      return;
+                    }
+                    _saveSpeakingPreferences(
+                      _speakingPrefs.copyWith(tutorVoice: value),
+                    );
+                  },
+        ),
+        const SizedBox(height: 16),
         Text(
           'Proficiency level',
           style: TextStyle(
@@ -157,6 +207,8 @@ class _ProfileSettingsSpeakingSectionState
         CefrLevelChips(
           selectedLevel: _speakingPrefs.englishLevel,
           enabled: !_saving,
+          lockedLevels: _isPremium ? const {} : _premiumOnlyLevels,
+          onLockedLevelTap: (_) => showSpeakingPremiumSnackBar(context),
           onLevelSelected: (level) {
             if (level == null) return;
             _saveSpeakingPreferences(

@@ -22,7 +22,6 @@ class SpeakingNotesTab extends StatefulWidget {
 class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   static const _sourceFilters = [
     ('all', 'All'),
-    ('catalog', 'Word list'),
     ('speaking', 'From speaking'),
     ('manual', 'Manual'),
   ];
@@ -309,7 +308,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
           padding: const EdgeInsets.all(24),
           child: Text(
             'No saved notes match these filters.\n'
-            'Save words from the Library → Words tab, or add notes manually.',
+            'Save words from speaking chat, or add notes manually.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey.shade700, height: 1.4),
           ),

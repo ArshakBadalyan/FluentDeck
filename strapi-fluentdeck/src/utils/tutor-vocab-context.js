@@ -6,9 +6,9 @@ const SOURCE_PATTERNS = [
   { key: 'saved_words', label: 'Saved words', patterns: [/saved\s+words?/i, /my\s+saved/i] },
   { key: 'from_speaking', label: 'From speaking', patterns: [/from\s+speaking/i, /speaking\s+deck/i] },
   {
-    key: 'library_notes',
-    label: 'Library notes',
-    patterns: [/library/i, /my\s+notes?/i, /note(s)?\s+from/i],
+    key: 'my_notes',
+    label: 'My notes',
+    patterns: [/my\s+notes?/i, /note(s)?\s+from/i],
   },
   { key: 'custom_deck', label: 'Custom deck', patterns: [/custom\s+deck/i, /my\s+deck/i] },
 ];
@@ -112,26 +112,17 @@ async function loadDeckWords(strapi, userId, deckSlug) {
   return words;
 }
 
-async function loadLibraryNoteWords(strapi, userId) {
+async function loadMyNoteWords(strapi, userId) {
   const notes = await strapi.db.query('api::user-note.user-note').findMany({
     where: { user: userId },
-    populate: ['vocabularyEntry'],
     orderBy: { updatedAt: 'desc' },
     limit: 40,
   });
 
   const words = [];
   for (const note of notes) {
-    const entry = note.vocabularyEntry;
-    const word =
-      String(note.word ?? '').trim() ||
-      (typeof entry === 'object' ? String(entry.word ?? '').trim() : '');
-    const hintParts = [
-      note.definition,
-      note.exampleSentence,
-      typeof entry === 'object' ? entry.definition : null,
-      typeof entry === 'object' ? entry.exampleSentence : null,
-    ]
+    const word = String(note.word ?? '').trim();
+    const hintParts = [note.definition, note.exampleSentence]
       .map((part) => String(part ?? '').trim())
       .filter(Boolean);
     if (!word) continue;
@@ -171,8 +162,8 @@ async function loadTrainingWords(strapi, userId, sourceKey) {
   switch (sourceKey) {
     case 'from_speaking':
       return loadDeckWords(strapi, userId, 'from_speaking');
-    case 'library_notes':
-      return loadLibraryNoteWords(strapi, userId);
+    case 'my_notes':
+      return loadMyNoteWords(strapi, userId);
     case 'custom_deck':
       return loadCustomDeckWords(strapi, userId);
     case 'saved_words':

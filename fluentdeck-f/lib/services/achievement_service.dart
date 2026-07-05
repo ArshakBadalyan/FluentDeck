@@ -4,19 +4,16 @@ import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/user_progress_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/user_progress_service.dart';
-import 'package:fluentdeck/services/vocabulary_service.dart';
 
 class AchievementSnapshot {
   const AchievementSnapshot({
     required this.progress,
     required this.flashcardStats,
-    required this.hasPlacement,
     required this.achievements,
   });
 
   final UserProgressModel? progress;
   final FlashcardStudyStats? flashcardStats;
-  final bool hasPlacement;
   final List<AchievementStatus> achievements;
 
   int get unlockedCount => achievements.where((a) => a.unlocked).length;
@@ -104,7 +101,6 @@ class AchievementService {
   Future<AchievementSnapshot> load() async {
     UserProgressModel? progress;
     FlashcardStudyStats? stats;
-    var hasPlacement = false;
 
     try {
       progress = await UserProgressService.instance.createIfMissing();
@@ -112,10 +108,6 @@ class AchievementService {
 
     try {
       stats = await FlashcardService.instance.fetchStats();
-    } catch (_) {}
-
-    try {
-      hasPlacement = await VocabularyService.instance.fetchLatestPlacement() != null;
     } catch (_) {}
 
     final achievements =
@@ -126,7 +118,6 @@ class AchievementService {
     return AchievementSnapshot(
       progress: progress,
       flashcardStats: stats,
-      hasPlacement: hasPlacement,
       achievements: achievements,
     );
   }

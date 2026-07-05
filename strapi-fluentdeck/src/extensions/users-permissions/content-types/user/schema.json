@@ -146,7 +146,7 @@
     },
     "translation_language": {
       "type": "enumeration",
-      "enum": ["none", "en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"],
+      "enum": ["none", "en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru", "ar", "hy", "ko", "tr", "uk"],
       "default": "none"
     },
     "show_translations": {
@@ -201,6 +201,14 @@
     "daily_reminder_time": {
       "type": "string",
       "default": "09:00"
+    },
+    "daily_reminder_last_sent_date": {
+      "type": "string"
+    },
+    "tutor_voice": {
+      "type": "enumeration",
+      "enum": ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+      "default": "nova"
     },
     "correct_sentence_goal": {
       "type": "integer",

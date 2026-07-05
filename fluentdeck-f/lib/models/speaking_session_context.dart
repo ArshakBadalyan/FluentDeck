@@ -47,7 +47,6 @@ class SpeakingSessionContext {
       mode: SpeakingMode.chat,
       title: 'Free conversation',
       referenceKey: 'chat_free',
-      openingMessage: defaultChatGreeting,
     );
   }
 

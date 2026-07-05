@@ -54,6 +54,7 @@ class ConversationService {
   bool typeMessagesEnabled = false;
   bool autoStartRecordingEnabled = false;
   String practiceLanguage = 'en';
+  String? englishLevel;
   DateTime? sessionStartedAt;
   DateTime? _recordingStartedAt;
   Timer? _recordingTimer;
@@ -88,6 +89,7 @@ class ConversationService {
     typeMessagesEnabled = prefs.typeMessagesEnabled;
     autoStartRecordingEnabled = prefs.autoStartRecording;
     practiceLanguage = prefs.practiceLanguage;
+    englishLevel = prefs.englishLevel;
     _notify();
   }
 
@@ -519,8 +521,27 @@ class ConversationService {
             ? 'Lesson: ${context.title}. ${context.exercisePrompt!.trim()}'
             : 'Lesson: ${context.title}. Let\'s begin.';
       case SpeakingMode.chat:
-        return SpeakingSessionContext.defaultChatGreeting;
+        return _chatGreetingForLevel(englishLevel);
     }
+  }
+
+  /// Opening greeting scaled to the user's CEFR proficiency level, so the
+  /// very first tutor message already matches the vocabulary/complexity the
+  /// rest of the conversation will use.
+  static const _chatGreetingsByLevel = {
+    'A1': "Hi! I'm your AI tutor. How can I help you today?",
+    'A2': "Hi! I'm your AI tutor. How can I help you today?",
+    'B1': "Hi there! I'm your AI tutor. What would you like to talk about today?",
+    'B2': "Hello! I'm your AI tutor. What would you like to dive into today?",
+    'C1':
+        "Hello! I'm your AI tutor, here to help you sharpen your fluency. What's on your mind today?",
+    'C2':
+        "Greetings! I'm your AI tutor, here to help you refine even the subtlest nuances of the language. What shall we explore today?",
+  };
+
+  String _chatGreetingForLevel(String? level) {
+    return _chatGreetingsByLevel[level] ??
+        SpeakingSessionContext.defaultChatGreeting;
   }
 
   bool get canEvaluateSession => turns.length >= 2 && !isProcessing;

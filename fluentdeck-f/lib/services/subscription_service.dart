@@ -3,6 +3,8 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/billing_client_wrappers.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -134,7 +136,47 @@ class SubscriptionService {
     return response.productDetails;
   }
 
+  /// Switching between subscription plans on Android is a distinct Play
+  /// Billing flow ("subscription update") from a fresh purchase: it must
+  /// reference the purchase token of the subscription being replaced, or
+  /// Play rejects/ignores the new purchase because the user already holds a
+  /// competing entitlement. iOS/StoreKit handles this automatically via
+  /// subscription groups, so no equivalent is needed there.
+  Future<GooglePlayPurchaseDetails?> _currentAndroidSubscriptionPurchase() async {
+    if (kIsWeb || !Platform.isAndroid) return null;
+    try {
+      final addition = _iap.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+      final response = await addition.queryPastPurchases();
+      for (final purchase in response.pastPurchases) {
+        if (kSubscriptionProductIds.contains(purchase.productID) &&
+            (purchase.status == PurchaseStatus.purchased ||
+                purchase.status == PurchaseStatus.restored)) {
+          return purchase;
+        }
+      }
+    } catch (e) {
+      debugPrint('[Subscription] Could not look up current Android purchase: $e');
+    }
+    return null;
+  }
+
   Future<void> purchase(ProductDetails product) async {
+    if (!kIsWeb && Platform.isAndroid) {
+      final oldPurchase = await _currentAndroidSubscriptionPurchase();
+      if (oldPurchase != null && oldPurchase.productID != product.id) {
+        final offerToken = product is GooglePlayProductDetails ? product.offerToken : null;
+        final param = GooglePlayPurchaseParam(
+          productDetails: product,
+          offerToken: offerToken,
+          changeSubscriptionParam: ChangeSubscriptionParam(
+            oldPurchaseDetails: oldPurchase,
+            replacementMode: ReplacementMode.withTimeProration,
+          ),
+        );
+        await _iap.buyNonConsumable(purchaseParam: param);
+        return;
+      }
+    }
     final param = PurchaseParam(productDetails: product);
     await _iap.buyNonConsumable(purchaseParam: param);
   }

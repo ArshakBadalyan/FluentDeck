@@ -7,6 +7,7 @@ import 'package:fluentdeck/services/admob_service.dart';
 import 'package:fluentdeck/services/subscription_service.dart';
 import 'package:fluentdeck/widgets/cached_strapi_image.dart';
 import 'package:fluentdeck/data/flashcard_offline_store.dart';
+import 'package:fluentdeck/models/card_style_preset.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
@@ -48,7 +49,11 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   Offset? _panStart;
   Timer? _elapsedTimer;
   Map<int, DeckOptionsModel> _deckOptionsById = const {};
+  Map<String, CardStylePreset> _themeByNoteTypeId = const {};
   final InterstitialAdManager _adManager = InterstitialAdManager();
+
+  CardStylePreset? _themeForCard(FlashcardModel card) =>
+      card.noteTypeId != null ? _themeByNoteTypeId[card.noteTypeId] : null;
 
   @override
   void dispose() {
@@ -214,6 +219,15 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
           for (final d in decks)
             d.id: d.deckOptions ?? DeckSchedulingDefaults.deckOptions,
         };
+        try {
+          final noteTypes = await FlashcardService.instance.fetchNoteTypesWithCache();
+          _themeByNoteTypeId = {
+            for (final t in noteTypes.where((t) => t.isCustom))
+              t.id: CardStylePreset.byId(t.themeId),
+          };
+        } catch (_) {
+          // Card theming is cosmetic — never block review over it.
+        }
         queue = await FlashcardService.instance.fetchReviewQueue(
           deckId: widget.deckId,
           newCardOrder: _settings.newCardPosition,
@@ -762,6 +776,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     final previewsMap = intervalPreviewsForCard(card, deckOptions: deckOpts);
     final isLeech = (card.reviewState?.lapses ?? 0) >= _settings.leechThreshold;
     final textScale = _settings.cardTextScale;
+    final cardTheme = _themeForCard(card);
     String? preview(String key) =>
         _settings.showIntervalPreviews ? previewsMap[key] : null;
 
@@ -838,9 +853,12 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
               width: double.infinity,
               padding: EdgeInsets.all(imageOcclusion ? 8 : 24),
               decoration: BoxDecoration(
-                color: const Color(0xFFF2F2F5),
+                color: cardTheme?.backgroundColor ?? const Color(0xFFF2F2F5),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: (cardTheme?.accentColor ?? AppColors.primaryPurple)
+                      .withValues(alpha: 0.2),
+                ),
               ),
               child:
                   imageOcclusion
@@ -856,8 +874,9 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                       : BasicHtmlText(
                         html: _revealed ? _backHtml(card) : _frontHtml(card),
                         style: TextStyle(
-                          fontSize: 22 * textScale,
-                          fontWeight: FontWeight.w600,
+                          fontSize: (cardTheme?.fontSize ?? 22) * textScale,
+                          fontWeight: cardTheme?.fontWeight ?? FontWeight.w600,
+                          color: cardTheme?.textColor,
                           height: 1.35,
                         ),
                         textAlign: TextAlign.center,
@@ -937,14 +956,17 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
               AppColors.redWrong,
               'again',
               preview('again'),
+              icon: Icons.replay_rounded,
+              lightText: true,
             ),
             const SizedBox(height: 8),
             if (_settings.showHardButton) ...[
               _ratingButton(
                 _settings.labelHard,
-                Colors.orange,
+                AppColors.orangeHard,
                 'hard',
                 preview('hard'),
+                icon: Icons.trending_down_rounded,
               ),
               const SizedBox(height: 8),
             ],
@@ -953,6 +975,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
               AppColors.primaryYellow,
               'good',
               preview('good'),
+              icon: Icons.check_rounded,
             ),
             const SizedBox(height: 8),
             _ratingButton(
@@ -960,6 +983,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
               AppColors.greenCorrect,
               'easy',
               preview('easy'),
+              icon: Icons.bolt_rounded,
             ),
           ],
         ],
@@ -967,8 +991,16 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     );
   }
 
-  Widget _ratingButton(String label, Color color, String rating, String? interval) {
+  Widget _ratingButton(
+    String label,
+    Color color,
+    String rating,
+    String? interval, {
+    IconData? icon,
+    bool lightText = false,
+  }) {
     final scale = _settings.reviewButtonScale;
+    final textColor = lightText ? Colors.white : Colors.black87;
     return Transform.scale(
       scale: scale,
       alignment: Alignment.center,
@@ -978,20 +1010,30 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
           onPressed: () => _answer(rating),
           style: FilledButton.styleFrom(
             backgroundColor: color,
-            foregroundColor: Colors.black,
+            foregroundColor: textColor,
             padding: EdgeInsets.symmetric(vertical: 14 * scale),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+              if (icon != null) ...[
+                Icon(icon, size: 18, color: textColor),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                label,
+                style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
+              ),
               if (_settings.showIntervalPreviews && interval != null) ...[
                 const SizedBox(width: 8),
                 Text(
                   interval,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black.withValues(alpha: 0.65),
+                    color: textColor.withValues(alpha: 0.75),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

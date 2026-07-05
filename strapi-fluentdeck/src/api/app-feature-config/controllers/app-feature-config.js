@@ -28,19 +28,6 @@ module.exports = createCoreController(
         return Number.isFinite(n) ? n : fallback;
       };
 
-      let advanced =
-        entry.advancedLevelsRequiringPremium ??
-        entry.advanced_levels_requiring_premium ??
-        DEFAULT_CONFIG.advancedLevelsRequiringPremium;
-
-      if (typeof advanced === 'string') {
-        try {
-          advanced = JSON.parse(advanced);
-        } catch {
-          advanced = DEFAULT_CONFIG.advancedLevelsRequiringPremium;
-        }
-      }
-
       ctx.body = {
         freeMaxSavedWords: pickInt(
           'freeMaxSavedWords',
@@ -53,24 +40,11 @@ module.exports = createCoreController(
           'free_max_new_cards_per_day',
           DEFAULT_CONFIG.freeMaxNewCardsPerDay,
         ),
-        freePreviewWordsPerAdvancedList: pickInt(
-          'freePreviewWordsPerAdvancedList',
-          'free_preview_words_per_advanced_list',
-          DEFAULT_CONFIG.freePreviewWordsPerAdvancedList,
-        ),
-        freePlacementRetakesPerMonth: pickInt(
-          'freePlacementRetakesPerMonth',
-          'free_placement_retakes_per_month',
-          DEFAULT_CONFIG.freePlacementRetakesPerMonth,
-        ),
         freeDailyConversationTurns: pickInt(
           'freeDailyConversationTurns',
           'free_daily_conversation_turns',
           DEFAULT_CONFIG.freeDailyConversationTurns,
         ),
-        advancedLevelsRequiringPremium: Array.isArray(advanced)
-          ? advanced
-          : DEFAULT_CONFIG.advancedLevelsRequiringPremium,
         freeRolePlayPerCategory: pickInt(
           'freeRolePlayPerCategory',
           'free_role_play_per_category',

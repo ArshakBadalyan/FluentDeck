@@ -25,4 +25,24 @@ module.exports = {
       rule: "0 3 * * *", // daily at 03:00 server time
     },
   },
+
+  /** Push a "time to practice" notification to users at their chosen local
+   * time (dailyReminderEnabled/-Time on the profile), via OneSignal. Runs
+   * every 5 minutes and de-dupes per user per local day. */
+  sendDailyReminders: {
+    task: async ({ strapi }) => {
+      const { sendDailyReminders } = require("../src/utils/daily-reminder");
+      try {
+        const result = await sendDailyReminders(strapi);
+        if (result.sent > 0) {
+          strapi.log.info(`[cron] Sent ${result.sent} daily reminder(s).`);
+        }
+      } catch (e) {
+        strapi.log.error("[cron] sendDailyReminders failed", e);
+      }
+    },
+    options: {
+      rule: "*/5 * * * *", // every 5 minutes
+    },
+  },
 };

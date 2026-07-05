@@ -5,7 +5,7 @@
     "singularName": "user-note",
     "pluralName": "user-notes",
     "displayName": "User Note",
-    "description": "Personal vocabulary notes linked to catalog entries or conversation."
+    "description": "Personal vocabulary notes from speaking or manual entry."
   },
   "options": {
     "draftAndPublish": false
@@ -28,7 +28,7 @@
     },
     "source": {
       "type": "enumeration",
-      "enum": ["catalog", "speaking", "manual"],
+      "enum": ["speaking", "manual"],
       "default": "manual",
       "required": true
     },
@@ -36,11 +36,6 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user"
-    },
-    "vocabularyEntry": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::vocabulary-entry.vocabulary-entry"
     },
     "flashcards": {
       "type": "relation",

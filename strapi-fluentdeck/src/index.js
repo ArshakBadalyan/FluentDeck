@@ -43,22 +43,6 @@ module.exports = {
       "api::user-progress.user-progress.update",
       "api::notification.notification.find",
       "api::notification.notification.findOne",
-      "api::vocabulary-entry.vocabulary-entry.find",
-      "api::vocabulary-entry.vocabulary-entry.findOne",
-      "api::vocabulary-entry.vocabulary-entry.catalogStats",
-      "api::vocabulary-entry.vocabulary-entry.catalogList",
-      "api::vocabulary-entry.vocabulary-entry.saveWord",
-      "api::vocabulary-entry.vocabulary-entry.unsaveWord",
-      "api::vocabulary-entry.vocabulary-entry.myWords",
-      "api::vocabulary-entry.vocabulary-entry.placementQuestions",
-      "api::vocabulary-entry.vocabulary-entry.submitPlacement",
-      "api::vocabulary-entry.vocabulary-entry.latestPlacement",
-      "api::user-vocabulary-progress.user-vocabulary-progress.find",
-      "api::user-vocabulary-progress.user-vocabulary-progress.findOne",
-      "api::user-vocabulary-progress.user-vocabulary-progress.create",
-      "api::user-vocabulary-progress.user-vocabulary-progress.update",
-      "api::placement-test-result.placement-test-result.find",
-      "api::placement-test-result.placement-test-result.findOne",
       "api::user-note.user-note.find",
       "api::user-note.user-note.findOne",
       "api::user-note.user-note.create",
@@ -139,7 +123,6 @@ module.exports = {
       "api::ai.ai.tts",
       "api::ai.ai.evaluateSession",
       "api::ai.ai.wordMeaning",
-      "api::study-hall.study-hall.summary",
       "api::subscription.subscription.status",
       "api::subscription.subscription.verifyApple",
       "api::subscription.subscription.verifyGoogle",
@@ -223,18 +206,6 @@ module.exports = {
       );
     } catch (e) {
       strapi.log.warn(`[bootstrap] flashcard scheduling defaults: ${e?.message}`);
-    }
-
-    try {
-      const { seedPlacementVocabulary } = require('./utils/seed-placement-vocabulary');
-      const vocabResult = await seedPlacementVocabulary(strapi);
-      if (!vocabResult.skipped && vocabResult.created > 0) {
-        strapi.log.info(
-          `[bootstrap] Seeded ${vocabResult.created} placement vocabulary word(s).`,
-        );
-      }
-    } catch (e) {
-      strapi.log.warn(`[bootstrap] placement vocabulary seed: ${e?.message}`);
     }
 
     try {

@@ -5,7 +5,7 @@
     "singularName": "app-feature-config",
     "pluralName": "app-feature-configs",
     "displayName": "App Feature Config",
-    "description": "Free vs premium limits for vocabulary, decks, and placement tests."
+    "description": "Free vs premium limits for decks, notes, and speaking."
   },
   "options": {
     "draftAndPublish": true
@@ -27,24 +27,10 @@
       "default": 10,
       "min": 0
     },
-    "freePreviewWordsPerAdvancedList": {
-      "type": "integer",
-      "default": 10,
-      "min": 0
-    },
-    "freePlacementRetakesPerMonth": {
-      "type": "integer",
-      "default": 1,
-      "min": 0
-    },
     "freeDailyConversationTurns": {
       "type": "integer",
       "default": 10,
       "min": 0
-    },
-    "advancedLevelsRequiringPremium": {
-      "type": "json",
-      "default": ["B2", "C1", "C2"]
     },
     "freeRolePlayPerCategory": {
       "type": "integer",

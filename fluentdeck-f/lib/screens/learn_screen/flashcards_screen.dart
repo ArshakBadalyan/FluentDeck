@@ -549,6 +549,12 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                     title: const Text('Edit deck'),
                     onTap: () => Navigator.pop(ctx, 'edit'),
                   ),
+                if (deck.isDeletable)
+                  ListTile(
+                    leading: const Icon(Icons.delete_outline_rounded, color: AppColors.redWrong),
+                    title: const Text('Delete deck', style: TextStyle(color: AppColors.redWrong)),
+                    onTap: () => Navigator.pop(ctx, 'delete'),
+                  ),
                 const SizedBox(height: 8),
               ],
             ),
@@ -564,6 +570,8 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         await _manualSync();
       case 'edit':
         await _editDeck(deck);
+      case 'delete':
+        await _deleteDeck(deck);
     }
   }
 

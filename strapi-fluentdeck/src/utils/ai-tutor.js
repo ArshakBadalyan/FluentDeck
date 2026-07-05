@@ -7,6 +7,13 @@ const TTS_MODEL = process.env.AI_TTS_MODEL || "tts-1";
 const TTS_VOICE = process.env.AI_TTS_VOICE || "nova";
 const WHISPER_MODEL = process.env.AI_WHISPER_MODEL || "whisper-1";
 
+/** OpenAI TTS voices selectable in Settings > AI tutor voice. */
+const TUTOR_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"];
+
+function resolveTutorVoice(voice) {
+  return TUTOR_VOICES.includes(voice) ? voice : TTS_VOICE;
+}
+
 const LANGUAGE_LABELS = {
   en: "English",
   es: "Spanish",
@@ -464,19 +471,20 @@ async function getTutorReply({
   return parseTutorResponse(raw);
 }
 
-async function synthesizeSpeech(text) {
+async function synthesizeSpeech(text, voicePreference) {
+  const voice = resolveTutorVoice(voicePreference);
   const { readCachedAudio, writeCachedAudio } = require('./tts-cache');
-  const cached = readCachedAudio(text, TTS_VOICE, TTS_MODEL);
+  const cached = readCachedAudio(text, voice, TTS_MODEL);
   if (cached) return cached;
 
   const openai = getOpenAIClient();
   const response = await openai.audio.speech.create({
     model: TTS_MODEL,
-    voice: TTS_VOICE,
+    voice,
     input: text,
   });
   const buffer = Buffer.from(await response.arrayBuffer());
-  writeCachedAudio(text, TTS_VOICE, TTS_MODEL, buffer);
+  writeCachedAudio(text, voice, TTS_MODEL, buffer);
   return buffer;
 }
 

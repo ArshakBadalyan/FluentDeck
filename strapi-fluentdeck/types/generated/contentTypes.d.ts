@@ -470,7 +470,7 @@ export interface ApiAppFeatureConfigAppFeatureConfig
   extends Struct.SingleTypeSchema {
   collectionName: 'app_feature_configs';
   info: {
-    description: 'Free vs premium limits for vocabulary, decks, and placement tests.';
+    description: 'Free vs premium limits for decks, notes, and speaking.';
     displayName: 'App Feature Config';
     pluralName: 'app-feature-configs';
     singularName: 'app-feature-config';
@@ -479,8 +479,6 @@ export interface ApiAppFeatureConfigAppFeatureConfig
     draftAndPublish: true;
   };
   attributes: {
-    advancedLevelsRequiringPremium: Schema.Attribute.JSON &
-      Schema.Attribute.DefaultTo<['B2', 'C1', 'C2']>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -526,22 +524,6 @@ export interface ApiAppFeatureConfigAppFeatureConfig
         number
       > &
       Schema.Attribute.DefaultTo<20>;
-    freePlacementRetakesPerMonth: Schema.Attribute.Integer &
-      Schema.Attribute.SetMinMax<
-        {
-          min: 0;
-        },
-        number
-      > &
-      Schema.Attribute.DefaultTo<1>;
-    freePreviewWordsPerAdvancedList: Schema.Attribute.Integer &
-      Schema.Attribute.SetMinMax<
-        {
-          min: 0;
-        },
-        number
-      > &
-      Schema.Attribute.DefaultTo<10>;
     freeRolePlayPerCategory: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {
@@ -1071,50 +1053,6 @@ export interface ApiNotificationNotification
   };
 }
 
-export interface ApiPlacementTestResultPlacementTestResult
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'placement_test_results';
-  info: {
-    description: 'Vocabulary placement test history and suggested CEFR level.';
-    displayName: 'Placement Test Result';
-    pluralName: 'placement-test-results';
-    singularName: 'placement-test-result';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    answersSummary: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    levelBucket: Schema.Attribute.Enumeration<
-      ['beginner', 'intermediate', 'advanced']
-    > &
-      Schema.Attribute.Required;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::placement-test-result.placement-test-result'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    score: Schema.Attribute.Decimal & Schema.Attribute.Required;
-    suggestedLevel: Schema.Attribute.Enumeration<
-      ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-    > &
-      Schema.Attribute.Required;
-    takenAt: Schema.Attribute.DateTime & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    user: Schema.Attribute.Relation<
-      'manyToOne',
-      'plugin::users-permissions.user'
-    >;
-  };
-}
-
 export interface ApiSpeakingGameSpeakingGame
   extends Struct.CollectionTypeSchema {
   collectionName: 'speaking_games';
@@ -1323,34 +1261,6 @@ export interface ApiSpeakingTopicSpeakingTopic
   };
 }
 
-export interface ApiStudyHallStudyHall extends Struct.SingleTypeSchema {
-  collectionName: 'study_hall_configs';
-  info: {
-    description: 'Placeholder type for Study Hall custom routes';
-    displayName: 'Study Hall';
-    pluralName: 'study-halls';
-    singularName: 'study-hall';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::study-hall.study-hall'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiSubscriptionSubscription
   extends Struct.CollectionTypeSchema {
   collectionName: 'subscriptions';
@@ -1401,7 +1311,7 @@ export interface ApiSubscriptionSubscription
 export interface ApiUserNoteUserNote extends Struct.CollectionTypeSchema {
   collectionName: 'user_notes';
   info: {
-    description: 'Personal vocabulary notes linked to catalog entries or conversation.';
+    description: 'Personal vocabulary notes from speaking or manual entry.';
     displayName: 'User Note';
     pluralName: 'user-notes';
     singularName: 'user-note';
@@ -1426,7 +1336,7 @@ export interface ApiUserNoteUserNote extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    source: Schema.Attribute.Enumeration<['catalog', 'speaking', 'manual']> &
+    source: Schema.Attribute.Enumeration<['speaking', 'manual']> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'manual'>;
     tags: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
@@ -1436,10 +1346,6 @@ export interface ApiUserNoteUserNote extends Struct.CollectionTypeSchema {
     user: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
-    >;
-    vocabularyEntry: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::vocabulary-entry.vocabulary-entry'
     >;
     word: Schema.Attribute.String & Schema.Attribute.Required;
   };
@@ -1505,102 +1411,6 @@ export interface ApiUserProgressUserProgress
       'plugin::users-permissions.user'
     >;
     weakAreas: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
-  };
-}
-
-export interface ApiUserVocabularyProgressUserVocabularyProgress
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'user_vocabulary_progresses';
-  info: {
-    description: 'Tracks words a user saved from the catalog.';
-    displayName: 'User Vocabulary Progress';
-    pluralName: 'user-vocabulary-progresses';
-    singularName: 'user-vocabulary-progress';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::user-vocabulary-progress.user-vocabulary-progress'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    savedAt: Schema.Attribute.DateTime;
-    status: Schema.Attribute.Enumeration<['new', 'learning', 'known']> &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'new'>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    user: Schema.Attribute.Relation<
-      'manyToOne',
-      'plugin::users-permissions.user'
-    >;
-    vocabularyEntry: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::vocabulary-entry.vocabulary-entry'
-    >;
-  };
-}
-
-export interface ApiVocabularyEntryVocabularyEntry
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'vocabulary_entries';
-  info: {
-    description: 'Atomic vocabulary sense catalog (CEFR-tagged, frequency-ordered).';
-    displayName: 'Vocabulary Entry';
-    pluralName: 'vocabulary-entries';
-    singularName: 'vocabulary-entry';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    audioUrl: Schema.Attribute.String;
-    cefrLevel: Schema.Attribute.Enumeration<
-      ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-    >;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    definition: Schema.Attribute.Text & Schema.Attribute.Required;
-    entryType: Schema.Attribute.Enumeration<
-      ['word', 'phrase', 'idiom', 'expression']
-    > &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'word'>;
-    examples: Schema.Attribute.JSON;
-    exampleSentence: Schema.Attribute.Text;
-    externalId: Schema.Attribute.String & Schema.Attribute.Unique;
-    frequencyBucket: Schema.Attribute.String;
-    frequencyRank: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    ipa: Schema.Attribute.String;
-    lemma: Schema.Attribute.String;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::vocabulary-entry.vocabulary-entry'
-    > &
-      Schema.Attribute.Private;
-    partOfSpeech: Schema.Attribute.String;
-    publishedAt: Schema.Attribute.DateTime;
-    sensePriority: Schema.Attribute.Enumeration<['core', 'extend', 'rare']>;
-    source: Schema.Attribute.String & Schema.Attribute.DefaultTo<'import'>;
-    topic: Schema.Attribute.String;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    userProgress: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::user-vocabulary-progress.user-vocabulary-progress'
-    >;
-    word: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
@@ -2108,6 +1918,7 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.Private;
     daily_reminder_enabled: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
+    daily_reminder_last_sent_date: Schema.Attribute.String;
     daily_reminder_time: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'09:00'>;
     email: Schema.Attribute.Email &
@@ -2174,10 +1985,31 @@ export interface PluginUsersPermissionsUser
     special: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     surname: Schema.Attribute.String;
     translation_language: Schema.Attribute.Enumeration<
-      ['none', 'en', 'es', 'fr', 'de', 'it', 'hi', 'pt', 'zh', 'ja', 'ru']
+      [
+        'none',
+        'en',
+        'es',
+        'fr',
+        'de',
+        'it',
+        'hi',
+        'pt',
+        'zh',
+        'ja',
+        'ru',
+        'ar',
+        'hy',
+        'ko',
+        'tr',
+        'uk',
+      ]
     > &
       Schema.Attribute.DefaultTo<'none'>;
     tutor_memory: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
+    tutor_voice: Schema.Attribute.Enumeration<
+      ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+    > &
+      Schema.Attribute.DefaultTo<'nova'>;
     type_messages_enabled: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     updatedAt: Schema.Attribute.DateTime;
@@ -2239,17 +2071,13 @@ declare module '@strapi/strapi' {
       'api::lesson.lesson': ApiLessonLesson;
       'api::mobile-app-policy.mobile-app-policy': ApiMobileAppPolicyMobileAppPolicy;
       'api::notification.notification': ApiNotificationNotification;
-      'api::placement-test-result.placement-test-result': ApiPlacementTestResultPlacementTestResult;
       'api::speaking-game.speaking-game': ApiSpeakingGameSpeakingGame;
       'api::speaking-role-play.speaking-role-play': ApiSpeakingRolePlaySpeakingRolePlay;
       'api::speaking-session.speaking-session': ApiSpeakingSessionSpeakingSession;
       'api::speaking-topic.speaking-topic': ApiSpeakingTopicSpeakingTopic;
-      'api::study-hall.study-hall': ApiStudyHallStudyHall;
       'api::subscription.subscription': ApiSubscriptionSubscription;
       'api::user-note.user-note': ApiUserNoteUserNote;
       'api::user-progress.user-progress': ApiUserProgressUserProgress;
-      'api::user-vocabulary-progress.user-vocabulary-progress': ApiUserVocabularyProgressUserVocabularyProgress;
-      'api::vocabulary-entry.vocabulary-entry': ApiVocabularyEntryVocabularyEntry;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

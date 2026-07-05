@@ -73,7 +73,7 @@ List<InlineSpan> _parseHtmlSpans(String input, TextStyle current) {
   var index = 0;
   for (final match in _htmlTagRe.allMatches(input)) {
     if (match.start > index) {
-      spans.add(TextSpan(text: input.substring(index, match.start), style: current));
+      spans.add(TextSpan(text: stripHtml(input.substring(index, match.start)), style: current));
     }
 
     final tag = match.group(1)!.toLowerCase();
@@ -92,7 +92,7 @@ List<InlineSpan> _parseHtmlSpans(String input, TextStyle current) {
   }
 
   if (index < input.length) {
-    spans.add(TextSpan(text: input.substring(index), style: current));
+    spans.add(TextSpan(text: stripHtml(input.substring(index)), style: current));
   }
 
   if (spans.isEmpty) {

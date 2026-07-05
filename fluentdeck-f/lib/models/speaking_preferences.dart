@@ -14,6 +14,7 @@ class SpeakingPreferences {
   final int correctSentenceGoal;
   final int correctSentencesToday;
   final String? englishLevel;
+  final String tutorVoice;
 
   const SpeakingPreferences({
     this.practiceLanguage = 'en',
@@ -31,7 +32,21 @@ class SpeakingPreferences {
     this.correctSentenceGoal = 10,
     this.correctSentencesToday = 0,
     this.englishLevel,
+    this.tutorVoice = 'nova',
   });
+
+  /// OpenAI TTS voices, with a short descriptor for the picker UI.
+  static const voiceOptions = {
+    'nova': 'Nova — Female',
+    'onyx': 'Onyx — Male',
+    'alloy': 'Alloy — Neutral',
+    'echo': 'Echo — Male',
+    'fable': 'Fable — Male, expressive',
+    'shimmer': 'Shimmer — Female, soft',
+  };
+
+  /// Voices available on the free tier; the rest require Premium.
+  static const freeVoiceIds = {'nova', 'onyx'};
 
   static const practiceLanguageOptions = {
     'en': 'English',
@@ -71,6 +86,11 @@ class SpeakingPreferences {
     'zh': 'Mandarin Chinese',
     'ja': 'Japanese',
     'ru': 'Russian',
+    'ar': 'Arabic',
+    'hy': 'Armenian',
+    'ko': 'Korean',
+    'tr': 'Turkish',
+    'uk': 'Ukrainian',
   };
 
   bool get usesResponseSwitching => responseLanguage != practiceLanguage;
@@ -93,6 +113,7 @@ class SpeakingPreferences {
       correctSentenceGoal: user['correct_sentence_goal'] as int? ?? 10,
       correctSentencesToday: user['correct_sentences_today'] as int? ?? 0,
       englishLevel: user['english_level'] as String?,
+      tutorVoice: user['tutor_voice'] as String? ?? 'nova',
     );
   }
 
@@ -111,6 +132,7 @@ class SpeakingPreferences {
       'daily_reminder_enabled': dailyReminderEnabled,
       'daily_reminder_time': dailyReminderTime,
       'correct_sentence_goal': correctSentenceGoal,
+      'tutor_voice': tutorVoice,
       if (englishLevel != null) 'english_level': englishLevel,
     };
   }

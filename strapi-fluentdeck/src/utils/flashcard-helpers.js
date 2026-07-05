@@ -33,6 +33,8 @@ function formatCard(row, reviewRow) {
       typeof note === 'object'
         ? note?.id
         : note ?? row.flashcard_note_id ?? row.noteId ?? null,
+    noteTypeId:
+      typeof note === 'object' ? note?.noteType ?? note?.note_type ?? null : null,
     noteMarked: typeof note === 'object' ? note?.marked === true : false,
     tags: row.tags ?? [],
     mediaUrl: row.mediaUrl ?? row.media_url ?? null,

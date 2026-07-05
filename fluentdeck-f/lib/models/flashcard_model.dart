@@ -82,6 +82,7 @@ class FlashcardModel {
   final int id;
   final int deckId;
   final int? noteId;
+  final String? noteTypeId;
   final String front;
   final String back;
   final String cardType;
@@ -101,6 +102,7 @@ class FlashcardModel {
     required this.id,
     required this.deckId,
     this.noteId,
+    this.noteTypeId,
     required this.front,
     required this.back,
     this.cardType = 'basic',
@@ -130,6 +132,7 @@ class FlashcardModel {
       id: json['id'] as int? ?? 0,
       deckId: json['deckId'] as int? ?? 0,
       noteId: json['noteId'] as int?,
+      noteTypeId: json['noteTypeId'] as String?,
       front: json['front'] as String? ?? '',
       back: json['back'] as String? ?? '',
       cardType: json['cardType'] as String? ?? 'basic',
@@ -163,6 +166,7 @@ class FlashcardModel {
     'id': id,
     'deckId': deckId,
     if (noteId != null) 'noteId': noteId,
+    if (noteTypeId != null) 'noteTypeId': noteTypeId,
     'front': front,
     'back': back,
     'cardType': cardType,

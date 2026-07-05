@@ -70,6 +70,8 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
   bool get _canRename => !widget.deck.isDefault;
   bool get _canNest => !widget.deck.isDefault && !widget.deck.isFiltered;
   bool get _canEditOptions => !widget.deck.isDefault && !widget.deck.isFiltered;
+  bool get _canDelete => widget.deck.isDeletable;
+  bool _deleting = false;
 
   @override
   void initState() {
@@ -213,6 +215,52 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
     }
   }
 
+  Future<void> _confirmDelete() async {
+    final message =
+        widget.deck.isFiltered
+            ? 'Delete filtered deck "${widget.deck.name}"? Cards stay in their original decks.'
+            : 'Delete "${widget.deck.name}" and all ${widget.deck.total} cards in it? This cannot be undone.';
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('Delete deck?'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.redWrong,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+    );
+    if (ok != true || !mounted) return;
+
+    setState(() => _deleting = true);
+    try {
+      await FlashcardService.instance.deleteDeck(widget.deck.id);
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+      setState(() => _deleting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -238,7 +286,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
               IconButton(
                 icon: const Icon(Icons.close),
                 tooltip: 'Close',
-                onPressed: _saving ? null : () => Navigator.pop(context, false),
+                onPressed: _saving || _deleting ? null : () => Navigator.pop(context, false),
               ),
               Expanded(
                 child: Column(
@@ -255,6 +303,12 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
                   ],
                 ),
               ),
+              if (_canDelete)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded, color: AppColors.redWrong),
+                  tooltip: 'Delete deck',
+                  onPressed: _saving || _deleting ? null : _confirmDelete,
+                ),
             ],
           ),
         ),
@@ -405,13 +459,13 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
           child: SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: _saving ? null : _save,
+              onPressed: _saving || _deleting ? null : _save,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primaryPurple,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: _saving
+              child: _saving || _deleting
                   ? const SizedBox(
                       height: 20,
                       width: 20,

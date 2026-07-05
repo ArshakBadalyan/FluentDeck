@@ -43,7 +43,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized('Authentication required');
 
-    const { q, source, cefrLevel, topic } = ctx.query ?? {};
+    const { q, source } = ctx.query ?? {};
     const where = { user: userId };
 
     if (source && String(source).trim() && String(source) !== 'all') {
@@ -52,28 +52,8 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
 
     let rows = await strapi.db.query('api::user-note.user-note').findMany({
       where,
-      populate: ['vocabularyEntry'],
       orderBy: { createdAt: 'desc' },
     });
-
-    if (cefrLevel && String(cefrLevel).trim() && String(cefrLevel) !== 'all') {
-      const level = String(cefrLevel).trim();
-      rows = rows.filter((row) => {
-        const entry = row.vocabularyEntry ?? row.vocabulary_entry;
-        const rowLevel = entry?.cefrLevel ?? entry?.cefr_level ?? null;
-        if (level === 'none') return !rowLevel;
-        return rowLevel === level;
-      });
-    }
-
-    if (topic && String(topic).trim() && String(topic) !== 'all') {
-      const topicNeedle = String(topic).trim().toLowerCase();
-      rows = rows.filter((row) => {
-        const entry = row.vocabularyEntry ?? row.vocabulary_entry;
-        const rowTopic = (entry?.topic ?? '').toString().toLowerCase();
-        return rowTopic === topicNeedle;
-      });
-    }
 
     if (q && String(q).trim()) {
       const needle = String(q).trim().toLowerCase();
