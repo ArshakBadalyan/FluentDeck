@@ -41,9 +41,10 @@
       "type": "json",
       "default": ["intermediate"]
     },
-    "gamesRequirePremium": {
-      "type": "boolean",
-      "default": false
+    "freeGamesCount": {
+      "type": "integer",
+      "default": 10,
+      "min": 0
     },
     "defaultLearningStepsMinutes": {
       "type": "json",

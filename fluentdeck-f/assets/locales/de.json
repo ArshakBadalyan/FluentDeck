@@ -66,7 +66,8 @@
       "first-text": "Wenn du die Seite verlässt",
       "second-text": "werden Informationen nicht gespeichert",
       "save": "Speichern",
-      "leave": "Verlassen"
+      "leave": "Verlassen",
+      "save-failed": "Änderungen konnten nicht gespeichert werden. Bitte versuche es erneut."
     },
     "delete-page-popup": {
       "first-title": "Sind Sie sicher, dass Sie",

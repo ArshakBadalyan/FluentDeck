@@ -117,11 +117,24 @@ class UnsavedChangesService extends ChangeNotifier {
                                     }
                                     return;
                                   }
-                                  final saved = await saveFn();
+                                  bool saved = false;
+                                  try {
+                                    saved = await saveFn();
+                                  } catch (_) {
+                                    saved = false;
+                                  }
                                   if (!context.mounted) return;
                                   if (saved) {
                                     hasUnsavedChanges = false;
                                     Navigator.pop(context, true);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          context.tr('popups.leave-page-popup.save-failed'),
+                                        ),
+                                      ),
+                                    );
                                   }
                                 },
 

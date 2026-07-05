@@ -12,6 +12,7 @@ import 'package:fluentdeck/services/push_notification_service.dart';
 import 'package:fluentdeck/services/token_storage.dart';
 
 import 'package:fluentdeck/utils/user_facing_api_error.dart';
+import 'package:fluentdeck/utils/api_exception.dart';
 
 import 'package:fluentdeck/utils/strapi_response.dart';
 
@@ -211,16 +212,31 @@ class AuthService {
       return {'status': 'error', 'message': 'User not authenticated'};
     }
 
-    final data = await ApiService.put('users/$userId', body);
+    try {
+      final data = await ApiService.put('users/$userId', body);
 
-    if (data['error'] == null) {
-      return {'status': 'success'};
+      if (data is! Map || data['error'] == null) {
+        return {'status': 'success'};
+      }
+      return {
+        'status': 'error',
+        'message': data['error']?['message']?.toString(),
+        'fieldErrors': _parseStrapiFieldErrors(data['error']),
+      };
+    } on ApiException catch (e) {
+      final error = e.body is Map ? (e.body as Map)['error'] : null;
+      return {
+        'status': 'error',
+        'message': error is Map ? error['message']?.toString() : e.message,
+        'fieldErrors': _parseStrapiFieldErrors(error),
+      };
+    } catch (e, st) {
+      debugPrint('AuthService.updateUser failed: $e\n$st');
+      return {
+        'status': 'error',
+        'messageKey': userFacingErrorLocalizationKey(e),
+      };
     }
-    return {
-      'status': 'error',
-      'message': data['error']?['message']?.toString(),
-      'fieldErrors': _parseStrapiFieldErrors(data['error']),
-    };
   }
 
 

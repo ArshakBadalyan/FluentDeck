@@ -20,7 +20,7 @@ const DEFAULT_CONFIG = {
   freeDailyConversationTurns: 10,
   freeRolePlayPerCategory: 2,
   freeTopicLevelGroups: ['intermediate'],
-  gamesRequirePremium: false,
+  freeGamesCount: 10,
   defaultLearningStepsMinutes: _envScheduling.learningStepsMinutes,
   defaultEasyIntervalDays: _envScheduling.easyIntervalDays,
   hiddenSpeakingTabs: [],
@@ -82,8 +82,7 @@ async function getFeatureConfig(strapi) {
       DEFAULT_CONFIG.freeRolePlayPerCategory,
     ),
     freeTopicLevelGroups: freeTopicLevelGroups.map((v) => String(v).toLowerCase()),
-    gamesRequirePremium:
-      entry.gamesRequirePremium === true || entry.games_require_premium === true,
+    freeGamesCount: pickInt('freeGamesCount', 'free_games_count', DEFAULT_CONFIG.freeGamesCount),
     defaultLearningStepsMinutes,
     defaultEasyIntervalDays,
   };

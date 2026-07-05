@@ -8,7 +8,7 @@ class AppFeatureConfigModel {
   final List<String> advancedLevelsRequiringPremium;
   final int freeRolePlayPerCategory;
   final List<String> freeTopicLevelGroups;
-  final bool gamesRequirePremium;
+  final int freeGamesCount;
   final List<int> defaultLearningStepsMinutes;
   final double defaultEasyIntervalDays;
   final List<String> hiddenSpeakingTabs;
@@ -23,7 +23,7 @@ class AppFeatureConfigModel {
     this.advancedLevelsRequiringPremium = const ['B2', 'C1', 'C2'],
     this.freeRolePlayPerCategory = 2,
     this.freeTopicLevelGroups = const ['intermediate'],
-    this.gamesRequirePremium = false,
+    this.freeGamesCount = 10,
     this.defaultLearningStepsMinutes = const [2, 8, 10],
     this.defaultEasyIntervalDays = 5,
     this.hiddenSpeakingTabs = const [],
@@ -52,7 +52,7 @@ class AppFeatureConfigModel {
           topicGroups is List
               ? topicGroups.map((e) => e.toString()).toList()
               : const ['intermediate'],
-      gamesRequirePremium: json['gamesRequirePremium'] == true,
+      freeGamesCount: json['freeGamesCount'] as int? ?? 10,
       defaultLearningStepsMinutes: _parseSteps(steps),
       defaultEasyIntervalDays:
           (json['defaultEasyIntervalDays'] as num?)?.toDouble() ?? 5,

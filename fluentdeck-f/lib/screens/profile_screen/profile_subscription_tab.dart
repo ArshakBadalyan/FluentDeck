@@ -347,8 +347,13 @@ class _FeatureList extends StatelessWidget {
   static const _features = [
     ('No ads, ever', Icons.block_flipped),
     ('AI-generated word meanings', Icons.auto_awesome_rounded),
-    ('Unlimited saved words', Icons.style_rounded),
-    ('Unlimited speaking practice', Icons.record_voice_over_rounded),
+    ('Advanced AI tutor levels (B2, C1, C2)', Icons.school_rounded),
+    ('Unlimited AI speaking practice & conversations', Icons.record_voice_over_rounded),
+    ('Unlimited custom role-plays (3 free)', Icons.theater_comedy_rounded),
+    ('All speaking games (10 free)', Icons.sports_esports_rounded),
+    ('Full access to speaking topics', Icons.forum_rounded),
+    ('Unlimited saved words & decks', Icons.style_rounded),
+    ('Unlimited new cards per day', Icons.bolt_rounded),
   ];
 
   @override

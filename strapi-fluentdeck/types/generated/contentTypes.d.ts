@@ -500,6 +500,14 @@ export interface ApiAppFeatureConfigAppFeatureConfig
         number
       > &
       Schema.Attribute.DefaultTo<10>;
+    freeGamesCount: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<10>;
     freeMaxDecks: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {
@@ -534,8 +542,6 @@ export interface ApiAppFeatureConfigAppFeatureConfig
       Schema.Attribute.DefaultTo<2>;
     freeTopicLevelGroups: Schema.Attribute.JSON &
       Schema.Attribute.DefaultTo<['intermediate']>;
-    gamesRequirePremium: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
     hiddenSpeakingTabs: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<

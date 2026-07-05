@@ -22,7 +22,7 @@ async function seedAppFeatureConfig(strapi) {
       freeDailyConversationTurns: 10,
       freeRolePlayPerCategory: 2,
       freeTopicLevelGroups: ["intermediate"],
-      gamesRequirePremium: false,
+      freeGamesCount: 10,
       defaultLearningStepsMinutes: [2, 8, 10],
       defaultEasyIntervalDays: 5,
       hiddenSpeakingTabs: [],

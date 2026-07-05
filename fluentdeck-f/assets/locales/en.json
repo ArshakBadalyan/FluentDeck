@@ -67,7 +67,8 @@
       "first-text": "If you leave this page your edited",
       "second-text": "information will be removed",
       "save": "Save",
-      "leave": "Leave"
+      "leave": "Leave",
+      "save-failed": "Could not save your changes. Please try again."
     },
     "delete-page-popup": {
       "first-title": "Are you sure you want",

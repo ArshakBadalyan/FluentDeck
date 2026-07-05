@@ -355,21 +355,21 @@ class AppTextField extends StatelessWidget {
             hintText: hint,
             errorText: errorText,
             filled: true,
-            fillColor: AppPageColors.fieldBg,
+            fillColor: Colors.white,
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             suffixIcon: suffixIcon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.04)),
+              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
+              borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),

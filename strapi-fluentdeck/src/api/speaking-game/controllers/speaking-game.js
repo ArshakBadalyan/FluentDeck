@@ -36,7 +36,7 @@ module.exports = createCoreController(
         ),
         isPremium: premiumCtx.isPremium,
         rules: {
-          gamesRequirePremium: premiumCtx.gamesRequirePremium,
+          freeGamesCount: premiumCtx.freeGamesCount,
         },
       };
     },

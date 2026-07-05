@@ -7,11 +7,15 @@ import '../../services/custom_role_play_service.dart';
 import '../../services/speaking_content_service.dart';
 import '../../services/speaking_scores_service.dart';
 import '../../services/speaking_session_service.dart';
+import '../../services/subscription_service.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../utils/speaking_item_icons.dart';
 import '../../utils/speaking_premium_gate.dart';
 import '../../widgets/speaking_hub_widgets.dart';
+
+/// Free users can keep this many custom role-plays before Premium is required.
+const int kFreeCustomRolePlayLimit = 3;
 
 class SpeakingRolePlayTab extends StatefulWidget {
   const SpeakingRolePlayTab({super.key, required this.onStart});
@@ -40,6 +44,8 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
   bool _loading = true;
   String? _error;
   Map<String, int?> _scoreCache = {};
+  int _customCount = 0;
+  bool _isPremium = false;
 
   @override
   void initState() {
@@ -65,6 +71,9 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
             await SpeakingScoresService.instance.getScore(s.referenceKey);
       }
 
+      final customCount = (await CustomRolePlayService.instance.fetchAll()).length;
+      final status = await SubscriptionService.instance.fetchStatus();
+
       if (!mounted) return;
       setState(() {
         _scenarios = scenarios;
@@ -74,6 +83,8 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
                 : firstUnlocked(scenarios, (s) => s.isPremiumLocked) ??
                     (scenarios.isNotEmpty ? scenarios.first : null);
         _scoreCache = scores;
+        _customCount = customCount;
+        _isPremium = status.isPremium;
         _loading = false;
       });
     } catch (e) {
@@ -116,6 +127,11 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
   }
 
   Future<void> _showCreateDialog() async {
+    if (!_isPremium && _customCount >= kFreeCustomRolePlayLimit) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
+
     final result = await showFrostedBottomSheet<_RolePlayDraft>(
       context: context,
       isScrollControlled: true,
@@ -236,6 +252,14 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
             ),
           ),
         ),
+        if (!_isPremium)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            child: Text(
+              '$_customCount of $kFreeCustomRolePlayLimit free custom role-plays used',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+          ),
         const SizedBox(height: 8),
         Expanded(child: _buildList()),
         SpeakingStartButton(

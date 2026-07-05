@@ -10,12 +10,10 @@ import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/unsaved_changes_service.dart';
 import 'package:fluentdeck/ui_elements/dialogs/account_error_info_dialog.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/cefr_level_chips.dart';
 
 import '../../screens/auth/auth_screen.dart';
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
-import '../../services/english_level_service.dart';
 import '../../services/main_navigation_coordinator.dart';
 import '../../services/main_tab_config.dart';
 import '../../services/subscription_service.dart';
@@ -41,7 +39,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   bool _saving = false;
   bool _processing = false;
   bool _needsLogoutCredentials = false;
-  String? _selectedEnglishLevel;
   AchievementSnapshot? _achievementSnapshot;
   SubscriptionStatus _subscriptionStatus = SubscriptionStatus.none;
   StudySettingsModel? _studySettings;
@@ -89,14 +86,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
       surnameCtrl.text = (u['surname'] ?? '').toString();
       nicknameCtrl.text = (u['username'] ?? '').toString();
       _needsLogoutCredentials = u['needs_logout_credentials'] == true;
-
-      if (EnglishLevelService.levels.contains((u['english_level'] ?? '').toString())) {
-        _selectedEnglishLevel = (u['english_level'] ?? '').toString();
-      } else {
-        final local = await EnglishLevelService.instance.getLevel();
-        _selectedEnglishLevel =
-            EnglishLevelService.levels.contains(local) ? local : null;
-      }
     }
 
     if (!mounted) return;
@@ -119,12 +108,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
 
   void _openAchievements() => openProfileAchievements(context);
 
-  void _changeEnglishLevel(String? level) {
-    if (level == _selectedEnglishLevel) return;
-    setState(() => _selectedEnglishLevel = level);
-    UnsavedChangesService().hasUnsavedChanges = true;
-  }
-
   Future<bool> _saveProfile({bool showSuccessDialog = true}) async {
     if (_saving || _processing) return false;
 
@@ -137,11 +120,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
       'username': nicknameCtrl.text.trim(),
     };
 
-    final levelToSave = _selectedEnglishLevel;
-    if (levelToSave != null && EnglishLevelService.levels.contains(levelToSave)) {
-      body['english_level'] = levelToSave;
-    }
-
     final res = await AuthService.updateUser(body);
 
     if (!mounted) return false;
@@ -149,9 +127,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
 
     if (res['status'] == 'success') {
       UnsavedChangesService().hasUnsavedChanges = false;
-      if (levelToSave != null) {
-        await EnglishLevelService.instance.applyLevelLocally(levelToSave);
-      }
       if (!mounted) return true;
       if (showSuccessDialog) {
         showDialog(
@@ -388,16 +363,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 16),
-              AppSectionCard(
-                title: 'English level (CEFR)',
-                icon: Icons.school_outlined,
-                subtitle: 'Select your current level',
-                child: CefrLevelChips(
-                  selectedLevel: _selectedEnglishLevel,
-                  onLevelSelected: disableInputs ? null : _changeEnglishLevel,
-                ),
-              ),
               if (_studySettings != null) ...[
                 const SizedBox(height: 16),
                 AppSectionCard(

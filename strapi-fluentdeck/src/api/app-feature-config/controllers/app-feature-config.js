@@ -62,8 +62,11 @@ module.exports = createCoreController(
           }
           return Array.isArray(groups) ? groups : DEFAULT_CONFIG.freeTopicLevelGroups;
         })(),
-        gamesRequirePremium:
-          entry.gamesRequirePremium === true || entry.games_require_premium === true,
+        freeGamesCount: pickInt(
+          'freeGamesCount',
+          'free_games_count',
+          DEFAULT_CONFIG.freeGamesCount,
+        ),
         defaultLearningStepsMinutes: parseStepsList(
           entry.defaultLearningStepsMinutes ?? entry.default_learning_steps_minutes,
           DEFAULT_CONFIG.defaultLearningStepsMinutes,

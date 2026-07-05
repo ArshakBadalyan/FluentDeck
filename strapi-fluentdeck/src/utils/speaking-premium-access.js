@@ -50,9 +50,10 @@ function pickFreeRolePlayPerCategory(config) {
   return Number.isFinite(n) && n >= 0 ? n : 2;
 }
 
-function pickGamesRequirePremium(config) {
-  const raw = config?.gamesRequirePremium ?? config?.games_require_premium;
-  return raw === true;
+function pickFreeGamesCount(config) {
+  const raw = config?.freeGamesCount ?? config?.free_games_count ?? 10;
+  const n = typeof raw === 'number' ? raw : parseInt(String(raw), 10);
+  return Number.isFinite(n) && n >= 0 ? n : 10;
 }
 
 function annotateRolePlayRows(rows, { isPremium, freePerCategory }) {
@@ -80,10 +81,10 @@ function annotateTopicRows(rows, { isPremium, freeLevelGroups }) {
   });
 }
 
-function annotateGameRows(rows, { isPremium, gamesRequirePremium }) {
-  return rows.map((row) => {
+function annotateGameRows(rows, { isPremium, freeGamesCount }) {
+  return rows.map((row, index) => {
     const accessMode = readAccessMode(row);
-    const automaticLocked = !isPremium && gamesRequirePremium;
+    const automaticLocked = !isPremium && index >= freeGamesCount;
     const isPremiumLocked = resolveLockedByMode(accessMode, automaticLocked, isPremium);
     return { row, isPremiumLocked, accessMode };
   });
@@ -99,7 +100,7 @@ async function getSpeakingPremiumContext(strapi, userId) {
     isPremium,
     freePerCategory: pickFreeRolePlayPerCategory(config),
     freeLevelGroups: pickFreeTopicLevelGroups(config),
-    gamesRequirePremium: pickGamesRequirePremium(config),
+    freeGamesCount: pickFreeGamesCount(config),
   };
 }
 
@@ -112,5 +113,5 @@ module.exports = {
   getSpeakingPremiumContext,
   pickFreeTopicLevelGroups,
   pickFreeRolePlayPerCategory,
-  pickGamesRequirePremium,
+  pickFreeGamesCount,
 };
