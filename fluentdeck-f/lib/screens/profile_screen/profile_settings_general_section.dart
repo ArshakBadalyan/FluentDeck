@@ -74,12 +74,12 @@ class _ProfileSettingsGeneralSectionState
           decoration: appDropdownDecoration(context.tr('profile.account.language')),
           items: [
             DropdownMenuItem(
-              value: 'de',
-              child: Text(context.tr('profile.account.language-de')),
-            ),
-            DropdownMenuItem(
               value: 'en',
               child: Text(context.tr('profile.account.language-en')),
+            ),
+            DropdownMenuItem(
+              value: 'de',
+              child: Text(context.tr('profile.account.language-de')),
             ),
           ],
           onChanged: _changeLanguage,

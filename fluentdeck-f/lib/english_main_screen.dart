@@ -116,6 +116,9 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   void initState() {
     super.initState();
     MainNavigationCoordinator.navigateToMainTab = setMainIndex;
+    MainNavigationCoordinator.enterSpeakChatSession = () {
+      _speakingHubKey.currentState?.enterLoadedSession();
+    };
     UnsavedChangesService().addListener(_onUnsavedChangesChanged);
     unawaited(_initSoundSettings());
     unawaited(_refreshNotificationUnread());
@@ -148,6 +151,9 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   void dispose() {
     if (MainNavigationCoordinator.navigateToMainTab == setMainIndex) {
       MainNavigationCoordinator.navigateToMainTab = null;
+    }
+    if (MainNavigationCoordinator.enterSpeakChatSession != null) {
+      MainNavigationCoordinator.enterSpeakChatSession = null;
     }
     UnsavedChangesService().removeListener(_onUnsavedChangesChanged);
     _pageController.dispose();

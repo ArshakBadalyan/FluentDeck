@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../models/speaking_session_context.dart';
 import '../../services/conversation_service.dart';
 import '../../ui_elements/handoff_tab_bar_view.dart';
+import '../conversation_screen/conversation_chat_settings_sheet.dart';
 import '../conversation_screen/conversation_screen.dart';
 import 'speaking_chat_tab.dart';
 import 'speaking_games_tab.dart';
@@ -65,6 +66,20 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
     widget.onSessionActiveChanged?.call(true);
   }
 
+  /// Shows the active chat UI after [ConversationService.loadSession].
+  void enterLoadedSession() {
+    // #region agent log
+    // ignore: avoid_print
+    print(
+      '[dbg-fcee54] SpeakingHub.enterLoadedSession '
+      'wasInSession=$_inSession turns=${ConversationService.instance.turns.length} '
+      'chatActive=${ConversationService.instance.isChatActive}',
+    );
+    // #endregion
+    setState(() => _inSession = true);
+    widget.onSessionActiveChanged?.call(true);
+  }
+
   void _exitSession() {
     unawaited(ConversationService.instance.leaveChat());
     setState(() => _inSession = false);
@@ -107,6 +122,11 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
+                    ),
+                    IconButton(
+                      onPressed: () => showConversationChatSettingsSheet(context),
+                      icon: const Icon(Icons.tune_rounded, color: Colors.white),
+                      tooltip: 'Chat settings',
                     ),
                   ],
                 ),

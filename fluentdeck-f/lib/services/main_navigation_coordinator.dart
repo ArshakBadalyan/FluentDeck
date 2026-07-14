@@ -11,11 +11,18 @@ class MainNavigationCoordinator {
 
   static void Function(int index, {int? subIndex})? navigateToMainTab;
 
+  /// Opens the Speak chat UI for a session already loaded into ConversationService.
+  static void Function()? enterSpeakChatSession;
+
   static void goToMainTab(int index, {int? subIndex}) {
     navigateToMainTab?.call(index, subIndex: subIndex);
   }
 
   static void goToTab(MainTabId tab, {int? subIndex}) {
     goToMainTab(MainTabConfig.indexOf(tab), subIndex: subIndex);
+  }
+
+  static void enterSpeakSession() {
+    enterSpeakChatSession?.call();
   }
 }

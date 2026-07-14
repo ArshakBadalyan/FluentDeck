@@ -59,6 +59,12 @@ const USER_RESPONSE_EXCLUDED_KEYS = [
   "old_data",
 ];
 
+function clampAutoStartRecordingDelay(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return 2;
+  return Math.min(10, Math.max(0, Math.round(n)));
+}
+
 const registerBodySchema = yup.object().shape({
   username: yup.string().required(),
   password: yup.string().required(),
@@ -547,6 +553,7 @@ module.exports = (plugin) => {
         "sound",
         "type_messages_enabled",
         "auto_start_recording",
+        "auto_start_recording_delay_seconds",
         "daily_reminder_enabled",
         "daily_reminder_time",
         "correct_sentence_goal",
@@ -570,6 +577,9 @@ module.exports = (plugin) => {
       sound_on: user?.sound !== false,
       type_messages_enabled: user?.type_messages_enabled === true,
       auto_start_recording: user?.auto_start_recording === true,
+      auto_start_recording_delay_seconds: clampAutoStartRecordingDelay(
+        user?.auto_start_recording_delay_seconds
+      ),
       daily_reminder_enabled: user?.daily_reminder_enabled === true,
       daily_reminder_time: user?.daily_reminder_time ?? "09:00",
       correct_sentence_goal: user?.correct_sentence_goal ?? 10,
@@ -623,6 +633,15 @@ module.exports = (plugin) => {
     }
     if (body.auto_start_recording != null) {
       data.auto_start_recording = body.auto_start_recording === true;
+    }
+    if (body.auto_start_recording_delay_seconds != null) {
+      const delay = Number(body.auto_start_recording_delay_seconds);
+      if (!Number.isFinite(delay) || delay < 0 || delay > 10) {
+        return ctx.badRequest(
+          "auto_start_recording_delay_seconds must be between 0 and 10"
+        );
+      }
+      data.auto_start_recording_delay_seconds = Math.round(delay);
     }
     if (body.daily_reminder_enabled != null) {
       data.daily_reminder_enabled = body.daily_reminder_enabled === true;
@@ -694,6 +713,9 @@ module.exports = (plugin) => {
         sound_on: updated.sound !== false,
         type_messages_enabled: updated.type_messages_enabled === true,
         auto_start_recording: updated.auto_start_recording === true,
+        auto_start_recording_delay_seconds: clampAutoStartRecordingDelay(
+          updated.auto_start_recording_delay_seconds
+        ),
         daily_reminder_enabled: updated.daily_reminder_enabled === true,
         daily_reminder_time: updated.daily_reminder_time ?? "09:00",
         correct_sentence_goal: updated.correct_sentence_goal ?? 10,

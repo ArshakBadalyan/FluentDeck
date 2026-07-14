@@ -8,6 +8,8 @@ class SpeakingPreferences {
   final bool soundOn;
   final bool typeMessagesEnabled;
   final bool autoStartRecording;
+  /// Pause after tutor finishes (or after text appears if voice is off) before auto-mic.
+  final int autoStartRecordingDelaySeconds;
   final bool autoSaveCorrections;
   final bool dailyReminderEnabled;
   final String dailyReminderTime;
@@ -26,12 +28,13 @@ class SpeakingPreferences {
     this.soundOn = true,
     this.typeMessagesEnabled = false,
     this.autoStartRecording = false,
+    this.autoStartRecordingDelaySeconds = 2,
     this.autoSaveCorrections = true,
     this.dailyReminderEnabled = false,
     this.dailyReminderTime = '09:00',
     this.correctSentenceGoal = 10,
     this.correctSentencesToday = 0,
-    this.englishLevel,
+    this.englishLevel = 'A1',
     this.tutorVoice = 'nova',
   });
 
@@ -107,12 +110,15 @@ class SpeakingPreferences {
       soundOn: user['sound_on'] as bool? ?? user['sound'] as bool? ?? true,
       typeMessagesEnabled: user['type_messages_enabled'] == true,
       autoStartRecording: user['auto_start_recording'] == true,
+      autoStartRecordingDelaySeconds: _clampDelaySeconds(
+        user['auto_start_recording_delay_seconds'],
+      ),
       autoSaveCorrections: user['auto_save_corrections'] as bool? ?? true,
       dailyReminderEnabled: user['daily_reminder_enabled'] == true,
       dailyReminderTime: user['daily_reminder_time'] as String? ?? '09:00',
       correctSentenceGoal: user['correct_sentence_goal'] as int? ?? 10,
       correctSentencesToday: user['correct_sentences_today'] as int? ?? 0,
-      englishLevel: user['english_level'] as String?,
+      englishLevel: user['english_level'] as String? ?? 'A1',
       tutorVoice: user['tutor_voice'] as String? ?? 'nova',
     );
   }
@@ -129,11 +135,20 @@ class SpeakingPreferences {
       'sound_on': soundOn,
       'type_messages_enabled': typeMessagesEnabled,
       'auto_start_recording': autoStartRecording,
+      'auto_start_recording_delay_seconds': autoStartRecordingDelaySeconds,
       'daily_reminder_enabled': dailyReminderEnabled,
       'daily_reminder_time': dailyReminderTime,
       'correct_sentence_goal': correctSentenceGoal,
       'tutor_voice': tutorVoice,
       if (englishLevel != null) 'english_level': englishLevel,
     };
+  }
+
+  static int _clampDelaySeconds(Object? raw) {
+    final parsed = raw is int ? raw : int.tryParse(raw?.toString() ?? '');
+    if (parsed == null) return 2;
+    if (parsed < 0) return 0;
+    if (parsed > 10) return 10;
+    return parsed;
   }
 }

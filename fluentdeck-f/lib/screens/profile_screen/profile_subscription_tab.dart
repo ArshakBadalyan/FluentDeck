@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
 
 import '../../app_colors.dart';
+import '../../services/conversation_limit_service.dart';
 import '../../services/subscription_service.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../ui_elements/primary_button.dart';
@@ -22,6 +25,8 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
   List<ProductDetails> _products = [];
   String? _selectedProductId = kYearlyProductId;
   SubscriptionStatus _status = SubscriptionStatus.none;
+  ConversationUsageStatus? _usage;
+  late int _selectedDailyTurns;
   bool _loading = true;
   bool _purchasing = false;
   String? _error;
@@ -32,6 +37,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
   @override
   void initState() {
     super.initState();
+    _selectedDailyTurns = kDailyTurnsSliderConfig.defaultTurns;
     WidgetsBinding.instance.addObserver(this);
     _service.onPurchaseError = _onPurchaseError;
     _service.onStatusChanged = _onStatusChanged;
@@ -90,13 +96,111 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
       _error = 'Could not check your current subscription. Pull to refresh to try again.';
     }
 
+    ConversationUsageStatus? usage;
+    try {
+      usage = await ConversationLimitService.instance.getStatus(forceRefresh: true);
+    } catch (_) {
+      // Optional meter — keep tab usable without usage.
+    }
+
+    final slider = kDailyTurnsSliderConfig;
+    final initialDaily =
+        status.dailyConversationTurns ??
+        usage?.dailyLimit ??
+        slider.defaultTurns;
+    final clamped = initialDaily.clamp(slider.min, slider.max);
+
+    // #region agent log
+    unawaited(
+      http
+          .post(
+            Uri.parse(
+              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
+            ),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Debug-Session-Id': 'fcee54',
+            },
+            body: jsonEncode({
+              'sessionId': 'fcee54',
+              'runId': 'pre-fix',
+              'hypothesisId': 'A',
+              'location': 'profile_subscription_tab.dart:_load',
+              'message': 'Subscription tab loaded slider config',
+              'data': {
+                'sliderMin': slider.min,
+                'sliderMax': slider.max,
+                'defaultTurns': slider.defaultTurns,
+                'initialDaily': initialDaily,
+                'clamped': clamped,
+                'storeProductCount': products.length,
+                'basePrices': {
+                  for (final p in kFluentDeckPlans)
+                    p.productId: p.fallbackPrice,
+                },
+              },
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            }),
+          )
+          .catchError((_) => http.Response('', 500)),
+    );
+    // #endregion
+
     if (!mounted) return;
     setState(() {
       _products = products;
       _status = status;
+      _usage = usage;
       _selectedProductId = status.productId ?? kYearlyProductId;
+      _selectedDailyTurns = clamped;
       _loading = false;
     });
+  }
+
+  void _onDailyTurnsChanged(int value) {
+    final scaled = plansForDailyTurns(value);
+    final monthlyBase = kFluentDeckPlans
+        .where((p) => p.productId == kMonthlyProductId)
+        .firstOrNull;
+    final storeMonthly = _storeProductFor(kMonthlyProductId);
+    final baseTurns = monthlyBase?.dailyConversationTurns ?? 60;
+    final scale = value / (baseTurns > 0 ? baseTurns : 60);
+    // #region agent log
+    unawaited(
+      http
+          .post(
+            Uri.parse(
+              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
+            ),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Debug-Session-Id': 'fcee54',
+            },
+            body: jsonEncode({
+              'sessionId': 'fcee54',
+              'runId': 'pre-fix',
+              'hypothesisId': 'B-C',
+              'location': 'profile_subscription_tab.dart:_onDailyTurnsChanged',
+              'message': 'Daily turns slider changed',
+              'data': {
+                'selected': value,
+                'priceScale': scale,
+                'usingStorePrice': storeMonthly != null,
+                'storeRawPrice': storeMonthly?.rawPrice,
+                'prices': {
+                  for (final p in scaled) p.productId: p.fallbackPrice,
+                },
+                'amounts': {
+                  for (final p in scaled) p.productId: p.priceAmount,
+                },
+              },
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            }),
+          )
+          .catchError((_) => http.Response('', 500)),
+    );
+    // #endregion
+    setState(() => _selectedDailyTurns = value);
   }
 
   Future<void> _subscribe() async {
@@ -110,7 +214,10 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
 
     setState(() => _purchasing = true);
     try {
-      await _service.purchase(product);
+      await _service.purchase(
+        product,
+        dailyConversationTurns: _selectedDailyTurns,
+      );
     } catch (_) {
       _onPurchaseError('Could not start the purchase. Please try again.');
     }
@@ -168,7 +275,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _StatusHeroCard(status: _status),
+            _StatusHeroCard(status: _status, usage: _usage),
             const SizedBox(height: 24),
             if (_error != null) ...[
               Container(
@@ -200,7 +307,15 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            for (final plan in kFluentDeckPlans)
+            _DailyTurnsPicker(
+              value: _selectedDailyTurns,
+              min: kDailyTurnsSliderConfig.min,
+              max: kDailyTurnsSliderConfig.max,
+              defaultTurns: kDailyTurnsSliderConfig.defaultTurns,
+              onChanged: _onDailyTurnsChanged,
+            ),
+            const SizedBox(height: 16),
+            for (final plan in plansForDailyTurns(_selectedDailyTurns))
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _PlanCard(
@@ -209,11 +324,22 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
                   selected: _selectedProductId == plan.productId,
                   isCurrent: _status.isPremium && _status.productId == plan.productId,
                   badge: plan.badge,
+                  maxDailyTurns: kDailyTurnsSliderConfig.max,
+                  priceScale:
+                      _selectedDailyTurns /
+                      (kFluentDeckPlans
+                              .where((p) => p.productId == plan.productId)
+                              .firstOrNull
+                              ?.dailyConversationTurns ??
+                          60),
                   onTap: () => setState(() => _selectedProductId = plan.productId),
                 ),
               ),
             const SizedBox(height: 8),
-            _FeatureList(isPremium: _status.isPremium),
+            _FeatureList(
+              isPremium: _status.isPremium,
+              premiumDailyTurns: _selectedDailyTurns,
+            ),
             const SizedBox(height: 24),
             PrimaryButton(
               text:
@@ -246,12 +372,14 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
       ),
     );
   }
+
 }
 
 class _StatusHeroCard extends StatelessWidget {
-  const _StatusHeroCard({required this.status});
+  const _StatusHeroCard({required this.status, this.usage});
 
   final SubscriptionStatus status;
+  final ConversationUsageStatus? usage;
 
   String _planLabel(String? productId) {
     return kFluentDeckPlans.where((p) => p.productId == productId).firstOrNull?.title ??
@@ -286,53 +414,93 @@ class _StatusHeroCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color:
-                  isPremium
-                      ? Colors.white.withValues(alpha: 0.18)
-                      : AppColors.primaryPurple.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isPremium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,
-              size: 30,
-              color: isPremium ? Colors.white : AppColors.primaryPurple,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isPremium ? 'Premium · ${_planLabel(status.productId)}' : 'Free plan',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: isPremium ? Colors.white : Colors.black87,
-                  ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color:
+                      isPremium
+                          ? Colors.white.withValues(alpha: 0.18)
+                          : AppColors.primaryPurple.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 4),
-                Text(
+                child: Icon(
                   isPremium
-                      ? (status.currentPeriodEnd != null
-                          ? status.status == 'cancelled'
-                              ? 'Active until ${DateFormat.yMMMd().format(status.currentPeriodEnd!.toLocal())}'
-                              : 'Renews ${DateFormat.yMMMd().format(status.currentPeriodEnd!.toLocal())}'
-                          : 'Active')
-                      : 'Upgrade for an ad-free, AI-powered experience',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isPremium ? Colors.white.withValues(alpha: 0.85) : Colors.grey.shade600,
-                  ),
+                      ? Icons.workspace_premium_rounded
+                      : Icons.lock_open_rounded,
+                  size: 30,
+                  color: isPremium ? Colors.white : AppColors.primaryPurple,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isPremium
+                          ? 'Premium · ${_planLabel(status.productId)}'
+                          : 'Free plan',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: isPremium ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isPremium
+                          ? (status.currentPeriodEnd != null
+                              ? status.status == 'cancelled'
+                                  ? 'Active until ${DateFormat.yMMMd().format(status.currentPeriodEnd!.toLocal())}'
+                                  : 'Renews ${DateFormat.yMMMd().format(status.currentPeriodEnd!.toLocal())}'
+                              : 'Active')
+                          : 'Upgrade for an ad-free, AI-powered experience',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color:
+                            isPremium
+                                ? Colors.white.withValues(alpha: 0.85)
+                                : Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+          if (usage != null && usage!.hasMeter) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Today · ${usage!.usedToday} / ${usage!.dailyLimit} conversations',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color:
+                    isPremium
+                        ? Colors.white.withValues(alpha: 0.9)
+                        : Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: usage!.progress,
+                minHeight: 7,
+                backgroundColor:
+                    isPremium
+                        ? Colors.white.withValues(alpha: 0.22)
+                        : Colors.grey.shade200,
+                color:
+                    isPremium ? Colors.white : AppColors.primaryPurple,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -340,33 +508,39 @@ class _StatusHeroCard extends StatelessWidget {
 }
 
 class _FeatureList extends StatelessWidget {
-  const _FeatureList({required this.isPremium});
+  const _FeatureList({
+    required this.isPremium,
+    required this.premiumDailyTurns,
+  });
 
   final bool isPremium;
-
-  static const _features = [
-    ('No ads, ever', Icons.block_flipped),
-    ('AI-generated word meanings', Icons.auto_awesome_rounded),
-    ('Advanced AI tutor levels (B2, C1, C2)', Icons.school_rounded),
-    ('Unlimited AI speaking practice & conversations', Icons.record_voice_over_rounded),
-    ('Unlimited custom role-plays (3 free)', Icons.theater_comedy_rounded),
-    ('All speaking games (10 free)', Icons.sports_esports_rounded),
-    ('Full access to speaking topics', Icons.forum_rounded),
-    ('Unlimited saved words & decks', Icons.style_rounded),
-    ('Unlimited new cards per day', Icons.bolt_rounded),
-  ];
+  final int premiumDailyTurns;
 
   @override
   Widget build(BuildContext context) {
     final accent =
         isPremium ? AppColors.primaryPurple : Colors.grey.shade400;
+    final features = <(String, IconData)>[
+      ('No ads, ever', Icons.block_flipped),
+      ('AI-generated word meanings', Icons.auto_awesome_rounded),
+      ('Advanced AI tutor levels (B2, C1, C2)', Icons.school_rounded),
+      (
+        'Up to $premiumDailyTurns AI conversations / day',
+        Icons.record_voice_over_rounded,
+      ),
+      ('Unlimited custom role-plays (3 free)', Icons.theater_comedy_rounded),
+      ('All speaking games (10 free)', Icons.sports_esports_rounded),
+      ('Full access to speaking topics', Icons.forum_rounded),
+      ('Unlimited saved words & decks', Icons.style_rounded),
+      ('Unlimited new cards per day', Icons.bolt_rounded),
+    ];
 
     return AppSectionCard(
       title: 'What you get',
       icon: Icons.star_rounded,
       child: Column(
         children: [
-          for (final feature in _features)
+          for (final feature in features)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
@@ -386,6 +560,76 @@ class _FeatureList extends StatelessWidget {
   }
 }
 
+class _DailyTurnsPicker extends StatelessWidget {
+  const _DailyTurnsPicker({
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.defaultTurns,
+    required this.onChanged,
+  });
+
+  final int value;
+  final int min;
+  final int max;
+  final int defaultTurns;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final divisions = (max - min).clamp(1, 200);
+    return AppSectionCard(
+      title: 'Daily conversations',
+      icon: Icons.tune_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Drag the bar to set how many AI tutor turns you want each day. '
+            'Plan prices update with your choice (recommended: $defaultTurns).',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.35),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                '$value / day',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryPurple,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '$min – $max',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: AppColors.primaryPurple,
+              inactiveTrackColor: AppColors.primaryPurple.withValues(alpha: 0.18),
+              thumbColor: AppColors.primaryPurple,
+              overlayColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+              trackHeight: 6,
+            ),
+            child: Slider(
+              value: value.toDouble().clamp(min.toDouble(), max.toDouble()),
+              min: min.toDouble(),
+              max: max.toDouble(),
+              divisions: divisions,
+              label: '$value / day',
+              onChanged: (v) => onChanged(v.round()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
     required this.plan,
@@ -393,6 +637,8 @@ class _PlanCard extends StatelessWidget {
     required this.selected,
     required this.onTap,
     required this.isCurrent,
+    required this.maxDailyTurns,
+    required this.priceScale,
     this.badge,
   });
 
@@ -400,13 +646,32 @@ class _PlanCard extends StatelessWidget {
   final ProductDetails? storeProduct;
   final bool selected;
   final bool isCurrent;
+  final int maxDailyTurns;
+  final double priceScale;
   final VoidCallback onTap;
   final String? badge;
 
   String get _priceLabel {
     final product = storeProduct;
-    final amount = product?.price ?? plan.fallbackPrice;
-    return '$amount ${plan.periodSuffix}';
+    if (product != null && product.rawPrice > 0) {
+      final scaled = product.rawPrice * priceScale.clamp(0.1, 10);
+      final currency = product.currencyCode;
+      return '${_formatMoney(scaled, currency)} ${plan.periodSuffix}';
+    }
+    return '${plan.fallbackPrice} ${plan.periodSuffix}';
+  }
+
+  String _formatMoney(double amount, String currencyCode) {
+    try {
+      return NumberFormat.simpleCurrency(name: currencyCode).format(amount);
+    } catch (_) {
+      return '${amount.toStringAsFixed(2)} $currencyCode';
+    }
+  }
+
+  double get _capacity {
+    final max = maxDailyTurns <= 0 ? 60 : maxDailyTurns;
+    return (plan.dailyConversationTurns / max).clamp(0.0, 1.0);
   }
 
   @override
@@ -425,10 +690,14 @@ class _PlanCard extends StatelessWidget {
           ),
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: selected ? AppColors.primaryPurple : Colors.grey.shade400,
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                color: selected ? AppColors.primaryPurple : Colors.grey.shade400,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -482,6 +751,29 @@ class _PlanCard extends StatelessWidget {
                   Text(
                     _priceLabel,
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Text(
+                        '${plan.dailyConversationTurns} conversations / day',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: _capacity,
+                      minHeight: 6,
+                      backgroundColor: Colors.grey.shade200,
+                      color: AppColors.primaryPurple,
+                    ),
                   ),
                 ],
               ),

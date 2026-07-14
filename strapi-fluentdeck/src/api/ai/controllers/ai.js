@@ -4,6 +4,7 @@ const fs = require("fs");
 const { createCoreController } = require("@strapi/strapi").factories;
 const {
   transcribeAudio,
+  looksLikeWhisperHallucination,
   getTutorReply,
   synthesizeSpeech,
   evaluateSession: evaluateSpeakingSession,
@@ -144,6 +145,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         usedToday: usageBefore.usedToday,
         dailyLimit: usageBefore.dailyLimit,
         isPremium: usageBefore.isPremium,
+        unlimited: usageBefore.unlimited === true,
       };
       return;
     }
@@ -159,6 +161,65 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       return ctx.badRequest("message is required");
     }
 
+    const openingSession = sessionStart === true;
+    const trimmedMessage = message.trim();
+    // Only block clear Whisper/YouTube junk on tutor text. Typed short messages
+    // like "hi" must pass (hallucination heuristics need Whisper segments).
+    if (!openingSession && looksLikeWhisperHallucination(trimmedMessage)) {
+      // #region agent log
+      try {
+        fs.appendFileSync(
+          "/Users/arshak/Workspace/FluentDeck/.cursor/debug-fcee54.log",
+          `${JSON.stringify({
+            sessionId: "fcee54",
+            runId: "post-fix",
+            hypothesisId: "T1",
+            location: "ai.js:tutor",
+            message: "rejected junk tutor message; turn not recorded",
+            data: {
+              text: trimmedMessage,
+              textLen: trimmedMessage.length,
+              usedTodayBefore: usageBefore.usedToday,
+              isPremium: usageBefore.isPremium === true,
+            },
+            timestamp: Date.now(),
+          })}\n`,
+        );
+      } catch (_) {
+        // ignore
+      }
+      // #endregion
+      ctx.status = 400;
+      ctx.body = {
+        error: { message: "No speech detected", status: 400 },
+        noSpeech: true,
+        usage: usageBefore,
+      };
+      return;
+    }
+    // #region agent log
+    try {
+      fs.appendFileSync(
+        "/Users/arshak/Workspace/FluentDeck/.cursor/debug-fcee54.log",
+        `${JSON.stringify({
+          sessionId: "fcee54",
+          runId: "post-fix",
+          hypothesisId: "T1",
+          location: "ai.js:tutor",
+          message: "typed/spoken message accepted for tutor",
+          data: {
+            text: trimmedMessage,
+            textLen: trimmedMessage.length,
+            openingSession,
+          },
+          timestamp: Date.now(),
+        })}\n`,
+      );
+    } catch (_) {
+      // ignore
+    }
+    // #endregion
+
     try {
       const { userLevel, weakAreas, speakingPreferences, tutorMemory, practiceLanguage } =
         await loadUserTutorContext(strapi, userId);
@@ -166,13 +227,12 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         await resolveTrainingSession(
           strapi,
           userId,
-          message.trim(),
+          trimmedMessage,
           clientTrainingSession,
         );
       const deckCatalog = await loadUserDeckCatalog(strapi, userId);
-      const openingSession = sessionStart === true;
       const result = await getTutorReply({
-        message: message.trim(),
+        message: trimmedMessage,
         history: Array.isArray(history) ? history : [],
         userLevel,
         weakAreas,
@@ -214,18 +274,8 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         userId,
         result.corrections,
       );
-      if (!noteCreated && autoSaveResult.saved?.length) {
-        const first = autoSaveResult.saved[0];
-        noteCreated = {
-          word: first.word,
-          deckName: first.deckName,
-          remainingFree: autoSaveResult.remainingFree,
-          autoSaved: true,
-        };
-        if (autoSaveResult.saved.length > 1) {
-          noteMessage = `Auto-saved ${autoSaveResult.saved.length} words to ${first.deckName}.`;
-        }
-      }
+      // Auto-saves are marked visually in the Flutter chat UI — do not emit
+      // spoken/chat noteMessage bubbles for the success path.
       if (!noteLimitReached && autoSaveResult.limitReached) {
         noteLimitReached = true;
         noteMessage =
@@ -245,10 +295,11 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       }
 
       const speakingStats = await recordSpeakingTurnStats(strapi, userId, {
-        userText: message.trim(),
+        userText: trimmedMessage,
         corrections: result.corrections,
       });
 
+      // Only real tutor turns (including session openings) consume the free daily limit.
       const usageAfter = await recordConversationTurn(strapi, userId);
 
       ctx.body = {

@@ -46,6 +46,12 @@
       "type": "boolean",
       "default": true
     },
+    "dailyConversationTurns": {
+      "type": "integer",
+      "min": 1,
+      "max": 500,
+      "default": 60
+    },
     "lastVerifiedAt": {
       "type": "datetime"
     },

@@ -106,6 +106,38 @@ List<InlineSpan> buildCorrectedMessageSpans({
       }
     }
 
+    if (match.correction.autoSaved) {
+      spans.add(
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 3),
+            child: Tooltip(
+              message: 'Saved to From speaking',
+              child: Container(
+                width: 18,
+                height: 18,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryYellow.withValues(alpha: 0.22),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.primaryYellow.withValues(alpha: 0.9),
+                    width: 1.2,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.bookmark_added_rounded,
+                  size: 12,
+                  color: AppColors.primaryPurple,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     cursor = match.end;
   }
 

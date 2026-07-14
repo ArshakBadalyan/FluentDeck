@@ -32,6 +32,11 @@
       "default": 10,
       "min": 0
     },
+    "premiumDailyConversationTurns": {
+      "type": "integer",
+      "default": 60,
+      "min": 0
+    },
     "freeRolePlayPerCategory": {
       "type": "integer",
       "default": 2,

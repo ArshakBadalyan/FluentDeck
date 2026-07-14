@@ -28,10 +28,32 @@ function formatSubscription(sub) {
     status: sub.subscriptionStatus,
     currentPeriodEnd: sub.currentPeriodEnd,
     autoRenewing: sub.autoRenewing,
+    dailyConversationTurns: sub.dailyConversationTurns ?? null,
   };
 }
 
 module.exports = createCoreController("api::subscription.subscription", ({ strapi }) => ({
+  /** Public marketing plans (duration + fallback price) from env. */
+  async plans(ctx) {
+    const {
+      getSubscriptionPlans,
+      getSubscriptionPlansForDailyTurns,
+      getDailyTurnsSliderConfig,
+      clampDailyConversationTurns,
+    } = require("../../../utils/subscription-plans");
+    const slider = getDailyTurnsSliderConfig();
+    const requested = ctx.query?.dailyTurns ?? ctx.query?.dailyConversationTurns;
+    const dailyTurns = requested != null
+      ? clampDailyConversationTurns(requested)
+      : slider.default;
+    ctx.body = {
+      slider,
+      dailyConversationTurns: dailyTurns,
+      plans: getSubscriptionPlansForDailyTurns(dailyTurns),
+      basePlans: getSubscriptionPlans(),
+    };
+  },
+
   async status(ctx) {
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized("Authentication required");
@@ -47,10 +69,11 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized("Authentication required");
 
-    const { receiptData } = ctx.request.body ?? {};
+    const { receiptData, dailyConversationTurns } = ctx.request.body ?? {};
     if (!receiptData) return ctx.badRequest("receiptData is required");
 
     try {
+      const { clampDailyConversationTurns } = require("../../../utils/subscription-plans");
       const verified = await verifyAppleReceipt({ receiptData });
       const sub = await upsertSubscription(strapi, userId, {
         platform: "ios",
@@ -59,6 +82,9 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
         subscriptionStatus: "active",
         currentPeriodEnd: verified.currentPeriodEnd,
         autoRenewing: verified.autoRenewing,
+        dailyConversationTurns: clampDailyConversationTurns(
+          dailyConversationTurns,
+        ),
         rawPayload: verified.rawPayload,
       });
       ctx.body = {
@@ -76,12 +102,14 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized("Authentication required");
 
-    const { productId, purchaseToken } = ctx.request.body ?? {};
+    const { productId, purchaseToken, dailyConversationTurns } =
+      ctx.request.body ?? {};
     if (!productId || !purchaseToken) {
       return ctx.badRequest("productId and purchaseToken are required");
     }
 
     try {
+      const { clampDailyConversationTurns } = require("../../../utils/subscription-plans");
       const verified = await verifyGoogleSubscription({ productId, purchaseToken });
       const sub = await upsertSubscription(strapi, userId, {
         platform: "android",
@@ -90,6 +118,9 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
         subscriptionStatus: verified.status,
         currentPeriodEnd: verified.currentPeriodEnd,
         autoRenewing: verified.autoRenewing,
+        dailyConversationTurns: clampDailyConversationTurns(
+          dailyConversationTurns,
+        ),
         rawPayload: verified.rawPayload,
       });
       ctx.body = {

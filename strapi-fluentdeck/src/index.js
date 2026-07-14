@@ -149,6 +149,10 @@ module.exports = {
         "plugin::users-permissions.auth.googleMobile",
         "public",
       );
+      await linkPermissionToRole(
+        "api::subscription.subscription.plans",
+        "public",
+      );
       strapi.log.info(
         "[bootstrap] English content + AI proxy permissions linked.",
       );

@@ -14,7 +14,7 @@ class AppLocalizations extends ChangeNotifier {
   /// Convenience accessor matching Flutter l10n conventions; returns [instance].
   static AppLocalizations of(BuildContext context) => instance;
 
-  static const String _defaultLanguage = 'de';
+  static const String _defaultLanguage = 'en';
 
   final Map<String, dynamic> _deMap = {};
   final Map<String, dynamic> _enMap = {};

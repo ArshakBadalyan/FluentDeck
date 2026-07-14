@@ -41,7 +41,7 @@ module.exports = createCoreController('api::user-progress.user-progress', ({ str
     const payload = ctx.request.body?.data ?? {};
     const row = await strapi.db.query('api::user-progress.user-progress').create({
       data: {
-        currentLevel: payload.currentLevel ?? 'B1',
+        currentLevel: payload.currentLevel ?? 'A1',
         weakAreas: payload.weakAreas ?? [],
         streakDays: payload.streakDays ?? 0,
         totalSpeakingMinutes: payload.totalSpeakingMinutes ?? 0,

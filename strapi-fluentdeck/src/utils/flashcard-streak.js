@@ -11,7 +11,7 @@ async function recordFlashcardReviewStreak(strapi, userId, now = new Date()) {
     progress = await strapi.db.query('api::user-progress.user-progress').create({
       data: {
         user: userId,
-        currentLevel: 'B1',
+        currentLevel: 'A1',
         flashcardReviewStreakDays: 1,
         lastFlashcardReviewAt: now,
       },

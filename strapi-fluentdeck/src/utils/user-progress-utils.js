@@ -61,7 +61,7 @@ async function getOrCreateUserProgress(strapi, userId) {
   return strapi.db.query('api::user-progress.user-progress').create({
     data: {
       user: userId,
-      currentLevel: 'B1',
+      currentLevel: 'A1',
       weakAreas: [],
       streakDays: 0,
       totalSpeakingMinutes: 0,
@@ -94,7 +94,7 @@ function formatProgressResponse(row) {
   if (!row) return null;
   return {
     id: row.id,
-    currentLevel: row.currentLevel ?? row.current_level ?? 'B1',
+    currentLevel: row.currentLevel ?? row.current_level ?? 'A1',
     weakAreas: row.weakAreas ?? row.weak_areas ?? [],
     streakDays: row.streakDays ?? row.streak_days ?? 0,
     totalSpeakingMinutes: row.totalSpeakingMinutes ?? row.total_speaking_minutes ?? 0,

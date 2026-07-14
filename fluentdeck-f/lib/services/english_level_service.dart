@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluentdeck/models/user_progress_model.dart';
 import 'package:fluentdeck/screens/onboarding/english_onboarding_screen.dart';
@@ -16,15 +20,15 @@ class EnglishLevelService {
   static const englishLevelUserSetKey = 'english_level_user_set';
 
   /// Default CEFR level for new users (onboarding, lessons, profile).
-  static const defaultLevel = 'B2';
+  static const defaultLevel = 'A1';
 
-  /// Words tab level filter: B2 on first visit only, then persisted user choice.
+  /// Words tab level filter: A1 on first visit only, then persisted user choice.
   Future<String> resolveWordsTabLevelFilter({String allLevelsLabel = 'All'}) async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(wordsTabInitialB2AppliedKey) != true) {
       await prefs.setBool(wordsTabInitialB2AppliedKey, true);
-      await prefs.setString(wordsTabLevelFilterKey, 'B2');
-      return 'B2';
+      await prefs.setString(wordsTabLevelFilterKey, defaultLevel);
+      return defaultLevel;
     }
     return prefs.getString(wordsTabLevelFilterKey) ?? allLevelsLabel;
   }
@@ -37,13 +41,61 @@ class EnglishLevelService {
   Future<String> getLevel() async {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString(kEnglishLevelPrefsKey);
-    if (stored == null) return defaultLevel;
-    // Legacy installs kept B1 before B2 became the default — upgrade unless user chose B1.
-    if (stored == 'B1' && prefs.getBool(englishLevelUserSetKey) != true) {
+    final userSet = prefs.getBool(englishLevelUserSetKey) == true;
+    // Prior product default was B2; migrate unset installs to A1.
+    if (!userSet && (stored == null || stored == 'B2' || stored == 'B1')) {
       await saveLocal(defaultLevel);
+      // #region agent log
+      unawaited(
+        http
+            .post(
+              Uri.parse(
+                'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
+              ),
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Debug-Session-Id': 'fcee54',
+              },
+              body: jsonEncode({
+                'sessionId': 'fcee54',
+                'runId': 'level-lang',
+                'hypothesisId': 'E2',
+                'location': 'english_level_service.dart:getLevel',
+                'message': 'Defaulted proficiency to A1',
+                'data': {'stored': stored, 'userSet': userSet, 'resolved': defaultLevel},
+                'timestamp': DateTime.now().millisecondsSinceEpoch,
+              }),
+            )
+            .catchError((_) => http.Response('', 500)),
+      );
+      // #endregion
       return defaultLevel;
     }
-    return stored;
+    // #region agent log
+    unawaited(
+      http
+          .post(
+            Uri.parse(
+              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
+            ),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Debug-Session-Id': 'fcee54',
+            },
+            body: jsonEncode({
+              'sessionId': 'fcee54',
+              'runId': 'level-lang',
+              'hypothesisId': 'E2',
+              'location': 'english_level_service.dart:getLevel',
+              'message': 'Resolved proficiency level',
+              'data': {'stored': stored, 'userSet': userSet, 'resolved': stored},
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            }),
+          )
+          .catchError((_) => http.Response('', 500)),
+    );
+    // #endregion
+    return stored!;
   }
 
   Future<void> saveLocal(String level) async {
@@ -93,7 +145,12 @@ class EnglishLevelService {
     if (localLevel != null && levels.contains(localLevel)) {
       await AuthService.updateUser({'english_level': localLevel});
       await _syncProgressLevel(localLevel);
+      return;
     }
+
+    await saveLocal(defaultLevel);
+    await AuthService.updateUser({'english_level': defaultLevel});
+    await _syncProgressLevel(defaultLevel);
   }
 
   Future<void> applyLevelLocally(String level) async {

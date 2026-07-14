@@ -4,11 +4,14 @@ import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 
 void showSpeakingPremiumSnackBar(BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(
     SnackBar(
       content: Text(
         AppLocalizations.instance.t('speaking-premium.locked-message'),
       ),
+      showCloseIcon: true,
       action: SnackBarAction(
         label: 'Upgrade',
         onPressed: () {

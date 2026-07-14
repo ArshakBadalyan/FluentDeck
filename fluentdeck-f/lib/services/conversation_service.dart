@@ -53,6 +53,8 @@ class ConversationService {
   bool soundOnEnabled = true;
   bool typeMessagesEnabled = false;
   bool autoStartRecordingEnabled = false;
+  /// Seconds to wait after tutor audio (or text) before auto-opening the mic.
+  int autoStartRecordingDelaySeconds = 2;
   String practiceLanguage = 'en';
   String? englishLevel;
   DateTime? sessionStartedAt;
@@ -81,6 +83,39 @@ class ConversationService {
 
   void _notify() => onStateChanged?.call();
 
+  // #region agent log
+  void _agentDebugLog(
+    String hypothesisId,
+    String location,
+    String message, [
+    Map<String, Object?> data = const {},
+  ]) {
+    final payload = <String, Object?>{
+      'sessionId': 'fcee54',
+      'runId': 'post-fix',
+      'hypothesisId': hypothesisId,
+      'location': location,
+      'message': message,
+      'data': data,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    };
+    unawaited(
+      http
+          .post(
+            Uri.parse(
+              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
+            ),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Debug-Session-Id': 'fcee54',
+            },
+            body: jsonEncode(payload),
+          )
+          .catchError((_) => http.Response('', 500)),
+    );
+  }
+  // #endregion
+
   Future<void> refreshSpeakingSettings() async {
     final prefs = await SpeakingPreferencesService.instance.load(forceRefresh: true);
     autoPlayVoiceEnabled = prefs.autoPlayVoice;
@@ -88,6 +123,7 @@ class ConversationService {
     soundOnEnabled = prefs.soundOn;
     typeMessagesEnabled = prefs.typeMessagesEnabled;
     autoStartRecordingEnabled = prefs.autoStartRecording;
+    autoStartRecordingDelaySeconds = prefs.autoStartRecordingDelaySeconds;
     practiceLanguage = prefs.practiceLanguage;
     englishLevel = prefs.englishLevel;
     _notify();
@@ -181,6 +217,21 @@ class ConversationService {
     final sessionEpoch = _chatSessionEpoch;
     final audioEnabled = soundOnEnabled && (!isAutomatic || autoPlayVoiceEnabled);
 
+    // #region agent log
+    _agentDebugLog('A,B,E', 'conversation_service.dart:speakAiTurns:entry', 'speakAiTurns started', {
+      'startMicAfter': startMicAfter,
+      'isAutomatic': isAutomatic,
+      'audioEnabled': audioEnabled,
+      'soundOnEnabled': soundOnEnabled,
+      'autoPlayVoiceEnabled': autoPlayVoiceEnabled,
+      'autoStartRecordingEnabled': autoStartRecordingEnabled,
+      'autoConversationEnabled': autoConversationEnabled,
+      'isPlayingTts': isPlayingTts,
+      'playerState': _ttsPlayer.state.name,
+      'turnCount': turnIndices.length,
+    });
+    // #endregion
+
     if (audioEnabled) {
       for (final index in turnIndices) {
         if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
@@ -196,8 +247,40 @@ class ConversationService {
         startMicAfter &&
         (autoConversationEnabled || autoStartRecordingEnabled) &&
         !isRecording;
-    if (shouldStartMic) {
-      await startRecording();
+    // #region agent log
+    _agentDebugLog('A,B,D', 'conversation_service.dart:speakAiTurns:beforeMic', 'evaluating mic start after speak', {
+      'shouldStartMic': shouldStartMic,
+      'audioEnabled': audioEnabled,
+      'isPlayingTts': isPlayingTts,
+      'playerState': _ttsPlayer.state.name,
+      'isRecording': isRecording,
+      'delaySeconds': autoStartRecordingDelaySeconds,
+    });
+    // #endregion
+    if (!shouldStartMic) return;
+
+    // Give the user a beat to read (no audio) or finish listening (after TTS).
+    await _delayBeforeAutoMic(sessionEpoch);
+    if (sessionEpoch != _chatSessionEpoch || !_chatActive || isRecording) return;
+
+    // #region agent log
+    _agentDebugLog('A,D', 'conversation_service.dart:speakAiTurns:micGo', 'starting mic after TTS+delay', {
+      'playerState': _ttsPlayer.state.name,
+      'isPlayingTts': isPlayingTts,
+      'delaySeconds': autoStartRecordingDelaySeconds,
+      'audioEnabled': audioEnabled,
+    });
+    // #endregion
+    await startRecording();
+  }
+
+  Future<void> _delayBeforeAutoMic(int sessionEpoch) async {
+    final seconds = autoStartRecordingDelaySeconds.clamp(0, 10);
+    if (seconds <= 0) return;
+    final end = DateTime.now().add(Duration(seconds: seconds));
+    while (DateTime.now().isBefore(end)) {
+      if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
     }
   }
 
@@ -320,10 +403,20 @@ class ConversationService {
         ),
       );
     activeHistorySessionId = session.id;
+    sessionContext = SpeakingSessionContext.freeChat();
+    sessionStartedAt = session.startedAt;
     errorMessage = null;
     isRecording = false;
     isProcessing = false;
     stage = ConversationProcessingStage.idle;
+    // #region agent log
+    _agentDebugLog('H1', 'conversation_service.dart:loadSession', 'session loaded', {
+      'sessionId': session.id,
+      'turnCount': turns.length,
+      'chatActive': _chatActive,
+      'title': sessionContext.title,
+    });
+    // #endregion
     _notify();
   }
 
@@ -626,6 +719,18 @@ class ConversationService {
     if (isProcessing || isRecording) return;
     errorMessage = null;
 
+    // #region agent log
+    _agentDebugLog('A,C,D', 'conversation_service.dart:startRecording', 'startRecording called', {
+      'isProcessing': isProcessing,
+      'isRecording': isRecording,
+      'isPlayingTts': isPlayingTts,
+      'playerState': _ttsPlayer.state.name,
+      'stage': stage.name,
+      'autoStartRecordingEnabled': autoStartRecordingEnabled,
+      'autoConversationEnabled': autoConversationEnabled,
+    });
+    // #endregion
+
     final allowed = await ensureMicPermission();
     if (!allowed) {
       errorMessage = 'Microphone permission is required.';
@@ -650,6 +755,7 @@ class ConversationService {
 
   Future<void> stopRecordingAndSend() async {
     if (!isRecording) return;
+    final recordedFor = recordingDuration;
     final path = await _recorder.stop();
     isRecording = false;
     _stopRecordingTimer();
@@ -665,11 +771,23 @@ class ConversationService {
       return;
     }
 
-    final usage = await ConversationLimitService.instance.checkBeforeTurn();
-    if (!usage.allowed) {
-      errorMessage =
-          'Daily limit reached (${usage.dailyLimit} conversations). '
-          'Upgrade to premium for unlimited practice.';
+    // #region agent log
+    _agentDebugLog('W1,W3', 'conversation_service.dart:stopRecording', 'recording stopped', {
+      'recordedMs': recordedFor.inMilliseconds,
+      'pathLen': path.length,
+      'isWeb': kIsWeb,
+    });
+    // #endregion
+
+    // Near-empty clips are rejected before Whisper — silence often hallucinates.
+    if (recordedFor < const Duration(milliseconds: 700)) {
+      // #region agent log
+      _agentDebugLog('LIMIT', 'conversation_service.dart:tooShort', 'skip whisper+tutor; free limit unchanged', {
+        'recordedMs': recordedFor.inMilliseconds,
+        'willCallTutor': false,
+      });
+      // #endregion
+      errorMessage = 'Could not hear you. Please try again.';
       _notify();
       return;
     }
@@ -682,8 +800,30 @@ class ConversationService {
     ConversationTurnModel? userTurn;
     try {
       final userText = (await _transcribe(path)).trim();
-      if (userText.isEmpty) {
+      // #region agent log
+      _agentDebugLog('W1,W5', 'conversation_service.dart:afterTranscribe', 'transcription result', {
+        'recordedMs': recordedFor.inMilliseconds,
+        'text': userText,
+        'textLen': userText.length,
+        'looksHallucinated': _looksLikeWhisperHallucination(userText),
+      });
+      // #endregion
+      if (userText.isEmpty || _looksLikeWhisperHallucination(userText)) {
+        // No /ai/tutor call → free/premium daily conversation limit is not consumed.
+        // #region agent log
+        _agentDebugLog('LIMIT', 'conversation_service.dart:noHear', 'skip tutor; free limit unchanged', {
+          'userText': userText,
+          'willCallTutor': false,
+        });
+        // #endregion
         errorMessage = 'Could not hear you. Please try again.';
+        return;
+      }
+
+      // Only check/consume the free daily meter once we have real speech text.
+      final usage = await ConversationLimitService.instance.checkBeforeTurn();
+      if (!usage.allowed) {
+        errorMessage = _dailyLimitMessage(usage);
         return;
       }
 
@@ -696,6 +836,14 @@ class ConversationService {
       stage = ConversationProcessingStage.thinking;
       _notify();
 
+      // #region agent log
+      _agentDebugLog('LIMIT', 'conversation_service.dart:beforeTutor', 'calling tutor; limit will use 1 turn', {
+        'userText': userText,
+        'willCallTutor': true,
+        'usedToday': usage.usedToday,
+        'isPremium': usage.isPremium,
+      });
+      // #endregion
       await _completeUserTurn(userText, userTurn: userTurn);
     } catch (e) {
       if (userTurn != null) {
@@ -731,9 +879,7 @@ class ConversationService {
   Future<void> _sendUserMessage(String userText) async {
     final usage = await ConversationLimitService.instance.checkBeforeTurn();
     if (!usage.allowed) {
-      errorMessage =
-          'Daily limit reached (${usage.dailyLimit} conversations). '
-          'Upgrade to premium for unlimited practice.';
+      errorMessage = _dailyLimitMessage(usage);
       _notify();
       return;
     }
@@ -770,14 +916,16 @@ class ConversationService {
     final tutor = await _fetchTutorReply(userText);
     if (!isProcessing) return;
 
-    final corrections =
-        tutor.corrections
-            .map(
-              (item) => GrammarCorrection.fromJson(
-                Map<String, dynamic>.from(item as Map),
-              ),
-            )
-            .toList();
+    final corrections = _markAutoSavedCorrections(
+      tutor.corrections
+          .map(
+            (item) => GrammarCorrection.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(),
+      tutor.autoSavedWords,
+    );
 
     final userIndex = turns.indexOf(userTurn);
     if (userIndex >= 0) {
@@ -810,15 +958,9 @@ class ConversationService {
       speakIndices.add(turns.length - 1);
     }
 
-    if (tutor.noteMessage != null && tutor.noteMessage!.isNotEmpty) {
-      turns.add(
-        ConversationTurnModel(
-          speaker: 'ai',
-          text: tutor.noteMessage!,
-          timestamp: DateTime.now(),
-        ),
-      );
-      speakIndices.add(turns.length - 1);
+    // Deck saves are indicated with an icon on the correction — never spoken.
+    if (tutor.noteLimitMessage != null && tutor.noteLimitMessage!.isNotEmpty) {
+      errorMessage = tutor.noteLimitMessage;
     }
 
     trainingSession = tutor.trainingSession;
@@ -840,6 +982,61 @@ class ConversationService {
     );
     await ConversationLimitService.instance.recordTurn();
     await _persistActiveSession();
+  }
+
+  /// Whisper often invents YouTube-style lines from silence/noise.
+  String _dailyLimitMessage(ConversationUsageStatus usage) {
+    final limit = usage.dailyLimit;
+    if (usage.isPremium) {
+      return 'Daily AI limit reached ($limit turns). Comes back tomorrow — fair use keeps practice available for everyone.';
+    }
+    return 'Daily limit reached ($limit turns). Upgrade to Premium for a much higher daily allowance.';
+  }
+
+  bool _looksLikeWhisperHallucination(String text) {
+    final normalized = text
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (normalized.isEmpty) return true;
+
+    const known = <String>[
+      'thank you for watching',
+      'thanks for watching',
+      'thank you for listening',
+      'thanks for listening',
+      'please subscribe',
+      'like and subscribe',
+      'see you next time',
+      'see you in the next video',
+      'thanks for joining us',
+      'thanks for joining',
+      'subscribe to the channel',
+      'don t forget to subscribe',
+      'dont forget to subscribe',
+      'www',
+      'amara org',
+      'subtitles by',
+      'captioning',
+    ];
+    for (final phrase in known) {
+      if (normalized == phrase || normalized.startsWith('$phrase ')) {
+        return true;
+      }
+    }
+    // Extremely short filler tokens (do not reject "yes"/"hi"/etc.).
+    if (normalized.length <= 1) return true;
+    const fillers = <String>{
+      'you',
+      'thank you',
+      'thanks',
+      'um',
+      'uh',
+      'hmm',
+    };
+    if (fillers.contains(normalized)) return true;
+    return false;
   }
 
   Future<String> _transcribe(String audioPath) async {
@@ -879,9 +1076,10 @@ class ConversationService {
     }
 
     if (body is Map) {
-      final text = body['text'];
-      if (text is String && text.trim().isNotEmpty) {
-        return text.trim();
+      // Prefer explicit text — empty string means server discarded silence.
+      if (body.containsKey('text')) {
+        final text = body['text'];
+        return text is String ? text.trim() : '';
       }
       final segments = body['segments'];
       if (segments is List) {
@@ -893,9 +1091,7 @@ class ConversationService {
             .where((segmentText) => segmentText.isNotEmpty)
             .join(' ')
             .trim();
-        if (joined.isNotEmpty) {
-          return joined;
-        }
+        return joined;
       }
     }
     throw Exception('Unexpected transcription response');
@@ -910,6 +1106,25 @@ class ConversationService {
     return response.bodyBytes;
   }
 
+  List<GrammarCorrection> _markAutoSavedCorrections(
+    List<GrammarCorrection> corrections,
+    List<String> autoSavedWords,
+  ) {
+    if (corrections.isEmpty || autoSavedWords.isEmpty) return corrections;
+    final saved = autoSavedWords
+        .map((w) => w.trim().toLowerCase())
+        .where((w) => w.isNotEmpty)
+        .toSet();
+    if (saved.isEmpty) return corrections;
+    return corrections
+        .map(
+          (c) => saved.contains(c.correctedText.trim().toLowerCase())
+              ? c.copyWith(autoSaved: true)
+              : c,
+        )
+        .toList();
+  }
+
   Future<
     ({
       String reply,
@@ -917,7 +1132,8 @@ class ConversationService {
       List<dynamic> corrections,
       ConversationTrainingSession trainingSession,
       String? trainingNotice,
-      String? noteMessage,
+      List<String> autoSavedWords,
+      String? noteLimitMessage,
     })
   >
   _fetchTutorReply(String message) async {
@@ -945,25 +1161,16 @@ class ConversationService {
     final data = await ApiService.post('ai/tutor', body);
 
     if (data is Map && data['limitReached'] == true) {
-      final usage = data['usedToday'] != null
-          ? ConversationUsageStatus(
-              allowed: false,
-              usedToday: (data['usedToday'] as num?)?.round() ?? 0,
-              dailyLimit: (data['dailyLimit'] as num?)?.round() ?? 10,
-              isPremium: data['isPremium'] == true,
-            )
-          : null;
-      if (usage != null) {
-        ConversationLimitService.instance.applyServerUsage({
-          'allowed': false,
-          'usedToday': usage.usedToday,
-          'dailyLimit': usage.dailyLimit,
-          'isPremium': usage.isPremium,
-        });
-      }
+      final usageMap = <String, dynamic>{
+        'allowed': false,
+        'usedToday': (data['usedToday'] as num?)?.round() ?? 0,
+        'dailyLimit': (data['dailyLimit'] as num?)?.round() ?? 10,
+        'isPremium': data['isPremium'] == true,
+        'unlimited': data['unlimited'] == true,
+      };
+      ConversationLimitService.instance.applyServerUsage(usageMap);
       throw Exception(
-        'Daily limit reached (${data['dailyLimit'] ?? 10} conversations). '
-        'Upgrade to premium for unlimited practice.',
+        _dailyLimitMessage(ConversationUsageStatus.fromJson(usageMap)),
       );
     }
 
@@ -980,26 +1187,31 @@ class ConversationService {
       );
     }
 
-    String? noteMessage;
-    if (data['noteLimitReached'] == true) {
-      noteMessage =
-          data['noteMessage']?.toString() ??
-          'Free auto-save limit reached (10 notes). Upgrade for unlimited deck notes.';
-    } else if (data['noteCreated'] is Map) {
-      final note = Map<String, dynamic>.from(data['noteCreated'] as Map);
-      final word = note['word']?.toString() ?? 'Note';
-      final deckName = note['deckName']?.toString() ?? 'deck';
-      final remaining = note['remainingFree'];
-      final autoSaved = note['autoSaved'] == true;
-      noteMessage =
-          autoSaved
-              ? (remaining == null
-                  ? 'Auto-saved "$word" to $deckName.'
-                  : 'Auto-saved "$word" to $deckName. ($remaining free auto-saves left)')
-              : (remaining == null
-                  ? 'Saved "$word" to $deckName.'
-                  : 'Saved "$word" to $deckName. ($remaining free auto-saves left)');
+    final autoSavedWords = <String>[];
+    final rawAutoSaved = data['autoSavedWords'];
+    if (rawAutoSaved is List) {
+      for (final item in rawAutoSaved) {
+        if (item is Map) {
+          final word = item['word']?.toString().trim();
+          if (word != null && word.isNotEmpty) autoSavedWords.add(word);
+        }
+      }
     }
+    if (data['noteCreated'] is Map) {
+      final note = Map<String, dynamic>.from(data['noteCreated'] as Map);
+      final word = note['word']?.toString().trim();
+      if (word != null &&
+          word.isNotEmpty &&
+          !autoSavedWords.any((w) => w.toLowerCase() == word.toLowerCase())) {
+        autoSavedWords.add(word);
+      }
+    }
+
+    final noteLimitMessage =
+        data['noteLimitReached'] == true
+            ? (data['noteMessage']?.toString() ??
+                'Free auto-save limit reached (10 notes). Upgrade for unlimited deck notes.')
+            : null;
 
     return (
       reply: _sanitizeTutorReply(data['reply']?.toString() ?? ''),
@@ -1011,7 +1223,8 @@ class ConversationService {
             : null,
       ),
       trainingNotice: data['trainingNotice']?.toString(),
-      noteMessage: noteMessage,
+      autoSavedWords: autoSavedWords,
+      noteLimitMessage: noteLimitMessage,
     );
   }
 
@@ -1051,15 +1264,16 @@ class ConversationService {
     if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
     if (cached != null && cached.isNotEmpty) {
       await _ttsPlayer.stop();
-      if (kIsWeb) {
-        await _ttsPlayer.play(
-          UrlSource(
-            'data:audio/mpeg;base64,${base64Encode(cached)}',
-          ),
-        );
-      } else {
-        await _ttsPlayer.play(BytesSource(Uint8List.fromList(cached)));
-      }
+      if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+      await _startTtsAndWait(
+        sessionEpoch: sessionEpoch,
+        source: kIsWeb
+            ? UrlSource('data:audio/mpeg;base64,${base64Encode(cached)}')
+            : BytesSource(Uint8List.fromList(cached)),
+        fromCache: true,
+        textLen: text.length,
+        bytesLen: cached.length,
+      );
       return;
     }
 
@@ -1075,12 +1289,92 @@ class ConversationService {
     await _ttsPlayer.stop();
 
     if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
-    if (kIsWeb) {
-      await _ttsPlayer.play(
-        UrlSource('data:audio/mpeg;base64,$audioBase64'),
+    await _startTtsAndWait(
+      sessionEpoch: sessionEpoch,
+      source: kIsWeb
+          ? UrlSource('data:audio/mpeg;base64,$audioBase64')
+          : BytesSource(bytes),
+      fromCache: false,
+      textLen: text.length,
+      bytesLen: bytes.length,
+    );
+  }
+
+  /// Starts TTS and waits until playback finishes (not merely until play starts).
+  Future<void> _startTtsAndWait({
+    required int sessionEpoch,
+    required Source source,
+    required bool fromCache,
+    required int textLen,
+    required int bytesLen,
+  }) async {
+    final done = Completer<void>();
+    var seenPlaying = false;
+    // Subscribe before play() so short clips can't complete before we listen.
+    final subs = <StreamSubscription<dynamic>>[
+      _ttsPlayer.onPlayerComplete.listen((_) {
+        if (!done.isCompleted) done.complete();
+      }),
+      _ttsPlayer.onPlayerStateChanged.listen((state) {
+        if (state == PlayerState.playing) {
+          seenPlaying = true;
+          return;
+        }
+        // Ignore a stale "stopped" from the previous stop() before this play().
+        if (!seenPlaying) return;
+        if (state == PlayerState.completed || state == PlayerState.stopped) {
+          if (!done.isCompleted) done.complete();
+        }
+      }),
+    ];
+
+    try {
+      await _ttsPlayer.play(source);
+      if (_ttsPlayer.state == PlayerState.playing) {
+        seenPlaying = true;
+      }
+      // #region agent log
+      _agentDebugLog(
+        'A',
+        'conversation_service.dart:_startTtsAndWait:afterPlay',
+        'play() returned; waiting for completion',
+        {
+          'playerState': _ttsPlayer.state.name,
+          'textLen': textLen,
+          'fromCache': fromCache,
+          'bytesLen': bytesLen,
+        },
       );
-    } else {
-      await _ttsPlayer.play(BytesSource(bytes));
+      // #endregion
+
+      if (_ttsPlayer.state == PlayerState.completed) {
+        if (!done.isCompleted) done.complete();
+      }
+
+      while (!done.isCompleted) {
+        if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+        await Future.any([
+          done.future,
+          Future<void>.delayed(const Duration(milliseconds: 150)),
+        ]);
+      }
+
+      // #region agent log
+      _agentDebugLog(
+        'A,D',
+        'conversation_service.dart:_startTtsAndWait:completed',
+        'TTS playback finished',
+        {
+          'playerState': _ttsPlayer.state.name,
+          'isPlayingTts': isPlayingTts,
+          'fromCache': fromCache,
+        },
+      );
+      // #endregion
+    } finally {
+      for (final sub in subs) {
+        await sub.cancel();
+      }
     }
   }
 

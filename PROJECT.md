@@ -41,7 +41,7 @@ FluentDeck/
 
 ### Core Features
 
-**Speaking & AI:** Free-form chat, role-play, topics, games · Whisper → GPT → TTS · Grammar corrections · Tutor memory · 10 turns/day free (`user.special=true` = unlimited)
+**Speaking & AI:** Free-form chat, role-play, topics, games · Whisper → GPT → TTS · Grammar corrections · Tutor memory · 10 turns/day free · 60 turns/day premium · `user.special=true` = unlimited
 
 **Vocabulary:** CEFR catalog A1–C2 · Placement test · Lessons & exercises · User notes from corrections
 

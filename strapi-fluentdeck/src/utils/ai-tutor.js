@@ -249,7 +249,7 @@ function buildTutorUserPrompt({
   const customizationBlock = formatCustomizationBlock(speakingPreferences, practiceLanguage);
 
   const system = TUTOR_SYSTEM_PROMPT
-    .replace(/\{\{userLevel\}\}/g, userLevel || 'B1')
+    .replace(/\{\{userLevel\}\}/g, userLevel || 'A1')
     .replace(/\{\{practiceLanguageLabel\}\}/g, practiceLabel)
     .replace(/\{\{weakAreas\}\}/g, formatWeakAreas(weakAreas))
     .replace('{{trainingBlock}}', `${memoryBlock}${trainingBlock}${sessionBlock}${deckCatalogBlock}${customizationBlock}`);
@@ -397,6 +397,80 @@ function sanitizeTranslation(translation) {
   return cleaned;
 }
 
+const WHISPER_HALLUCINATION_PHRASES = [
+  'thank you for watching',
+  'thanks for watching',
+  'thank you for listening',
+  'thanks for listening',
+  'please subscribe',
+  'like and subscribe',
+  'see you next time',
+  'see you in the next video',
+  'thanks for joining us',
+  'thanks for joining',
+  'subscribe to the channel',
+  "don't forget to subscribe",
+  'dont forget to subscribe',
+  'subtitles by',
+  'captioning',
+];
+
+function normalizeTranscriptForHallucinationCheck(text) {
+  return String(text ?? '')
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Detect Whisper silence / YouTube-junk hallucinations.
+ *
+ * Aggressive short-token / no_speech heuristics apply only when Whisper
+ * segments are present. Typed tutor messages must NOT use those rules —
+ * otherwise "hi", training words like "a", etc. get rejected as no-speech.
+ */
+function looksLikeWhisperHallucination(text, segments = []) {
+  const normalized = normalizeTranscriptForHallucinationCheck(text);
+  if (!normalized) return true;
+
+  for (const phrase of WHISPER_HALLUCINATION_PHRASES) {
+    const plain = phrase.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (normalized === plain || normalized.startsWith(`${plain} `)) {
+      return true;
+    }
+  }
+
+  const segmentList = Array.isArray(segments) ? segments : [];
+  const hasSegments = segmentList.length > 0;
+  // Typed /ai/tutor messages have no Whisper segments — allow greetings & short words.
+  if (!hasSegments) {
+    return false;
+  }
+
+  // High "no speech" probability across segments ⇒ treat as silence.
+  const probs = segmentList
+    .map((s) => Number(s?.no_speech_prob))
+    .filter((n) => Number.isFinite(n));
+  if (probs.length > 0) {
+    const avg = probs.reduce((sum, n) => sum + n, 0) / probs.length;
+    if (avg >= 0.6) return true;
+    // Short clips with elevated no-speech often invent "Thank you." / "You".
+    const wordCount = normalized.split(' ').filter(Boolean).length;
+    if (avg >= 0.45 && wordCount <= 4) return true;
+  }
+
+  // Lone filler tokens common in silent Whisper outputs (audio only).
+  if (['you', 'thank you', 'thanks', 'ok', 'okay', 'um', 'uh', 'hmm'].includes(normalized)) {
+    return true;
+  }
+
+  // Extremely short Whisper leftovers without useful content.
+  if (normalized.length <= 1) return true;
+
+  return false;
+}
+
 async function transcribeAudio(filePath, originalName, language = 'en') {
   const { whisperLanguageCode } = require('./practice-languages');
   const openai = getOpenAIClient();
@@ -414,7 +488,49 @@ async function transcribeAudio(filePath, originalName, language = 'en') {
     .filter(Boolean)
     .join(' ')
     .trim();
-  const fullText = String(result.text ?? '').trim() || segmentText;
+  let fullText = String(result.text ?? '').trim() || segmentText;
+
+  // #region agent log
+  try {
+    const fsLog = require('fs');
+    fsLog.appendFileSync(
+      '/Users/arshak/Workspace/FluentDeck/.cursor/debug-fcee54.log',
+      `${JSON.stringify({
+        sessionId: 'fcee54',
+        runId: 'whisper-silence',
+        hypothesisId: 'W1',
+        location: 'ai-tutor.js:transcribeAudio',
+        message: 'whisper raw result',
+        data: {
+          text: fullText,
+          textLen: fullText.length,
+          segmentCount: segments.length,
+          avgNoSpeech:
+            segments.length > 0
+              ? segments.reduce(
+                  (s, seg) => s + (Number(seg?.no_speech_prob) || 0),
+                  0,
+                ) / segments.length
+              : null,
+          hallucinated: looksLikeWhisperHallucination(fullText, segments),
+        },
+        timestamp: Date.now(),
+      })}\n`,
+    );
+  } catch (_) {
+    // ignore debug log failures
+  }
+  // #endregion
+
+  const hallucinated = looksLikeWhisperHallucination(fullText, segments);
+  if (hallucinated) {
+    // Clear both text and segments so clients cannot rebuild junk from segments.
+    return {
+      text: '',
+      segments: [],
+      discardedAsSilence: true,
+    };
+  }
 
   return {
     text: fullText,
@@ -422,6 +538,7 @@ async function transcribeAudio(filePath, originalName, language = 'en') {
       text: String(segment?.text ?? '').trim(),
       start: segment?.start ?? null,
       end: segment?.end ?? null,
+      noSpeechProb: segment?.no_speech_prob ?? null,
     })),
   };
 }
@@ -492,7 +609,7 @@ async function loadUserTutorContext(strapi, userId) {
   const { loadTutorMemory } = require('./tutor-memory');
   const { normalizePracticeLanguage } = require('./practice-languages');
   const { findUserById } = require('./document-service');
-  let userLevel = "B1";
+  let userLevel = "A1";
   let weakAreas = [];
   let tutorMemory = [];
   let practiceLanguage = 'en';
@@ -590,7 +707,7 @@ async function evaluateSession({ history, sessionContext, userLevel }) {
 
   const userPrompt = `Session mode: ${mode}
 Session title: ${title}
-Learner CEFR level: ${userLevel || "B1"}
+Learner CEFR level: ${userLevel || "A1"}
 
 Transcript:
 ${transcript}
@@ -630,6 +747,7 @@ Evaluate the learner's spoken English in this session.`;
 
 module.exports = {
   transcribeAudio,
+  looksLikeWhisperHallucination,
   getTutorReply,
   synthesizeSpeech,
   evaluateSession,

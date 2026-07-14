@@ -48,7 +48,7 @@ async function getOrCreateUserProgress(strapi, userId) {
   return strapi.db.query('api::user-progress.user-progress').create({
     data: {
       user: userId,
-      currentLevel: 'B1',
+      currentLevel: 'A1',
       weakAreas: [],
       streakDays: 0,
       totalSpeakingMinutes: 0,

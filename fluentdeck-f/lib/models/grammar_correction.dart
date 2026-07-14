@@ -10,6 +10,8 @@ class GrammarCorrection {
   final String explanation;
   final String errorType;
   final CorrectionInlineStyle inlineStyle;
+  /// True when this correction was auto-saved to the From speaking deck.
+  final bool autoSaved;
 
   const GrammarCorrection({
     required this.originalText,
@@ -17,9 +19,28 @@ class GrammarCorrection {
     required this.explanation,
     required this.errorType,
     this.inlineStyle = CorrectionInlineStyle.none,
+    this.autoSaved = false,
   });
 
   bool get showsInline => inlineStyle != CorrectionInlineStyle.none;
+
+  GrammarCorrection copyWith({
+    String? originalText,
+    String? correctedText,
+    String? explanation,
+    String? errorType,
+    CorrectionInlineStyle? inlineStyle,
+    bool? autoSaved,
+  }) {
+    return GrammarCorrection(
+      originalText: originalText ?? this.originalText,
+      correctedText: correctedText ?? this.correctedText,
+      explanation: explanation ?? this.explanation,
+      errorType: errorType ?? this.errorType,
+      inlineStyle: inlineStyle ?? this.inlineStyle,
+      autoSaved: autoSaved ?? this.autoSaved,
+    );
+  }
 
   bool get showsCard {
     if (inlineStyle == CorrectionInlineStyle.replace) return true;
@@ -46,6 +67,7 @@ class GrammarCorrection {
       explanation: json['explanation'] as String? ?? '',
       errorType: json['errorType'] as String? ?? 'grammar',
       inlineStyle: _parseInlineStyle(json),
+      autoSaved: json['autoSaved'] == true,
     );
   }
 
@@ -69,5 +91,6 @@ class GrammarCorrection {
     'explanation': explanation,
     'errorType': errorType,
     'inlineStyle': inlineStyle.name,
+    if (autoSaved) 'autoSaved': true,
   };
 }

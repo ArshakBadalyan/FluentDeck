@@ -46,6 +46,9 @@ async function upsertSubscription(strapi, userId, data) {
     lastVerifiedAt: new Date().toISOString(),
     lastEventPayload: data.rawPayload ?? null,
   };
+  if (data.dailyConversationTurns != null) {
+    payload.dailyConversationTurns = data.dailyConversationTurns;
+  }
 
   if (existing) {
     return strapi.db.query(SUBSCRIPTION_UID).update({

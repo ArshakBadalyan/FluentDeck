@@ -1,92 +1,20 @@
 'use strict';
 
 const { createCoreController } = require('@strapi/strapi').factories;
-const { DEFAULT_CONFIG } = require('../../../utils/app-feature-config');
-const { parseStepsList, parseEasyDays } = require('../../../utils/flashcard-scheduling-defaults');
+const {
+  DEFAULT_CONFIG,
+  getFeatureConfig,
+} = require('../../../utils/app-feature-config');
 
 module.exports = createCoreController(
   'api::app-feature-config.app-feature-config',
   ({ strapi }) => ({
     async publicConfig(ctx) {
-      const rows = await strapi.db
-        .query('api::app-feature-config.app-feature-config')
-        .findMany({
-          where: { publishedAt: { $notNull: true } },
-          limit: 1,
-        });
-      const entry = rows[0];
-
-      if (!entry) {
-        ctx.body = DEFAULT_CONFIG;
-        return;
-      }
-
-      const pickInt = (camel, snake, fallback) => {
-        const raw = entry[camel] ?? entry[snake];
-        if (raw === null || raw === undefined || raw === '') return fallback;
-        const n = typeof raw === 'number' ? raw : parseInt(String(raw), 10);
-        return Number.isFinite(n) ? n : fallback;
-      };
-
+      // Shared resolver applies FREE_/PREMIUM_DAILY_CONVERSATION_TURNS from env.
+      const config = await getFeatureConfig(strapi);
       ctx.body = {
-        freeMaxSavedWords: pickInt(
-          'freeMaxSavedWords',
-          'free_max_saved_words',
-          DEFAULT_CONFIG.freeMaxSavedWords,
-        ),
-        freeMaxDecks: pickInt('freeMaxDecks', 'free_max_decks', DEFAULT_CONFIG.freeMaxDecks),
-        freeMaxNewCardsPerDay: pickInt(
-          'freeMaxNewCardsPerDay',
-          'free_max_new_cards_per_day',
-          DEFAULT_CONFIG.freeMaxNewCardsPerDay,
-        ),
-        freeDailyConversationTurns: pickInt(
-          'freeDailyConversationTurns',
-          'free_daily_conversation_turns',
-          DEFAULT_CONFIG.freeDailyConversationTurns,
-        ),
-        freeRolePlayPerCategory: pickInt(
-          'freeRolePlayPerCategory',
-          'free_role_play_per_category',
-          DEFAULT_CONFIG.freeRolePlayPerCategory,
-        ),
-        freeTopicLevelGroups: (() => {
-          let groups =
-            entry.freeTopicLevelGroups ?? entry.free_topic_level_groups ?? DEFAULT_CONFIG.freeTopicLevelGroups;
-          if (typeof groups === 'string') {
-            try {
-              groups = JSON.parse(groups);
-            } catch {
-              groups = DEFAULT_CONFIG.freeTopicLevelGroups;
-            }
-          }
-          return Array.isArray(groups) ? groups : DEFAULT_CONFIG.freeTopicLevelGroups;
-        })(),
-        freeGamesCount: pickInt(
-          'freeGamesCount',
-          'free_games_count',
-          DEFAULT_CONFIG.freeGamesCount,
-        ),
-        defaultLearningStepsMinutes: parseStepsList(
-          entry.defaultLearningStepsMinutes ?? entry.default_learning_steps_minutes,
-          DEFAULT_CONFIG.defaultLearningStepsMinutes,
-        ),
-        defaultEasyIntervalDays: parseEasyDays(
-          entry.defaultEasyIntervalDays ?? entry.default_easy_interval_days,
-          DEFAULT_CONFIG.defaultEasyIntervalDays,
-        ),
-        hiddenSpeakingTabs: (() => {
-          let tabs =
-            entry.hiddenSpeakingTabs ?? entry.hidden_speaking_tabs ?? DEFAULT_CONFIG.hiddenSpeakingTabs;
-          if (typeof tabs === 'string') {
-            try {
-              tabs = JSON.parse(tabs);
-            } catch {
-              tabs = DEFAULT_CONFIG.hiddenSpeakingTabs;
-            }
-          }
-          return Array.isArray(tabs) ? tabs : DEFAULT_CONFIG.hiddenSpeakingTabs;
-        })(),
+        ...DEFAULT_CONFIG,
+        ...config,
       };
     },
   }),

@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
@@ -39,11 +43,46 @@ class _ProfileSettingsSpeakingSectionState
       );
       final status = await SubscriptionService.instance.fetchStatus();
       if (!mounted) return;
+      final level =
+          speakingPrefs.englishLevel ?? EnglishLevelService.defaultLevel;
+      final normalized = speakingPrefs.copyWith(englishLevel: level);
+      // #region agent log
+      unawaited(
+        http
+            .post(
+              Uri.parse(
+                'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
+              ),
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Debug-Session-Id': 'fcee54',
+              },
+              body: jsonEncode({
+                'sessionId': 'fcee54',
+                'runId': 'level-lang',
+                'hypothesisId': 'E4',
+                'location': 'profile_settings_speaking_tab.dart:_load',
+                'message': 'Speaking settings loaded',
+                'data': {
+                  'englishLevel': normalized.englishLevel,
+                  'practiceLanguage': normalized.practiceLanguage,
+                  'responseLanguage': normalized.responseLanguage,
+                },
+                'timestamp': DateTime.now().millisecondsSinceEpoch,
+              }),
+            )
+            .catchError((_) => http.Response('', 500)),
+      );
+      // #endregion
+      if (!mounted) return;
       setState(() {
-        _speakingPrefs = speakingPrefs;
+        _speakingPrefs = normalized;
         _isPremium = status.isPremium;
         _loading = false;
       });
+      if (speakingPrefs.englishLevel == null) {
+        await _saveSpeakingPreferences(normalized);
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -259,28 +298,6 @@ class _ProfileSettingsSpeakingSectionState
           },
         ),
         AppToggleRow(
-          title: 'Auto-start recording',
-          subtitle: 'Open the mic automatically after the tutor finishes speaking.',
-          value: _speakingPrefs.autoStartRecording,
-          enabled: !_saving,
-          onChanged: (value) {
-            _saveSpeakingPreferences(
-              _speakingPrefs.copyWith(autoStartRecording: value),
-            );
-          },
-        ),
-        AppToggleRow(
-          title: 'Show translations',
-          subtitle: 'Display a helper translation under each tutor message.',
-          value: _speakingPrefs.showTranslations,
-          enabled: !_saving,
-          onChanged: (value) {
-            _saveSpeakingPreferences(
-              _speakingPrefs.copyWith(showTranslations: value),
-            );
-          },
-        ),
-        AppToggleRow(
           title: 'Auto-play tutor voice',
           subtitle:
               'Play AI replies automatically. Turn off to use the Play button on each message.',
@@ -296,9 +313,42 @@ class _ProfileSettingsSpeakingSectionState
           },
         ),
         AppToggleRow(
+          title: 'Auto-start recording',
+          subtitle:
+              'Open the mic after the tutor finishes speaking (or after a short pause if voice is off).',
+          value: _speakingPrefs.autoStartRecording,
+          enabled: !_saving,
+          onChanged: (value) {
+            _saveSpeakingPreferences(
+              _speakingPrefs.copyWith(autoStartRecording: value),
+            );
+          },
+        ),
+        if (_speakingPrefs.autoStartRecording ||
+            _speakingPrefs.autoConversation) ...[
+          const SizedBox(height: 4),
+          AppSliderRow(
+            title: 'Mic start delay',
+            value: _speakingPrefs.autoStartRecordingDelaySeconds.toDouble(),
+            min: 0,
+            max: 10,
+            divisions: 10,
+            label:
+                '${_speakingPrefs.autoStartRecordingDelaySeconds}s after tutor finishes',
+            enabled: !_saving,
+            onChanged: (value) {
+              _saveSpeakingPreferences(
+                _speakingPrefs.copyWith(
+                  autoStartRecordingDelaySeconds: value.round(),
+                ),
+              );
+            },
+          ),
+        ],
+        AppToggleRow(
           title: 'Hands-free conversation',
           subtitle:
-              'After the tutor speaks, reopen the mic automatically for continuous practice.',
+              'Keep auto-playing voice and reopening the mic after every tutor reply.',
           value: _speakingPrefs.autoConversation,
           enabled: !_saving,
           onChanged: (value) {
@@ -307,6 +357,17 @@ class _ProfileSettingsSpeakingSectionState
                 autoConversation: value,
                 autoPlayVoice: value ? true : _speakingPrefs.autoPlayVoice,
               ),
+            );
+          },
+        ),
+        AppToggleRow(
+          title: 'Show translations',
+          subtitle: 'Display a helper translation under each tutor message.',
+          value: _speakingPrefs.showTranslations,
+          enabled: !_saving,
+          onChanged: (value) {
+            _saveSpeakingPreferences(
+              _speakingPrefs.copyWith(showTranslations: value),
             );
           },
         ),

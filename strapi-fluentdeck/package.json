@@ -12,7 +12,8 @@
     "test:apkg": "node tests/apkg-import.test.js",
     "test:queue": "node --test tests/flashcard-review-queue.test.js",
     "test:speaking-premium": "node --test tests/speaking-premium-access.test.js",
-    "test": "yarn test:apkg && yarn test:queue && yarn test:speaking-premium"
+    "test:ai-rate-limit": "node --test tests/ai-rate-limit.test.js",
+    "test": "yarn test:apkg && yarn test:queue && yarn test:speaking-premium && yarn test:ai-rate-limit"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",

@@ -124,7 +124,8 @@
     },
     "english_level": {
       "type": "enumeration",
-      "enum": ["A1", "A2", "B1", "B2", "C1", "C2"]
+      "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
+      "default": "A1"
     },
     "practice_language": {
       "type": "enumeration",
@@ -193,6 +194,12 @@
     "auto_start_recording": {
       "type": "boolean",
       "default": false
+    },
+    "auto_start_recording_delay_seconds": {
+      "type": "integer",
+      "default": 1,
+      "min": 0,
+      "max": 10
     },
     "daily_reminder_enabled": {
       "type": "boolean",

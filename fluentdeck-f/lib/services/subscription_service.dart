@@ -8,12 +8,16 @@ import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../models/app_feature_config_model.dart';
+import 'app_feature_config_service.dart';
 import 'api_service.dart';
 
 const String kMonthlyProductId = 'fluentdeck_premium_monthly';
 const String kQuarterlyProductId = 'fluentdeck_premium_quarterly';
 const String kYearlyProductId = 'fluentdeck_premium_yearly';
-const Set<String> kSubscriptionProductIds = {
+
+/// Fallback product IDs when remote config has not loaded yet.
+const Set<String> kDefaultSubscriptionProductIds = {
   kMonthlyProductId,
   kQuarterlyProductId,
   kYearlyProductId,
@@ -26,6 +30,9 @@ class PlanInfo {
     required this.periodSuffix,
     required this.fallbackPrice,
     this.badge,
+    this.durationMonths = 1,
+    this.dailyConversationTurns = 60,
+    this.priceAmount = 0,
   });
 
   final String productId;
@@ -33,33 +40,105 @@ class PlanInfo {
   final String periodSuffix;
   final String fallbackPrice;
   final String? badge;
+  final int durationMonths;
+  final int dailyConversationTurns;
+  final double priceAmount;
 }
 
-/// The plans FluentDeck actually sells. Always shown in the subscription UI,
-/// so it never looks empty — real store data (localized price, currency) is
-/// layered on top once the products are live in App Store Connect / Play Console.
-const List<PlanInfo> kFluentDeckPlans = [
+/// Recommended launch defaults (EUR). Overridden by Strapi env via app-feature-config.
+const List<PlanInfo> kDefaultFluentDeckPlans = [
   PlanInfo(
     productId: kMonthlyProductId,
     title: 'Monthly',
     periodSuffix: '/ month',
     fallbackPrice: '€9.99',
+    durationMonths: 1,
+    dailyConversationTurns: 60,
+    priceAmount: 9.99,
   ),
   PlanInfo(
     productId: kQuarterlyProductId,
     title: 'Quarterly',
     periodSuffix: '/ 3 months',
-    fallbackPrice: '€26.99',
-    badge: 'Save 10%',
+    fallbackPrice: '€25.99',
+    badge: 'Save 13%',
+    durationMonths: 3,
+    dailyConversationTurns: 60,
+    priceAmount: 25.99,
   ),
   PlanInfo(
     productId: kYearlyProductId,
     title: 'Yearly',
     periodSuffix: '/ year',
-    fallbackPrice: '€100.00',
+    fallbackPrice: '€69.99',
     badge: 'Best value',
+    durationMonths: 12,
+    dailyConversationTurns: 60,
+    priceAmount: 69.99,
   ),
 ];
+
+/// Base plans (at default 60 daily turns). Use [plansForDailyTurns] for scaled prices.
+List<PlanInfo> get kFluentDeckPlans {
+  final remote = AppFeatureConfigService.instance.config.subscriptionPlans;
+  if (remote.isEmpty) return kDefaultFluentDeckPlans;
+  return remote
+      .map(
+        (p) => PlanInfo(
+          productId: p.productId,
+          title: p.title,
+          periodSuffix: p.periodSuffix,
+          fallbackPrice: p.fallbackPrice,
+          badge: p.badge,
+          durationMonths: p.durationMonths,
+          dailyConversationTurns: p.dailyConversationTurns,
+          priceAmount: p.priceAmount,
+        ),
+      )
+      .toList();
+}
+
+SubscriptionDailyTurnsSliderConfig get kDailyTurnsSliderConfig =>
+    AppFeatureConfigService.instance.config.subscriptionDailyTurnsSlider;
+
+/// Scale plan prices with the user-selected daily conversation size.
+List<PlanInfo> plansForDailyTurns(int selectedDailyTurns) {
+  final slider = kDailyTurnsSliderConfig;
+  final selected = selectedDailyTurns.clamp(slider.min, slider.max);
+  final scaledPlans = kFluentDeckPlans.map((plan) {
+    final baseTurns =
+        plan.dailyConversationTurns > 0 ? plan.dailyConversationTurns : 60;
+    final baseAmount =
+        plan.priceAmount > 0
+            ? plan.priceAmount
+            : _parseEuroAmount(plan.fallbackPrice);
+    final scaled = baseAmount * (selected / baseTurns);
+    final currency = plan.fallbackPrice.trim().isNotEmpty
+        ? plan.fallbackPrice.trim()[0]
+        : '€';
+    return PlanInfo(
+      productId: plan.productId,
+      title: plan.title,
+      periodSuffix: plan.periodSuffix,
+      fallbackPrice: '$currency${scaled.toStringAsFixed(2)}',
+      badge: plan.badge,
+      durationMonths: plan.durationMonths,
+      dailyConversationTurns: selected,
+      priceAmount: scaled,
+    );
+  }).toList();
+  return scaledPlans;
+}
+
+double _parseEuroAmount(String raw) {
+  final cleaned = raw.replaceAll(RegExp(r'[^\d.]'), '');
+  return double.tryParse(cleaned) ?? 0;
+}
+
+Set<String> get kSubscriptionProductIds {
+  final ids = kFluentDeckPlans.map((p) => p.productId).toSet();
+  return ids.isEmpty ? kDefaultSubscriptionProductIds : ids;
+}
 
 class SubscriptionStatus {
   const SubscriptionStatus({
@@ -67,12 +146,14 @@ class SubscriptionStatus {
     this.productId,
     this.status,
     this.currentPeriodEnd,
+    this.dailyConversationTurns,
   });
 
   final bool isPremium;
   final String? productId;
   final String? status;
   final DateTime? currentPeriodEnd;
+  final int? dailyConversationTurns;
 
   static const none = SubscriptionStatus(isPremium: false);
 
@@ -86,6 +167,8 @@ class SubscriptionStatus {
           sub is Map && sub['currentPeriodEnd'] != null
               ? DateTime.tryParse(sub['currentPeriodEnd'].toString())
               : null,
+      dailyConversationTurns:
+          sub is Map ? (sub['dailyConversationTurns'] as num?)?.round() : null,
     );
   }
 }
@@ -100,6 +183,7 @@ class SubscriptionService {
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   SubscriptionStatus _cachedStatus = SubscriptionStatus.none;
+  int? _pendingDailyConversationTurns;
 
   SubscriptionStatus get cachedStatus => _cachedStatus;
 
@@ -160,7 +244,11 @@ class SubscriptionService {
     return null;
   }
 
-  Future<void> purchase(ProductDetails product) async {
+  Future<void> purchase(
+    ProductDetails product, {
+    int? dailyConversationTurns,
+  }) async {
+    _pendingDailyConversationTurns = dailyConversationTurns;
     if (!kIsWeb && Platform.isAndroid) {
       final oldPurchase = await _currentAndroidSubscriptionPurchase();
       if (oldPurchase != null && oldPurchase.productID != product.id) {
@@ -255,9 +343,11 @@ class SubscriptionService {
 
   Future<bool> _verifyWithBackend(PurchaseDetails purchase) async {
     try {
+      final dailyTurns = _pendingDailyConversationTurns;
       if (!kIsWeb && Platform.isIOS) {
         final data = await ApiService.post('subscriptions/verify-apple', {
           'receiptData': purchase.verificationData.serverVerificationData,
+          if (dailyTurns != null) 'dailyConversationTurns': dailyTurns,
         });
         return _applyStatusFromResponse(data);
       }
@@ -265,6 +355,7 @@ class SubscriptionService {
         final data = await ApiService.post('subscriptions/verify-google', {
           'productId': purchase.productID,
           'purchaseToken': purchase.verificationData.serverVerificationData,
+          if (dailyTurns != null) 'dailyConversationTurns': dailyTurns,
         });
         return _applyStatusFromResponse(data);
       }

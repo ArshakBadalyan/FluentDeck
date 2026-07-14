@@ -4,6 +4,14 @@ module.exports = {
   routes: [
     {
       method: "GET",
+      path: "/subscriptions/plans",
+      handler: "subscription.plans",
+      config: {
+        auth: false,
+      },
+    },
+    {
+      method: "GET",
       path: "/subscriptions/status",
       handler: "subscription.status",
     },

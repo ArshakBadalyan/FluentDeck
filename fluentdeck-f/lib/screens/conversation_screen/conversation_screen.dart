@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/conversation_turn_model.dart';
 import 'package:fluentdeck/models/grammar_correction.dart';
@@ -14,7 +16,9 @@ import 'package:fluentdeck/services/speaking_scores_service.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/utils/correction_text_utils.dart';
 import 'package:fluentdeck/utils/vocabulary_highlight_utils.dart';
+import 'package:fluentdeck/widgets/ai_daily_usage_bar.dart';
 
+import 'conversation_chat_settings_sheet.dart';
 import 'save_word_meaning_sheet.dart';
 
 class ConversationScreen extends StatefulWidget {
@@ -41,7 +45,41 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 
   Future<void> _loadUsage() async {
-    final usage = await ConversationLimitService.instance.getStatus();
+    final usage = await ConversationLimitService.instance.getStatus(
+      forceRefresh: true,
+    );
+    // #region agent log
+    unawaited(() async {
+      try {
+        await http.post(
+          Uri.parse(
+            'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
+          ),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': 'fcee54',
+          },
+          body: jsonEncode({
+            'sessionId': 'fcee54',
+            'runId': 'premium-usage',
+            'hypothesisId': 'P2-P3',
+            'location': 'conversation_screen.dart:_loadUsage',
+            'message': 'Conversation usage bar data',
+            'data': {
+              'isPremium': usage.isPremium,
+              'usedToday': usage.usedToday,
+              'dailyLimit': usage.dailyLimit,
+              'freeDailyLimit': usage.freeDailyLimit,
+              'premiumDailyLimit': usage.premiumDailyLimit,
+              'phase': usage.phase,
+              'hasMeter': usage.hasMeter,
+            },
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          }),
+        );
+      } catch (_) {}
+    }());
+    // #endregion
     if (!mounted) return;
     setState(() => _usage = usage);
   }
@@ -152,11 +190,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
         '(${_service.trainingSession.words.length} words)',
       );
     }
-    if (_usage != null && !_usage!.isPremium) {
-      parts.add(
-        '${_usage!.remaining}/${_usage!.dailyLimit} free today',
-      );
-    }
     if (_service.autoConversationEnabled) {
       parts.add('Hands-free on');
     }
@@ -237,9 +270,17 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 backgroundColor: AppColors.primaryPurple,
                 foregroundColor: Colors.white,
                 elevation: 0,
+                actions: [
+                  IconButton(
+                    onPressed: () => showConversationChatSettingsSheet(context),
+                    icon: const Icon(Icons.tune_rounded),
+                    tooltip: 'Chat settings',
+                  ),
+                ],
               ),
       body: Column(
         children: [
+          if (_usage != null && _usage!.hasMeter) AiDailyUsageBar(usage: _usage!),
           if (statusLine != null || _service.canEvaluateSession)
             Container(
               width: double.infinity,
@@ -652,8 +693,10 @@ class _CorrectionCardState extends State<_CorrectionCard> {
   bool _saving = false;
   bool _saved = false;
 
+  bool get _isSaved => _saved || widget.correction.autoSaved;
+
   Future<void> _saveToNotes() async {
-    if (_saving || _saved) return;
+    if (_saving || _isSaved) return;
     setState(() => _saving = true);
     try {
       final result = await NoteService.instance.saveFromCorrection(
@@ -710,8 +753,10 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                   children: [
                     Row(
                       children: [
-                        const Icon(
-                          Icons.auto_fix_high,
+                        Icon(
+                          _isSaved
+                              ? Icons.bookmark_added_rounded
+                              : Icons.auto_fix_high,
                           size: 16,
                           color: AppColors.primaryPurple,
                         ),
@@ -725,6 +770,45 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                             ),
                           ),
                         ),
+                        if (_isSaved) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryYellow.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: AppColors.primaryYellow.withValues(
+                                  alpha: 0.85,
+                                ),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.bookmark_added_rounded,
+                                  size: 13,
+                                  color: AppColors.primaryPurple,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Saved',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primaryPurple,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
                         Icon(
                           _expanded
                               ? Icons.expand_less
@@ -747,24 +831,32 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                           color: Colors.grey.shade700,
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton.icon(
-                          onPressed: _saving || _saved ? null : _saveToNotes,
-                          icon: Icon(
-                            _saved ? Icons.check : Icons.bookmark_add_outlined,
-                            size: 16,
-                          ),
-                          label: Text(
-                            _saved
-                                ? 'Saved'
-                                : _saving
-                                ? 'Saving…'
-                                : 'Save to notes',
+                      if (!_isSaved) ...[
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: _saving ? null : _saveToNotes,
+                            icon: Icon(
+                              _saving
+                                  ? Icons.hourglass_top_rounded
+                                  : Icons.bookmark_add_outlined,
+                              size: 16,
+                            ),
+                            label: Text(_saving ? 'Saving…' : 'Save to notes'),
                           ),
                         ),
-                      ),
+                      ] else ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Added to your From speaking deck',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ],
                   ],
                 ),

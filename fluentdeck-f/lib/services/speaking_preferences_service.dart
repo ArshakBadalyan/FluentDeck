@@ -82,6 +82,7 @@ extension SpeakingPreferencesCopy on SpeakingPreferences {
     bool? soundOn,
     bool? typeMessagesEnabled,
     bool? autoStartRecording,
+    int? autoStartRecordingDelaySeconds,
     bool? autoSaveCorrections,
     bool? dailyReminderEnabled,
     String? dailyReminderTime,
@@ -100,6 +101,8 @@ extension SpeakingPreferencesCopy on SpeakingPreferences {
       soundOn: soundOn ?? this.soundOn,
       typeMessagesEnabled: typeMessagesEnabled ?? this.typeMessagesEnabled,
       autoStartRecording: autoStartRecording ?? this.autoStartRecording,
+      autoStartRecordingDelaySeconds:
+          autoStartRecordingDelaySeconds ?? this.autoStartRecordingDelaySeconds,
       autoSaveCorrections: autoSaveCorrections ?? this.autoSaveCorrections,
       dailyReminderEnabled: dailyReminderEnabled ?? this.dailyReminderEnabled,
       dailyReminderTime: dailyReminderTime ?? this.dailyReminderTime,

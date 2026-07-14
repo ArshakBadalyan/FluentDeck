@@ -549,6 +549,14 @@ export interface ApiAppFeatureConfigAppFeatureConfig
       'api::app-feature-config.app-feature-config'
     > &
       Schema.Attribute.Private;
+    premiumDailyConversationTurns: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<60>;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1285,6 +1293,15 @@ export interface ApiSubscriptionSubscription
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     currentPeriodEnd: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    dailyConversationTurns: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 500;
+          min: 1;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<60>;
     lastEventPayload: Schema.Attribute.JSON;
     lastVerifiedAt: Schema.Attribute.DateTime;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -1898,6 +1915,15 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.DefaultTo<true>;
     auto_start_recording: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
+    auto_start_recording_delay_seconds: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 10;
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<1>;
     blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     confirmationToken: Schema.Attribute.String & Schema.Attribute.Private;
     confirmed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
@@ -1934,7 +1960,8 @@ export interface PluginUsersPermissionsUser
       }>;
     english_level: Schema.Attribute.Enumeration<
       ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-    >;
+    > &
+      Schema.Attribute.DefaultTo<'A1'>;
     hide_screen_explanation: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     is_admin: Schema.Attribute.Boolean &
