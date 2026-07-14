@@ -1,8 +1,4 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
@@ -46,34 +42,6 @@ class _ProfileSettingsSpeakingSectionState
       final level =
           speakingPrefs.englishLevel ?? EnglishLevelService.defaultLevel;
       final normalized = speakingPrefs.copyWith(englishLevel: level);
-      // #region agent log
-      unawaited(
-        http
-            .post(
-              Uri.parse(
-                'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
-              ),
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Debug-Session-Id': 'fcee54',
-              },
-              body: jsonEncode({
-                'sessionId': 'fcee54',
-                'runId': 'level-lang',
-                'hypothesisId': 'E4',
-                'location': 'profile_settings_speaking_tab.dart:_load',
-                'message': 'Speaking settings loaded',
-                'data': {
-                  'englishLevel': normalized.englishLevel,
-                  'practiceLanguage': normalized.practiceLanguage,
-                  'responseLanguage': normalized.responseLanguage,
-                },
-                'timestamp': DateTime.now().millisecondsSinceEpoch,
-              }),
-            )
-            .catchError((_) => http.Response('', 500)),
-      );
-      // #endregion
       if (!mounted) return;
       setState(() {
         _speakingPrefs = normalized;

@@ -83,39 +83,6 @@ class ConversationService {
 
   void _notify() => onStateChanged?.call();
 
-  // #region agent log
-  void _agentDebugLog(
-    String hypothesisId,
-    String location,
-    String message, [
-    Map<String, Object?> data = const {},
-  ]) {
-    final payload = <String, Object?>{
-      'sessionId': 'fcee54',
-      'runId': 'post-fix',
-      'hypothesisId': hypothesisId,
-      'location': location,
-      'message': message,
-      'data': data,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-    };
-    unawaited(
-      http
-          .post(
-            Uri.parse(
-              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
-            ),
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Debug-Session-Id': 'fcee54',
-            },
-            body: jsonEncode(payload),
-          )
-          .catchError((_) => http.Response('', 500)),
-    );
-  }
-  // #endregion
-
   Future<void> refreshSpeakingSettings() async {
     final prefs = await SpeakingPreferencesService.instance.load(forceRefresh: true);
     autoPlayVoiceEnabled = prefs.autoPlayVoice;
@@ -217,21 +184,6 @@ class ConversationService {
     final sessionEpoch = _chatSessionEpoch;
     final audioEnabled = soundOnEnabled && (!isAutomatic || autoPlayVoiceEnabled);
 
-    // #region agent log
-    _agentDebugLog('A,B,E', 'conversation_service.dart:speakAiTurns:entry', 'speakAiTurns started', {
-      'startMicAfter': startMicAfter,
-      'isAutomatic': isAutomatic,
-      'audioEnabled': audioEnabled,
-      'soundOnEnabled': soundOnEnabled,
-      'autoPlayVoiceEnabled': autoPlayVoiceEnabled,
-      'autoStartRecordingEnabled': autoStartRecordingEnabled,
-      'autoConversationEnabled': autoConversationEnabled,
-      'isPlayingTts': isPlayingTts,
-      'playerState': _ttsPlayer.state.name,
-      'turnCount': turnIndices.length,
-    });
-    // #endregion
-
     if (audioEnabled) {
       for (final index in turnIndices) {
         if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
@@ -247,30 +199,12 @@ class ConversationService {
         startMicAfter &&
         (autoConversationEnabled || autoStartRecordingEnabled) &&
         !isRecording;
-    // #region agent log
-    _agentDebugLog('A,B,D', 'conversation_service.dart:speakAiTurns:beforeMic', 'evaluating mic start after speak', {
-      'shouldStartMic': shouldStartMic,
-      'audioEnabled': audioEnabled,
-      'isPlayingTts': isPlayingTts,
-      'playerState': _ttsPlayer.state.name,
-      'isRecording': isRecording,
-      'delaySeconds': autoStartRecordingDelaySeconds,
-    });
-    // #endregion
     if (!shouldStartMic) return;
 
     // Give the user a beat to read (no audio) or finish listening (after TTS).
     await _delayBeforeAutoMic(sessionEpoch);
     if (sessionEpoch != _chatSessionEpoch || !_chatActive || isRecording) return;
 
-    // #region agent log
-    _agentDebugLog('A,D', 'conversation_service.dart:speakAiTurns:micGo', 'starting mic after TTS+delay', {
-      'playerState': _ttsPlayer.state.name,
-      'isPlayingTts': isPlayingTts,
-      'delaySeconds': autoStartRecordingDelaySeconds,
-      'audioEnabled': audioEnabled,
-    });
-    // #endregion
     await startRecording();
   }
 
@@ -409,14 +343,6 @@ class ConversationService {
     isRecording = false;
     isProcessing = false;
     stage = ConversationProcessingStage.idle;
-    // #region agent log
-    _agentDebugLog('H1', 'conversation_service.dart:loadSession', 'session loaded', {
-      'sessionId': session.id,
-      'turnCount': turns.length,
-      'chatActive': _chatActive,
-      'title': sessionContext.title,
-    });
-    // #endregion
     _notify();
   }
 
@@ -719,18 +645,6 @@ class ConversationService {
     if (isProcessing || isRecording) return;
     errorMessage = null;
 
-    // #region agent log
-    _agentDebugLog('A,C,D', 'conversation_service.dart:startRecording', 'startRecording called', {
-      'isProcessing': isProcessing,
-      'isRecording': isRecording,
-      'isPlayingTts': isPlayingTts,
-      'playerState': _ttsPlayer.state.name,
-      'stage': stage.name,
-      'autoStartRecordingEnabled': autoStartRecordingEnabled,
-      'autoConversationEnabled': autoConversationEnabled,
-    });
-    // #endregion
-
     final allowed = await ensureMicPermission();
     if (!allowed) {
       errorMessage = 'Microphone permission is required.';
@@ -771,22 +685,8 @@ class ConversationService {
       return;
     }
 
-    // #region agent log
-    _agentDebugLog('W1,W3', 'conversation_service.dart:stopRecording', 'recording stopped', {
-      'recordedMs': recordedFor.inMilliseconds,
-      'pathLen': path.length,
-      'isWeb': kIsWeb,
-    });
-    // #endregion
-
     // Near-empty clips are rejected before Whisper — silence often hallucinates.
     if (recordedFor < const Duration(milliseconds: 700)) {
-      // #region agent log
-      _agentDebugLog('LIMIT', 'conversation_service.dart:tooShort', 'skip whisper+tutor; free limit unchanged', {
-        'recordedMs': recordedFor.inMilliseconds,
-        'willCallTutor': false,
-      });
-      // #endregion
       errorMessage = 'Could not hear you. Please try again.';
       _notify();
       return;
@@ -800,22 +700,8 @@ class ConversationService {
     ConversationTurnModel? userTurn;
     try {
       final userText = (await _transcribe(path)).trim();
-      // #region agent log
-      _agentDebugLog('W1,W5', 'conversation_service.dart:afterTranscribe', 'transcription result', {
-        'recordedMs': recordedFor.inMilliseconds,
-        'text': userText,
-        'textLen': userText.length,
-        'looksHallucinated': _looksLikeWhisperHallucination(userText),
-      });
-      // #endregion
       if (userText.isEmpty || _looksLikeWhisperHallucination(userText)) {
         // No /ai/tutor call → free/premium daily conversation limit is not consumed.
-        // #region agent log
-        _agentDebugLog('LIMIT', 'conversation_service.dart:noHear', 'skip tutor; free limit unchanged', {
-          'userText': userText,
-          'willCallTutor': false,
-        });
-        // #endregion
         errorMessage = 'Could not hear you. Please try again.';
         return;
       }
@@ -836,14 +722,6 @@ class ConversationService {
       stage = ConversationProcessingStage.thinking;
       _notify();
 
-      // #region agent log
-      _agentDebugLog('LIMIT', 'conversation_service.dart:beforeTutor', 'calling tutor; limit will use 1 turn', {
-        'userText': userText,
-        'willCallTutor': true,
-        'usedToday': usage.usedToday,
-        'isPremium': usage.isPremium,
-      });
-      // #endregion
       await _completeUserTurn(userText, userTurn: userTurn);
     } catch (e) {
       if (userTurn != null) {
@@ -1333,19 +1211,6 @@ class ConversationService {
       if (_ttsPlayer.state == PlayerState.playing) {
         seenPlaying = true;
       }
-      // #region agent log
-      _agentDebugLog(
-        'A',
-        'conversation_service.dart:_startTtsAndWait:afterPlay',
-        'play() returned; waiting for completion',
-        {
-          'playerState': _ttsPlayer.state.name,
-          'textLen': textLen,
-          'fromCache': fromCache,
-          'bytesLen': bytesLen,
-        },
-      );
-      // #endregion
 
       if (_ttsPlayer.state == PlayerState.completed) {
         if (!done.isCompleted) done.complete();
@@ -1359,18 +1224,6 @@ class ConversationService {
         ]);
       }
 
-      // #region agent log
-      _agentDebugLog(
-        'A,D',
-        'conversation_service.dart:_startTtsAndWait:completed',
-        'TTS playback finished',
-        {
-          'playerState': _ttsPlayer.state.name,
-          'isPlayingTts': isPlayingTts,
-          'fromCache': fromCache,
-        },
-      );
-      // #endregion
     } finally {
       for (final sub in subs) {
         await sub.cancel();

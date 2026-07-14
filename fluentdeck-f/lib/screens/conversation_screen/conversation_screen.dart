@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/conversation_turn_model.dart';
 import 'package:fluentdeck/models/grammar_correction.dart';
@@ -48,38 +46,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
     final usage = await ConversationLimitService.instance.getStatus(
       forceRefresh: true,
     );
-    // #region agent log
-    unawaited(() async {
-      try {
-        await http.post(
-          Uri.parse(
-            'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
-          ),
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': 'fcee54',
-          },
-          body: jsonEncode({
-            'sessionId': 'fcee54',
-            'runId': 'premium-usage',
-            'hypothesisId': 'P2-P3',
-            'location': 'conversation_screen.dart:_loadUsage',
-            'message': 'Conversation usage bar data',
-            'data': {
-              'isPremium': usage.isPremium,
-              'usedToday': usage.usedToday,
-              'dailyLimit': usage.dailyLimit,
-              'freeDailyLimit': usage.freeDailyLimit,
-              'premiumDailyLimit': usage.premiumDailyLimit,
-              'phase': usage.phase,
-              'hasMeter': usage.hasMeter,
-            },
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          }),
-        );
-      } catch (_) {}
-    }());
-    // #endregion
     if (!mounted) return;
     setState(() => _usage = usage);
   }

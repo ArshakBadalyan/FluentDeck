@@ -1,8 +1,4 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 import '../../app_colors.dart';
 import '../../models/speaking_preferences.dart';
@@ -50,36 +46,6 @@ class _ConversationChatSettingsSheetState
       _prefs = prefs;
       _loading = false;
     });
-    // #region agent log
-    unawaited(
-      http
-          .post(
-            Uri.parse(
-              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
-            ),
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Debug-Session-Id': 'fcee54',
-            },
-            body: jsonEncode({
-              'sessionId': 'fcee54',
-              'runId': 'chat-settings',
-              'hypothesisId': 'S1',
-              'location': 'conversation_chat_settings_sheet.dart:_load',
-              'message': 'Chat settings sheet opened',
-              'data': {
-                'soundOn': prefs.soundOn,
-                'autoPlayVoice': prefs.autoPlayVoice,
-                'autoStartRecording': prefs.autoStartRecording,
-                'autoConversation': prefs.autoConversation,
-                'typeMessagesEnabled': prefs.typeMessagesEnabled,
-              },
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
-            }),
-          )
-          .catchError((_) => http.Response('', 500)),
-    );
-    // #endregion
   }
 
   Future<void> _save(SpeakingPreferences next) async {
@@ -108,40 +74,6 @@ class _ConversationChatSettingsSheetState
     }
 
     await ConversationService.instance.refreshSpeakingSettings();
-    // #region agent log
-    unawaited(
-      http
-          .post(
-            Uri.parse(
-              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
-            ),
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Debug-Session-Id': 'fcee54',
-            },
-            body: jsonEncode({
-              'sessionId': 'fcee54',
-              'runId': 'chat-settings',
-              'hypothesisId': 'S2',
-              'location': 'conversation_chat_settings_sheet.dart:_save',
-              'message': 'Chat settings saved',
-              'data': {
-                'soundOn': next.soundOn,
-                'autoPlayVoice': next.autoPlayVoice,
-                'autoStartRecording': next.autoStartRecording,
-                'autoConversation': next.autoConversation,
-                'typeMessagesEnabled': next.typeMessagesEnabled,
-                'serviceSound': ConversationService.instance.soundOnEnabled,
-                'serviceAutoStart':
-                    ConversationService.instance.autoStartRecordingEnabled,
-                'serviceType': ConversationService.instance.typeMessagesEnabled,
-              },
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
-            }),
-          )
-          .catchError((_) => http.Response('', 500)),
-    );
-    // #endregion
     if (mounted) setState(() {});
   }
 

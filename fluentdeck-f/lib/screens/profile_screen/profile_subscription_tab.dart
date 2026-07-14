@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
 
@@ -110,42 +108,6 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
         slider.defaultTurns;
     final clamped = initialDaily.clamp(slider.min, slider.max);
 
-    // #region agent log
-    unawaited(
-      http
-          .post(
-            Uri.parse(
-              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
-            ),
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Debug-Session-Id': 'fcee54',
-            },
-            body: jsonEncode({
-              'sessionId': 'fcee54',
-              'runId': 'pre-fix',
-              'hypothesisId': 'A',
-              'location': 'profile_subscription_tab.dart:_load',
-              'message': 'Subscription tab loaded slider config',
-              'data': {
-                'sliderMin': slider.min,
-                'sliderMax': slider.max,
-                'defaultTurns': slider.defaultTurns,
-                'initialDaily': initialDaily,
-                'clamped': clamped,
-                'storeProductCount': products.length,
-                'basePrices': {
-                  for (final p in kFluentDeckPlans)
-                    p.productId: p.fallbackPrice,
-                },
-              },
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
-            }),
-          )
-          .catchError((_) => http.Response('', 500)),
-    );
-    // #endregion
-
     if (!mounted) return;
     setState(() {
       _products = products;
@@ -158,48 +120,6 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
   }
 
   void _onDailyTurnsChanged(int value) {
-    final scaled = plansForDailyTurns(value);
-    final monthlyBase = kFluentDeckPlans
-        .where((p) => p.productId == kMonthlyProductId)
-        .firstOrNull;
-    final storeMonthly = _storeProductFor(kMonthlyProductId);
-    final baseTurns = monthlyBase?.dailyConversationTurns ?? 60;
-    final scale = value / (baseTurns > 0 ? baseTurns : 60);
-    // #region agent log
-    unawaited(
-      http
-          .post(
-            Uri.parse(
-              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
-            ),
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Debug-Session-Id': 'fcee54',
-            },
-            body: jsonEncode({
-              'sessionId': 'fcee54',
-              'runId': 'pre-fix',
-              'hypothesisId': 'B-C',
-              'location': 'profile_subscription_tab.dart:_onDailyTurnsChanged',
-              'message': 'Daily turns slider changed',
-              'data': {
-                'selected': value,
-                'priceScale': scale,
-                'usingStorePrice': storeMonthly != null,
-                'storeRawPrice': storeMonthly?.rawPrice,
-                'prices': {
-                  for (final p in scaled) p.productId: p.fallbackPrice,
-                },
-                'amounts': {
-                  for (final p in scaled) p.productId: p.priceAmount,
-                },
-              },
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
-            }),
-          )
-          .catchError((_) => http.Response('', 500)),
-    );
-    // #endregion
     setState(() => _selectedDailyTurns = value);
   }
 

@@ -1,7 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluentdeck/models/user_progress_model.dart';
 import 'package:fluentdeck/screens/onboarding/english_onboarding_screen.dart';
@@ -45,56 +41,8 @@ class EnglishLevelService {
     // Prior product default was B2; migrate unset installs to A1.
     if (!userSet && (stored == null || stored == 'B2' || stored == 'B1')) {
       await saveLocal(defaultLevel);
-      // #region agent log
-      unawaited(
-        http
-            .post(
-              Uri.parse(
-                'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
-              ),
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Debug-Session-Id': 'fcee54',
-              },
-              body: jsonEncode({
-                'sessionId': 'fcee54',
-                'runId': 'level-lang',
-                'hypothesisId': 'E2',
-                'location': 'english_level_service.dart:getLevel',
-                'message': 'Defaulted proficiency to A1',
-                'data': {'stored': stored, 'userSet': userSet, 'resolved': defaultLevel},
-                'timestamp': DateTime.now().millisecondsSinceEpoch,
-              }),
-            )
-            .catchError((_) => http.Response('', 500)),
-      );
-      // #endregion
       return defaultLevel;
     }
-    // #region agent log
-    unawaited(
-      http
-          .post(
-            Uri.parse(
-              'http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938',
-            ),
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Debug-Session-Id': 'fcee54',
-            },
-            body: jsonEncode({
-              'sessionId': 'fcee54',
-              'runId': 'level-lang',
-              'hypothesisId': 'E2',
-              'location': 'english_level_service.dart:getLevel',
-              'message': 'Resolved proficiency level',
-              'data': {'stored': stored, 'userSet': userSet, 'resolved': stored},
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
-            }),
-          )
-          .catchError((_) => http.Response('', 500)),
-    );
-    // #endregion
     return stored!;
   }
 

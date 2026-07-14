@@ -166,29 +166,6 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     // Only block clear Whisper/YouTube junk on tutor text. Typed short messages
     // like "hi" must pass (hallucination heuristics need Whisper segments).
     if (!openingSession && looksLikeWhisperHallucination(trimmedMessage)) {
-      // #region agent log
-      try {
-        fs.appendFileSync(
-          "/Users/arshak/Workspace/FluentDeck/.cursor/debug-fcee54.log",
-          `${JSON.stringify({
-            sessionId: "fcee54",
-            runId: "post-fix",
-            hypothesisId: "T1",
-            location: "ai.js:tutor",
-            message: "rejected junk tutor message; turn not recorded",
-            data: {
-              text: trimmedMessage,
-              textLen: trimmedMessage.length,
-              usedTodayBefore: usageBefore.usedToday,
-              isPremium: usageBefore.isPremium === true,
-            },
-            timestamp: Date.now(),
-          })}\n`,
-        );
-      } catch (_) {
-        // ignore
-      }
-      // #endregion
       ctx.status = 400;
       ctx.body = {
         error: { message: "No speech detected", status: 400 },
@@ -197,28 +174,6 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       };
       return;
     }
-    // #region agent log
-    try {
-      fs.appendFileSync(
-        "/Users/arshak/Workspace/FluentDeck/.cursor/debug-fcee54.log",
-        `${JSON.stringify({
-          sessionId: "fcee54",
-          runId: "post-fix",
-          hypothesisId: "T1",
-          location: "ai.js:tutor",
-          message: "typed/spoken message accepted for tutor",
-          data: {
-            text: trimmedMessage,
-            textLen: trimmedMessage.length,
-            openingSession,
-          },
-          timestamp: Date.now(),
-        })}\n`,
-      );
-    } catch (_) {
-      // ignore
-    }
-    // #endregion
 
     try {
       const { userLevel, weakAreas, speakingPreferences, tutorMemory, practiceLanguage } =

@@ -68,14 +68,6 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
 
   /// Shows the active chat UI after [ConversationService.loadSession].
   void enterLoadedSession() {
-    // #region agent log
-    // ignore: avoid_print
-    print(
-      '[dbg-fcee54] SpeakingHub.enterLoadedSession '
-      'wasInSession=$_inSession turns=${ConversationService.instance.turns.length} '
-      'chatActive=${ConversationService.instance.isChatActive}',
-    );
-    // #endregion
     setState(() => _inSession = true);
     widget.onSessionActiveChanged?.call(true);
   }

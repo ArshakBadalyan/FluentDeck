@@ -490,38 +490,6 @@ async function transcribeAudio(filePath, originalName, language = 'en') {
     .trim();
   let fullText = String(result.text ?? '').trim() || segmentText;
 
-  // #region agent log
-  try {
-    const fsLog = require('fs');
-    fsLog.appendFileSync(
-      '/Users/arshak/Workspace/FluentDeck/.cursor/debug-fcee54.log',
-      `${JSON.stringify({
-        sessionId: 'fcee54',
-        runId: 'whisper-silence',
-        hypothesisId: 'W1',
-        location: 'ai-tutor.js:transcribeAudio',
-        message: 'whisper raw result',
-        data: {
-          text: fullText,
-          textLen: fullText.length,
-          segmentCount: segments.length,
-          avgNoSpeech:
-            segments.length > 0
-              ? segments.reduce(
-                  (s, seg) => s + (Number(seg?.no_speech_prob) || 0),
-                  0,
-                ) / segments.length
-              : null,
-          hallucinated: looksLikeWhisperHallucination(fullText, segments),
-        },
-        timestamp: Date.now(),
-      })}\n`,
-    );
-  } catch (_) {
-    // ignore debug log failures
-  }
-  // #endregion
-
   const hallucinated = looksLikeWhisperHallucination(fullText, segments);
   if (hallucinated) {
     // Clear both text and segments so clients cannot rebuild junk from segments.

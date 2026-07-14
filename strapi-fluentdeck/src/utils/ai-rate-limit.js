@@ -126,28 +126,6 @@ function buildUsageBreakdown({
   };
 }
 
-// #region agent log
-function _agentDebugLog(hypothesisId, location, message, data) {
-  try {
-    const fs = require('fs');
-    fs.appendFileSync(
-      '/Users/arshak/Workspace/FluentDeck/.cursor/debug-fcee54.log',
-      `${JSON.stringify({
-        sessionId: 'fcee54',
-        runId: 'premium-usage',
-        hypothesisId,
-        location,
-        message,
-        data,
-        timestamp: Date.now(),
-      })}\n`,
-    );
-  } catch {
-    // ignore
-  }
-}
-// #endregion
-
 async function loadTurnCounters(strapi, userId) {
   const user = await strapi.db.query('plugin::users-permissions.user').findOne({
     where: { id: userId },
@@ -186,17 +164,6 @@ async function resolveUsagePools(strapi, userId, usedToday) {
     freeDailyLimit,
     premiumDailyLimit,
   });
-
-  // #region agent log
-  _agentDebugLog('P1-P2', 'ai-rate-limit.js:resolveUsagePools', 'Resolved conversation usage pools', {
-    userId,
-    isPremium,
-    usedToday,
-    productId: sub?.productId ?? null,
-    subDailyTurns: sub?.dailyConversationTurns ?? sub?.daily_conversation_turns ?? null,
-    ...breakdown,
-  });
-  // #endregion
 
   return {
     isPremium,

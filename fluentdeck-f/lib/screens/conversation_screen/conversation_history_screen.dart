@@ -161,26 +161,11 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
   }
 
   Future<void> _continueSession(ConversationSessionModel session) async {
-    // #region agent log
-    // ignore: avoid_print
-    print(
-      '[dbg-fcee54] history.continue tap '
-      'sessionId=${session.id} turns=${session.transcript.length}',
-    );
-    // #endregion
     await ConversationService.instance.loadSession(session);
     if (!mounted) return;
     // Speak hub only shows ConversationScreen when _inSession is true;
     // loadSession alone does not flip that flag.
     MainNavigationCoordinator.enterSpeakSession();
-    // #region agent log
-    // ignore: avoid_print
-    print(
-      '[dbg-fcee54] history.continue after enterSpeakSession '
-      'chatActive=${ConversationService.instance.isChatActive} '
-      'turns=${ConversationService.instance.turns.length}',
-    );
-    // #endregion
     Navigator.pop(context);
     MainNavigationCoordinator.goToTab(MainTabId.speak);
   }
