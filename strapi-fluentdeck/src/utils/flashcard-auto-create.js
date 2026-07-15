@@ -1,6 +1,7 @@
 'use strict';
 
 const { createNoteAndCards } = require('./flashcard-note-sync');
+const { resolveUserLanguageCode } = require('./user-language');
 
 const DEFAULT_DECKS = [
   { slug: 'saved_words', name: 'Saved words' },
@@ -42,7 +43,7 @@ function buildCardBack({ definition, exampleSentence, explanation }) {
   return parts.join('\n\n') || '—';
 }
 
-async function createFlashcardForNote(strapi, userId, { word, deckSlug, noteId, back }) {
+async function createFlashcardForNote(strapi, userId, { word, deckSlug, noteId, back, languageCode }) {
   const deck = await getOrCreateDefaultDeck(strapi, userId, deckSlug);
 
   const duplicate = await strapi.db.query('api::flashcard.flashcard').findOne({
@@ -52,12 +53,14 @@ async function createFlashcardForNote(strapi, userId, { word, deckSlug, noteId, 
     return { created: false, flashcardId: duplicate.id, deckId: deck.id };
   }
 
+  const lang = await resolveUserLanguageCode(strapi, userId, languageCode);
   const result = await createNoteAndCards(strapi, userId, {
     deckId: deck.id,
     noteType: 'basic',
     fields: { Front: word, Back: back },
     tags: [],
     userNoteId: noteId,
+    languageCode: lang,
   });
 
   const card = result.cards[0];
@@ -81,6 +84,7 @@ async function maybeCreateFlashcard(strapi, userId, payload) {
     deckSlug: payload.deckSlug,
     noteId: payload.noteId,
     back,
+    languageCode: payload.languageCode,
   });
 
   return {
@@ -92,7 +96,8 @@ async function maybeCreateFlashcard(strapi, userId, payload) {
 }
 
 async function createUserNote(strapi, userId, data) {
-  const { word, definition, exampleSentence, tags, source } = data;
+  const { word, definition, exampleSentence, tags, source, languageCode } = data;
+  const lang = await resolveUserLanguageCode(strapi, userId, languageCode);
 
   const noteData = {
     word,
@@ -100,6 +105,7 @@ async function createUserNote(strapi, userId, data) {
     exampleSentence: exampleSentence ?? '',
     tags: Array.isArray(tags) ? tags : [],
     source: source ?? 'manual',
+    languageCode: lang,
     user: userId,
   };
 
@@ -129,6 +135,7 @@ function formatNote(row) {
     exampleSentence: row.exampleSentence ?? row.example_sentence ?? '',
     tags: row.tags ?? [],
     source: row.source ?? 'manual',
+    languageCode: row.languageCode ?? row.language_code ?? 'en',
     createdAt: row.createdAt ?? row.created_at,
   };
 }

@@ -1,6 +1,7 @@
 'use strict';
 
 const { generateCardsFromNote, formatNote } = require('./flashcard-note-types');
+const { normalizePracticeLanguage } = require('./practice-languages');
 const {
   resolveCustomNoteType,
   generateCardsFromCustomType,
@@ -33,7 +34,7 @@ async function deleteCardsForNote(strapi, userId, noteId) {
   }
 }
 
-async function syncCardsForNote(strapi, userId, noteRow, { preserveReviewState = true, deckId = null } = {}) {
+async function syncCardsForNote(strapi, userId, noteRow, { preserveReviewState = true, deckId = null, languageCode = 'en' } = {}) {
   const noteId = noteRow.id;
   const resolvedDeckId =
     deckId ?? noteRow.deck?.id ?? noteRow.deck ?? null;
@@ -70,6 +71,9 @@ async function syncCardsForNote(strapi, userId, noteRow, { preserveReviewState =
       flashcardNote: noteId,
       deck: resolvedDeckId,
       user: userId,
+      languageCode: normalizePracticeLanguage(
+        languageCode ?? noteRow.languageCode ?? noteRow.language_code ?? 'en',
+      ),
       occlusionData: spec.occlusionData ?? null,
     };
 
@@ -117,6 +121,7 @@ async function createNoteAndCards(strapi, userId, payload) {
     createReverse = false,
     mediaUrl,
     userNoteId,
+    languageCode = 'en',
   } = payload;
 
   const deck = await strapi.db.query('api::flashcard-deck.flashcard-deck').findOne({
@@ -143,6 +148,7 @@ async function createNoteAndCards(strapi, userId, payload) {
   const cards = await syncCardsForNote(strapi, userId, note, {
     preserveReviewState: false,
     deckId,
+    languageCode,
   });
   return { note: formatNote({ ...note, deck: deckId }, cards), cards };
 }

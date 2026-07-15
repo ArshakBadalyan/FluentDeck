@@ -8,6 +8,8 @@ import '../../models/speaking_session_context.dart';
 import '../../models/user_note_model.dart';
 import '../../services/conversation_service.dart';
 import '../../services/note_service.dart';
+import '../../services/speaking_preferences_service.dart';
+import '../../utils/learning_language_utils.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingNotesTab extends StatefulWidget {
@@ -39,7 +41,10 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   int _sourceIndex = 0;
   int _levelIndex = 0;
+  int _languageIndex = 0;
   String _topicFilter = 'all';
+  String _practiceLanguage = 'en';
+  bool _syncLearningLanguage = true;
   List<String> _topicOptions = const [];
   List<UserNoteModel> _notes = const [];
   final Set<int> _selectedIds = {};
@@ -50,7 +55,32 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _init();
+  }
+
+  List<MapEntry<String, String>> get _languageFilters =>
+      LearningLanguageUtils.filterOptions();
+
+  String? get _effectiveLanguageCode => LearningLanguageUtils.effectiveFilterCode(
+    syncLearningLanguage: _syncLearningLanguage,
+    practiceLanguage: _practiceLanguage,
+    manualFilter: _languageFilters[_languageIndex].key,
+  );
+
+  Future<void> _init() async {
+    final prefs = await SpeakingPreferencesService.instance.load();
+    if (!mounted) return;
+    setState(() {
+      _syncLearningLanguage = prefs.syncLearningLanguage;
+      _practiceLanguage = prefs.practiceLanguage;
+      if (prefs.syncLearningLanguage) {
+        _languageIndex = _languageFilters.indexWhere(
+          (e) => e.key == prefs.practiceLanguage,
+        );
+        if (_languageIndex < 0) _languageIndex = 0;
+      }
+    });
+    await _load();
   }
 
   String get _sourceKey => _sourceFilters[_sourceIndex].$1;
@@ -101,6 +131,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
         source: _sourceKey,
         cefrLevel: _levelKey,
         topic: _topicFilter,
+        languageCode: _effectiveLanguageCode,
       );
       if (!mounted) return;
       setState(() {
@@ -127,6 +158,12 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   void _onLevelSelected(int index) {
     setState(() => _levelIndex = index);
+    _load();
+  }
+
+  void _onLanguageSelected(int index) {
+    if (_syncLearningLanguage) return;
+    setState(() => _languageIndex = index);
     _load();
   }
 
@@ -392,6 +429,34 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
           selectedIndex: _levelIndex,
           onSelected: _onLevelSelected,
         ),
+        if (_syncLearningLanguage)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FilterChip(
+                label: Text(
+                  'Language: ${LearningLanguageUtils.languageLabel(_practiceLanguage)}',
+                ),
+                selected: true,
+                onSelected: null,
+                selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+                checkmarkColor: AppColors.primaryPurple,
+                labelStyle: const TextStyle(
+                  color: AppColors.primaryPurple,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Rubik',
+                ),
+                side: const BorderSide(color: AppColors.primaryPurple),
+              ),
+            ),
+          )
+        else
+          SpeakingFilterChips(
+            labels: _languageFilters.map((f) => f.value).toList(),
+            selectedIndex: _languageIndex,
+            onSelected: _onLanguageSelected,
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
           child: Align(

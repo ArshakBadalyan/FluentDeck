@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
+import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
@@ -91,6 +93,8 @@ class _CardEditScreenState extends State<CardEditScreen> {
   int? _selectedDeckId;
   List<NoteTypeModel> _noteTypes = const [];
   List<FlashcardDeckModel> _decks = const [];
+  String _languageCode = 'en';
+  bool _syncLearningLanguage = true;
 
   List<OcclusionRegion> _occlusionRegions = const [];
 
@@ -182,6 +186,8 @@ class _CardEditScreenState extends State<CardEditScreen> {
         }
       }
 
+      final prefs = await SpeakingPreferencesService.instance.load();
+
       if (existing != null) {
         _noteType = existing.noteType;
         _createReverse = existing.createReverse;
@@ -202,6 +208,10 @@ class _CardEditScreenState extends State<CardEditScreen> {
         _noteTypes = types;
         _decks = decks;
         _offlineMode = offline;
+        _syncLearningLanguage = prefs.syncLearningLanguage;
+        if (!widget.isEditing) {
+          _languageCode = prefs.practiceLanguage;
+        }
         if (_selectedDeckId == null && decks.isNotEmpty) {
           _selectedDeckId = decks.first.id;
         }
@@ -402,6 +412,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
           tags: _parseTags(),
           createReverse: _createReverse,
           mediaUrl: _mediaCtrl.text.trim().isEmpty ? null : _mediaCtrl.text.trim(),
+          languageCode: _languageCode,
         );
 
         if (!mounted) return;
@@ -632,6 +643,38 @@ class _CardEditScreenState extends State<CardEditScreen> {
             const SizedBox(height: 16),
           ],
           _deckDropdown(),
+          if (!widget.isEditing) ...[
+            const SizedBox(height: 12),
+            _labeledField(
+              'Language',
+              DropdownButtonFormField<String>(
+                initialValue: _languageCode,
+                isExpanded: true,
+                decoration: _filledDecoration(),
+                items:
+                    SpeakingPreferences.practiceLanguageOptions.entries
+                        .map(
+                          (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                        )
+                        .toList(),
+                onChanged:
+                    _syncLearningLanguage
+                        ? null
+                        : (value) {
+                          if (value == null) return;
+                          setState(() => _languageCode = value);
+                        },
+              ),
+            ),
+            if (_syncLearningLanguage)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'Synced to your learning language.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ),
+          ],
           const SizedBox(height: 12),
           _typeDropdown(),
           if (_activeType != null) ...[

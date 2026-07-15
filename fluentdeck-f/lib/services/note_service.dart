@@ -13,6 +13,7 @@ class NoteService {
     String? source,
     String? cefrLevel,
     String? topic,
+    String? languageCode,
   }) async {
     final params = <String, String>{};
     if (query != null && query.trim().isNotEmpty) {
@@ -26,6 +27,9 @@ class NoteService {
     }
     if (topic != null && topic.isNotEmpty && topic != 'all') {
       params['topic'] = topic;
+    }
+    if (languageCode != null && languageCode.isNotEmpty && languageCode != 'all') {
+      params['languageCode'] = languageCode;
     }
 
     final q = params.isEmpty
@@ -60,6 +64,7 @@ class NoteService {
     String? definition,
     String? exampleSentence,
     List<String>? tags,
+    String? languageCode,
   }) async {
     final data = await ApiService.post('notes', {
       'word': word,
@@ -67,6 +72,8 @@ class NoteService {
       'exampleSentence': exampleSentence,
       'tags': tags ?? [],
       'source': 'manual',
+      if (languageCode != null && languageCode.isNotEmpty)
+        'languageCode': languageCode,
     });
 
     return _parseSaveResult(data);
@@ -78,6 +85,7 @@ class NoteService {
     String? explanation,
     String? errorType,
     String? exampleSentence,
+    String? languageCode,
   }) async {
     final data = await ApiService.post('notes/from-correction', {
       'correctedText': correctedText,
@@ -86,6 +94,8 @@ class NoteService {
       'errorType': errorType,
       if (exampleSentence != null && exampleSentence.trim().isNotEmpty)
         'exampleSentence': exampleSentence.trim(),
+      if (languageCode != null && languageCode.isNotEmpty)
+        'languageCode': languageCode,
     });
 
     return _parseSaveResult(data);
@@ -99,6 +109,7 @@ class NoteService {
     String? sourceSentence,
     String? meaning,
     String? exampleSentence,
+    String? languageCode,
   }) async {
     return saveFromCorrection(
       correctedText: selectedText,
@@ -109,6 +120,7 @@ class NoteService {
               : 'Saved from speaking chat',
       exampleSentence: exampleSentence,
       errorType: 'highlight',
+      languageCode: languageCode,
     );
   }
 
@@ -155,12 +167,14 @@ class NoteService {
     String? definition,
     String? exampleSentence,
     List<String>? tags,
+    String? languageCode,
   }) async {
     final body = <String, dynamic>{};
     if (word != null) body['word'] = word;
     if (definition != null) body['definition'] = definition;
     if (exampleSentence != null) body['exampleSentence'] = exampleSentence;
     if (tags != null) body['tags'] = tags;
+    if (languageCode != null) body['languageCode'] = languageCode;
 
     final data = await ApiService.put('notes/$id', body);
     return data is Map && data['ok'] == true;

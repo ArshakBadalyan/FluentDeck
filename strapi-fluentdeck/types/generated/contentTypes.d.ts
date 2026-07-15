@@ -893,6 +893,7 @@ export interface ApiFlashcardFlashcard extends Struct.CollectionTypeSchema {
       'api::flashcard-note.flashcard-note'
     >;
     front: Schema.Attribute.Text & Schema.Attribute.Required;
+    languageCode: Schema.Attribute.String & Schema.Attribute.DefaultTo<'en'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1352,6 +1353,7 @@ export interface ApiUserNoteUserNote extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::flashcard.flashcard'
     >;
+    languageCode: Schema.Attribute.String & Schema.Attribute.DefaultTo<'en'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -2018,6 +2020,8 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.DefaultTo<0>;
     special: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     surname: Schema.Attribute.String;
+    sync_learning_language: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
     translation_language: Schema.Attribute.Enumeration<
       [
         'none',

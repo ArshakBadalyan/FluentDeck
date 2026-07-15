@@ -140,6 +140,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
       sourceSentence: sourceSentence,
       meaning: sheetResult.meaning,
       exampleSentence: sheetResult.example,
+      languageCode: sheetResult.languageCode,
     );
 
     if (!mounted) return;

@@ -132,6 +132,10 @@
       "enum": ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ru", "hi"],
       "default": "en"
     },
+    "sync_learning_language": {
+      "type": "boolean",
+      "default": true
+    },
     "auto_save_corrections": {
       "type": "boolean",
       "default": true

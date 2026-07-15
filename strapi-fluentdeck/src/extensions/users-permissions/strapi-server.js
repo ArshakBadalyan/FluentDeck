@@ -544,6 +544,7 @@ module.exports = (plugin) => {
     const user = await findUserById(strapi, userId, {
       fields: [
         "practice_language",
+        "sync_learning_language",
         "auto_save_corrections",
         "response_language",
         "translation_language",
@@ -568,6 +569,7 @@ module.exports = (plugin) => {
     );
     ctx.send({
       practice_language: user?.practice_language ?? "en",
+      sync_learning_language: user?.sync_learning_language !== false,
       auto_save_corrections: user?.auto_save_corrections !== false,
       response_language: user?.response_language ?? "en",
       translation_language: user?.translation_language ?? "none",
@@ -600,6 +602,9 @@ module.exports = (plugin) => {
         return ctx.badRequest("Invalid practice_language");
       }
       data.practice_language = body.practice_language;
+    }
+    if (body.sync_learning_language != null) {
+      data.sync_learning_language = body.sync_learning_language === true;
     }
     if (body.auto_save_corrections != null) {
       data.auto_save_corrections = body.auto_save_corrections === true;
@@ -724,6 +729,7 @@ module.exports = (plugin) => {
 
       ctx.send({
         practice_language: updated.practice_language ?? "en",
+        sync_learning_language: updated.sync_learning_language !== false,
         auto_save_corrections: updated.auto_save_corrections !== false,
         response_language: updated.response_language,
         translation_language: updated.translation_language,

@@ -1,5 +1,6 @@
 class SpeakingPreferences {
   final String practiceLanguage;
+  final bool syncLearningLanguage;
   final String responseLanguage;
   final String translationLanguage;
   final bool showTranslations;
@@ -20,6 +21,7 @@ class SpeakingPreferences {
 
   const SpeakingPreferences({
     this.practiceLanguage = 'en',
+    this.syncLearningLanguage = true,
     this.responseLanguage = 'en',
     this.translationLanguage = 'none',
     this.showTranslations = false,
@@ -102,6 +104,7 @@ class SpeakingPreferences {
     if (user == null) return const SpeakingPreferences();
     return SpeakingPreferences(
       practiceLanguage: user['practice_language'] as String? ?? 'en',
+      syncLearningLanguage: user['sync_learning_language'] != false,
       responseLanguage: user['response_language'] as String? ?? 'en',
       translationLanguage: user['translation_language'] as String? ?? 'none',
       showTranslations: user['show_translations'] == true,
@@ -126,6 +129,7 @@ class SpeakingPreferences {
   Map<String, dynamic> toUpdatePayload() {
     return {
       'practice_language': practiceLanguage,
+      'sync_learning_language': syncLearningLanguage,
       'auto_save_corrections': autoSaveCorrections,
       'response_language': responseLanguage,
       'translation_language': translationLanguage,

@@ -39,6 +39,7 @@ function formatCard(row, reviewRow) {
     tags: row.tags ?? [],
     mediaUrl: row.mediaUrl ?? row.media_url ?? null,
     flag: row.flag ?? 0,
+    languageCode: row.languageCode ?? row.language_code ?? 'en',
     occlusionData: row.occlusionData ?? row.occlusion_data ?? null,
     deckId:
       typeof deck === 'object'

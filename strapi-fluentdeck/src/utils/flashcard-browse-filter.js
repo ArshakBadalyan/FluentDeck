@@ -1,13 +1,20 @@
 'use strict';
 
+const { normalizePracticeLanguage } = require('./practice-languages');
+
 /**
  * Shared card filter logic for browse API and filtered decks (Phase 4F).
  */
 function normalizeFilter(filter = {}) {
+  const rawLang = filter.languageCode ?? filter.language;
   return {
     q: filter.q ? String(filter.q).trim().toLowerCase() : '',
     tag: filter.tag ? String(filter.tag).trim().toLowerCase() : '',
     state: filter.state ? String(filter.state).trim() : '',
+    languageCode:
+      rawLang && String(rawLang).trim() && String(rawLang).trim() !== 'all'
+        ? normalizePracticeLanguage(rawLang)
+        : '',
     marked:
       filter.marked === true || filter.marked === 'true' || filter.marked === '1'
         ? true
@@ -37,6 +44,11 @@ function cardMatchesFilter(card, reviewState, filter, now = new Date()) {
   if (f.tag) {
     const tags = (card.tags ?? []).map((t) => String(t).toLowerCase());
     if (!tags.some((t) => t.includes(f.tag))) return false;
+  }
+
+  if (f.languageCode) {
+    const cardLang = normalizePracticeLanguage(card.languageCode ?? 'en');
+    if (cardLang !== f.languageCode) return false;
   }
 
   if (f.marked != null && card.noteMarked !== f.marked) return false;

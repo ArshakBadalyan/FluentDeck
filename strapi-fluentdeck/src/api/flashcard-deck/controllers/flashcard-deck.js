@@ -692,7 +692,7 @@ module.exports = createCoreController(
       const userId = await getAuthenticatedUserId(ctx, strapi);
       if (!userId) return ctx.unauthorized('Authentication required');
 
-      const { q, deckId, tag, state: stateFilter, marked, flag } = ctx.query ?? {};
+      const { q, deckId, tag, state: stateFilter, marked, flag, languageCode, language } = ctx.query ?? {};
       const where = { user: userId };
       if (deckId) {
         const parsedDeckId = parseInt(String(deckId), 10);
@@ -720,6 +720,7 @@ module.exports = createCoreController(
         state: stateFilter,
         marked: marked === 'true' || marked === '1' ? true : marked === 'false' ? false : null,
         flag: flag != null && flag !== '' ? (flag === 'none' ? 0 : parseInt(String(flag), 10)) : null,
+        languageCode: languageCode ?? language,
       };
 
       const now = new Date();

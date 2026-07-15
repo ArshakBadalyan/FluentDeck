@@ -138,6 +138,26 @@ class _ProfileSettingsSpeakingSectionState
                     );
                   },
         ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Sync deck language'),
+          subtitle: Text(
+            'When on, decks, notes, and filters use only your learning language '
+            '(${SpeakingPreferences.practiceLanguageOptions[_speakingPrefs.practiceLanguage] ?? _speakingPrefs.practiceLanguage}).',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+          value: _speakingPrefs.syncLearningLanguage,
+          activeThumbColor: AppColors.primaryPurple,
+          onChanged:
+              _saving
+                  ? null
+                  : (value) {
+                    _saveSpeakingPreferences(
+                      _speakingPrefs.copyWith(syncLearningLanguage: value),
+                    );
+                  },
+        ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
           initialValue: _speakingPrefs.responseLanguage,

@@ -32,6 +32,10 @@
       "default": "manual",
       "required": true
     },
+    "languageCode": {
+      "type": "string",
+      "default": "en"
+    },
     "user": {
       "type": "relation",
       "relation": "manyToOne",

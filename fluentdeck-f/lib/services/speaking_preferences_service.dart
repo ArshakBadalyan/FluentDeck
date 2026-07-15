@@ -74,6 +74,7 @@ class SpeakingPreferencesService {
 extension SpeakingPreferencesCopy on SpeakingPreferences {
   SpeakingPreferences copyWith({
     String? practiceLanguage,
+    bool? syncLearningLanguage,
     String? responseLanguage,
     String? translationLanguage,
     bool? showTranslations,
@@ -93,6 +94,7 @@ extension SpeakingPreferencesCopy on SpeakingPreferences {
   }) {
     return SpeakingPreferences(
       practiceLanguage: practiceLanguage ?? this.practiceLanguage,
+      syncLearningLanguage: syncLearningLanguage ?? this.syncLearningLanguage,
       responseLanguage: responseLanguage ?? this.responseLanguage,
       translationLanguage: translationLanguage ?? this.translationLanguage,
       showTranslations: showTranslations ?? this.showTranslations,

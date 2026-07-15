@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/models/user_note_model.dart';
 import 'package:fluentdeck/services/note_service.dart';
+import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class NoteEditScreen extends StatefulWidget {
   const NoteEditScreen({super.key, this.note});
@@ -21,6 +24,9 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   late final TextEditingController _exampleCtrl;
   late final TextEditingController _tagsCtrl;
   bool _saving = false;
+  String _languageCode = 'en';
+  bool _syncLearningLanguage = true;
+  bool _loadingPrefs = true;
 
   @override
   void initState() {
@@ -30,6 +36,22 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     _definitionCtrl = TextEditingController(text: note?.definition ?? '');
     _exampleCtrl = TextEditingController(text: note?.exampleSentence ?? '');
     _tagsCtrl = TextEditingController(text: note?.tags.join(', ') ?? '');
+    _languageCode = note?.languageCode ?? 'en';
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SpeakingPreferencesService.instance.load();
+    if (!mounted) return;
+    setState(() {
+      _syncLearningLanguage = prefs.syncLearningLanguage;
+      if (!widget.isEditing && prefs.syncLearningLanguage) {
+        _languageCode = prefs.practiceLanguage;
+      } else if (!widget.isEditing) {
+        _languageCode = prefs.practiceLanguage;
+      }
+      _loadingPrefs = false;
+    });
   }
 
   @override
@@ -67,6 +89,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           definition: _definitionCtrl.text.trim(),
           exampleSentence: _exampleCtrl.text.trim(),
           tags: _parseTags(),
+          languageCode: _languageCode,
         );
         if (!mounted) return;
         if (ok) {
@@ -82,6 +105,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           definition: _definitionCtrl.text.trim(),
           exampleSentence: _exampleCtrl.text.trim(),
           tags: _parseTags(),
+          languageCode: _languageCode,
         );
         if (!mounted) return;
         if (result.ok) {
@@ -125,6 +149,42 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
             const SizedBox(height: 16),
             _field('Example sentence', _exampleCtrl, maxLines: 2),
             const SizedBox(height: 16),
+            if (!_loadingPrefs) ...[
+              Text(
+                'Language',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                initialValue: _languageCode,
+                decoration: appDropdownDecoration('Word language'),
+                items:
+                    SpeakingPreferences.practiceLanguageOptions.entries
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e.key,
+                            child: Text(e.value),
+                          ),
+                        )
+                        .toList(),
+                onChanged:
+                    _syncLearningLanguage && !widget.isEditing
+                        ? null
+                        : (value) {
+                          if (value == null) return;
+                          setState(() => _languageCode = value);
+                        },
+              ),
+              if (_syncLearningLanguage && !widget.isEditing)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    'Synced to your learning language in Settings.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ),
+              const SizedBox(height: 16),
+            ],
             _field('Tags (comma-separated)', _tagsCtrl),
             const SizedBox(height: 32),
             PrimaryButton(

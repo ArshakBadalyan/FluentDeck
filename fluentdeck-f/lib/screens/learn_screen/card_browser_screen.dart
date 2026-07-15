@@ -7,7 +7,9 @@ import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/utils/card_browser_utils.dart';
+import 'package:fluentdeck/utils/learning_language_utils.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/card_browser_options_menu.dart';
@@ -47,6 +49,9 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   int? _deckFilter;
   String _stateFilter = 'all';
+  String _languageFilter = 'all';
+  bool _syncLearningLanguage = true;
+  String _practiceLanguage = 'en';
   bool? _markedFilter;
   int? _flagFilter;
   CardBrowserSortField? _sortField;
@@ -69,9 +74,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   void initState() {
     super.initState();
     _deckFilter = widget.deckId;
-    _loadDecks();
-    _loadNoteTypes();
-    _load();
+    _init();
     if (widget.embedInShell) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -154,6 +157,34 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     );
   }
 
+  Future<void> _init() async {
+    await _loadLanguagePrefs();
+    unawaited(_loadDecks());
+    unawaited(_loadNoteTypes());
+    await _load();
+  }
+
+  Future<void> _loadLanguagePrefs() async {
+    final prefs = await SpeakingPreferencesService.instance.load();
+    if (!mounted) return;
+    setState(() {
+      _syncLearningLanguage = prefs.syncLearningLanguage;
+      _practiceLanguage = prefs.practiceLanguage;
+      if (prefs.syncLearningLanguage) {
+        _languageFilter = prefs.practiceLanguage;
+      }
+    });
+  }
+
+  String? get _effectiveLanguageCode => LearningLanguageUtils.effectiveFilterCode(
+    syncLearningLanguage: _syncLearningLanguage,
+    practiceLanguage: _practiceLanguage,
+    manualFilter: _languageFilter,
+  );
+
+  List<MapEntry<String, String>> get _languageFilterOptions =>
+      LearningLanguageUtils.filterOptions();
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -167,6 +198,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
         state: _stateFilter == 'all' ? null : _stateFilter,
         marked: _markedFilter,
         flag: _flagFilter,
+        languageCode: _effectiveLanguageCode,
       );
       if (!mounted) return;
       setState(() {
@@ -569,6 +601,11 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       _flagFilter = null;
       _searchCtrl.clear();
       _tagCtrl.clear();
+      if (_syncLearningLanguage) {
+        _languageFilter = _practiceLanguage;
+      } else {
+        _languageFilter = 'all';
+      }
     });
     _load();
   }
@@ -603,6 +640,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     if (_flagFilter != null) {
       filter['flag'] = _flagFilter == 0 ? 'none' : _flagFilter;
     }
+    final lang = _effectiveLanguageCode;
+    if (lang != null) filter['languageCode'] = lang;
     return filter;
   }
 
@@ -931,6 +970,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     if (_markedFilter == true) n++;
     if (_flagFilter != null) n++;
     if (_tagCtrl.text.trim().isNotEmpty) n++;
+    if (!_syncLearningLanguage && _languageFilter != 'all') n++;
     return n;
   }
 
@@ -939,6 +979,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     if (!['all', 'new', 'learning', 'review'].contains(_stateFilter)) n++;
     if (_markedFilter == true) n++;
     if (_flagFilter != null) n++;
+    if (!_syncLearningLanguage && _languageFilter != 'all') n++;
     return n;
   }
 
@@ -953,6 +994,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     var marked = _markedFilter == true;
     var flag = _flagFilter;
     var tag = _tagCtrl.text;
+    var language = _languageFilter;
 
     final applied = await showModalBottomSheet<bool>(
       context: context,
@@ -1051,6 +1093,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                                 marked = false;
                                 flag = null;
                                 tag = '';
+                                language =
+                                    _syncLearningLanguage ? _practiceLanguage : 'all';
                               });
                             },
                             child: const Text('Clear all'),
@@ -1078,6 +1122,42 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                               onChanged: (v) => setSheetState(() => deck = v),
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          labeledField(
+                            'Language',
+                            DropdownButtonFormField<String>(
+                              value: language,
+                              isExpanded: true,
+                              decoration: filledDecoration(),
+                              items:
+                                  _languageFilterOptions
+                                      .map(
+                                        (e) => DropdownMenuItem(
+                                          value: e.key,
+                                          child: Text(e.value),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged:
+                                  _syncLearningLanguage
+                                      ? null
+                                      : (v) {
+                                        if (v == null) return;
+                                        setSheetState(() => language = v);
+                                      },
+                            ),
+                          ),
+                          if (_syncLearningLanguage)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                'Synced to your learning language.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ),
                           const SizedBox(height: 16),
                           labeledField(
                             'Tag',
@@ -1221,6 +1301,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
         _markedFilter = marked ? true : null;
         _flagFilter = flag;
         _tagCtrl.text = tag;
+        _languageFilter = language;
       });
       await _load();
     }

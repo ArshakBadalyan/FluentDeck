@@ -2,6 +2,7 @@
 
 const { getOrCreateDefaultDeck } = require('./flashcard-auto-create');
 const { createNoteAndCards } = require('./flashcard-note-sync');
+const { resolveUserLanguageCode } = require('./user-language');
 const { findUserById, updateByNumericId } = require('./document-service');
 
 const FREE_AUTO_NOTE_LIMIT = 10;
@@ -110,12 +111,14 @@ async function processSpeakingNoteAction(strapi, userId, noteAction, options = {
     Back: example ? `${definition}\n\nExample: ${example}` : definition,
   };
 
+  const languageCode = await resolveUserLanguageCode(strapi, userId);
   const result = await createNoteAndCards(strapi, userId, {
     deckId: deck.id,
     noteType: 'basic',
     fields,
     tags: ['from-speaking', 'auto-created'],
     createReverse: false,
+    languageCode,
   });
 
   if (!isPremium) {

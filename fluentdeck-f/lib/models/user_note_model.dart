@@ -5,6 +5,7 @@ class UserNoteModel {
   final String exampleSentence;
   final List<String> tags;
   final String source;
+  final String languageCode;
   final DateTime? createdAt;
   final int? vocabularyEntryId;
   final String? cefrLevel;
@@ -19,6 +20,7 @@ class UserNoteModel {
     this.exampleSentence = '',
     this.tags = const [],
     this.source = 'manual',
+    this.languageCode = 'en',
     this.createdAt,
     this.vocabularyEntryId,
     this.cefrLevel,
@@ -50,6 +52,7 @@ class UserNoteModel {
               ? rawTags.map((e) => e.toString()).toList()
               : const [],
       source: json['source'] as String? ?? 'manual',
+      languageCode: json['languageCode'] as String? ?? 'en',
       createdAt:
           json['createdAt'] != null
               ? DateTime.tryParse(json['createdAt'].toString())

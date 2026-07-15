@@ -56,6 +56,10 @@
       "min": 0,
       "max": 7
     },
+    "languageCode": {
+      "type": "string",
+      "default": "en"
+    },
     "user": {
       "type": "relation",
       "relation": "manyToOne",

@@ -2,6 +2,7 @@
 
 const { getOrCreateDefaultDeck } = require('./flashcard-auto-create');
 const { createNoteAndCards } = require('./flashcard-note-sync');
+const { resolveUserLanguageCode } = require('./user-language');
 const { FREE_AUTO_NOTE_LIMIT } = require('./speaking-note-actions');
 const { updateByNumericId } = require('./document-service');
 
@@ -78,6 +79,7 @@ async function autoSaveCorrectionsFromTurn(strapi, userId, corrections) {
   }
 
   const deck = await getOrCreateDefaultDeck(strapi, userId, 'from_speaking');
+  const languageCode = await resolveUserLanguageCode(strapi, userId);
   const saved = [];
   let notesUsed = 0;
 
@@ -99,6 +101,7 @@ async function autoSaveCorrectionsFromTurn(strapi, userId, corrections) {
       fields: { Front: candidate.word, Back: back },
       tags: ['from-speaking', 'auto-correction'],
       createReverse: false,
+      languageCode,
     });
 
     saved.push({

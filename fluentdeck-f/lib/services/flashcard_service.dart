@@ -361,6 +361,7 @@ class FlashcardService {
     List<String>? tags,
     bool createReverse = false,
     String? mediaUrl,
+    String? languageCode,
   }) async {
     final data = await ApiService.post('flashcards/notes', {
       'deckId': deckId,
@@ -369,6 +370,7 @@ class FlashcardService {
       'tags': tags ?? [],
       'createReverse': createReverse,
       if (mediaUrl != null) 'mediaUrl': mediaUrl,
+      if (languageCode != null && languageCode.isNotEmpty) 'languageCode': languageCode,
     });
     if (data is! Map) throw Exception('Could not create note');
     final err = _extractError(data);
@@ -461,6 +463,7 @@ class FlashcardService {
     List<String>? tags,
     String? mediaUrl,
     bool createReverse = false,
+    String? languageCode,
   }) async {
     final resolvedNoteType =
         noteType != 'basic' ? noteType : (cardType == 'cloze' ? 'cloze' : 'basic');
@@ -477,6 +480,7 @@ class FlashcardService {
       tags: tags,
       createReverse: createReverse,
       mediaUrl: mediaUrl,
+      languageCode: languageCode,
     );
     return result.cards.isNotEmpty ? result.cards.first : null;
   }
@@ -553,6 +557,7 @@ class FlashcardService {
     String? state,
     bool? marked,
     int? flag,
+    String? languageCode,
   }) async {
     final params = <String>[];
     if (deckId != null) params.add('deckId=$deckId');
@@ -566,6 +571,9 @@ class FlashcardService {
     if (marked != null) params.add('marked=$marked');
     if (flag != null) {
       params.add(flag == 0 ? 'flag=none' : 'flag=$flag');
+    }
+    if (languageCode != null && languageCode.isNotEmpty && languageCode != 'all') {
+      params.add('languageCode=${Uri.encodeComponent(languageCode)}');
     }
 
     final qs = params.isEmpty ? '' : '?${params.join('&')}';

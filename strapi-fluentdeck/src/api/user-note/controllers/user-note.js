@@ -9,6 +9,8 @@ const {
   formatNote,
   buildCardBack,
 } = require('../../../utils/flashcard-auto-create');
+const { normalizePracticeLanguage } = require('../../../utils/practice-languages');
+const { resolveUserLanguageCode } = require('../../../utils/user-language');
 
 async function getAuthenticatedUserId(ctx, strapi) {
   const token = await strapi.plugins['users-permissions'].services.jwt.getToken(
@@ -43,11 +45,16 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized('Authentication required');
 
-    const { q, source } = ctx.query ?? {};
+    const { q, source, languageCode, language } = ctx.query ?? {};
     const where = { user: userId };
 
     if (source && String(source).trim() && String(source) !== 'all') {
       where.source = String(source).trim();
+    }
+
+    const langFilterRaw = languageCode ?? language;
+    if (langFilterRaw && String(langFilterRaw).trim() && String(langFilterRaw) !== 'all') {
+      where.languageCode = normalizePracticeLanguage(langFilterRaw);
     }
 
     let rows = await strapi.db.query('api::user-note.user-note').findMany({
@@ -73,7 +80,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized('Authentication required');
 
-    const { word, definition, exampleSentence, tags, source = 'manual' } =
+    const { word, definition, exampleSentence, tags, source = 'manual', languageCode } =
       ctx.request.body ?? {};
 
     if (!word || !String(word).trim()) {
@@ -83,12 +90,14 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const allowed = await canAddNote(strapi, userId);
     if (!allowed.ok) return ctx.forbidden(allowed.reason);
 
+    const lang = await resolveUserLanguageCode(strapi, userId, languageCode);
     const { note, created } = await createUserNote(strapi, userId, {
       word: String(word).trim(),
       definition,
       exampleSentence,
       tags,
       source,
+      languageCode: lang,
     });
 
     const flashcardResult = await maybeCreateFlashcard(strapi, userId, {
@@ -97,6 +106,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       exampleSentence: note.exampleSentence,
       deckSlug: deckSlugForSource(source),
       noteId: note.id,
+      languageCode: lang,
     });
 
     ctx.body = {
@@ -119,12 +129,15 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     });
     if (!existing) return ctx.notFound('Note not found');
 
-    const { word, definition, exampleSentence, tags } = ctx.request.body ?? {};
+    const { word, definition, exampleSentence, tags, languageCode } = ctx.request.body ?? {};
     const data = {};
     if (word != null) data.word = String(word).trim();
     if (definition != null) data.definition = definition;
     if (exampleSentence != null) data.exampleSentence = exampleSentence;
     if (tags != null) data.tags = Array.isArray(tags) ? tags : [];
+    if (languageCode != null) {
+      data.languageCode = normalizePracticeLanguage(languageCode);
+    }
 
     const updated = await strapi.db.query('api::user-note.user-note').update({
       where: { id: noteId },
@@ -196,6 +209,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
         : '';
 
     const tags = ['speaking', errorType].filter(Boolean);
+    const lang = await resolveUserLanguageCode(strapi, userId);
 
     const { note, created } = await createUserNote(strapi, userId, {
       word,
@@ -203,6 +217,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       exampleSentence,
       tags,
       source: 'speaking',
+      languageCode: lang,
     });
 
     const flashcardResult = await maybeCreateFlashcard(strapi, userId, {
@@ -213,6 +228,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
         isHighlight || !originalText ? '' : `You said: ${originalText}`,
       deckSlug: 'from_speaking',
       noteId: note.id,
+      languageCode: lang,
     });
 
     ctx.body = {

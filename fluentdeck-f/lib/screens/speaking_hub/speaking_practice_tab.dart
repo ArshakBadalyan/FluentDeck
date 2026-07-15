@@ -6,6 +6,7 @@ import '../../models/flashcard_model.dart';
 import '../../models/speaking_session_context.dart';
 import '../../services/conversation_service.dart';
 import '../../services/flashcard_service.dart';
+import '../../services/speaking_preferences_service.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingPracticeTab extends StatefulWidget {
@@ -112,7 +113,14 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
     setState(() => _starting = true);
     try {
       final detail = await FlashcardService.instance.fetchDeckDetail(deck.id);
-      final cards = detail.cards;
+      final prefs = await SpeakingPreferencesService.instance.load();
+      var cards = detail.cards;
+      if (prefs.syncLearningLanguage) {
+        cards =
+            cards
+                .where((c) => c.languageCode == prefs.practiceLanguage)
+                .toList();
+      }
       if (cards.isEmpty) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

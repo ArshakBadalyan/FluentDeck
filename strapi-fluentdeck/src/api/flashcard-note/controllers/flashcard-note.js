@@ -9,6 +9,7 @@ const {
   deleteNoteAndCards,
 } = require('../../../utils/flashcard-note-sync');
 const { getAuthenticatedUserId } = require('../../../utils/flashcard-helpers');
+const { resolveUserLanguageCode } = require('../../../utils/user-language');
 
 module.exports = createCoreController('api::flashcard-note.flashcard-note', ({ strapi }) => ({
   async listNoteTypes(ctx) {
@@ -28,6 +29,11 @@ module.exports = createCoreController('api::flashcard-note.flashcard-note', ({ s
     if (!deckId) return ctx.badRequest('deckId is required');
 
     try {
+      const languageCode = await resolveUserLanguageCode(
+        strapi,
+        userId,
+        body.languageCode ?? body.language,
+      );
       const result = await createNoteAndCards(strapi, userId, {
         deckId,
         noteType: body.noteType ?? 'basic',
@@ -36,6 +42,7 @@ module.exports = createCoreController('api::flashcard-note.flashcard-note', ({ s
         createReverse: body.createReverse,
         mediaUrl: body.mediaUrl,
         userNoteId: body.userNoteId,
+        languageCode,
       });
       ctx.body = { ok: true, ...result };
     } catch (e) {

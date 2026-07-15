@@ -93,6 +93,7 @@ class FlashcardModel {
   final List<String> tags;
   final String? mediaUrl;
   final int flag;
+  final String languageCode;
   final String? deckName;
   final bool noteMarked;
   final CardReviewStateModel? reviewState;
@@ -113,6 +114,7 @@ class FlashcardModel {
     this.tags = const [],
     this.mediaUrl,
     this.flag = 0,
+    this.languageCode = 'en',
     this.deckName,
     this.noteMarked = false,
     this.reviewState,
@@ -146,6 +148,7 @@ class FlashcardModel {
               : const [],
       mediaUrl: json['mediaUrl'] as String?,
       flag: json['flag'] as int? ?? 0,
+      languageCode: json['languageCode'] as String? ?? 'en',
       deckName: json['deckName'] as String?,
       noteMarked: json['noteMarked'] == true,
       occlusionData:

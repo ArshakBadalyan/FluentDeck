@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../app_colors.dart';
+import '../../models/speaking_preferences.dart';
 import '../../services/note_service.dart';
+import '../../services/speaking_preferences_service.dart';
 import '../../services/subscription_service.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
+import '../../ui_elements/modern_page_widgets.dart';
 
 /// Result of the save-word-meaning sheet: the phrase and meaning to save, or
 /// null if the user cancelled.
@@ -12,12 +15,14 @@ class SaveWordMeaningResult {
     required this.phrase,
     required this.meaning,
     this.example,
+    this.languageCode,
   });
 
   final String phrase;
   /// Short dictionary-style definition (flashcard back).
   final String meaning;
   final String? example;
+  final String? languageCode;
 }
 
 /// Shown when the user taps "Save to deck" after selecting text in the
@@ -61,12 +66,24 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
   bool _isPremium = false;
   bool _generating = false;
   String? _error;
+  String _languageCode = 'en';
+  bool _syncLearningLanguage = true;
 
   @override
   void initState() {
     super.initState();
     _phraseController.text = widget.selectedText;
     _loadPremiumStatus();
+    _loadLanguagePrefs();
+  }
+
+  Future<void> _loadLanguagePrefs() async {
+    final prefs = await SpeakingPreferencesService.instance.load();
+    if (!mounted) return;
+    setState(() {
+      _syncLearningLanguage = prefs.syncLearningLanguage;
+      _languageCode = prefs.practiceLanguage;
+    });
   }
 
   @override
@@ -120,6 +137,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
         phrase: phrase,
         meaning: _meaningController.text.trim(),
         example: _exampleController.text.trim(),
+        languageCode: _languageCode,
       ),
     );
   }
@@ -182,6 +200,41 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
             ),
           ),
           const SizedBox(height: 16),
+          Text(
+            'Language',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          DropdownButtonFormField<String>(
+            initialValue: _languageCode,
+            decoration: appDropdownDecoration('Word language'),
+            items:
+                SpeakingPreferences.practiceLanguageOptions.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+            onChanged:
+                _syncLearningLanguage
+                    ? null
+                    : (value) {
+                      if (value == null) return;
+                      setState(() => _languageCode = value);
+                    },
+          ),
+          if (_syncLearningLanguage)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
+              child: Text(
+                'Synced to your learning language.',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ),
+          const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
