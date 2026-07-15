@@ -395,28 +395,6 @@ class ConversationService {
   String get _effectiveResponseLanguage =>
       responseLanguage.trim().isNotEmpty ? responseLanguage.trim() : practiceLanguage;
 
-  void _agentLog(String message, Map<String, dynamic> data, String hypothesisId) {
-    // #region agent log
-    http
-        .post(
-          Uri.parse('http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938'),
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': 'fcee54',
-          },
-          body: jsonEncode({
-            'sessionId': 'fcee54',
-            'location': 'conversation_service.dart',
-            'message': message,
-            'data': data,
-            'hypothesisId': hypothesisId,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          }),
-        )
-        .catchError((_) => http.Response('', 500));
-    // #endregion
-  }
-
   Future<void> _bootstrapSessionOpening({
     String? openingMessageOverride,
   }) async {
@@ -430,15 +408,6 @@ class ConversationService {
         sessionContext.openingMessage?.trim().isNotEmpty == true;
     // Curated English openers from games/role-plays must not bypass tutor language.
     final shouldGenerate = !hasCuratedOpener || responseLang != 'en';
-
-    // #region agent log
-    _agentLog('bootstrap_opening', {
-      'mode': sessionContext.mode.name,
-      'responseLang': responseLang,
-      'hasCuratedOpener': hasCuratedOpener,
-      'shouldGenerate': shouldGenerate,
-    }, 'D');
-    // #endregion
 
     if (!shouldGenerate) {
       _seedStaticOpening(
@@ -481,12 +450,6 @@ class ConversationService {
       );
     } catch (e, st) {
       debugPrint('_bootstrapSessionOpening failed: $e\n$st');
-      // #region agent log
-      _agentLog('bootstrap_opening_failed', {
-        'error': e.toString(),
-        'responseLang': _effectiveResponseLanguage,
-      }, 'D');
-      // #endregion
       isProcessing = false;
       stage = ConversationProcessingStage.idle;
       _seedStaticOpening(

@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/data/decks_help_content.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
@@ -807,30 +805,6 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   }
 
   void _clearAllFilters() {
-    // #region agent log
-    http
-        .post(
-          Uri.parse('http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938'),
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': 'fcee54',
-          },
-          body: jsonEncode({
-            'sessionId': 'fcee54',
-            'location': 'card_browser_screen.dart:_clearAllFilters',
-            'message': 'clear_all_filters',
-            'data': {
-              'activeFilterCount': _activeFilterCount,
-              'cefrFilter': _cefrFilter,
-              'hasSearch': _searchCtrl.text.trim().isNotEmpty,
-              'runId': 'post-fix',
-            },
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-            'hypothesisId': 'F',
-          }),
-        )
-        .catchError((_) => http.Response('', 0));
-    // #endregion
     setState(() {
       _stateFilter = 'all';
       _markedFilter = null;
@@ -1705,33 +1679,6 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     );
     final availableWidth = maxWidth - (tableInset * 2);
     final needsHorizontalScroll = contentWidth > availableWidth;
-
-    // #region agent log
-    http
-        .post(
-          Uri.parse('http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938'),
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': 'fcee54',
-          },
-          body: jsonEncode({
-            'sessionId': 'fcee54',
-            'location': 'card_browser_screen.dart:_buildBody',
-            'message': 'wide_table_layout',
-            'data': {
-              'maxWidth': maxWidth,
-              'contentWidth': contentWidth,
-              'availableWidth': availableWidth,
-              'needsHorizontalScroll': needsHorizontalScroll,
-              'tableInset': tableInset,
-            },
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-            'hypothesisId': 'H1',
-            'runId': 'post-fix',
-          }),
-        )
-        .catchError((_) => http.Response('', 0));
-    // #endregion
 
     Widget buildTableList({double? itemWidth}) {
       return Column(

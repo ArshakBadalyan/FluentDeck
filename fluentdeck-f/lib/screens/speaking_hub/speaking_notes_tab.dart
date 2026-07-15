@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
-import 'package:http/http.dart' as http;
 
 import '../../models/conversation_training_session.dart';
 import '../../models/speaking_session_context.dart';
@@ -69,28 +67,6 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
     return key;
   }
 
-  void _agentLog(String message, Map<String, dynamic> data, String hypothesisId) {
-    // #region agent log
-    http
-        .post(
-          Uri.parse('http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938'),
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': 'fcee54',
-          },
-          body: jsonEncode({
-            'sessionId': 'fcee54',
-            'location': 'speaking_notes_tab.dart',
-            'message': message,
-            'data': data,
-            'hypothesisId': hypothesisId,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          }),
-        )
-        .catchError((_) => http.Response('', 500));
-    // #endregion
-  }
-
   List<LinkedMyNotesDeck> get _visibleLinkedDecks =>
       _linkedDecks.where((d) => !d.duplicatesSpeakingSource).toList();
 
@@ -153,12 +129,6 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       if (nextIndex != _languageIndex) {
         setState(() => _languageIndex = nextIndex);
       }
-      // #region agent log
-      _agentLog('language_options_loaded', {
-        'codes': codes,
-        'filterCount': options.length,
-      }, 'C');
-      // #endregion
     } catch (_) {}
   }
 
@@ -232,15 +202,6 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
           ..addAll(notes.map((n) => n.id));
         _loading = false;
       });
-      // #region agent log
-      _agentLog('notes_loaded', {
-        'count': notes.length,
-        'source': _sourceKey,
-        'level': _levelKey,
-        'language': _effectiveLanguageCode ?? 'all',
-        'languages': notes.map((n) => n.languageCode).toSet().toList(),
-      }, 'C');
-      // #endregion
       unawaited(_loadTopics());
     } catch (e) {
       if (!mounted) return;
@@ -310,15 +271,6 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   void _clearAllFilters() {
     if (!_hasAnyFilters) return;
-    // #region agent log
-    _agentLog('clear_all_filters', {
-      'sourceBefore': _sourceKey,
-      'levelBefore': _levelKey,
-      'languageBefore': _effectiveLanguageCode ?? 'all',
-      'topicBefore': _topicFilter,
-      'runId': 'post-fix',
-    }, 'F');
-    // #endregion
     setState(() {
       _sourceIndex = _speakingSourceIndex;
       _levelIndex = 0;
@@ -339,9 +291,6 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   }
 
   Future<void> _openImportDecks() async {
-    // #region agent log
-    _agentLog('open_import_decks', {}, 'E');
-    // #endregion
     final result = await showImportDecksToNotesSheet(context);
     if (!mounted || result == null || !result.ok) return;
     _linkedDecks = await MyNotesLinkedDecksStore.instance.merge(result.linkedDecks);
@@ -353,13 +302,6 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       final deckIndex = _sourceFilters.indexWhere((f) => f.$1 == 'deck:${target.id}');
       if (deckIndex >= 0) nextIndex = deckIndex;
     }
-    // #region agent log
-    _agentLog('import_decks_selected', {
-      'addedDecks': addedDecks.map((d) => d.name).toList(),
-      'nextIndex': nextIndex,
-      'nextKey': nextIndex < _sourceFilters.length ? _sourceFilters[nextIndex].$1 : 'all',
-    }, 'G');
-    // #endregion
     setState(() {
       if (nextIndex >= _sourceFilters.length) nextIndex = _speakingSourceIndex;
       _sourceIndex = nextIndex;
@@ -646,9 +588,6 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   }
 
   Future<void> _openEditNote(UserNoteModel note) async {
-    // #region agent log
-    _agentLog('open_edit_note', {'id': note.id, 'source': note.source}, 'B');
-    // #endregion
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => NoteEditScreen(note: note)),
     );
@@ -931,25 +870,6 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   @override
   Widget build(BuildContext context) {
-    final viewportHeight = MediaQuery.sizeOf(context).height;
-    const estimatedHeaderHeight = 88.0;
-    const estimatedTrainBarHeight = 58.0;
-    final estimatedListHeight =
-        viewportHeight - estimatedHeaderHeight - estimatedTrainBarHeight;
-    // #region agent log
-    _agentLog('layout_metrics', {
-      'viewportHeight': viewportHeight,
-      'estimatedHeaderHeight': estimatedHeaderHeight,
-      'estimatedTrainBarHeight': estimatedTrainBarHeight,
-      'estimatedListHeight': estimatedListHeight,
-      'noteCount': _notes.length,
-      'filterRows': 2,
-      'hasActiveFilters': _hasActiveAdvancedFilters,
-      'hasAnyFilters': _hasAnyFilters,
-      'runId': 'post-fix',
-    }, 'A');
-    // #endregion
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

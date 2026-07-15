@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
@@ -12,7 +10,6 @@ import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 import 'package:fluentdeck/widgets/cefr_level_chips.dart';
 import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
-import 'package:http/http.dart' as http;
 
 class NoteEditScreen extends StatefulWidget {
   const NoteEditScreen({super.key, this.note});
@@ -94,28 +91,6 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         .toList();
   }
 
-  void _agentLog(String message, Map<String, dynamic> data, String hypothesisId) {
-    // #region agent log
-    http
-        .post(
-          Uri.parse('http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938'),
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': 'fcee54',
-          },
-          body: jsonEncode({
-            'sessionId': 'fcee54',
-            'location': 'note_edit_screen.dart',
-            'message': message,
-            'data': data,
-            'hypothesisId': hypothesisId,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          }),
-        )
-        .catchError((_) => http.Response('', 500));
-    // #endregion
-  }
-
   Future<void> _detectCefrWithAi() async {
     if (!_isPremium) {
       showSpeakingPremiumSnackBar(context);
@@ -138,13 +113,6 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         definition: _definitionCtrl.text.trim(),
         exampleSentence: _exampleCtrl.text.trim(),
       );
-      // #region agent log
-      _agentLog('detect_cefr_result', {
-        'ok': result.ok,
-        'level': result.cefrLevel,
-        'premiumRequired': result.premiumRequired,
-      }, 'F');
-      // #endregion
       if (!mounted) return;
       if (result.premiumRequired) {
         showSpeakingPremiumSnackBar(context);
@@ -189,9 +157,6 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           topic: _topicCtrl.text.trim(),
           clearTopic: _topicCtrl.text.trim().isEmpty,
         );
-        // #region agent log
-        _agentLog('update_note_result', {'ok': ok, 'id': widget.note!.id}, 'B');
-        // #endregion
         if (!mounted) return;
         if (ok) {
           Navigator.pop(context, true);
@@ -210,9 +175,6 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           cefrLevel: _cefrLevel,
           topic: _topicCtrl.text.trim(),
         );
-        // #region agent log
-        _agentLog('create_note_result', {'ok': result.ok, 'word': word}, 'A');
-        // #endregion
         if (!mounted) return;
         if (result.ok) {
           final msg =
