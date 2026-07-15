@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/models/language_levels_snapshot.dart';
 import 'package:fluentdeck/models/speaking_session_record_model.dart';
 import 'package:fluentdeck/models/user_note_model.dart';
 import 'package:fluentdeck/models/user_progress_model.dart';
@@ -9,6 +10,7 @@ import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/screens/activity_screen/speaking_saved_phrases_screen.dart';
 import 'package:fluentdeck/screens/activity_screen/speaking_session_detail_screen.dart';
 import 'package:fluentdeck/screens/activity_screen/speaking_session_history_screen.dart';
+import 'package:fluentdeck/services/language_levels_service.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/services/user_progress_service.dart';
@@ -27,6 +29,7 @@ class EnglishActivityScreen extends StatefulWidget {
 class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
   bool _loading = true;
   UserProgressModel? _progress;
+  LanguageLevelsSnapshot? _languageLevels;
   List<SpeakingSessionRecord> _history = [];
   List<UserNoteModel> _savedPhrases = [];
   String? _error;
@@ -45,17 +48,19 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
     try {
       final results = await Future.wait([
         UserProgressService.instance.createIfMissing(),
+        LanguageLevelsService.instance.fetch(forceRefresh: true),
         SpeakingSessionService.instance.fetchRecent(limit: 50),
         NoteService.instance.fetchNotes(),
       ]);
-      final notes = results[2] as List<UserNoteModel>;
+      final notes = results[3] as List<UserNoteModel>;
       final speakingNotes =
           notes.where((n) => n.source == 'speaking').toList();
 
       if (!mounted) return;
       setState(() {
         _progress = results[0] as UserProgressModel;
-        _history = results[1] as List<SpeakingSessionRecord>;
+        _languageLevels = results[1] as LanguageLevelsSnapshot;
+        _history = results[2] as List<SpeakingSessionRecord>;
         _savedPhrases = speakingNotes;
         _loading = false;
       });
@@ -104,6 +109,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
     }
 
     final progress = _progress!;
+    final tutorLevel = _languageLevels?.tutorLevel ?? progress.currentLevel;
     final topWeak = progress.weakAreas.take(5).toList();
     final topWeakMaxCount = topWeak.isEmpty
         ? 0
@@ -125,8 +131,8 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                 Expanded(
                   child: _MetricTile(
                     icon: Icons.school_outlined,
-                    label: 'Current level',
-                    value: progress.currentLevel,
+                    label: 'AI tutor level',
+                    value: tutorLevel,
                     color: AppColors.primaryPurple,
                   ),
                 ),

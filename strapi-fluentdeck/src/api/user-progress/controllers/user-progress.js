@@ -7,8 +7,21 @@ const {
   updateOwnedProgress,
   formatProgressResponse,
 } = require('../../../utils/user-progress-utils');
+const { getLanguageLevelsSnapshot } = require('../../../utils/language-level-analytics');
 
 module.exports = createCoreController('api::user-progress.user-progress', ({ strapi }) => ({
+  async languageLevels(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized('Authentication required');
+
+    try {
+      ctx.body = await getLanguageLevelsSnapshot(strapi, userId);
+    } catch (error) {
+      strapi.log.error('[user-progress.languageLevels]', error);
+      return ctx.internalServerError('Could not load language levels');
+    }
+  },
+
   async find(ctx) {
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Authentication required');

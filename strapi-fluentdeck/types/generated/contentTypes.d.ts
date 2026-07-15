@@ -1397,6 +1397,7 @@ export interface ApiUserProgressUserProgress
       Schema.Attribute.DefaultTo<'B1'>;
     flashcardReviewStreakDays: Schema.Attribute.Integer &
       Schema.Attribute.DefaultTo<0>;
+    languageLevels: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
     lastFlashcardReviewAt: Schema.Attribute.DateTime;
     lastPracticeAt: Schema.Attribute.DateTime;
     locale: Schema.Attribute.String & Schema.Attribute.Private;

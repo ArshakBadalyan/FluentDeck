@@ -87,6 +87,22 @@ async function recordSpeakingTurnStats(strapi, userId, { userText, corrections }
     perfectDelta === 1,
   );
 
+  try {
+    const user = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { id: userId },
+      select: ['practice_language'],
+    });
+    const { recordSpeakingActivity } = require('./language-level-analytics');
+    await recordSpeakingActivity(strapi, userId, {
+      languageCode: user?.practice_language ?? 'en',
+      isPerfect: perfectDelta === 1,
+      correctionCount: hasCorrections ? corrections.length : 0,
+      newWords,
+    });
+  } catch (err) {
+    strapi.log.warn('[recordSpeakingTurnStats] language analytics failed', err);
+  }
+
   return {
     perfectSentencesCount,
     uniqueWordsUsed,

@@ -702,6 +702,26 @@ module.exports = (plugin) => {
         userId,
         data
       );
+
+      try {
+        const {
+          recordLanguageSelection,
+          updateTutorLevelForLanguage,
+        } = require("../../utils/language-level-analytics");
+        const lang = updated.practice_language ?? "en";
+        const tutorLevel = updated.english_level ?? "A1";
+        if (body.practice_language != null) {
+          await recordLanguageSelection(strapi, userId, lang, tutorLevel);
+        } else if (body.english_level != null) {
+          await updateTutorLevelForLanguage(strapi, userId, lang, tutorLevel);
+        }
+      } catch (analyticsErr) {
+        strapi.log.warn(
+          "[updateSpeakingPreferences] language analytics failed",
+          analyticsErr,
+        );
+      }
+
       ctx.send({
         practice_language: updated.practice_language ?? "en",
         auto_save_corrections: updated.auto_save_corrections !== false,

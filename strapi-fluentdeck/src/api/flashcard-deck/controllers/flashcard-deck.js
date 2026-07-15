@@ -604,6 +604,19 @@ module.exports = createCoreController(
         undoSnapshot,
       });
 
+      try {
+        const user = await strapi.db.query('plugin::users-permissions.user').findOne({
+          where: { id: userId },
+          select: ['practice_language'],
+        });
+        const { recordDeckReviewActivity } = require('../../../utils/language-level-analytics');
+        await recordDeckReviewActivity(strapi, userId, {
+          languageCode: user?.practice_language ?? 'en',
+        });
+      } catch (analyticsErr) {
+        strapi.log.warn('[submitReview] language analytics failed', analyticsErr);
+      }
+
       ctx.body = {
         ok: true,
         card: formatCard(card, updated),

@@ -41,6 +41,7 @@ module.exports = {
       "api::user-progress.user-progress.findOne",
       "api::user-progress.user-progress.create",
       "api::user-progress.user-progress.update",
+      "api::user-progress.user-progress.languageLevels",
       "api::notification.notification.find",
       "api::notification.notification.findOne",
       "api::user-note.user-note.find",

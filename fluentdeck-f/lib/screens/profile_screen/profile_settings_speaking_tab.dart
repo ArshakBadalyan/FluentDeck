@@ -203,12 +203,17 @@ class _ProfileSettingsSpeakingSectionState
         ),
         const SizedBox(height: 16),
         Text(
-          'Proficiency level',
+          'AI tutor level',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
             color: Colors.grey.shade700,
           ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'How challenging the tutor speaks and corrects you — not your personal level. Change it if you want harder or easier practice.',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.35),
         ),
         const SizedBox(height: 8),
         CefrLevelChips(

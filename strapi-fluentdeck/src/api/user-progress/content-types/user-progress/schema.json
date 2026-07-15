@@ -57,6 +57,10 @@
     "lastFlashcardReviewAt": {
       "type": "datetime"
     },
+    "languageLevels": {
+      "type": "json",
+      "default": {}
+    },
     "user": {
       "type": "relation",
       "relation": "oneToOne",
