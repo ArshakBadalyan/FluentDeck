@@ -35,6 +35,8 @@ class UserNoteModel {
         return 'Word list';
       case 'speaking':
         return 'From speaking';
+      case 'deck':
+        return topic?.trim().isNotEmpty == true ? topic!.trim() : 'From deck';
       default:
         return 'Manual';
     }
@@ -118,6 +120,72 @@ class WordMeaningResult {
     this.definition = '',
     this.example = '',
     this.premiumRequired = false,
+    this.message,
+  });
+}
+
+class CefrLevelResult {
+  final bool ok;
+  final String? cefrLevel;
+  final bool premiumRequired;
+  final String? message;
+
+  const CefrLevelResult({
+    required this.ok,
+    this.cefrLevel,
+    this.premiumRequired = false,
+    this.message,
+  });
+}
+
+class LinkedMyNotesDeck {
+  const LinkedMyNotesDeck({
+    required this.id,
+    required this.name,
+    this.deckSlug = '',
+  });
+
+  final int id;
+  final String name;
+  final String deckSlug;
+
+  /// The built-in speaking source chip already covers this deck — hide duplicate chip.
+  bool get duplicatesSpeakingSource {
+    if (deckSlug == 'from_speaking') return true;
+    return name.trim().toLowerCase() == 'from speaking';
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    if (deckSlug.isNotEmpty) 'deckSlug': deckSlug,
+  };
+
+  factory LinkedMyNotesDeck.fromJson(Map<String, dynamic> json) {
+    return LinkedMyNotesDeck(
+      id: (json['id'] as num?)?.round() ?? 0,
+      name: json['name']?.toString() ?? '',
+      deckSlug: json['deckSlug']?.toString() ?? '',
+    );
+  }
+}
+
+class ImportDecksResult {
+  final bool ok;
+  final int created;
+  final int skipped;
+  final List<String> deckNames;
+  final List<LinkedMyNotesDeck> linkedDecks;
+  final bool limitReached;
+  final String? message;
+
+  const ImportDecksResult({
+    required this.ok,
+    this.created = 0,
+    this.skipped = 0,
+    this.deckNames = const [],
+    this.linkedDecks = const [],
+    this.limitReached = false,
     this.message,
   });
 }

@@ -1,14 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:http/http.dart' as http;
 
 import '../../models/conversation_training_session.dart';
 import '../../models/speaking_session_context.dart';
 import '../../models/user_note_model.dart';
+import '../../screens/learn_screen/note_edit_screen.dart';
+import '../../screens/speaking_hub/widgets/import_decks_to_notes_sheet.dart';
+import '../../screens/speaking_hub/widgets/my_notes_filters_sheet.dart';
 import '../../services/conversation_service.dart';
+import '../../services/my_notes_linked_decks_store.dart';
 import '../../services/note_service.dart';
-import '../../services/speaking_preferences_service.dart';
 import '../../utils/learning_language_utils.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
@@ -22,12 +27,6 @@ class SpeakingNotesTab extends StatefulWidget {
 }
 
 class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
-  static const _sourceFilters = [
-    ('all', 'All'),
-    ('speaking', 'From speaking'),
-    ('manual', 'Manual'),
-  ];
-
   static const _levelFilters = [
     ('all', 'All levels'),
     ('A1', 'A1'),
@@ -39,13 +38,14 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
     ('none', 'No level'),
   ];
 
-  int _sourceIndex = 0;
+  int _sourceIndex = 1;
   int _levelIndex = 0;
   int _languageIndex = 0;
   String _topicFilter = 'all';
-  String _practiceLanguage = 'en';
-  bool _syncLearningLanguage = true;
-  List<String> _topicOptions = const [];
+  List<LinkedMyNotesDeck> _linkedDecks = const [];
+  List<MapEntry<String, String>> _languageFilters = const [
+    MapEntry('all', 'All languages'),
+  ];
   List<UserNoteModel> _notes = const [];
   final Set<int> _selectedIds = {};
   bool _loading = true;
@@ -58,37 +58,119 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
     _init();
   }
 
-  List<MapEntry<String, String>> get _languageFilters =>
-      LearningLanguageUtils.filterOptions();
+  List<String> _topicOptions = const [];
 
-  String? get _effectiveLanguageCode => LearningLanguageUtils.effectiveFilterCode(
-    syncLearningLanguage: _syncLearningLanguage,
-    practiceLanguage: _practiceLanguage,
-    manualFilter: _languageFilters[_languageIndex].key,
-  );
+  String? get _effectiveLanguageCode {
+    if (_languageIndex < 0 || _languageIndex >= _languageFilters.length) {
+      return null;
+    }
+    final key = _languageFilters[_languageIndex].key;
+    if (key == 'all') return null;
+    return key;
+  }
+
+  void _agentLog(String message, Map<String, dynamic> data, String hypothesisId) {
+    // #region agent log
+    http
+        .post(
+          Uri.parse('http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938'),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': 'fcee54',
+          },
+          body: jsonEncode({
+            'sessionId': 'fcee54',
+            'location': 'speaking_notes_tab.dart',
+            'message': message,
+            'data': data,
+            'hypothesisId': hypothesisId,
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          }),
+        )
+        .catchError((_) => http.Response('', 500));
+    // #endregion
+  }
+
+  List<LinkedMyNotesDeck> get _visibleLinkedDecks =>
+      _linkedDecks.where((d) => !d.duplicatesSpeakingSource).toList();
+
+  List<(String key, String label)> get _sourceFilters => [
+    ('all', 'All'),
+    ('speaking', 'From speaking'),
+    ..._visibleLinkedDecks.map((d) => ('deck:${d.id}', d.name)),
+  ];
+
+  int get _speakingSourceIndex => 1;
+
+  String get _sourceKey =>
+      _sourceIndex >= 0 && _sourceIndex < _sourceFilters.length
+          ? _sourceFilters[_sourceIndex].$1
+          : 'all';
+
+  String? get _activeDeckTopic {
+    if (!_sourceKey.startsWith('deck:')) return null;
+    final id = int.tryParse(_sourceKey.substring(5));
+    if (id == null) return null;
+    for (final deck in _linkedDecks) {
+      if (deck.id == id) return deck.name;
+    }
+    return null;
+  }
 
   Future<void> _init() async {
-    final prefs = await SpeakingPreferencesService.instance.load();
-    if (!mounted) return;
-    setState(() {
-      _syncLearningLanguage = prefs.syncLearningLanguage;
-      _practiceLanguage = prefs.practiceLanguage;
-      if (prefs.syncLearningLanguage) {
-        _languageIndex = _languageFilters.indexWhere(
-          (e) => e.key == prefs.practiceLanguage,
-        );
-        if (_languageIndex < 0) _languageIndex = 0;
-      }
-    });
+    final stored = await MyNotesLinkedDecksStore.instance.load();
+    _linkedDecks = stored.where((d) => !d.duplicatesSpeakingSource).toList();
+    if (stored.length != _linkedDecks.length) {
+      await MyNotesLinkedDecksStore.instance.save(_linkedDecks);
+    }
+    if (mounted) {
+      setState(() => _sourceIndex = _speakingSourceIndex);
+    }
+    await _loadLanguageOptions();
     await _load();
   }
 
-  String get _sourceKey => _sourceFilters[_sourceIndex].$1;
+  Future<void> _loadLanguageOptions() async {
+    try {
+      final all = await NoteService.instance.fetchNotes(source: 'all');
+      if (!mounted) return;
+      final codes =
+          all
+              .map((n) => n.languageCode.trim())
+              .where((c) => c.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort();
+      final options = <MapEntry<String, String>>[
+        const MapEntry('all', 'All languages'),
+        ...codes.map(
+          (c) => MapEntry(c, LearningLanguageUtils.languageLabel(c)),
+        ),
+      ];
+      var nextIndex = _languageIndex;
+      if (nextIndex >= options.length) nextIndex = 0;
+      setState(() => _languageFilters = options);
+      if (nextIndex != _languageIndex) {
+        setState(() => _languageIndex = nextIndex);
+      }
+      // #region agent log
+      _agentLog('language_options_loaded', {
+        'codes': codes,
+        'filterCount': options.length,
+      }, 'C');
+      // #endregion
+    } catch (_) {}
+  }
+
   String get _levelKey => _levelFilters[_levelIndex].$1;
 
   String get _sessionLabel {
     final parts = <String>['My notes'];
-    if (_sourceKey != 'all') {
+    if (_sourceKey == 'all') {
+      // no extra source label
+    } else if (_activeDeckTopic != null) {
+      parts.add(_activeDeckTopic!);
+    } else if (_sourceKey != 'all') {
       parts.add(_sourceFilters[_sourceIndex].$2);
     }
     if (_levelKey != 'all') {
@@ -102,7 +184,13 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   Future<void> _loadTopics() async {
     try {
-      final all = await NoteService.instance.fetchNotes(source: _sourceKey);
+      final deckTopic = _activeDeckTopic;
+      final all = await NoteService.instance.fetchNotes(
+        source: deckTopic != null
+            ? 'deck'
+            : (_sourceKey == 'all' ? null : _sourceKey),
+        topic: deckTopic,
+      );
       if (!mounted) return;
       final topics =
           all
@@ -127,10 +215,13 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       _error = null;
     });
     try {
+      final deckTopic = _activeDeckTopic;
       final notes = await NoteService.instance.fetchNotes(
-        source: _sourceKey,
+        source: deckTopic != null
+            ? 'deck'
+            : (_sourceKey == 'all' ? null : _sourceKey),
         cefrLevel: _levelKey,
-        topic: _topicFilter,
+        topic: deckTopic ?? (_topicFilter == 'all' ? null : _topicFilter),
         languageCode: _effectiveLanguageCode,
       );
       if (!mounted) return;
@@ -141,6 +232,15 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
           ..addAll(notes.map((n) => n.id));
         _loading = false;
       });
+      // #region agent log
+      _agentLog('notes_loaded', {
+        'count': notes.length,
+        'source': _sourceKey,
+        'level': _levelKey,
+        'language': _effectiveLanguageCode ?? 'all',
+        'languages': notes.map((n) => n.languageCode).toSet().toList(),
+      }, 'C');
+      // #endregion
       unawaited(_loadTopics());
     } catch (e) {
       if (!mounted) return;
@@ -152,66 +252,441 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   }
 
   void _onSourceSelected(int index) {
-    setState(() => _sourceIndex = index);
+    if (index < 0 || index >= _sourceFilters.length) return;
+    setState(() {
+      _sourceIndex = index;
+      if (_sourceFilters[index].$1.startsWith('deck:')) {
+        _topicFilter = 'all';
+      }
+    });
     _load();
   }
 
-  void _onLevelSelected(int index) {
-    setState(() => _levelIndex = index);
+  bool get _advancedFiltersEnabled => _activeDeckTopic == null;
+
+  bool get _hasActiveAdvancedFilters =>
+      _levelIndex != 0 || _languageIndex != 0 || _topicFilter != 'all';
+
+  bool get _hasAnyFilters =>
+      _sourceIndex != _speakingSourceIndex || _hasActiveAdvancedFilters;
+
+  String get _filtersSummary {
+    final parts = <String>[];
+    if (_levelIndex != 0) {
+      parts.add(_levelFilters[_levelIndex].$2);
+    }
+    if (_languageIndex != 0 && _languageIndex < _languageFilters.length) {
+      parts.add(_languageFilters[_languageIndex].value);
+    }
+    if (_topicFilter != 'all') {
+      parts.add(_topicFilter);
+    }
+    return parts.isEmpty ? 'Level, language, topic' : parts.join(' · ');
+  }
+
+  Future<void> _showAdvancedFiltersSheet() async {
+    if (!_advancedFiltersEnabled) return;
+    final result = await showMyNotesFiltersSheet(
+      context,
+      levelLabels: _levelFilters.map((f) => f.$2).toList(),
+      levelIndex: _levelIndex,
+      languageLabels: _languageFilters.map((f) {
+        if (f.key == 'all') return f.value;
+        return f.value;
+      }).toList(),
+      languageIndex: _languageIndex,
+      topicOptions: _topicOptions,
+      topicFilter: _topicFilter,
+      enabled: _advancedFiltersEnabled,
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _levelIndex = result.levelIndex;
+      _languageIndex = result.languageIndex;
+      _topicFilter = result.topicFilter;
+    });
     _load();
   }
 
-  void _onLanguageSelected(int index) {
-    if (_syncLearningLanguage) return;
-    setState(() => _languageIndex = index);
+  void _clearAllFilters() {
+    if (!_hasAnyFilters) return;
+    // #region agent log
+    _agentLog('clear_all_filters', {
+      'sourceBefore': _sourceKey,
+      'levelBefore': _levelKey,
+      'languageBefore': _effectiveLanguageCode ?? 'all',
+      'topicBefore': _topicFilter,
+      'runId': 'post-fix',
+    }, 'F');
+    // #endregion
+    setState(() {
+      _sourceIndex = _speakingSourceIndex;
+      _levelIndex = 0;
+      _languageIndex = 0;
+      _topicFilter = 'all';
+    });
     _load();
   }
 
-  Future<void> _pickTopic() async {
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: Text(
-                  'Topic',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Rubik',
+  Future<void> _openAddNote() async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const NoteEditScreen()),
+    );
+    if (saved == true && mounted) {
+      await _loadLanguageOptions();
+      await _load();
+    }
+  }
+
+  Future<void> _openImportDecks() async {
+    // #region agent log
+    _agentLog('open_import_decks', {}, 'E');
+    // #endregion
+    final result = await showImportDecksToNotesSheet(context);
+    if (!mounted || result == null || !result.ok) return;
+    _linkedDecks = await MyNotesLinkedDecksStore.instance.merge(result.linkedDecks);
+    final addedDecks =
+        result.linkedDecks.where((d) => !d.duplicatesSpeakingSource).toList();
+    var nextIndex = _sourceIndex;
+    if (addedDecks.isNotEmpty) {
+      final target = addedDecks.last;
+      final deckIndex = _sourceFilters.indexWhere((f) => f.$1 == 'deck:${target.id}');
+      if (deckIndex >= 0) nextIndex = deckIndex;
+    }
+    // #region agent log
+    _agentLog('import_decks_selected', {
+      'addedDecks': addedDecks.map((d) => d.name).toList(),
+      'nextIndex': nextIndex,
+      'nextKey': nextIndex < _sourceFilters.length ? _sourceFilters[nextIndex].$1 : 'all',
+    }, 'G');
+    // #endregion
+    setState(() {
+      if (nextIndex >= _sourceFilters.length) nextIndex = _speakingSourceIndex;
+      _sourceIndex = nextIndex;
+      if (_sourceKey.startsWith('deck:')) {
+        _topicFilter = 'all';
+      }
+    });
+    await _loadLanguageOptions();
+    await _load();
+    final msg = StringBuffer('Added ${result.created} note${result.created == 1 ? '' : 's'}');
+    if (result.skipped > 0) {
+      msg.write(' (${result.skipped} skipped)');
+    }
+    if (result.limitReached) {
+      msg.write('. Note limit reached — upgrade for unlimited saves.');
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg.toString())),
+    );
+  }
+
+  Widget _compactSourceChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: selected
+          ? AppColors.primaryPurple.withValues(alpha: 0.1)
+          : Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? AppColors.primaryPurple : Colors.grey.shade300,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              color: selected ? AppColors.primaryPurple : const Color(0xFF777481),
+              fontFamily: 'Rubik',
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSourceFilterRow() {
+    final filters = _sourceFilters;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+      child: Row(
+        children: [
+          for (int index = 0; index < filters.length; index++)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: _compactSourceChip(
+                label: filters[index].$2,
+                selected: index == _sourceIndex,
+                onTap: () => _onSourceSelected(index),
+              ),
+            ),
+          Material(
+            color: AppColors.primaryPurple.withValues(alpha: 0.1),
+            shape: CircleBorder(
+              side: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.35)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: _openAddNote,
+              customBorder: const CircleBorder(),
+              child: const Padding(
+                padding: EdgeInsets.all(7),
+                child: Icon(
+                  Icons.note_add_outlined,
+                  size: 16,
+                  color: AppColors.primaryPurple,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Material(
+            color: AppColors.primaryPurple.withValues(alpha: 0.1),
+            shape: CircleBorder(
+              side: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.35)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: _openImportDecks,
+              customBorder: const CircleBorder(),
+              child: const Padding(
+                padding: EdgeInsets.all(7),
+                child: Icon(
+                  Icons.add_rounded,
+                  size: 16,
+                  color: AppColors.primaryPurple,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMoreFiltersBar() {
+    final enabled = _advancedFiltersEnabled;
+    final active = _hasActiveAdvancedFilters;
+    final hasAnyFilters = _hasAnyFilters;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              elevation: 0,
+              child: InkWell(
+                onTap: enabled ? _showAdvancedFiltersSheet : null,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: active ? AppColors.primaryPurple : Colors.grey.shade200,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.tune_rounded,
+                        size: 16,
+                        color: enabled ? AppColors.primaryPurple : Colors.grey.shade400,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          enabled ? _filtersSummary : 'Filters locked for deck source',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                            color: enabled
+                                ? (active ? AppColors.primaryPurple : const Color(0xFF777481))
+                                : Colors.grey.shade500,
+                            fontFamily: 'Rubik',
+                          ),
+                        ),
+                      ),
+                      if (active)
+                        Container(
+                          margin: const EdgeInsets.only(right: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'Active',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryPurple,
+                              fontFamily: 'Rubik',
+                            ),
+                          ),
+                        ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: enabled ? Colors.grey.shade500 : Colors.grey.shade300,
+                      ),
+                    ],
                   ),
                 ),
               ),
-              ListTile(
-                title: const Text('All topics'),
-                trailing: _topicFilter == 'all'
-                    ? const Icon(Icons.check, color: AppColors.primaryPurple)
-                    : null,
-                onTap: () => Navigator.pop(ctx, 'all'),
-              ),
-              for (final topic in _topicOptions)
-                ListTile(
-                  title: Text(topic),
-                  trailing: _topicFilter == topic
-                      ? const Icon(Icons.check, color: AppColors.primaryPurple)
-                      : null,
-                  onTap: () => Navigator.pop(ctx, topic),
-                ),
-              const SizedBox(height: 8),
-            ],
+            ),
           ),
-        );
-      },
+          if (hasAnyFilters) ...[
+            const SizedBox(width: 6),
+            Material(
+              color: AppColors.primaryPurple.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                onTap: _clearAllFilters,
+                borderRadius: BorderRadius.circular(12),
+                child: Tooltip(
+                  message: 'Clear all filters',
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primaryPurple.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.filter_alt_off_outlined,
+                      size: 18,
+                      color: AppColors.primaryPurple,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
-    if (picked == null || !mounted) return;
-    setState(() => _topicFilter = picked);
-    _load();
+  }
+
+  Widget _buildTrainBar() {
+    final count = _selectedIds.length;
+    final enabled = count > 0 && !_starting;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: SizedBox(
+            width: double.infinity,
+            height: 42,
+            child: FilledButton.icon(
+              onPressed: enabled ? _startTraining : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryPurple,
+                disabledBackgroundColor: AppColors.greySkipped.withValues(alpha: 0.35),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: Icon(
+                _starting ? Icons.hourglass_top_rounded : Icons.record_voice_over_rounded,
+                size: 18,
+              ),
+              label: Text(
+                _starting
+                    ? 'Starting…'
+                    : count > 0
+                        ? 'Train with AI tutor ($count)'
+                        : 'Select notes to train',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Rubik',
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openEditNote(UserNoteModel note) async {
+    // #region agent log
+    _agentLog('open_edit_note', {'id': note.id, 'source': note.source}, 'B');
+    // #endregion
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => NoteEditScreen(note: note)),
+    );
+    if (saved == true && mounted) {
+      await _loadLanguageOptions();
+      await _load();
+    }
+  }
+
+  Future<void> _confirmDeleteNote(UserNoteModel note) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete note?'),
+        content: Text('Remove "${note.word}" from your saved notes?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final ok = await NoteService.instance.deleteNote(note.id);
+    if (!mounted) return;
+    if (ok) {
+      await _loadLanguageOptions();
+      await _load();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not delete note')),
+      );
+    }
   }
 
   void _toggleSelection(int id) {
@@ -234,8 +709,18 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
     });
   }
 
+  String _plainText(String raw) {
+    return raw
+        .replaceAll(RegExp(r'<[^>]*>'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
   String _noteSubtitle(UserNoteModel note) {
     final parts = <String>[note.sourceLabel];
+    if (note.languageCode.isNotEmpty) {
+      parts.add(LearningLanguageUtils.languageLabel(note.languageCode));
+    }
     if (note.cefrLevel != null && note.cefrLevel!.isNotEmpty) {
       parts.add(note.cefrLevel!);
     }
@@ -243,9 +728,9 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       parts.add(note.topic!);
     }
     if (note.definition.trim().isNotEmpty) {
-      parts.add(note.definition.trim());
+      parts.add(_plainText(note.definition));
     } else if (note.exampleSentence.trim().isNotEmpty) {
-      parts.add(note.exampleSentence.trim());
+      parts.add(_plainText(note.exampleSentence));
     }
     return parts.join(' · ');
   }
@@ -345,7 +830,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
           padding: const EdgeInsets.all(24),
           child: Text(
             'No saved notes match these filters.\n'
-            'Save words from speaking chat, or add notes manually.',
+            'Save words from speaking chat, or tap + to add a deck.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey.shade700, height: 1.4),
           ),
@@ -360,25 +845,54 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       color: AppColors.primaryPurple,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: [
-          Row(
-            children: [
-              Checkbox(
-                value: allSelected,
-                tristate: true,
-                onChanged: (value) => _selectAll(value ?? false),
-                activeColor: AppColors.primaryPurple,
-              ),
-              Text(
-                '${_selectedIds.length} of ${_notes.length} selected',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade700,
-                  fontFamily: 'Rubik',
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: allSelected,
+                    tristate: true,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    onChanged: (value) => _selectAll(value ?? false),
+                    activeColor: AppColors.primaryPurple,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${_selectedIds.length} of ${_notes.length} selected',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                      fontFamily: 'Rubik',
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => _selectAll(!allSelected),
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    allSelected ? 'Clear' : 'Select all',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Rubik',
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           ..._notes.map((note) {
             final selected = _selectedIds.contains(note.id);
@@ -390,6 +904,23 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
                 icon: Icons.menu_book_outlined,
                 selected: selected,
                 onTap: () => _toggleSelection(note.id),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      tooltip: 'Edit note',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => _openEditNote(note),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, size: 20, color: Colors.grey.shade600),
+                      tooltip: 'Delete note',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => _confirmDeleteNote(note),
+                    ),
+                  ],
+                ),
               ),
             );
           }),
@@ -400,94 +931,32 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   @override
   Widget build(BuildContext context) {
-    final topicLabel =
-        _topicFilter == 'all' ? 'All topics' : _topicFilter;
+    final viewportHeight = MediaQuery.sizeOf(context).height;
+    const estimatedHeaderHeight = 88.0;
+    const estimatedTrainBarHeight = 58.0;
+    final estimatedListHeight =
+        viewportHeight - estimatedHeaderHeight - estimatedTrainBarHeight;
+    // #region agent log
+    _agentLog('layout_metrics', {
+      'viewportHeight': viewportHeight,
+      'estimatedHeaderHeight': estimatedHeaderHeight,
+      'estimatedTrainBarHeight': estimatedTrainBarHeight,
+      'estimatedListHeight': estimatedListHeight,
+      'noteCount': _notes.length,
+      'filterRows': 2,
+      'hasActiveFilters': _hasActiveAdvancedFilters,
+      'hasAnyFilters': _hasAnyFilters,
+      'runId': 'post-fix',
+    }, 'A');
+    // #endregion
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: Text(
-            'Practice words you saved as notes. Filter by level, source, or topic, '
-            'then train with the AI tutor on your list.',
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.4,
-              color: Colors.grey.shade700,
-              fontFamily: 'Rubik',
-            ),
-          ),
-        ),
-        SpeakingFilterChips(
-          labels: _sourceFilters.map((f) => f.$2).toList(),
-          selectedIndex: _sourceIndex,
-          onSelected: _onSourceSelected,
-        ),
-        SpeakingFilterChips(
-          labels: _levelFilters.map((f) => f.$2).toList(),
-          selectedIndex: _levelIndex,
-          onSelected: _onLevelSelected,
-        ),
-        if (_syncLearningLanguage)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: FilterChip(
-                label: Text(
-                  'Language: ${LearningLanguageUtils.languageLabel(_practiceLanguage)}',
-                ),
-                selected: true,
-                onSelected: null,
-                selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
-                checkmarkColor: AppColors.primaryPurple,
-                labelStyle: const TextStyle(
-                  color: AppColors.primaryPurple,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Rubik',
-                ),
-                side: const BorderSide(color: AppColors.primaryPurple),
-              ),
-            ),
-          )
-        else
-          SpeakingFilterChips(
-            labels: _languageFilters.map((f) => f.value).toList(),
-            selectedIndex: _languageIndex,
-            onSelected: _onLanguageSelected,
-          ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: FilterChip(
-              label: Text('Topic: $topicLabel'),
-              selected: _topicFilter != 'all',
-              onSelected: (_) => _pickTopic(),
-              selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
-              checkmarkColor: AppColors.primaryPurple,
-              labelStyle: TextStyle(
-                color: _topicFilter != 'all'
-                    ? AppColors.primaryPurple
-                    : const Color(0xFF777481),
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Rubik',
-              ),
-              side: BorderSide(
-                color: _topicFilter != 'all'
-                    ? AppColors.primaryPurple
-                    : Colors.grey.shade300,
-              ),
-            ),
-          ),
-        ),
+        _buildSourceFilterRow(),
+        _buildMoreFiltersBar(),
         Expanded(child: _buildList()),
-        SpeakingStartButton(
-          label: _starting ? 'Starting…' : 'Train with AI tutor',
-          enabled: _selectedIds.isNotEmpty && !_starting,
-          onPressed: _starting ? null : _startTraining,
-        ),
+        _buildTrainBar(),
       ],
     );
   }

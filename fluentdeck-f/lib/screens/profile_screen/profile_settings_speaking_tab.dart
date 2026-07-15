@@ -113,15 +113,16 @@ class _ProfileSettingsSpeakingSectionState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DropdownButtonFormField<String>(
-                initialValue: _speakingPrefs.practiceLanguage,
-                decoration: appDropdownDecoration('Language you are learning'),
-                items:
+              AppSelectField<String>(
+                label: 'Language you are learning',
+                value: _speakingPrefs.practiceLanguage,
+                enabled: !_saving,
+                options:
                     SpeakingPreferences.practiceLanguageOptions.entries
                         .map(
-                          (entry) => DropdownMenuItem(
+                          (entry) => AppSelectOption(
                             value: entry.key,
-                            child: Text(entry.value),
+                            label: entry.value,
                           ),
                         )
                         .toList(),
@@ -129,7 +130,6 @@ class _ProfileSettingsSpeakingSectionState
                     _saving
                         ? null
                         : (value) {
-                          if (value == null) return;
                           _saveSpeakingPreferences(
                             _speakingPrefs.copyWith(practiceLanguage: value),
                           );
@@ -158,15 +158,16 @@ class _ProfileSettingsSpeakingSectionState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DropdownButtonFormField<String>(
-                initialValue: _speakingPrefs.responseLanguage,
-                decoration: appDropdownDecoration('Tutor response language'),
-                items:
+              AppSelectField<String>(
+                label: 'Tutor response language',
+                value: _speakingPrefs.responseLanguage,
+                enabled: !_saving,
+                options:
                     SpeakingPreferences.responseLanguageOptions.entries
                         .map(
-                          (entry) => DropdownMenuItem(
+                          (entry) => AppSelectOption(
                             value: entry.key,
-                            child: Text(entry.value),
+                            label: entry.value,
                           ),
                         )
                         .toList(),
@@ -174,47 +175,44 @@ class _ProfileSettingsSpeakingSectionState
                     _saving
                         ? null
                         : (value) {
-                          if (value == null) return;
                           _saveSpeakingPreferences(
                             _speakingPrefs.copyWith(responseLanguage: value),
                           );
                         },
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _speakingPrefs.tutorVoice,
-                decoration: appDropdownDecoration('Tutor voice'),
-                items:
+              AppSelectField<String>(
+                label: 'Tutor voice',
+                value: _speakingPrefs.tutorVoice,
+                enabled: !_saving,
+                options:
                     SpeakingPreferences.voiceOptions.entries
                         .map(
-                          (entry) => DropdownMenuItem(
+                          (entry) => AppSelectOption(
                             value: entry.key,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(entry.value),
-                                if (_voiceLocked(entry.key)) ...[
-                                  const SizedBox(width: 6),
-                                  Icon(
-                                    Icons.lock_outline_rounded,
-                                    size: 14,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                ],
-                              ],
-                            ),
+                            label: entry.value,
+                            trailing:
+                                _voiceLocked(entry.key)
+                                    ? Icon(
+                                        Icons.lock_outline_rounded,
+                                        size: 16,
+                                        color: Colors.grey.shade500,
+                                      )
+                                    : null,
                           ),
                         )
                         .toList(),
+                canSelect: (option) {
+                  if (_voiceLocked(option.value)) {
+                    showSpeakingPremiumSnackBar(context);
+                    return false;
+                  }
+                  return true;
+                },
                 onChanged:
                     _saving
                         ? null
                         : (value) {
-                          if (value == null) return;
-                          if (_voiceLocked(value)) {
-                            showSpeakingPremiumSnackBar(context);
-                            return;
-                          }
                           _saveSpeakingPreferences(
                             _speakingPrefs.copyWith(tutorVoice: value),
                           );
@@ -239,15 +237,16 @@ class _ProfileSettingsSpeakingSectionState
         AppSettingsGroup(
           title: 'Translation',
           subtitle: 'Tap the translate icon on any tutor message in chat.',
-          child: DropdownButtonFormField<String>(
-            initialValue: _speakingPrefs.translationLanguage,
-            decoration: appDropdownDecoration('Translation language'),
-            items:
+          child: AppSelectField<String>(
+            label: 'Translation language',
+            value: _speakingPrefs.translationLanguage,
+            enabled: !_saving,
+            options:
                 SpeakingPreferences.translationLanguageOptions.entries
                     .map(
-                      (entry) => DropdownMenuItem(
+                      (entry) => AppSelectOption(
                         value: entry.key,
-                        child: Text(entry.value),
+                        label: entry.value,
                       ),
                     )
                     .toList(),
@@ -255,7 +254,6 @@ class _ProfileSettingsSpeakingSectionState
                 _saving
                     ? null
                     : (value) {
-                      if (value == null) return;
                       _saveSpeakingPreferences(
                         _speakingPrefs.copyWith(translationLanguage: value),
                       );

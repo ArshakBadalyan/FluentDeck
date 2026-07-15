@@ -44,6 +44,26 @@ abstract final class AppTheme {
         fillColor: AppPageColors.fieldBg,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(Colors.white),
+          elevation: WidgetStateProperty.all(8),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 6)),
+        ),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(Colors.white),
+          elevation: WidgetStateProperty.all(8),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        ),
+      ),
       pageTransitionsTheme: _pageTransitionsTheme,
     );
   }
@@ -88,6 +108,26 @@ abstract final class AppTheme {
         filled: true,
         fillColor: const Color(0xFF2A2A2A),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(card),
+          elevation: WidgetStateProperty.all(8),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 6)),
+        ),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(card),
+          elevation: WidgetStateProperty.all(8),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        ),
       ),
       pageTransitionsTheme: _pageTransitionsTheme,
     );

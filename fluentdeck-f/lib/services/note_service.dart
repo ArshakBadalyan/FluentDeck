@@ -65,6 +65,8 @@ class NoteService {
     String? exampleSentence,
     List<String>? tags,
     String? languageCode,
+    String? cefrLevel,
+    String? topic,
   }) async {
     final data = await ApiService.post('notes', {
       'word': word,
@@ -74,6 +76,8 @@ class NoteService {
       'source': 'manual',
       if (languageCode != null && languageCode.isNotEmpty)
         'languageCode': languageCode,
+      if (cefrLevel != null && cefrLevel.isNotEmpty) 'cefrLevel': cefrLevel,
+      if (topic != null && topic.isNotEmpty) 'topic': topic,
     });
 
     return _parseSaveResult(data);
@@ -86,6 +90,8 @@ class NoteService {
     String? errorType,
     String? exampleSentence,
     String? languageCode,
+    String? cefrLevel,
+    String? topic,
   }) async {
     final data = await ApiService.post('notes/from-correction', {
       'correctedText': correctedText,
@@ -96,6 +102,8 @@ class NoteService {
         'exampleSentence': exampleSentence.trim(),
       if (languageCode != null && languageCode.isNotEmpty)
         'languageCode': languageCode,
+      if (cefrLevel != null && cefrLevel.isNotEmpty) 'cefrLevel': cefrLevel,
+      if (topic != null && topic.isNotEmpty) 'topic': topic,
     });
 
     return _parseSaveResult(data);
@@ -110,6 +118,8 @@ class NoteService {
     String? meaning,
     String? exampleSentence,
     String? languageCode,
+    String? cefrLevel,
+    String? topic,
   }) async {
     return saveFromCorrection(
       correctedText: selectedText,
@@ -121,6 +131,8 @@ class NoteService {
       exampleSentence: exampleSentence,
       errorType: 'highlight',
       languageCode: languageCode,
+      cefrLevel: cefrLevel,
+      topic: topic,
     );
   }
 
@@ -168,6 +180,10 @@ class NoteService {
     String? exampleSentence,
     List<String>? tags,
     String? languageCode,
+    String? cefrLevel,
+    String? topic,
+    bool clearCefrLevel = false,
+    bool clearTopic = false,
   }) async {
     final body = <String, dynamic>{};
     if (word != null) body['word'] = word;
@@ -175,6 +191,16 @@ class NoteService {
     if (exampleSentence != null) body['exampleSentence'] = exampleSentence;
     if (tags != null) body['tags'] = tags;
     if (languageCode != null) body['languageCode'] = languageCode;
+    if (clearCefrLevel) {
+      body['cefrLevel'] = null;
+    } else if (cefrLevel != null) {
+      body['cefrLevel'] = cefrLevel.isEmpty ? null : cefrLevel;
+    }
+    if (clearTopic) {
+      body['topic'] = null;
+    } else if (topic != null) {
+      body['topic'] = topic.isEmpty ? null : topic;
+    }
 
     final data = await ApiService.put('notes/$id', body);
     return data is Map && data['ok'] == true;
@@ -183,6 +209,79 @@ class NoteService {
   Future<bool> deleteNote(int id) async {
     final data = await ApiService.delete('notes/$id');
     return data is Map && data['ok'] == true;
+  }
+
+  Future<ImportDecksResult> importFromDecks({required List<int> deckIds}) async {
+    try {
+      final data = await ApiService.post('notes/import-from-decks', {
+        'deckIds': deckIds,
+      });
+      if (data is Map && data['ok'] == true) {
+        return ImportDecksResult(
+          ok: true,
+          created: (data['created'] as num?)?.round() ?? 0,
+          skipped: (data['skipped'] as num?)?.round() ?? 0,
+          deckNames:
+              (data['deckNames'] as List?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              const [],
+          linkedDecks: const [],
+          limitReached: data['limitReached'] == true,
+        );
+      }
+      return ImportDecksResult(
+        ok: false,
+        message: _extractErrorMessage(data) ?? 'Could not import decks.',
+      );
+    } on ApiException catch (e) {
+      return ImportDecksResult(ok: false, message: e.message);
+    } catch (_) {
+      return const ImportDecksResult(
+        ok: false,
+        message: 'Could not import decks.',
+      );
+    }
+  }
+
+  /// Premium-only — detects CEFR level for a word/phrase via AI.
+  Future<CefrLevelResult> detectCefrLevel({
+    required String word,
+    String? languageCode,
+    String? definition,
+    String? exampleSentence,
+  }) async {
+    try {
+      final data = await ApiService.post('ai/cefr-level', {
+        'word': word,
+        if (languageCode != null && languageCode.isNotEmpty)
+          'languageCode': languageCode,
+        if (definition != null && definition.isNotEmpty) 'definition': definition,
+        if (exampleSentence != null && exampleSentence.isNotEmpty)
+          'exampleSentence': exampleSentence,
+      });
+      if (data is Map && data['cefrLevel'] != null) {
+        return CefrLevelResult(
+          ok: true,
+          cefrLevel: data['cefrLevel'].toString(),
+        );
+      }
+      return const CefrLevelResult(
+        ok: false,
+        message: 'Could not detect CEFR level.',
+      );
+    } on ApiException catch (e) {
+      return CefrLevelResult(
+        ok: false,
+        premiumRequired: e.statusCode == 402,
+        message: e.message,
+      );
+    } catch (_) {
+      return const CefrLevelResult(
+        ok: false,
+        message: 'Could not detect CEFR level.',
+      );
+    }
   }
 
   SaveNoteResult _parseSaveResult(dynamic data) {

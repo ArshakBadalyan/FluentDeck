@@ -22,6 +22,8 @@ const {
   getConversationUsage,
   recordConversationTurn,
   validateSessionOpening,
+  checkSessionOpeningAllowed,
+  recordSessionOpening,
   clampHistory,
   clampTtsText,
   ensureConversationAllowed,
@@ -37,6 +39,7 @@ const {
   deleteMemoryFact,
 } = require("../../../utils/tutor-memory");
 const { generateWordMeaning } = require("../../../utils/word-meaning");
+const { detectCefrLevel } = require("../../../utils/cefr-level-detect");
 const { isPremiumUser } = require("../../../utils/app-feature-config");
 
 async function getAuthenticatedUserId(ctx, strapi) {
@@ -175,7 +178,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     const trimmedMessage = message.trim();
 
     if (openingSession) {
-      const openingCheck = await validateSessionOpening(strapi, userId, {
+      const openingCheck = await checkSessionOpeningAllowed(strapi, userId, {
         history: Array.isArray(history) ? history : [],
       });
       if (!openingCheck.allowed) {
@@ -300,6 +303,10 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
             userText: trimmedMessage,
             corrections: result.corrections,
           });
+
+      if (openingSession) {
+        await recordSessionOpening(strapi, userId);
+      }
 
       // Session opening (first AI greeting) is free — count starts after the user engages.
       const usageAfter = openingSession
@@ -453,6 +460,50 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     } catch (error) {
       strapi.log.error("[ai.wordMeaning]", error);
       return ctx.internalServerError("Could not generate word meaning");
+    }
+  },
+
+  async cefrLevel(ctx) {
+    const userId = await getAuthenticatedUserId(ctx, strapi);
+    if (!userId) {
+      return ctx.unauthorized("Authentication required");
+    }
+
+    const usageBefore = await ensureConversationAllowed(ctx, strapi, userId);
+    if (!usageBefore) return;
+
+    const premium = await isPremiumUser(strapi, userId);
+    if (!premium) {
+      ctx.status = 402;
+      ctx.body = {
+        error: {
+          status: 402,
+          name: "PremiumRequired",
+          message: "AI CEFR level detection is a premium feature.",
+        },
+      };
+      return;
+    }
+
+    const { word, languageCode, definition, exampleSentence } = ctx.request.body ?? {};
+    if (!word || !String(word).trim()) {
+      return ctx.badRequest("word is required");
+    }
+
+    try {
+      const result = await detectCefrLevel({
+        word: String(word).trim(),
+        languageCode: languageCode ? String(languageCode).trim() : 'en',
+        definition: definition ? String(definition).trim() : undefined,
+        exampleSentence: exampleSentence ? String(exampleSentence).trim() : undefined,
+      });
+      ctx.body = {
+        ...result,
+        usage: await recordConversationTurn(strapi, userId),
+      };
+    } catch (error) {
+      strapi.log.error("[ai.cefrLevel]", error);
+      return ctx.internalServerError("Could not detect CEFR level");
     }
   },
 

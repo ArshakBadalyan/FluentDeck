@@ -36,6 +36,12 @@
       "type": "string",
       "default": "en"
     },
+    "cefrLevel": {
+      "type": "string"
+    },
+    "topic": {
+      "type": "string"
+    },
     "user": {
       "type": "relation",
       "relation": "manyToOne",

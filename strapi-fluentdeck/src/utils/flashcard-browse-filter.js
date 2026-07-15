@@ -7,6 +7,12 @@ const { normalizePracticeLanguage } = require('./practice-languages');
  */
 function normalizeFilter(filter = {}) {
   const rawLang = filter.languageCode ?? filter.language;
+  const rawCefr = filter.cefrLevel ?? filter.cefr;
+  let cefrLevel = '';
+  if (rawCefr != null && String(rawCefr).trim() && String(rawCefr).trim() !== 'all') {
+    const normalized = String(rawCefr).trim().toLowerCase();
+    cefrLevel = normalized === 'none' ? 'none' : normalized.toUpperCase();
+  }
   return {
     q: filter.q ? String(filter.q).trim().toLowerCase() : '',
     tag: filter.tag ? String(filter.tag).trim().toLowerCase() : '',
@@ -15,6 +21,7 @@ function normalizeFilter(filter = {}) {
       rawLang && String(rawLang).trim() && String(rawLang).trim() !== 'all'
         ? normalizePracticeLanguage(rawLang)
         : '',
+    cefrLevel,
     marked:
       filter.marked === true || filter.marked === 'true' || filter.marked === '1'
         ? true
@@ -49,6 +56,15 @@ function cardMatchesFilter(card, reviewState, filter, now = new Date()) {
   if (f.languageCode) {
     const cardLang = normalizePracticeLanguage(card.languageCode ?? 'en');
     if (cardLang !== f.languageCode) return false;
+  }
+
+  if (f.cefrLevel) {
+    const cardLevel = card.cefrLevel ? String(card.cefrLevel).trim().toUpperCase() : null;
+    if (f.cefrLevel === 'none') {
+      if (cardLevel) return false;
+    } else if (cardLevel !== f.cefrLevel) {
+      return false;
+    }
   }
 
   if (f.marked != null && card.noteMarked !== f.marked) return false;

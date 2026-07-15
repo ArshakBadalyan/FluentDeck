@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 
 /// Shared visual language for Activity, Decks, and Profile screens.
 class AppPageColors {
@@ -537,25 +538,248 @@ class AppTextField extends StatelessWidget {
 }
 
 InputDecoration appDropdownDecoration(String label) {
-  return InputDecoration(
-    labelText: label,
-    filled: true,
-    fillColor: AppPageColors.fieldBg,
-    isDense: true,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide.none,
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.04)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
-    ),
+  return appSheetFieldDecoration(label: label);
+}
+
+/// One choice in [AppSelectField] / [showAppSelectSheet].
+class AppSelectOption<T> {
+  const AppSelectOption({
+    required this.value,
+    required this.label,
+    this.enabled = true,
+    this.trailing,
+  });
+
+  final T value;
+  final String label;
+  final bool enabled;
+  final Widget? trailing;
+}
+
+/// Frosted bottom sheet picker — consistent dropdown UX on mobile and web.
+Future<T?> showAppSelectSheet<T>({
+  required BuildContext context,
+  required String title,
+  String? subtitle,
+  required List<AppSelectOption<T>> options,
+  T? selected,
+  bool Function(AppSelectOption<T> option)? canSelect,
+}) {
+  return showFrostedBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (ctx) {
+      final maxHeight = MediaQuery.sizeOf(ctx).height * 0.72;
+      return SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const AppSheetHandle(),
+              AppSheetHeader(
+                title: title,
+                subtitle: subtitle,
+                icon: Icons.tune_rounded,
+              ),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  children: [
+                    for (final option in options)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Material(
+                          color: AppPageColors.cardBgOf(ctx),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            side: BorderSide(
+                              color:
+                                  selected == option.value
+                                      ? AppColors.primaryPurple.withValues(alpha: 0.35)
+                                      : AppPageColors.subtleBorderOf(ctx),
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: () {
+                              if (!(canSelect?.call(option) ?? true)) return;
+                              if (!option.enabled) return;
+                              Navigator.pop(ctx, option.value);
+                            },
+                            child: Opacity(
+                              opacity: option.enabled ? 1 : 0.5,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        option.label,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight:
+                                              selected == option.value
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w500,
+                                          color:
+                                              selected == option.value
+                                                  ? AppColors.primaryPurple
+                                                  : null,
+                                        ),
+                                      ),
+                                    ),
+                                    if (option.trailing != null)
+                                      option.trailing!
+                                    else if (selected == option.value)
+                                      const Icon(
+                                        Icons.check_rounded,
+                                        color: AppColors.primaryPurple,
+                                        size: 22,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
   );
+}
+
+/// Tappable select field — opens [showAppSelectSheet] instead of native dropdown.
+class AppSelectField<T> extends StatelessWidget {
+  const AppSelectField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+    this.enabled = true,
+    this.hint,
+    this.sheetTitle,
+    this.sheetSubtitle,
+    this.canSelect,
+    this.compact = false,
+    this.showLabel = true,
+  });
+
+  final String label;
+  final T? value;
+  final List<AppSelectOption<T>> options;
+  final ValueChanged<T>? onChanged;
+  final bool enabled;
+  final String? hint;
+  final String? sheetTitle;
+  final String? sheetSubtitle;
+  final bool Function(AppSelectOption<T> option)? canSelect;
+  final bool compact;
+  final bool showLabel;
+
+  String? get _selectedLabel {
+    for (final option in options) {
+      if (option.value == value) return option.label;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = enabled && onChanged != null;
+    final display = _selectedLabel ?? hint ?? 'Choose…';
+    final hasSelection = _selectedLabel != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showLabel) ...[
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: compact ? 12 : 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          SizedBox(height: compact ? 6 : 8),
+        ],
+        Material(
+          color: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(compact ? 12 : 14),
+            side: BorderSide(
+              color:
+                  active
+                      ? Colors.grey.shade200
+                      : Colors.grey.shade200.withValues(alpha: 0.7),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap:
+                active
+                    ? () async {
+                      final picked = await showAppSelectSheet<T>(
+                        context: context,
+                        title: sheetTitle ?? label,
+                        subtitle: sheetSubtitle,
+                        options: options,
+                        selected: value,
+                        canSelect: canSelect,
+                      );
+                      if (picked != null) onChanged!(picked);
+                    }
+                    : null,
+            child: Opacity(
+              opacity: active ? 1 : 0.55,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: compact ? 12 : 14,
+                  vertical: compact ? 10 : 14,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        display,
+                        style: TextStyle(
+                          fontSize: compact ? 13 : 15,
+                          fontWeight: hasSelection ? FontWeight.w600 : FontWeight.w500,
+                          color: hasSelection ? AppColors.primaryPurple : Colors.grey.shade600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Icon(
+                      Icons.expand_more_rounded,
+                      size: compact ? 20 : 24,
+                      color: active ? AppColors.primaryPurple : Colors.grey.shade500,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class AppToggleRow extends StatelessWidget {

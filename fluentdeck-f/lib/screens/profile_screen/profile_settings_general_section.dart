@@ -62,17 +62,17 @@ class _ProfileSettingsGeneralSectionState
       children: [
         AppSettingsGroup(
           title: 'App language',
-          child: DropdownButtonFormField<String>(
-            initialValue: _selectedLanguage,
-            decoration: appDropdownDecoration(context.tr('profile.account.language')),
-            items: [
-              DropdownMenuItem(
+          child: AppSelectField<String>(
+            label: context.tr('profile.account.language'),
+            value: _selectedLanguage,
+            options: [
+              AppSelectOption(
                 value: 'en',
-                child: Text(context.tr('profile.account.language-en')),
+                label: context.tr('profile.account.language-en'),
               ),
-              DropdownMenuItem(
+              AppSelectOption(
                 value: 'de',
-                child: Text(context.tr('profile.account.language-de')),
+                label: context.tr('profile.account.language-de'),
               ),
             ],
             onChanged: _changeLanguage,

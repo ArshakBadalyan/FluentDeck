@@ -19,15 +19,6 @@ class SpeakingPracticeTab extends StatefulWidget {
 }
 
 class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
-  static const _filters = [
-    ('all', 'All'),
-    ('saved_words', 'Saved words'),
-    ('from_speaking', 'From speaking'),
-    ('custom', 'My decks'),
-  ];
-
-  int _filterIndex = 0;
-  List<FlashcardDeckModel> _allDecks = [];
   List<FlashcardDeckModel> _decks = [];
   FlashcardDeckModel? _selected;
   bool _loading = true;
@@ -49,10 +40,13 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
       final decks = await FlashcardService.instance.fetchDecksWithCache();
       if (!mounted) return;
       setState(() {
-        _allDecks = decks;
+        _decks = decks;
+        _selected =
+            _selected != null && decks.any((d) => d.id == _selected!.id)
+                ? _selected
+                : (decks.isNotEmpty ? decks.first : null);
         _loading = false;
       });
-      _applyFilter();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -60,34 +54,6 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
         _loading = false;
       });
     }
-  }
-
-  void _applyFilter() {
-    final key = _filters[_filterIndex].$1;
-    List<FlashcardDeckModel> filtered;
-    switch (key) {
-      case 'saved_words':
-        filtered =
-            _allDecks.where((d) => d.deckSlug == 'saved_words').toList();
-      case 'from_speaking':
-        filtered =
-            _allDecks.where((d) => d.deckSlug == 'from_speaking').toList();
-      case 'custom':
-        filtered =
-            _allDecks
-                .where((d) => !d.isDefault && !d.isFiltered)
-                .toList();
-      default:
-        filtered = List<FlashcardDeckModel>.from(_allDecks);
-    }
-
-    setState(() {
-      _decks = filtered;
-      _selected =
-          filtered.any((d) => d.id == _selected?.id)
-              ? _selected
-              : (filtered.isNotEmpty ? filtered.first : null);
-    });
   }
 
   String _deckSubtitle(FlashcardDeckModel deck) {
@@ -204,9 +170,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            _filters[_filterIndex].$1 == 'custom'
-                ? 'No custom decks yet.\nCreate one in the Decks tab first.'
-                : 'No decks in this category.',
+            'No decks yet.\nCreate one in the Decks tab first.',
             textAlign: TextAlign.center,
           ),
         ),
@@ -243,7 +207,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: Text(
-            'Practice words and expressions from your decks. '
+            'Practice words from any of your decks. '
             'During chat you can ask the tutor to save new notes to a deck.',
             style: TextStyle(
               fontSize: 13,
@@ -252,14 +216,6 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
               fontFamily: 'Rubik',
             ),
           ),
-        ),
-        SpeakingFilterChips(
-          labels: _filters.map((f) => f.$2).toList(),
-          selectedIndex: _filterIndex,
-          onSelected: (index) {
-            setState(() => _filterIndex = index);
-            _applyFilter();
-          },
         ),
         Expanded(child: _buildList()),
         SpeakingStartButton(

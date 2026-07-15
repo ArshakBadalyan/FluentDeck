@@ -42,6 +42,11 @@ module.exports = {
     },
     {
       method: "POST",
+      path: "/ai/cefr-level",
+      handler: "ai.cefrLevel",
+    },
+    {
+      method: "POST",
       path: "/ai/translate-message",
       handler: "ai.translateMessage",
     },

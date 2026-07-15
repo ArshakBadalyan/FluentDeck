@@ -3,6 +3,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Create a filtered deck from a saved search query (Phase 4F).
 Future<FlashcardDeckModel?> showFilteredDeckDialog(
@@ -299,26 +300,16 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              _labeledField(
-                'Source deck',
-                DropdownButtonFormField<int?>(
-                  initialValue: _sourceDeckId,
-                  isExpanded: true,
-                  decoration: _fieldDecoration(),
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('Any deck'),
-                    ),
-                    ...realDecks.map(
-                      (d) => DropdownMenuItem<int?>(
-                        value: d.id,
-                        child: Text(d.name, overflow: TextOverflow.ellipsis),
-                      ),
-                    ),
-                  ],
-                  onChanged: (v) => setState(() => _sourceDeckId = v),
-                ),
+              AppSelectField<int?>(
+                label: 'Source deck',
+                value: _sourceDeckId,
+                options: [
+                  const AppSelectOption<int?>(value: null, label: 'Any deck'),
+                  ...realDecks.map(
+                    (d) => AppSelectOption<int?>(value: d.id, label: d.name),
+                  ),
+                ],
+                onChanged: (v) => setState(() => _sourceDeckId = v),
               ),
               const SizedBox(height: 16),
               Text('Card state', style: _labelStyle),

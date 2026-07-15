@@ -10,6 +10,7 @@ import 'package:fluentdeck/screens/learn_screen/review_log_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
 import 'package:fluentdeck/services/decks_help_hints_store.dart';
 import 'package:fluentdeck/utils/statistics_labels.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/activity_preview_list.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -345,86 +346,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  InputDecoration _statsFilterDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      isDense: true,
-      filled: true,
-      fillColor: _pageBg,
-      labelStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.5)),
-      ),
-    );
-  }
-
-  String _scopeDisplayLabel(int? deckId, {required bool compact}) {
-    if (deckId == null) {
-      return compact ? 'All' : StatisticsLabels.collectionScope;
-    }
-    for (final deck in _decks) {
-      if (deck.id == deckId) {
-        final name = deck.name;
-        if (!compact || name.length <= 10) return name;
-        return '${name.substring(0, 9)}…';
-      }
-    }
-    return compact ? '#$deckId' : 'Deck #$deckId';
-  }
-
-  String _rangeDisplayLabel(String range, {required bool compact}) {
-    if (range == 'all') {
-      return compact ? 'All' : StatisticsLabels.rangeAllHistory;
-    }
-    return compact ? '12 mo' : StatisticsLabels.range12Months;
-  }
-
   Widget _scopeDropdown({required bool compact}) {
-    return DropdownButtonFormField<int?>(
-      key: ValueKey(_deckFilter),
-      isExpanded: true,
-      initialValue: _deckFilter,
-      style: TextStyle(fontSize: compact ? 13 : 14, color: Colors.black87),
-      decoration: _statsFilterDecoration('Scope'),
-      selectedItemBuilder:
-          (_) => [
-            DropdownMenuItem(
-              value: null,
-              child: Text(
-                _scopeDisplayLabel(null, compact: compact),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            ..._decks.map(
-              (d) => DropdownMenuItem(
-                value: d.id,
-                child: Text(
-                  _scopeDisplayLabel(d.id, compact: compact),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-          ],
-      items: [
-        const DropdownMenuItem<int?>(
+    return AppSelectField<int?>(
+      label: 'Scope',
+      value: _deckFilter,
+      compact: compact,
+      showLabel: !compact,
+      options: [
+        const AppSelectOption<int?>(
           value: null,
-          child: Text(StatisticsLabels.collectionScope, overflow: TextOverflow.ellipsis),
+          label: StatisticsLabels.collectionScope,
         ),
         ..._decks.map(
-          (d) => DropdownMenuItem(
-            value: d.id,
-            child: Text('Deck: ${d.name}', overflow: TextOverflow.ellipsis),
-          ),
+          (d) => AppSelectOption<int?>(value: d.id, label: 'Deck: ${d.name}'),
         ),
       ],
       onChanged: (v) {
@@ -435,35 +369,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _rangeDropdown({required bool compact}) {
-    return DropdownButtonFormField<String>(
-      key: ValueKey(_range),
-      isExpanded: true,
-      initialValue: _range,
-      style: TextStyle(fontSize: compact ? 13 : 14, color: Colors.black87),
-      decoration: _statsFilterDecoration('Range'),
-      selectedItemBuilder:
-          (_) => [
-            DropdownMenuItem(
-              value: '12m',
-              child: Text(
-                _rangeDisplayLabel('12m', compact: compact),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            DropdownMenuItem(
-              value: 'all',
-              child: Text(
-                _rangeDisplayLabel('all', compact: compact),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-      items: const [
-        DropdownMenuItem(value: '12m', child: Text(StatisticsLabels.range12Months)),
-        DropdownMenuItem(value: 'all', child: Text(StatisticsLabels.rangeAllHistory)),
+    return AppSelectField<String>(
+      label: 'Range',
+      value: _range,
+      compact: compact,
+      showLabel: !compact,
+      options: const [
+        AppSelectOption(value: '12m', label: StatisticsLabels.range12Months),
+        AppSelectOption(value: 'all', label: StatisticsLabels.rangeAllHistory),
       ],
       onChanged: (v) {
-        if (v == null) return;
         setState(() => _range = v);
         _load();
       },

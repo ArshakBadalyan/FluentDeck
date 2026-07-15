@@ -141,6 +141,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
       meaning: sheetResult.meaning,
       exampleSentence: sheetResult.example,
       languageCode: sheetResult.languageCode,
+      cefrLevel: sheetResult.cefrLevel,
+      topic: sheetResult.topic,
     );
 
     if (!mounted) return;

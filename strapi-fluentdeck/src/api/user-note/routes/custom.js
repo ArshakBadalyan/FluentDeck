@@ -30,5 +30,10 @@ module.exports = {
       path: '/notes/study-settings',
       handler: 'user-note.studySettings',
     },
+    {
+      method: 'POST',
+      path: '/notes/import-from-decks',
+      handler: 'user-note.importFromDecks',
+    },
   ],
 };

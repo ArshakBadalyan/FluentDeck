@@ -57,6 +57,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   int? _deckFilter;
   String _stateFilter = 'all';
   String _languageFilter = 'all';
+  String _cefrFilter = 'all';
   bool _syncLearningLanguage = true;
   String _practiceLanguage = 'en';
   bool? _markedFilter;
@@ -348,24 +349,6 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     );
   }
 
-  Widget _labeledDropdownField({required String label, required Widget child}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        child,
-      ],
-    );
-  }
-
   Future<void> _init() async {
     await _loadLanguagePrefs();
     unawaited(_loadDecks());
@@ -394,6 +377,20 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   List<MapEntry<String, String>> get _languageFilterOptions =>
       LearningLanguageUtils.filterOptions();
 
+  static const _cefrFilterOptions = [
+    ('all', 'All levels'),
+    ('A1', 'A1'),
+    ('A2', 'A2'),
+    ('B1', 'B1'),
+    ('B2', 'B2'),
+    ('C1', 'C1'),
+    ('C2', 'C2'),
+    ('none', 'No level'),
+  ];
+
+  String? get _effectiveCefrLevel =>
+      _cefrFilter == 'all' ? null : _cefrFilter;
+
   Future<void> _load({bool showFullLoading = true}) async {
     if (showFullLoading) {
       setState(() {
@@ -412,6 +409,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
         marked: _markedFilter,
         flag: _flagFilter,
         languageCode: _effectiveLanguageCode,
+        cefrLevel: _effectiveCefrLevel,
       );
       final storedOrder = await CardBrowserOrderStore.instance.load(_orderScopeKey);
       if (!mounted) return;
@@ -809,10 +807,35 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   }
 
   void _clearAllFilters() {
+    // #region agent log
+    http
+        .post(
+          Uri.parse('http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938'),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': 'fcee54',
+          },
+          body: jsonEncode({
+            'sessionId': 'fcee54',
+            'location': 'card_browser_screen.dart:_clearAllFilters',
+            'message': 'clear_all_filters',
+            'data': {
+              'activeFilterCount': _activeFilterCount,
+              'cefrFilter': _cefrFilter,
+              'hasSearch': _searchCtrl.text.trim().isNotEmpty,
+              'runId': 'post-fix',
+            },
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+            'hypothesisId': 'F',
+          }),
+        )
+        .catchError((_) => http.Response('', 0));
+    // #endregion
     setState(() {
       _stateFilter = 'all';
       _markedFilter = null;
       _flagFilter = null;
+      _cefrFilter = 'all';
       _suppressSearchDebounce = true;
       _searchCtrl.clear();
       _tagCtrl.clear();
@@ -859,6 +882,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     }
     final lang = _effectiveLanguageCode;
     if (lang != null) filter['languageCode'] = lang;
+    if (_cefrFilter != 'all') filter['cefrLevel'] = _cefrFilter;
     return filter;
   }
 
@@ -983,6 +1007,17 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               child: const Icon(Icons.tune, size: 22),
             ),
           ),
+          if (_hasAnyFilters)
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              tooltip: 'Clear all filters',
+              onPressed: _clearAllFilters,
+              icon: const Icon(
+                Icons.filter_alt_off_outlined,
+                size: 20,
+                color: AppColors.primaryPurple,
+              ),
+            ),
           IconButton(
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.more_vert, size: 22),
@@ -1031,22 +1066,19 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               ],
             ),
           if (!_fixedDeckScope && _decks.isNotEmpty) ...[
-            _labeledDropdownField(
+            AppSelectField<int?>(
               label: 'Deck',
-              child: DropdownButtonFormField<int?>(
-                key: ValueKey(_safeDeckDropdownValue(_deckFilter)),
-                value: _safeDeckDropdownValue(_deckFilter),
-                isExpanded: true,
-                decoration: _filledFieldDecoration(),
-                items: [
-                  const DropdownMenuItem<int?>(value: null, child: Text('All decks')),
-                  ..._decks.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name))),
-                ],
-                onChanged: (v) {
-                  setState(() => _deckFilter = v);
-                  _load();
-                },
-              ),
+              value: _safeDeckDropdownValue(_deckFilter),
+              options: [
+                const AppSelectOption<int?>(value: null, label: 'All decks'),
+                ..._decks.map(
+                  (d) => AppSelectOption<int?>(value: d.id, label: d.name),
+                ),
+              ],
+              onChanged: (v) {
+                setState(() => _deckFilter = v);
+                _load();
+              },
             ),
             const SizedBox(height: 8),
           ],
@@ -1169,6 +1201,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               ),
             ),
           ),
+          if (_hasAnyFilters) ...[
+            const SizedBox(width: 6),
+            _clearFiltersIconButton(),
+          ],
         ],
       ),
     );
@@ -1181,6 +1217,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     if (_markedFilter == true) n++;
     if (_flagFilter != null) n++;
     if (_tagCtrl.text.trim().isNotEmpty) n++;
+    if (_cefrFilter != 'all') n++;
     if (!_syncLearningLanguage && _languageFilter != 'all') n++;
     return n;
   }
@@ -1190,8 +1227,42 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     if (!['all', 'new', 'learning', 'review'].contains(_stateFilter)) n++;
     if (_markedFilter == true) n++;
     if (_flagFilter != null) n++;
+    if (_cefrFilter != 'all') n++;
     if (!_syncLearningLanguage && _languageFilter != 'all') n++;
     return n;
+  }
+
+  bool get _hasAnyFilters =>
+      _activeFilterCount > 0 || _searchCtrl.text.trim().isNotEmpty;
+
+  Widget _clearFiltersIconButton({double size = 38}) {
+    return Material(
+      color: AppColors.primaryPurple.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: _clearAllFilters,
+        borderRadius: BorderRadius.circular(12),
+        child: Tooltip(
+          message: 'Clear all filters',
+          child: Container(
+            width: size,
+            height: size,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primaryPurple.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Icon(
+              Icons.filter_alt_off_outlined,
+              size: size >= 38 ? 18 : 20,
+              color: AppColors.primaryPurple,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   String _stateFilterLabel(String s) {
@@ -1206,6 +1277,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     var flag = _flagFilter;
     var tag = _tagCtrl.text;
     var language = _languageFilter;
+    var cefr = _cefrFilter;
 
     final applied = await showFrostedBottomSheet<bool>(
       context: context,
@@ -1265,70 +1337,63 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                       subtitle:
                           '${_visibleCards.length} card${_visibleCards.length == 1 ? '' : 's'}',
                       icon: Icons.filter_list_rounded,
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            setSheetState(() {
-                              deck = null;
-                              state = 'all';
-                              marked = false;
-                              flag = null;
-                              tag = '';
-                              language =
-                                  _syncLearningLanguage ? _practiceLanguage : 'all';
-                            });
-                          },
-                          child: const Text('Clear all'),
-                        ),
-                      ],
                     ),
                     Expanded(
                       child: ListView(
                         controller: scrollController,
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                         children: [
-                          labeledField(
-                            'Deck',
-                            DropdownButtonFormField<int?>(
-                              value: _safeDeckDropdownValue(deck),
-                              isExpanded: true,
-                              decoration: appSheetFieldDecoration(),
-                              items: [
-                                const DropdownMenuItem<int?>(value: null, child: Text('All decks')),
-                                ..._decks.map(
-                                  (d) => DropdownMenuItem(value: d.id, child: Text(d.name)),
-                                ),
-                              ],
-                              onChanged: (v) => setSheetState(() => deck = v),
-                            ),
+                          AppSelectField<int?>(
+                            label: 'Deck',
+                            value: _safeDeckDropdownValue(deck),
+                            options: [
+                              const AppSelectOption<int?>(value: null, label: 'All decks'),
+                              ..._decks.map(
+                                (d) => AppSelectOption<int?>(value: d.id, label: d.name),
+                              ),
+                            ],
+                            onChanged: (v) => setSheetState(() => deck = v),
                           ),
                           const SizedBox(height: 16),
-                          labeledField(
-                            'Language',
-                            DropdownButtonFormField<String>(
-                              value: language,
-                              isExpanded: true,
-                              decoration: appSheetFieldDecoration(),
-                              items:
-                                  _languageFilterOptions
-                                      .map(
-                                        (e) => DropdownMenuItem(
-                                          value: e.key,
-                                          child: Text(e.value),
-                                        ),
-                                      )
-                                      .toList(),
-                              onChanged:
-                                  _syncLearningLanguage
-                                      ? null
-                                      : (v) {
-                                        if (v == null) return;
-                                        setSheetState(() => language = v);
-                                      },
-                            ),
+                          AppSelectField<String>(
+                            label: 'Language',
+                            value: language,
+                            enabled: !_syncLearningLanguage,
+                            options:
+                                _languageFilterOptions
+                                    .map(
+                                      (e) => AppSelectOption(
+                                        value: e.key,
+                                        label: e.value,
+                                      ),
+                                    )
+                                    .toList(),
+                            onChanged:
+                                _syncLearningLanguage
+                                    ? null
+                                    : (v) => setSheetState(() => language = v),
                           ),
                           if (_syncLearningLanguage)
                             const SyncedLearningLanguageHint(),
+                          const SizedBox(height: 16),
+                          Text('CEFR level', style: fieldLabelStyle),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children:
+                                _cefrFilterOptions.map((option) {
+                                  final selected = cefr == option.$1;
+                                  return FilterChip(
+                                    label: Text(option.$2),
+                                    selected: selected,
+                                    showCheckmark: true,
+                                    selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+                                    checkmarkColor: AppColors.primaryPurple,
+                                    onSelected: (_) => setSheetState(() => cefr = option.$1),
+                                  );
+                                }).toList(),
+                          ),
                           const SizedBox(height: 16),
                           labeledField(
                             'Tag',
@@ -1448,6 +1513,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
         _flagFilter = flag;
         _tagCtrl.text = tag;
         _languageFilter = language;
+        _cefrFilter = cefr;
       });
       await _load();
     }

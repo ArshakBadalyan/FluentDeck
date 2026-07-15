@@ -56,6 +56,7 @@ class ConversationService {
   /// Seconds to wait after tutor audio (or text) before auto-opening the mic.
   int autoStartRecordingDelaySeconds = 2;
   String practiceLanguage = 'en';
+  String responseLanguage = 'en';
   String? englishLevel;
   DateTime? sessionStartedAt;
   DateTime? _recordingStartedAt;
@@ -92,6 +93,7 @@ class ConversationService {
     autoStartRecordingEnabled = prefs.autoStartRecording;
     autoStartRecordingDelaySeconds = prefs.autoStartRecordingDelaySeconds;
     practiceLanguage = prefs.practiceLanguage;
+    responseLanguage = prefs.responseLanguage;
     englishLevel = prefs.englishLevel;
     _notify();
   }
@@ -390,6 +392,31 @@ class ConversationService {
     await _bootstrapSessionOpening();
   }
 
+  String get _effectiveResponseLanguage =>
+      responseLanguage.trim().isNotEmpty ? responseLanguage.trim() : practiceLanguage;
+
+  void _agentLog(String message, Map<String, dynamic> data, String hypothesisId) {
+    // #region agent log
+    http
+        .post(
+          Uri.parse('http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938'),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': 'fcee54',
+          },
+          body: jsonEncode({
+            'sessionId': 'fcee54',
+            'location': 'conversation_service.dart',
+            'message': message,
+            'data': data,
+            'hypothesisId': hypothesisId,
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          }),
+        )
+        .catchError((_) => http.Response('', 500));
+    // #endregion
+  }
+
   Future<void> _bootstrapSessionOpening({
     String? openingMessageOverride,
   }) async {
@@ -397,9 +424,21 @@ class ConversationService {
     await refreshSpeakingSettings();
     if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
 
-    // Generate via tutor API unless the caller supplied a curated opener string.
-    // Free chat used to seed hardcoded English — now respects practice/response language.
-    final shouldGenerate = openingMessageOverride?.trim().isNotEmpty != true;
+    final responseLang = _effectiveResponseLanguage;
+    final hasCuratedOpener =
+        openingMessageOverride?.trim().isNotEmpty == true ||
+        sessionContext.openingMessage?.trim().isNotEmpty == true;
+    // Curated English openers from games/role-plays must not bypass tutor language.
+    final shouldGenerate = !hasCuratedOpener || responseLang != 'en';
+
+    // #region agent log
+    _agentLog('bootstrap_opening', {
+      'mode': sessionContext.mode.name,
+      'responseLang': responseLang,
+      'hasCuratedOpener': hasCuratedOpener,
+      'shouldGenerate': shouldGenerate,
+    }, 'D');
+    // #endregion
 
     if (!shouldGenerate) {
       _seedStaticOpening(
@@ -442,6 +481,12 @@ class ConversationService {
       );
     } catch (e, st) {
       debugPrint('_bootstrapSessionOpening failed: $e\n$st');
+      // #region agent log
+      _agentLog('bootstrap_opening_failed', {
+        'error': e.toString(),
+        'responseLang': _effectiveResponseLanguage,
+      }, 'D');
+      // #endregion
       isProcessing = false;
       stage = ConversationProcessingStage.idle;
       _seedStaticOpening(
@@ -504,11 +549,14 @@ class ConversationService {
     required SpeakingSessionContext context,
     String? openingMessage,
   }) {
+    final responseLang = _effectiveResponseLanguage;
+    var curated = openingMessage?.trim();
+    if (curated == null || curated.isEmpty) {
+      curated = context.openingMessage?.trim();
+    }
     final opener =
-        openingMessage?.trim().isNotEmpty == true
-            ? openingMessage!.trim()
-            : context.openingMessage?.trim().isNotEmpty == true
-            ? context.openingMessage!.trim()
+        curated != null && curated.isNotEmpty && responseLang == 'en'
+            ? curated
             : _defaultOpening(context);
 
     if (opener.isEmpty) return;
@@ -531,24 +579,71 @@ class ConversationService {
   }
 
   String _defaultOpening(SpeakingSessionContext context) {
+    final lang = _effectiveResponseLanguage;
     switch (context.mode) {
       case SpeakingMode.rolePlay:
-        return "Let's begin our role-play: ${context.title}. I'll play ${context.tutorRole ?? 'your partner'}. When you're ready, say something to start.";
+        return _localizedRolePlayOpening(context, lang);
       case SpeakingMode.topic:
-        return context.starterPrompt?.trim().isNotEmpty == true
-            ? context.starterPrompt!.trim()
-            : "Let's talk about ${context.title}. What's your take?";
+        if (context.starterPrompt?.trim().isNotEmpty == true && lang == 'en') {
+          return context.starterPrompt!.trim();
+        }
+        return _localizedTopicOpening(context, lang);
       case SpeakingMode.game:
-        return context.openingMessage?.trim().isNotEmpty == true
-            ? context.openingMessage!.trim()
-            : "Let's play ${context.title}! Ready when you are.";
+        return _localizedGameOpening(context, lang);
       case SpeakingMode.lesson:
-        return context.exercisePrompt?.trim().isNotEmpty == true
-            ? 'Lesson: ${context.title}. ${context.exercisePrompt!.trim()}'
+        if (context.exercisePrompt?.trim().isNotEmpty == true && lang == 'en') {
+          return 'Lesson: ${context.title}. ${context.exercisePrompt!.trim()}';
+        }
+        return lang == 'de'
+            ? 'Lektion: ${context.title}. Lass uns beginnen.'
             : 'Lesson: ${context.title}. Let\'s begin.';
       case SpeakingMode.chat:
-        return _chatGreetingForLevel(englishLevel);
+        return _chatGreetingForLevel(englishLevel, lang);
     }
+  }
+
+  String _localizedRolePlayOpening(SpeakingSessionContext context, String lang) {
+    final tutorRole = context.tutorRole ?? 'your partner';
+    if (lang == 'de') {
+      return 'Willkommen bei ${context.title}! Ich spiele ${tutorRole}. '
+          'Wenn du bereit bist, sag etwas, um zu beginnen.';
+    }
+    if (lang == 'es') {
+      return '¡Bienvenido a ${context.title}! Yo seré ${tutorRole}. '
+          'Cuando estés listo, di algo para empezar.';
+    }
+    if (lang == 'fr') {
+      return 'Bienvenue dans ${context.title} ! Je jouerai ${tutorRole}. '
+          'Quand tu es prêt, dis quelque chose pour commencer.';
+    }
+    return "Let's begin our role-play: ${context.title}. I'll play $tutorRole. "
+        "When you're ready, say something to start.";
+  }
+
+  String _localizedTopicOpening(SpeakingSessionContext context, String lang) {
+    if (lang == 'de') {
+      return 'Lass uns über ${context.title} sprechen. Was denkst du darüber?';
+    }
+    if (lang == 'es') {
+      return 'Hablemos de ${context.title}. ¿Qué opinas?';
+    }
+    if (lang == 'fr') {
+      return 'Parlons de ${context.title}. Qu\'en penses-tu ?';
+    }
+    return "Let's talk about ${context.title}. What's your take?";
+  }
+
+  String _localizedGameOpening(SpeakingSessionContext context, String lang) {
+    if (lang == 'de') {
+      return 'Lass uns ${context.title} spielen! Bist du bereit?';
+    }
+    if (lang == 'es') {
+      return '¡Juguemos a ${context.title}! ¿Listo?';
+    }
+    if (lang == 'fr') {
+      return 'Jouons à ${context.title} ! Prêt ?';
+    }
+    return "Let's play ${context.title}! Ready when you are.";
   }
 
   /// Opening greeting scaled to the user's CEFR proficiency level, so the
@@ -565,7 +660,22 @@ class ConversationService {
         "Greetings! I'm your AI tutor, here to help you refine even the subtlest nuances of the language. What shall we explore today?",
   };
 
-  String _chatGreetingForLevel(String? level) {
+  static const _chatGreetingsByLevelDe = {
+    'A1': 'Hallo! Ich bin dein KI-Tutor. Wie kann ich dir heute helfen?',
+    'A2': 'Hallo! Ich bin dein KI-Tutor. Wie kann ich dir heute helfen?',
+    'B1': 'Hallo! Ich bin dein KI-Tutor. Worüber möchtest du heute sprechen?',
+    'B2': 'Hallo! Ich bin dein KI-Tutor. Worüber möchtest du heute sprechen?',
+    'C1':
+        'Hallo! Ich bin dein KI-Tutor und helfe dir, deine Sprachgewandtheit zu verbessern. Was beschäftigt dich heute?',
+    'C2':
+        'Hallo! Ich bin dein KI-Tutor und helfe dir, selbst feine Nuancen zu verfeinern. Was möchtest du erkunden?',
+  };
+
+  String _chatGreetingForLevel(String? level, String lang) {
+    if (lang == 'de') {
+      return _chatGreetingsByLevelDe[level] ??
+          _chatGreetingsByLevelDe['A1']!;
+    }
     return _chatGreetingsByLevel[level] ??
         SpeakingSessionContext.defaultChatGreeting;
   }

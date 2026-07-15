@@ -215,22 +215,16 @@ Future<void> showFlashcardImportSheet(
                       controller: scrollController,
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       children: [
-                        DropdownButtonFormField<int?>(
-                          initialValue: targetDeckId,
-                          isExpanded: true,
-                          decoration: appSheetFieldDecoration(
-                            label: 'Default deck (optional)',
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
+                        AppSelectField<int?>(
+                          label: 'Default deck (optional)',
+                          value: targetDeckId,
+                          options: [
+                            const AppSelectOption<int?>(
                               value: null,
-                              child: Text('Use deck column / #deck: header'),
+                              label: 'Use deck column / #deck: header',
                             ),
                             ...realDecks.map(
-                              (d) => DropdownMenuItem<int?>(
-                                value: d.id,
-                                child: Text(d.name, overflow: TextOverflow.ellipsis),
-                              ),
+                              (d) => AppSelectOption<int?>(value: d.id, label: d.name),
                             ),
                           ],
                           onChanged: (v) => setLocal(() => targetDeckId = v),

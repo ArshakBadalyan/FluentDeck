@@ -256,8 +256,9 @@ async function loadSessionOpeningCounters(strapi, userId) {
 
 /**
  * Opening greetings are free but capped per day and only when history is empty.
+ * Does not increment counters — call [recordSessionOpening] after a successful reply.
  */
-async function validateSessionOpening(strapi, userId, { history }) {
+async function checkSessionOpeningAllowed(strapi, userId, { history }) {
   if (Array.isArray(history) && history.length > 0) {
     return {
       allowed: false,
@@ -269,19 +270,33 @@ async function validateSessionOpening(strapi, userId, { history }) {
     return { allowed: true };
   }
 
-  const { today, usedToday, isSpecial } = await loadSessionOpeningCounters(strapi, userId);
+  const { usedToday, isSpecial } = await loadSessionOpeningCounters(strapi, userId);
   if (isSpecial) {
     return { allowed: true };
   }
 
-  if (usedToday >= MAX_SESSION_OPENINGS_PER_DAY) {
+  const usage = await getConversationUsage(strapi, userId);
+  const dailyLimit = usage.isPremium ? 40 : MAX_SESSION_OPENINGS_PER_DAY;
+
+  if (usedToday >= dailyLimit) {
     return {
       allowed: false,
       reason: 'Daily session opening limit reached',
       usedToday,
-      dailyLimit: MAX_SESSION_OPENINGS_PER_DAY,
+      dailyLimit,
     };
   }
+
+  return { allowed: true, usedToday, dailyLimit };
+}
+
+async function recordSessionOpening(strapi, userId) {
+  if (isDailyConversationLimitDisabled(strapi)) {
+    return;
+  }
+
+  const { today, usedToday, isSpecial } = await loadSessionOpeningCounters(strapi, userId);
+  if (isSpecial) return;
 
   await strapi.db.query('plugin::users-permissions.user').update({
     where: { id: userId },
@@ -290,8 +305,14 @@ async function validateSessionOpening(strapi, userId, { history }) {
       ai_session_opens_count: usedToday + 1,
     },
   });
+}
 
-  return { allowed: true, usedToday: usedToday + 1 };
+/** @deprecated Use checkSessionOpeningAllowed + recordSessionOpening */
+async function validateSessionOpening(strapi, userId, opts) {
+  const check = await checkSessionOpeningAllowed(strapi, userId, opts);
+  if (!check.allowed) return check;
+  await recordSessionOpening(strapi, userId);
+  return { allowed: true, usedToday: (check.usedToday ?? 0) + 1 };
 }
 
 function clampHistory(history) {
@@ -338,6 +359,8 @@ module.exports = {
   getConversationUsage,
   recordConversationTurn,
   validateSessionOpening,
+  checkSessionOpeningAllowed,
+  recordSessionOpening,
   clampHistory,
   clampTtsText,
   ensureConversationAllowed,

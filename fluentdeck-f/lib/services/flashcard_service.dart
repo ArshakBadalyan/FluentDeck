@@ -578,6 +578,7 @@ class FlashcardService {
     bool? marked,
     int? flag,
     String? languageCode,
+    String? cefrLevel,
   }) async {
     final params = <String>[];
     if (deckId != null) params.add('deckId=$deckId');
@@ -594,6 +595,9 @@ class FlashcardService {
     }
     if (languageCode != null && languageCode.isNotEmpty && languageCode != 'all') {
       params.add('languageCode=${Uri.encodeComponent(languageCode)}');
+    }
+    if (cefrLevel != null && cefrLevel.isNotEmpty && cefrLevel != 'all') {
+      params.add('cefrLevel=${Uri.encodeComponent(cefrLevel)}');
     }
 
     final qs = params.isEmpty ? '' : '?${params.join('&')}';

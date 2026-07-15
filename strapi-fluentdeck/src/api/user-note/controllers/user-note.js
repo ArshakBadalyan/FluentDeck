@@ -45,7 +45,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized('Authentication required');
 
-    const { q, source, languageCode, language } = ctx.query ?? {};
+    const { q, source, languageCode, language, cefrLevel, topic } = ctx.query ?? {};
     const where = { user: userId };
 
     if (source && String(source).trim() && String(source) !== 'all') {
@@ -57,10 +57,24 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       where.languageCode = normalizePracticeLanguage(langFilterRaw);
     }
 
+    const levelFilter = cefrLevel != null ? String(cefrLevel).trim() : '';
+    if (levelFilter && levelFilter !== 'all' && levelFilter !== 'none') {
+      where.cefrLevel = levelFilter;
+    }
+
+    const topicFilter = topic != null ? String(topic).trim() : '';
+    if (topicFilter && topicFilter !== 'all') {
+      where.topic = topicFilter;
+    }
+
     let rows = await strapi.db.query('api::user-note.user-note').findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
+
+    if (levelFilter === 'none') {
+      rows = rows.filter((row) => !row.cefrLevel || !String(row.cefrLevel).trim());
+    }
 
     if (q && String(q).trim()) {
       const needle = String(q).trim().toLowerCase();
@@ -80,7 +94,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized('Authentication required');
 
-    const { word, definition, exampleSentence, tags, source = 'manual', languageCode } =
+    const { word, definition, exampleSentence, tags, source = 'manual', languageCode, cefrLevel, topic } =
       ctx.request.body ?? {};
 
     if (!word || !String(word).trim()) {
@@ -98,6 +112,8 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       tags,
       source,
       languageCode: lang,
+      cefrLevel,
+      topic,
     });
 
     const flashcardResult = await maybeCreateFlashcard(strapi, userId, {
@@ -129,7 +145,8 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     });
     if (!existing) return ctx.notFound('Note not found');
 
-    const { word, definition, exampleSentence, tags, languageCode } = ctx.request.body ?? {};
+    const { word, definition, exampleSentence, tags, languageCode, cefrLevel, topic } =
+      ctx.request.body ?? {};
     const data = {};
     if (word != null) data.word = String(word).trim();
     if (definition != null) data.definition = definition;
@@ -137,6 +154,16 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     if (tags != null) data.tags = Array.isArray(tags) ? tags : [];
     if (languageCode != null) {
       data.languageCode = normalizePracticeLanguage(languageCode);
+    }
+    if (cefrLevel !== undefined) {
+      data.cefrLevel =
+        cefrLevel == null || String(cefrLevel).trim() === ''
+          ? null
+          : String(cefrLevel).trim();
+    }
+    if (topic !== undefined) {
+      data.topic =
+        topic == null || String(topic).trim() === '' ? null : String(topic).trim();
     }
 
     const updated = await strapi.db.query('api::user-note.user-note').update({
@@ -184,6 +211,9 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       explanation,
       errorType = 'grammar',
       exampleSentence: exampleFromBody,
+      languageCode,
+      cefrLevel,
+      topic,
     } = ctx.request.body ?? {};
 
     if (!correctedText || !String(correctedText).trim()) {
@@ -209,7 +239,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
         : '';
 
     const tags = ['speaking', errorType].filter(Boolean);
-    const lang = await resolveUserLanguageCode(strapi, userId);
+    const lang = await resolveUserLanguageCode(strapi, userId, languageCode);
 
     const { note, created } = await createUserNote(strapi, userId, {
       word,
@@ -218,6 +248,8 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       tags,
       source: 'speaking',
       languageCode: lang,
+      cefrLevel,
+      topic,
     });
 
     const flashcardResult = await maybeCreateFlashcard(strapi, userId, {
@@ -257,6 +289,110 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       noteCount,
       noteLimit: premium ? null : config.freeMaxSavedWords,
       isPremium: premium,
+    };
+  },
+
+  async importFromDecks(ctx) {
+    const userId = await getAuthenticatedUserId(ctx, strapi);
+    if (!userId) return ctx.unauthorized('Authentication required');
+
+    const { deckIds } = ctx.request.body ?? {};
+    if (!Array.isArray(deckIds) || deckIds.length === 0) {
+      return ctx.badRequest('deckIds must be a non-empty array');
+    }
+
+    const uniqueDeckIds = [
+      ...new Set(
+        deckIds
+          .map((id) => parseInt(String(id), 10))
+          .filter((id) => Number.isFinite(id) && id > 0),
+      ),
+    ];
+    if (uniqueDeckIds.length === 0) {
+      return ctx.badRequest('deckIds must contain valid deck ids');
+    }
+
+    const existingRows = await strapi.db.query('api::user-note.user-note').findMany({
+      where: { user: userId },
+      select: ['word', 'languageCode'],
+    });
+    const existingKeys = new Set(
+      existingRows.map(
+        (row) =>
+          `${normalizePracticeLanguage(row.languageCode)}:${String(row.word ?? '')
+            .trim()
+            .toLowerCase()}`,
+      ),
+    );
+
+    let created = 0;
+    let skipped = 0;
+    let limitReached = false;
+    const deckNames = [];
+
+    for (const deckId of uniqueDeckIds) {
+      const deck = await strapi.db.query('api::flashcard-deck.flashcard-deck').findOne({
+        where: { id: deckId, user: userId },
+      });
+      if (!deck) continue;
+      deckNames.push(deck.name ?? `Deck ${deckId}`);
+
+      const cards = await strapi.db.query('api::flashcard.flashcard').findMany({
+        where: { deck: deckId, user: userId },
+        orderBy: { id: 'asc' },
+      });
+
+      for (const card of cards) {
+        if (card.cardType === 'image_occlusion') {
+          skipped += 1;
+          continue;
+        }
+
+        const word =
+          card.cardType === 'cloze' && card.clozeText
+            ? String(card.clozeText).trim()
+            : String(card.front ?? '').trim();
+        if (!word) {
+          skipped += 1;
+          continue;
+        }
+
+        const lang = normalizePracticeLanguage(card.languageCode);
+        const dedupeKey = `${lang}:${word.toLowerCase()}`;
+        if (existingKeys.has(dedupeKey)) {
+          skipped += 1;
+          continue;
+        }
+
+        const allowed = await canAddNote(strapi, userId);
+        if (!allowed.ok) {
+          limitReached = true;
+          break;
+        }
+
+        await createUserNote(strapi, userId, {
+          word,
+          definition: String(card.back ?? '').trim(),
+          exampleSentence: '',
+          tags: ['deck', deck.name ?? 'Deck'].filter(Boolean),
+          source: 'deck',
+          languageCode: lang,
+          topic: deck.name ?? null,
+        });
+
+        existingKeys.add(dedupeKey);
+        created += 1;
+      }
+
+      if (limitReached) break;
+    }
+
+    ctx.body = {
+      ok: true,
+      created,
+      skipped,
+      deckNames,
+      limitReached,
     };
   },
 }));

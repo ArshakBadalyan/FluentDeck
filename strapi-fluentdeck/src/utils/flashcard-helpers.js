@@ -17,13 +17,32 @@ async function getAuthenticatedUserId(ctx, strapi) {
   return token?.id ?? null;
 }
 
+function resolveCefrLevelFromTags(tags = []) {
+  for (const t of tags) {
+    const raw = String(t).trim().toLowerCase();
+    if (raw.startsWith('cefr:')) {
+      const level = raw.slice(5).trim().toUpperCase();
+      if (level) return level;
+    }
+  }
+  return null;
+}
+
 function formatCard(row, reviewRow, extras = {}) {
   const deck = row.deck ?? row.deck_id;
   const note = row.flashcardNote ?? row.flashcard_note;
+  const userNote = row.userNote ?? row.user_note;
   const noteId =
     typeof note === 'object'
       ? note?.id
       : note ?? row.flashcard_note_id ?? row.noteId ?? null;
+  const noteTags = typeof note === 'object' ? note?.tags ?? [] : [];
+  const cefrFromTags = resolveCefrLevelFromTags([...(row.tags ?? []), ...noteTags]);
+  const cefrLevel =
+    cefrFromTags ??
+    (typeof userNote === 'object' && userNote?.cefrLevel
+      ? String(userNote.cefrLevel).trim().toUpperCase()
+      : null);
   return {
     id: row.id,
     front: row.front,
@@ -42,6 +61,7 @@ function formatCard(row, reviewRow, extras = {}) {
     mediaUrl: row.mediaUrl ?? row.media_url ?? null,
     flag: row.flag ?? 0,
     languageCode: row.languageCode ?? row.language_code ?? 'en',
+    cefrLevel,
     occlusionData: row.occlusionData ?? row.occlusion_data ?? null,
     deckId:
       typeof deck === 'object'

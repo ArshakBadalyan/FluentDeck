@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/deck_scheduling_defaults.dart';
@@ -352,26 +353,16 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
               ),
               if (_canNest) ...[
                 const SizedBox(height: 12),
-                _labeledField(
-                  'Parent deck',
-                  DropdownButtonFormField<int?>(
-                    value: _safeParentDeckId,
-                    isExpanded: true,
-                    decoration: _fieldDecoration(),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('None (top level)'),
-                      ),
-                      ..._parentOptions.map(
-                        (d) => DropdownMenuItem<int?>(
-                          value: d.id,
-                          child: Text(d.name),
-                        ),
-                      ),
-                    ],
-                    onChanged: (v) => setState(() => _parentDeckId = v),
-                  ),
+                AppSelectField<int?>(
+                  label: 'Parent deck',
+                  value: _safeParentDeckId,
+                  options: [
+                    const AppSelectOption<int?>(value: null, label: 'None (top level)'),
+                    ..._parentOptions.map(
+                      (d) => AppSelectOption<int?>(value: d.id, label: d.name),
+                    ),
+                  ],
+                  onChanged: (v) => setState(() => _parentDeckId = v),
                 ),
               ],
               if (_canEditOptions) ...[

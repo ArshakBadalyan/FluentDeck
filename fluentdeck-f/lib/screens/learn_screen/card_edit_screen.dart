@@ -5,10 +5,14 @@ import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
+import 'package:fluentdeck/services/subscription_service.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
+import 'package:fluentdeck/utils/speaking_premium_gate.dart';
+import 'package:fluentdeck/widgets/cefr_level_chips.dart';
 import 'package:fluentdeck/widgets/html_field_editor.dart';
 import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
@@ -81,6 +85,7 @@ class CardEditScreen extends StatefulWidget {
 class _CardEditScreenState extends State<CardEditScreen> {
   final _mediaCtrl = TextEditingController();
   final _tagsCtrl = TextEditingController();
+  final _topicCtrl = TextEditingController();
   final Map<String, TextEditingController> _fieldCtrls = {};
   final Map<int, TextEditingController> _maskLabelCtrls = {};
 
@@ -96,6 +101,10 @@ class _CardEditScreenState extends State<CardEditScreen> {
   List<FlashcardDeckModel> _decks = const [];
   String _languageCode = 'en';
   bool _syncLearningLanguage = true;
+  String? _cefrLevel;
+  bool _isPremium = false;
+  bool _checkingPremium = true;
+  bool _detectingLevel = false;
 
   List<OcclusionRegion> _occlusionRegions = const [];
 
@@ -115,12 +124,16 @@ class _CardEditScreenState extends State<CardEditScreen> {
     super.initState();
     _selectedDeckId = widget.deckId;
     _load();
+    if (!widget.isEditing) {
+      _loadPremium();
+    }
   }
 
   @override
   void dispose() {
     _mediaCtrl.dispose();
     _tagsCtrl.dispose();
+    _topicCtrl.dispose();
     for (final c in _fieldCtrls.values) {
       c.dispose();
     }
@@ -158,6 +171,65 @@ class _CardEditScreenState extends State<CardEditScreen> {
           ),
         )
         .toList();
+  }
+
+  Future<void> _loadPremium() async {
+    final status = await SubscriptionService.instance.fetchStatus();
+    if (!mounted) return;
+    setState(() {
+      _isPremium = status.isPremium;
+      _checkingPremium = false;
+    });
+  }
+
+  String? _wordForCefrDetect() {
+    final front = _fieldCtrls['Front']?.text.trim() ?? '';
+    if (front.isNotEmpty) return stripHtml(front);
+    final text = _fieldCtrls['Text']?.text.trim() ?? '';
+    if (text.isNotEmpty) return stripHtml(text);
+    return null;
+  }
+
+  Future<void> _detectCefrWithAi() async {
+    if (!_isPremium) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
+
+    final word = _wordForCefrDetect();
+    if (word == null || word.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter the front field first')),
+      );
+      return;
+    }
+
+    setState(() => _detectingLevel = true);
+    try {
+      final result = await NoteService.instance.detectCefrLevel(
+        word: word,
+        languageCode: _languageCode,
+        definition: _fieldCtrls['Back']?.text.trim(),
+        exampleSentence: null,
+      );
+      if (!mounted) return;
+      if (result.premiumRequired) {
+        showSpeakingPremiumSnackBar(context);
+        return;
+      }
+      if (result.ok && result.cefrLevel != null) {
+        setState(() => _cefrLevel = result.cefrLevel);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Suggested level: ${result.cefrLevel}')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.message ?? 'Could not detect level')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _detectingLevel = false);
+    }
   }
 
   Future<void> _load() async {
@@ -269,11 +341,22 @@ class _CardEditScreenState extends State<CardEditScreen> {
   }
 
   List<String> _parseTags() {
-    return _tagsCtrl.text
-        .split(',')
-        .map((t) => t.trim())
-        .where((t) => t.isNotEmpty)
-        .toList();
+    final tags =
+        _tagsCtrl.text
+            .split(',')
+            .map((t) => t.trim())
+            .where((t) => t.isNotEmpty)
+            .toList();
+    if (!widget.isEditing && _cefrLevel != null && _cefrLevel!.isNotEmpty) {
+      tags.removeWhere((t) => t.toLowerCase().startsWith('cefr:'));
+      tags.add('cefr:${_cefrLevel!}');
+    }
+    final topic = _topicCtrl.text.trim();
+    if (!widget.isEditing && topic.isNotEmpty) {
+      tags.removeWhere((t) => t.toLowerCase().startsWith('topic:'));
+      tags.add('topic:$topic');
+    }
+    return tags;
   }
 
   Map<String, String> _buildFields() {
@@ -646,29 +729,31 @@ class _CardEditScreenState extends State<CardEditScreen> {
           _deckDropdown(),
           if (!widget.isEditing) ...[
             const SizedBox(height: 12),
-            _labeledField(
-              'Language',
-              DropdownButtonFormField<String>(
-                initialValue: _languageCode,
-                isExpanded: true,
-                decoration: _filledDecoration(),
-                items:
-                    SpeakingPreferences.practiceLanguageOptions.entries
-                        .map(
-                          (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                        )
-                        .toList(),
-                onChanged:
-                    _syncLearningLanguage
-                        ? null
-                        : (value) {
-                          if (value == null) return;
-                          setState(() => _languageCode = value);
-                        },
-              ),
+            AppSelectField<String>(
+              label: 'Language',
+              value: _languageCode,
+              enabled: !_syncLearningLanguage,
+              options:
+                  SpeakingPreferences.practiceLanguageOptions.entries
+                      .map((e) => AppSelectOption(value: e.key, label: e.value))
+                      .toList(),
+              onChanged:
+                  _syncLearningLanguage
+                      ? null
+                      : (value) => setState(() => _languageCode = value),
             ),
             if (_syncLearningLanguage)
               const SyncedLearningLanguageHint(),
+            const SizedBox(height: 12),
+            _buildCefrSection(),
+            const SizedBox(height: 12),
+            _labeledField(
+              'Topic (optional)',
+              TextField(
+                controller: _topicCtrl,
+                decoration: _filledDecoration(),
+              ),
+            ),
           ],
           const SizedBox(height: 12),
           _typeDropdown(),
@@ -738,59 +823,91 @@ class _CardEditScreenState extends State<CardEditScreen> {
         ];
   }
 
-  Widget _deckDropdown() {
-    return _labeledField(
-      'Deck',
-      DropdownButtonFormField<int>(
-        key: ValueKey(_selectedDeckId),
-        value:
-            _decks.any((d) => d.id == _selectedDeckId)
-                ? _selectedDeckId
-                : (_decks.isNotEmpty ? _decks.first.id : null),
-        isExpanded: true,
-        icon: Icon(Icons.expand_more_rounded, color: Colors.grey.shade600),
-        decoration: _filledDecoration(
-          prefixIcon: const Icon(Icons.folder_outlined, size: 20),
+  Widget _buildCefrSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Expanded(
+              child: Text(
+                'CEFR level (optional)',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            if (!_checkingPremium)
+              TextButton.icon(
+                onPressed:
+                    _detectingLevel
+                        ? null
+                        : (_isPremium
+                            ? _detectCefrWithAi
+                            : () => showSpeakingPremiumSnackBar(context)),
+                icon:
+                    _detectingLevel
+                        ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : Icon(
+                          _isPremium
+                              ? Icons.auto_awesome_rounded
+                              : Icons.lock_outline_rounded,
+                          size: 16,
+                        ),
+                label: Text(
+                  _detectingLevel
+                      ? 'Analyzing…'
+                      : (_isPremium ? 'Detect with AI' : 'Premium'),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primaryPurple,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+          ],
         ),
-        items:
-            _decks
-                .map(
-                  (d) => DropdownMenuItem(
-                    value: d.id,
-                    child: Text(d.name, overflow: TextOverflow.ellipsis),
-                  ),
-                )
-                .toList(),
-        onChanged: (v) => setState(() => _selectedDeckId = v),
-      ),
+        const SizedBox(height: 8),
+        CefrLevelChips(
+          selectedLevel: _cefrLevel,
+          allowDeselect: true,
+          onLevelSelected: (level) => setState(() => _cefrLevel = level),
+        ),
+      ],
+    );
+  }
+
+  Widget _deckDropdown() {
+    final deckId =
+        _decks.any((d) => d.id == _selectedDeckId)
+            ? _selectedDeckId
+            : (_decks.isNotEmpty ? _decks.first.id : null);
+    return AppSelectField<int>(
+      label: 'Deck',
+      value: deckId,
+      options:
+          _decks
+              .map((d) => AppSelectOption(value: d.id, label: d.name))
+              .toList(),
+      onChanged: (v) => setState(() => _selectedDeckId = v),
     );
   }
 
   Widget _typeDropdown() {
-    return _labeledField(
-      'Type',
-      DropdownButtonFormField<String>(
-        key: ValueKey(_noteType),
-        value:
-            _noteTypes.any((t) => t.id == _noteType)
-                ? _noteType
-                : (_noteTypes.isNotEmpty ? _noteTypes.first.id : 'basic'),
-        isExpanded: true,
-        icon: Icon(Icons.expand_more_rounded, color: Colors.grey.shade600),
-        decoration: _filledDecoration(
-          prefixIcon: const Icon(Icons.style_outlined, size: 20),
-        ),
-        items:
-            _noteTypes
-                .map(
-                  (t) => DropdownMenuItem(
-                    value: t.id,
-                    child: Text(t.name, overflow: TextOverflow.ellipsis),
-                  ),
-                )
-                .toList(),
-        onChanged: _onNoteTypeChanged,
-      ),
+    final typeId =
+        _noteTypes.any((t) => t.id == _noteType)
+            ? _noteType
+            : (_noteTypes.isNotEmpty ? _noteTypes.first.id : 'basic');
+    return AppSelectField<String>(
+      label: 'Type',
+      value: typeId,
+      options:
+          _noteTypes
+              .map((t) => AppSelectOption(value: t.id, label: t.name))
+              .toList(),
+      onChanged: _onNoteTypeChanged,
     );
   }
 

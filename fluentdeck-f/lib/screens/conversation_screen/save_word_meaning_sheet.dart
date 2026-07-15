@@ -7,6 +7,8 @@ import '../../services/speaking_preferences_service.dart';
 import '../../services/subscription_service.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../ui_elements/modern_page_widgets.dart';
+import '../../utils/speaking_premium_gate.dart';
+import '../../widgets/cefr_level_chips.dart';
 import '../../widgets/synced_learning_language_hint.dart';
 
 /// Result of the save-word-meaning sheet: the phrase and meaning to save, or
@@ -17,6 +19,8 @@ class SaveWordMeaningResult {
     required this.meaning,
     this.example,
     this.languageCode,
+    this.cefrLevel,
+    this.topic,
   });
 
   final String phrase;
@@ -24,6 +28,8 @@ class SaveWordMeaningResult {
   final String meaning;
   final String? example;
   final String? languageCode;
+  final String? cefrLevel;
+  final String? topic;
 }
 
 /// Shown when the user taps "Save to deck" after selecting text in the
@@ -63,12 +69,15 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
   final _phraseController = TextEditingController();
   final _meaningController = TextEditingController();
   final _exampleController = TextEditingController();
+  final _topicController = TextEditingController();
   bool _checkingPremium = true;
   bool _isPremium = false;
   bool _generating = false;
+  bool _detectingLevel = false;
   String? _error;
   String _languageCode = 'en';
   bool _syncLearningLanguage = true;
+  String? _cefrLevel;
 
   @override
   void initState() {
@@ -92,6 +101,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
     _phraseController.dispose();
     _meaningController.dispose();
     _exampleController.dispose();
+    _topicController.dispose();
     super.dispose();
   }
 
@@ -126,6 +136,45 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
     }
   }
 
+  Future<void> _detectCefrWithAi() async {
+    if (!_isPremium) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
+
+    final word = _phraseController.text.trim();
+    if (word.isEmpty) {
+      setState(() => _error = 'Enter a word or phrase first.');
+      return;
+    }
+
+    setState(() {
+      _detectingLevel = true;
+      _error = null;
+    });
+
+    try {
+      final result = await NoteService.instance.detectCefrLevel(
+        word: word,
+        languageCode: _languageCode,
+        definition: _meaningController.text.trim(),
+        exampleSentence: _exampleController.text.trim(),
+      );
+      if (!mounted) return;
+      if (result.premiumRequired) {
+        showSpeakingPremiumSnackBar(context);
+        return;
+      }
+      if (result.ok && result.cefrLevel != null) {
+        setState(() => _cefrLevel = result.cefrLevel);
+      } else {
+        setState(() => _error = result.message ?? 'Could not detect level.');
+      }
+    } finally {
+      if (mounted) setState(() => _detectingLevel = false);
+    }
+  }
+
   void _save() {
     final phrase = _phraseController.text.trim();
     if (phrase.isEmpty) {
@@ -139,6 +188,8 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
         meaning: _meaningController.text.trim(),
         example: _exampleController.text.trim(),
         languageCode: _languageCode,
+        cefrLevel: _cefrLevel,
+        topic: _topicController.text.trim(),
       ),
     );
   }
@@ -210,28 +261,100 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
             ),
           ),
           const SizedBox(height: 4),
-          DropdownButtonFormField<String>(
-            initialValue: _languageCode,
-            decoration: appDropdownDecoration('Word language'),
-            items:
+          AppSelectField<String>(
+            label: 'Word language',
+            value: _languageCode,
+            enabled: !_syncLearningLanguage,
+            options:
                 SpeakingPreferences.practiceLanguageOptions.entries
-                    .map(
-                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                    )
+                    .map((e) => AppSelectOption(value: e.key, label: e.value))
                     .toList(),
             onChanged:
                 _syncLearningLanguage
                     ? null
-                    : (value) {
-                      if (value == null) return;
-                      setState(() => _languageCode = value);
-                    },
+                    : (value) => setState(() => _languageCode = value),
           ),
           if (_syncLearningLanguage)
             const SyncedLearningLanguageHint(
               padding: EdgeInsets.only(top: 4, bottom: 8),
             ),
           const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  'CEFR level (optional)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ),
+              if (!_checkingPremium)
+                TextButton.icon(
+                  onPressed:
+                      _detectingLevel
+                          ? null
+                          : (_isPremium
+                              ? _detectCefrWithAi
+                              : () => showSpeakingPremiumSnackBar(context)),
+                  icon:
+                      _detectingLevel
+                          ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : Icon(
+                            _isPremium
+                                ? Icons.auto_awesome_rounded
+                                : Icons.lock_outline_rounded,
+                            size: 16,
+                          ),
+                  label: Text(
+                    _detectingLevel
+                        ? 'Analyzing…'
+                        : (_isPremium ? 'Detect with AI' : 'Premium'),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryPurple,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          CefrLevelChips(
+            selectedLevel: _cefrLevel,
+            allowDeselect: true,
+            onLevelSelected: (level) => setState(() => _cefrLevel = level),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Topic (optional)',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          TextField(
+            controller: _topicController,
+            decoration: InputDecoration(
+              hintText: 'e.g. Travel, Business',
+              filled: true,
+              fillColor: Colors.grey.shade100,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.all(12),
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

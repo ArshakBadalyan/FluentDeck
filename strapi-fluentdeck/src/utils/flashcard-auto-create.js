@@ -96,7 +96,8 @@ async function maybeCreateFlashcard(strapi, userId, payload) {
 }
 
 async function createUserNote(strapi, userId, data) {
-  const { word, definition, exampleSentence, tags, source, languageCode } = data;
+  const { word, definition, exampleSentence, tags, source, languageCode, cefrLevel, topic } =
+    data;
   const lang = await resolveUserLanguageCode(strapi, userId, languageCode);
 
   const noteData = {
@@ -108,6 +109,12 @@ async function createUserNote(strapi, userId, data) {
     languageCode: lang,
     user: userId,
   };
+  if (cefrLevel != null && String(cefrLevel).trim()) {
+    noteData.cefrLevel = String(cefrLevel).trim();
+  }
+  if (topic != null && String(topic).trim()) {
+    noteData.topic = String(topic).trim();
+  }
 
   const note = await strapi.db.query('api::user-note.user-note').create({
     data: noteData,
@@ -136,6 +143,8 @@ function formatNote(row) {
     tags: row.tags ?? [],
     source: row.source ?? 'manual',
     languageCode: row.languageCode ?? row.language_code ?? 'en',
+    cefrLevel: row.cefrLevel ?? row.cefr_level ?? null,
+    topic: row.topic ?? null,
     createdAt: row.createdAt ?? row.created_at,
   };
 }

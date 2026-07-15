@@ -1344,6 +1344,7 @@ export interface ApiUserNoteUserNote extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    cefrLevel: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1365,6 +1366,7 @@ export interface ApiUserNoteUserNote extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'manual'>;
     tags: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
+    topic: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

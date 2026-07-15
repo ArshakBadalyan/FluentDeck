@@ -5,6 +5,7 @@ import 'package:fluentdeck/screens/lessons_screen/lesson_detail_screen.dart';
 import 'package:fluentdeck/services/english_level_service.dart';
 import 'package:fluentdeck/services/lesson_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class LessonsListTab extends StatefulWidget {
   const LessonsListTab({super.key});
@@ -89,24 +90,19 @@ class _LessonsListTabState extends State<LessonsListTab> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Row(
-            children: [
-              const Text('Level', style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(width: 12),
-              DropdownButton<String>(
-                value: _levelFilter,
-                items:
-                    const ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-                        .map(
-                          (level) => DropdownMenuItem(
-                            value: level,
-                            child: Text(level),
-                          ),
-                        )
-                        .toList(),
-                onChanged: _onLevelChanged,
-              ),
+          child: AppSelectField<String>(
+            label: 'Level',
+            value: _levelFilter,
+            compact: true,
+            options: const [
+              AppSelectOption(value: 'A1', label: 'A1'),
+              AppSelectOption(value: 'A2', label: 'A2'),
+              AppSelectOption(value: 'B1', label: 'B1'),
+              AppSelectOption(value: 'B2', label: 'B2'),
+              AppSelectOption(value: 'C1', label: 'C1'),
+              AppSelectOption(value: 'C2', label: 'C2'),
             ],
+            onChanged: _onLevelChanged,
           ),
         ),
         Expanded(

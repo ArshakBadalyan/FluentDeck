@@ -6,6 +6,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/card_tag_undo_store.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 enum BulkTagMode { add, remove, replace }
 
@@ -245,20 +246,15 @@ class CardBrowserBulkActions {
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      DropdownButtonFormField<BulkTagMode>(
+                      AppSelectField<BulkTagMode>(
+                        label: 'Action',
                         value: mode,
-                        decoration: const InputDecoration(
-                          labelText: 'Action',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: BulkTagMode.add, child: Text('Add tags')),
-                          DropdownMenuItem(value: BulkTagMode.remove, child: Text('Remove tags')),
-                          DropdownMenuItem(value: BulkTagMode.replace, child: Text('Replace all tags')),
+                        options: const [
+                          AppSelectOption(value: BulkTagMode.add, label: 'Add tags'),
+                          AppSelectOption(value: BulkTagMode.remove, label: 'Remove tags'),
+                          AppSelectOption(value: BulkTagMode.replace, label: 'Replace all tags'),
                         ],
-                        onChanged: (v) {
-                          if (v != null) setLocal(() => mode = v);
-                        },
+                        onChanged: (v) => setLocal(() => mode = v),
                       ),
                       const SizedBox(height: 12),
                       TextField(
