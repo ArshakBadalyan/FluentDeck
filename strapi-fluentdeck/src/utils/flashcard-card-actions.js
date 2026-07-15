@@ -154,7 +154,8 @@ async function gradeCardNow(strapi, userId, cardId, rating) {
 
 async function repositionCard(strapi, userId, cardId, direction) {
   const card = await loadCard(strapi, userId, cardId);
-  const noteId = card.flashcardNote?.id ?? card.flashcard_note ?? card.flashcardNote;
+  const { ensureCardHasNote } = require('./flashcard-note-sync');
+  const noteId = await ensureCardHasNote(strapi, userId, card);
   if (!noteId) {
     throw Object.assign(new Error('Card has no linked note to reposition'), { status: 400 });
   }

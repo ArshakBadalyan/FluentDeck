@@ -3,6 +3,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/card_style_preset.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/services/note_type_style_store.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Create or edit a user-defined note type. No HTML/CSS in sight — pick what
@@ -15,6 +16,9 @@ class NoteTypeEditScreen extends StatefulWidget {
   final NoteTypeModel? existing;
 
   bool get isEditing => existing != null;
+
+  /// Built-in types: card style only. Custom types: full editor.
+  bool get styleOnly => existing != null && !existing!.isCustom;
 
   @override
   State<NoteTypeEditScreen> createState() => _NoteTypeEditScreenState();
@@ -99,6 +103,28 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
   }
 
   Future<void> _save() async {
+    if (widget.styleOnly) {
+      setState(() {
+        _saving = true;
+        _error = null;
+      });
+      try {
+        await NoteTypeStyleStore.instance.save(
+          widget.existing!.id,
+          _selectedThemeId,
+        );
+        if (!mounted) return;
+        Navigator.pop(context, true);
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _error = e.toString();
+          _saving = false;
+        });
+      }
+      return;
+    }
+
     final validation = _validate();
     if (validation != null) {
       setState(() => _error = validation);
@@ -150,7 +176,13 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
         backgroundColor: AppPageColors.pageBgOf(context),
         foregroundColor: Colors.black,
         elevation: 0,
-        title: Text(widget.isEditing ? 'Edit note type' : 'New note type'),
+        title: Text(
+          widget.styleOnly
+              ? 'Card style'
+              : widget.isEditing
+              ? 'Edit note type'
+              : 'New note type',
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -196,30 +228,43 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
               ),
               const SizedBox(height: 12),
             ],
-            AppSectionCard(
-              title: 'Name',
-              icon: Icons.label_outline_rounded,
-              child: AppTextField(
-                controller: _nameCtrl,
-                hint: 'e.g. Vocabulary, Grammar point',
+            if (widget.styleOnly) ...[
+              AppSectionCard(
+                title: widget.existing!.name,
+                icon: Icons.lock_outline_rounded,
+                subtitle: 'Built-in type — you can change the card style only',
+                child: Text(
+                  'Fields and templates are fixed for this note type.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.4),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            AppSectionCard(
-              title: 'What does each card show?',
-              icon: Icons.view_column_outlined,
-              subtitle: 'The first field is the question; the rest appear when you reveal the answer',
-              trailing: _AddButton(onPressed: _addField),
-              child: Column(
-                children: [
-                  for (final entry in _fields.asMap().entries) ...[
-                    if (entry.key > 0) const SizedBox(height: 8),
-                    _fieldTile(entry.key, entry.value),
+              const SizedBox(height: 16),
+            ] else ...[
+              AppSectionCard(
+                title: 'Name',
+                icon: Icons.label_outline_rounded,
+                child: AppTextField(
+                  controller: _nameCtrl,
+                  hint: 'e.g. Vocabulary, Grammar point',
+                ),
+              ),
+              const SizedBox(height: 16),
+              AppSectionCard(
+                title: 'What does each card show?',
+                icon: Icons.view_column_outlined,
+                subtitle: 'The first field is the question; the rest appear when you reveal the answer',
+                trailing: _AddButton(onPressed: _addField),
+                child: Column(
+                  children: [
+                    for (final entry in _fields.asMap().entries) ...[
+                      if (entry.key > 0) const SizedBox(height: 8),
+                      _fieldTile(entry.key, entry.value),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
             AppSectionCard(
               title: 'Card style',
               icon: Icons.palette_outlined,

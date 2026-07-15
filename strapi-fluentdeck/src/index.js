@@ -94,6 +94,7 @@ module.exports = {
       "api::flashcard-deck.flashcard-deck.resetCardProgress",
       "api::flashcard-deck.flashcard-deck.gradeCardNow",
       "api::flashcard-deck.flashcard-deck.repositionCard",
+      "api::flashcard-deck.flashcard-deck.ensureCardNote",
       "api::flashcard-deck.flashcard-deck.exportCardJson",
       "api::flashcard-note.flashcard-note.listNoteTypes",
       "api::flashcard-note.flashcard-note.createNote",

@@ -388,7 +388,6 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                         : context.tr('buttons.save').toUpperCase(),
                 enabled: !_saving && !_processing,
                 onPressed: () => _saveProfile(),
-                color: AppColors.primaryYellow,
               ),
               const SizedBox(height: 24),
               AppSectionCard(

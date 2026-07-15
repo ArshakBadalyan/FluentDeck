@@ -67,7 +67,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
 
   static const _decksSubTabs = ['Decks', 'Browser'];
 
-  static const _activitySubTabs = ['Levels', 'Speaking', 'Decks'];
+  static const _activitySubTabs = ['Progress', 'Speaking', 'Decks'];
 
   static const _speakSubTabDefs = [
     ('chat', 'Chat'),

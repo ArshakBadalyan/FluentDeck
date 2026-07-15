@@ -10,12 +10,14 @@ import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dar
 import 'package:fluentdeck/screens/learn_screen/shared_decks_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/note_types_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_overflow_menu.dart';
+import 'package:fluentdeck/services/deck_order_store.dart';
 import 'package:fluentdeck/services/deck_backup_service.dart';
 import 'package:fluentdeck/services/flashcard_export_service.dart';
 import 'package:fluentdeck/services/flashcard_import_service.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 
@@ -62,9 +64,12 @@ class FlashcardsScreen extends StatefulWidget {
 }
 
 class _FlashcardsScreenState extends State<FlashcardsScreen> {
+  static const _dragColumnWidth = 32.0;
+
   bool _loading = true;
   String? _error;
   List<FlashcardDeckModel> _decks = const [];
+  List<_DeckRow> _deckRows = const [];
   FlashcardStudyStats? _stats;
   final _sync = FlashcardSyncService.instance;
 
@@ -85,6 +90,95 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     if (mounted) setState(() {});
   }
 
+  Widget _deckReorderProxy(Widget child, int index, Animation<double> animation) {
+    final width = MediaQuery.sizeOf(context).width - 32;
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final t = Curves.easeOut.transform(animation.value);
+        return Material(
+          color: AppPageColors.cardBg,
+          elevation: 4 * t,
+          shadowColor: Colors.black26,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            width: width,
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+
+  Future<List<_DeckRow>> _deckRowsWithStoredOrder(
+    List<FlashcardDeckModel> decks,
+  ) async {
+    final baseRows = _orderedDeckRows(decks);
+    final stored = await DeckOrderStore.instance.load();
+    return DeckOrderStore.applyOrder(
+      items: baseRows,
+      orderedIds: stored,
+      idFor: (row) => row.deck.id,
+    );
+  }
+
+  void _onDeckReorder(int oldIndex, int newIndex) {
+    if (oldIndex == newIndex) return;
+    var target = newIndex;
+    if (target > oldIndex) target -= 1;
+    _scheduleDeckOrderMutation(oldIndex, target);
+  }
+
+  void _scheduleDeckOrderMutation(int oldIndex, int targetIndex) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      if (oldIndex < 0 ||
+          targetIndex < 0 ||
+          oldIndex >= _deckRows.length ||
+          targetIndex >= _deckRows.length ||
+          oldIndex == targetIndex) {
+        return;
+      }
+      setState(() {
+        final moved = _deckRows.removeAt(oldIndex);
+        _deckRows.insert(targetIndex, moved);
+      });
+      final ids = _deckRows.map((row) => row.deck.id).toList();
+      await DeckOrderStore.instance.save(ids);
+    });
+  }
+
+  Widget _deckDragHandle(int index) {
+    return SizedBox(
+      width: _dragColumnWidth,
+      child: ReorderableDragStartListener(
+        index: index,
+        child: Tooltip(
+          message: 'Drag to reorder',
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Center(
+                  child: Icon(
+                    Icons.drag_indicator_rounded,
+                    size: 20,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -98,16 +192,20 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         stats = await FlashcardService.instance.fetchStats();
       } catch (_) {}
       if (!mounted) return;
+      final deckRows = await _deckRowsWithStoredOrder(decks);
       setState(() {
         _decks = decks;
+        _deckRows = deckRows;
         _stats = stats;
         _loading = false;
       });
     } catch (e) {
       if (!mounted) return;
       final cached = await FlashcardService.instance.fetchDecksWithCache();
+      final deckRows = await _deckRowsWithStoredOrder(cached);
       setState(() {
         _decks = cached;
+        _deckRows = deckRows;
         _error = cached.isEmpty ? e.toString() : null;
         _loading = false;
       });
@@ -124,8 +222,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       try {
         stats = await FlashcardService.instance.fetchStats();
       } catch (_) {}
+      final deckRows = await _deckRowsWithStoredOrder(decks);
       setState(() {
         _decks = decks;
+        _deckRows = deckRows;
         _stats = stats;
       });
       await FlashcardSyncService.showConflictDialogIfNeeded(
@@ -173,36 +273,19 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   }
 
   Future<void> _createDeck() async {
-    final nameCtrl = TextEditingController();
-    final created = await showDialog<bool>(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('New deck'),
-            content: TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(hintText: 'Deck name'),
-              autofocus: true,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Create'),
-              ),
-            ],
-          ),
+    final name = await showAppPromptDialog(
+      context,
+      title: 'New deck',
+      subtitle: 'New collection for your cards',
+      icon: Icons.folder_outlined,
+      fieldLabel: 'Deck name',
+      hintText: 'e.g. Travel vocabulary',
+      confirmLabel: 'Create',
     );
-    if (created != true) {
-      nameCtrl.dispose();
-      return;
-    }
+    if (name == null) return;
 
     try {
-      await FlashcardService.instance.createDeck(name: nameCtrl.text.trim());
+      await FlashcardService.instance.createDeck(name: name);
       if (!mounted) return;
       await _load();
     } catch (e) {
@@ -210,8 +293,6 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
-    } finally {
-      nameCtrl.dispose();
     }
   }
 
@@ -226,54 +307,65 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   }
 
   Future<void> _showFabMenu() async {
-    final action = await showModalBottomSheet<String>(
+    final action = await showFrostedBottomSheet<String>(
       context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder:
-          (ctx) => SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'Add',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      useSafeArea: true,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.48,
+          minChildSize: 0.34,
+          maxChildSize: 0.62,
+          builder: (context, scrollController) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AppSheetHandle(),
+                const AppSheetHeader(
+                  title: 'Add',
+                  subtitle: 'Create notes, decks, or import content',
+                  icon: Icons.add_circle_outline_rounded,
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    children: [
+                      AppSheetActionTile(
+                        icon: Icons.note_add_outlined,
+                        title: 'Add note',
+                        subtitle: 'Create a new flashcard note',
+                        onTap: () => Navigator.pop(ctx, 'note'),
+                      ),
+                      AppSheetActionTile(
+                        icon: Icons.folder_outlined,
+                        title: 'Create deck',
+                        subtitle: 'New collection for your cards',
+                        onTap: () => Navigator.pop(ctx, 'deck'),
+                      ),
+                      AppSheetActionTile(
+                        icon: Icons.filter_list_rounded,
+                        title: 'Filtered deck',
+                        subtitle: 'Study cards matching a saved search',
+                        onTap: () => Navigator.pop(ctx, 'filtered'),
+                      ),
+                      AppSheetActionTile(
+                        icon: Icons.public_outlined,
+                        title: 'Shared decks',
+                        subtitle: 'Browse community decks or import a deck file',
+                        onTap: () => Navigator.pop(ctx, 'shared'),
+                      ),
+                    ],
                   ),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.note_add_outlined),
-                  title: const Text('Add note'),
-                  subtitle: const Text('Create a new flashcard note'),
-                  onTap: () => Navigator.pop(ctx, 'note'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.folder_outlined),
-                  title: const Text('Create deck'),
-                  subtitle: const Text('New collection for your cards'),
-                  onTap: () => Navigator.pop(ctx, 'deck'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.filter_list),
-                  title: const Text('Filtered deck'),
-                  subtitle: const Text('Study cards matching a saved search'),
-                  onTap: () => Navigator.pop(ctx, 'filtered'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.public_outlined),
-                  title: const Text('Shared decks'),
-                  subtitle: const Text('Browse community decks or import a deck file'),
-                  onTap: () => Navigator.pop(ctx, 'shared'),
-                ),
-                const SizedBox(height: 8),
               ],
-            ),
-            ),
-          ),
+            );
+          },
+        );
+      },
     );
 
     switch (action) {
@@ -349,68 +441,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
 
   Future<void> _exportDeck() async {
     try {
-      final format = await showModalBottomSheet<String>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        builder:
-            (ctx) => SafeArea(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                      'Export flashcards',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.archive_outlined),
-                    title: const Text('Deck package (.apkg)'),
-                    subtitle: const Text('Compatible with common flashcard apps'),
-                    onTap: () => Navigator.pop(ctx, 'apkg'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.table_chart_outlined),
-                    title: const Text('CSV file'),
-                    subtitle: const Text('Spreadsheet-friendly format'),
-                    onTap: () => Navigator.pop(ctx, 'csv'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.grid_on_outlined),
-                    title: const Text('Excel file'),
-                    subtitle: const Text('Opens in Microsoft Excel'),
-                    onTap: () => Navigator.pop(ctx, 'excel'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.picture_as_pdf_outlined),
-                    title: const Text('PDF file'),
-                    subtitle: const Text('Printable card list'),
-                    onTap: () => Navigator.pop(ctx, 'pdf'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.data_object_outlined),
-                    title: const Text('JSON backup'),
-                    subtitle: const Text('Full collection backup'),
-                    onTap: () => Navigator.pop(ctx, 'json'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.share_outlined),
-                    title: const Text('Share CSV'),
-                    subtitle: const Text('Send via messages, email, etc.'),
-                    onTap: () => Navigator.pop(ctx, 'share'),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-            ),
-      );
+      final format = await showFlashcardExportSheet(context);
       if (!mounted || format == null) return;
 
       final exporter = FlashcardExportService.instance;
@@ -612,7 +643,6 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
 
     final stats = _stats;
     final dueSummary = stats != null ? '${stats.dueNow} due' : '';
-    final deckRows = _orderedDeckRows(_decks);
 
     return AppPageBackground(
       child: Stack(
@@ -682,18 +712,29 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                               'No decks yet. Save words or take notes to auto-create cards.',
                         )
                       else
-                        ...deckRows.map(
-                          (row) => _DeckListTile(
-                            deck: row.deck,
-                            depth: row.depth,
-                            enableSwipeActions: widget.enableDeckSwipeActions,
-                            onShowOptions: () => _showDeckOptions(row.deck),
-                            onStudy: () => _startReview(deckId: row.deck.id),
-                            onDelete:
-                                row.deck.isDeletable
-                                    ? () => _deleteDeck(row.deck)
-                                    : null,
-                          ),
+                        ReorderableListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          buildDefaultDragHandles: false,
+                          itemCount: _deckRows.length,
+                          onReorder: _onDeckReorder,
+                          proxyDecorator: _deckReorderProxy,
+                          itemBuilder: (context, index) {
+                            final row = _deckRows[index];
+                            return _DeckListTile(
+                              key: ValueKey('deck-row-${row.deck.id}'),
+                              deck: row.deck,
+                              depth: row.depth,
+                              dragHandle: _deckDragHandle(index),
+                              enableSwipeActions: widget.enableDeckSwipeActions,
+                              onShowOptions: () => _showDeckOptions(row.deck),
+                              onStudy: () => _startReview(deckId: row.deck.id),
+                              onDelete:
+                                  row.deck.isDeletable
+                                      ? () => _deleteDeck(row.deck)
+                                      : null,
+                            );
+                          },
                         ),
                     ],
                   ),
@@ -736,7 +777,7 @@ class _SyncStatusButton extends StatelessWidget {
     final (icon, color, tooltip) = switch (status) {
       FlashcardSyncStatus.synced => (
         Icons.cloud_done_outlined,
-        Colors.green.shade600,
+        AppColors.primaryPurple,
         'Synced — tap to refresh',
       ),
       FlashcardSyncStatus.pending => (
@@ -768,8 +809,10 @@ class _SyncStatusButton extends StatelessWidget {
 
 class _DeckListTile extends StatelessWidget {
   const _DeckListTile({
+    super.key,
     required this.deck,
     required this.depth,
+    required this.dragHandle,
     required this.onShowOptions,
     required this.onStudy,
     this.enableSwipeActions = false,
@@ -778,6 +821,7 @@ class _DeckListTile extends StatelessWidget {
 
   final FlashcardDeckModel deck;
   final int depth;
+  final Widget dragHandle;
   final bool enableSwipeActions;
   final VoidCallback onShowOptions;
   final VoidCallback onStudy;
@@ -785,26 +829,24 @@ class _DeckListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tile = Container(
-      decoration: BoxDecoration(
-        color: AppPageColors.cardBg,
+    final tile = Material(
+      color: AppPageColors.cardBg,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        side: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
       ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onShowOptions,
         borderRadius: BorderRadius.circular(16),
+        splashColor: AppColors.primaryPurple.withValues(alpha: 0.06),
+        highlightColor: AppColors.primaryPurple.withValues(alpha: 0.04),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
+              dragHandle,
               SizedBox(width: depth * 16.0),
               if (deck.isFiltered) ...[
                 Icon(

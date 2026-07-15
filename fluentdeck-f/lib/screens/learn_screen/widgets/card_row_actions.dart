@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
 import 'package:fluentdeck/services/card_tag_undo_store.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/utils/api_exception.dart';
 import 'package:fluentdeck/utils/card_browser_utils.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/widgets/card_preview_sheet.dart';
@@ -20,6 +22,7 @@ class CardRowActions {
     required this.decks,
     required this.noteTypes,
     required this.onChanged,
+    this.onBrowserReposition,
   });
 
   final BuildContext context;
@@ -27,6 +30,57 @@ class CardRowActions {
   final List<FlashcardDeckModel> decks;
   final List<NoteTypeModel> noteTypes;
   final VoidCallback onChanged;
+  /// For Basic / single-card notes: reorder row in the browser list instead of
+  /// sibling reposition within a multi-card note.
+  final Future<bool> Function({required bool down})? onBrowserReposition;
+
+  bool get _isSingleCardNote => (card.siblingCardCount ?? 1) <= 1;
+
+  String _friendlyError(Object error) {
+    if (error is ApiException) {
+      final msg = error.message;
+      if (msg.contains('only one card')) {
+        return 'This note has only one card — repositioning needs multiple cards '
+            '(e.g. Basic with reversed card).';
+      }
+      if (msg.contains('edge of note')) {
+        return 'This card is already at the top/bottom of its note.';
+      }
+      if (msg.contains('no linked note')) {
+        return 'This card is not linked to a note yet.';
+      }
+      return msg;
+    }
+    final text = error.toString();
+    if (text.contains('No linked note')) {
+      return 'This card is not linked to a note yet.';
+    }
+    if (text.contains('No note types')) {
+      return 'Note types could not be loaded. Check your connection and try again.';
+    }
+    return text.replaceFirst('Exception: ', '');
+  }
+
+  void _showMessage(String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<int?> _resolveNoteId() async {
+    return FlashcardService.instance.ensureCardNote(card.id);
+  }
+
+  Future<T?> _showDialogAfterMenu<T>(WidgetBuilder builder) {
+    final completer = Completer<T?>();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!context.mounted) {
+        completer.complete(null);
+        return;
+      }
+      completer.complete(await showDialog<T>(context: context, builder: builder));
+    });
+    return completer.future;
+  }
 
   List<PopupMenuEntry<String>> buildMenuItems({required bool canUndoTag}) {
     final suspended = card.reviewState?.suspended == true;
@@ -116,9 +170,7 @@ class CardRowActions {
       }
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      _showMessage(_friendlyError(e));
     }
   }
 
@@ -234,63 +286,64 @@ class CardRowActions {
   }
 
   Future<void> _changeNoteType() async {
-    if (card.noteId == null) throw Exception('No linked note');
     if (noteTypes.isEmpty) throw Exception('No note types available');
 
-    final note = await FlashcardService.instance.fetchNote(card.noteId!);
-    final current = note?.noteType;
+    final noteId = await _resolveNoteId();
+    if (noteId == null) throw Exception('Could not link card to a note');
+
+    final note = await FlashcardService.instance.fetchNote(noteId);
+    final current = note?.noteType ?? card.noteTypeId;
 
     if (!context.mounted) return;
 
-    final picked = await showDialog<String>(
-      context: context,
-      builder:
-          (ctx) => SimpleDialog(
-            title: const Text('Change note type'),
-            children:
-                noteTypes
-                    .map(
-                      (t) => SimpleDialogOption(
-                        onPressed: () => Navigator.pop(ctx, t.id),
-                        child: Row(
-                          children: [
-                            Expanded(child: Text(t.name)),
-                            if (t.id == current)
-                              const Icon(Icons.check, color: AppColors.primaryPurple, size: 18),
-                          ],
-                        ),
-                      ),
-                    )
-                    .toList(),
-          ),
+    final picked = await _showDialogAfterMenu<String>(
+      (ctx) => SimpleDialog(
+        title: const Text('Change note type'),
+        children:
+            noteTypes
+                .map(
+                  (t) => SimpleDialogOption(
+                    onPressed: () => Navigator.pop(ctx, t.id),
+                    child: Row(
+                      children: [
+                        Expanded(child: Text(t.name)),
+                        if (t.id == current)
+                          const Icon(Icons.check, color: AppColors.primaryPurple, size: 18),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+      ),
     );
     if (picked == null || picked == current) return;
+    if (!context.mounted) return;
 
-    final ok = await showDialog<bool>(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Change note type?'),
-            content: const Text(
-              'Cards will be regenerated from the new template. Review history is preserved where possible.',
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Change')),
-            ],
-          ),
+    final ok = await _showDialogAfterMenu<bool>(
+      (ctx) => AlertDialog(
+        title: const Text('Change note type?'),
+        content: const Text(
+          'Cards will be regenerated from the new template. Review history is preserved where possible.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Change')),
+        ],
+      ),
     );
     if (ok != true) return;
 
     await FlashcardService.instance.changeNoteType(
-      noteId: card.noteId!,
+      noteId: noteId,
       noteType: picked,
     );
+    _showMessage('Note type updated');
     onChanged();
   }
 
   Future<void> _changeDeck() async {
-    if (card.noteId == null) throw Exception('No linked note');
+    final noteId = await _resolveNoteId();
+    if (noteId == null) throw Exception('No linked note');
     if (decks.isEmpty) throw Exception('No decks available');
 
     if (!context.mounted) return;
@@ -312,16 +365,26 @@ class CardRowActions {
     );
     if (targetId == null || targetId == card.deckId) return;
 
-    await FlashcardService.instance.updateNote(noteId: card.noteId!, deckId: targetId);
+    await FlashcardService.instance.updateNote(noteId: noteId, deckId: targetId);
     onChanged();
   }
 
   Future<void> _reposition({required bool down}) async {
+    if (_isSingleCardNote && onBrowserReposition != null) {
+      final moved = await onBrowserReposition!(down: down);
+      if (!context.mounted) return;
+      if (moved) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          _showMessage(down ? 'Moved down in list' : 'Moved up in list');
+        });
+      }
+      return;
+    }
+
     await FlashcardService.instance.repositionCard(card.id, down: down);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(down ? 'Moved down in note' : 'Moved up in note')),
-      );
+      _showMessage(down ? 'Moved down in note' : 'Moved up in note');
     }
     onChanged();
   }
@@ -344,6 +407,9 @@ class CardRowActions {
 
     final due = DateTime(date.year, date.month, date.day, time.hour, time.minute);
     await FlashcardService.instance.setCardDue(card.id, due);
+    if (context.mounted) {
+      _showMessage('Due date set to ${formatDueDateTime(due)}');
+    }
     onChanged();
   }
 

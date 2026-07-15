@@ -10,6 +10,7 @@ import 'package:fluentdeck/ui_elements/primary_button.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/widgets/html_field_editor.dart';
+import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
 import 'package:fluentdeck/widgets/image_occlusion_editor.dart';
 import 'package:fluentdeck/widgets/note_preview_sheet.dart';
@@ -667,13 +668,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
               ),
             ),
             if (_syncLearningLanguage)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  'Synced to your learning language.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-              ),
+              const SyncedLearningLanguageHint(),
           ],
           const SizedBox(height: 12),
           _typeDropdown(),
@@ -738,7 +733,6 @@ class _CardEditScreenState extends State<CardEditScreen> {
               text: _saving ? 'SAVING…' : (widget.isEditing ? 'UPDATE NOTE' : 'SAVE NOTE'),
               enabled: !_saving,
               onPressed: _save,
-              color: AppColors.primaryYellow,
             ),
           ],
         ];

@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_settings_section.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_settings_section_screen.dart';
+import 'package:fluentdeck/screens/learn_screen/widgets/decks_settings_widgets.dart';
 import 'package:fluentdeck/services/deck_backup_service.dart';
 import 'package:fluentdeck/services/deck_notification_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
@@ -151,15 +151,11 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
   }
 
   Widget _sectionTile(DecksSettingsSection section) {
-    return Material(
-      color: Colors.transparent,
-      child: ListTile(
-        leading: Icon(section.icon, color: AppColors.primaryPurple),
-        title: Text(section.title),
-        subtitle: Text(section.subtitle),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _openSection(section),
-      ),
+    return decksSettingsNavTile(
+      icon: section.icon,
+      title: section.title,
+      subtitle: section.subtitle,
+      onTap: () => _openSection(section),
     );
   }
 

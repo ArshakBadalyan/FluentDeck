@@ -6,6 +6,7 @@ import '../data/flashcard_offline_store.dart';
 import '../utils/strapi_response.dart';
 import 'api_service.dart';
 import 'flashcard_sync_store.dart';
+import 'note_type_style_store.dart';
 import 'review_settings_store.dart';
 
 class ReviewSubmitResult {
@@ -293,8 +294,10 @@ class FlashcardService {
             .map((m) => NoteTypeModel.fromJson(Map<String, dynamic>.from(m)))
             .where((t) => t.available)
             .toList();
-    await FlashcardOfflineStore.instance.saveNoteTypes(types);
-    return types;
+    final styles = await NoteTypeStyleStore.instance.loadAll();
+    final merged = NoteTypeStyleStore.applyStyles(types, styles);
+    await FlashcardOfflineStore.instance.saveNoteTypes(merged);
+    return merged;
   }
 
   /// Online fetch with cached / built-in fallback (Phase 5E).
@@ -304,9 +307,17 @@ class FlashcardService {
     } catch (_) {
       final cached = await FlashcardOfflineStore.instance.loadNoteTypes();
       if (cached.isNotEmpty) {
-        return cached.where((t) => t.available).toList();
+        final styles = await NoteTypeStyleStore.instance.loadAll();
+        return NoteTypeStyleStore.applyStyles(
+          cached.where((t) => t.available).toList(),
+          styles,
+        );
       }
-      return builtinNoteTypes().where((t) => t.available).toList();
+      final styles = await NoteTypeStyleStore.instance.loadAll();
+      return NoteTypeStyleStore.applyStyles(
+        builtinNoteTypes().where((t) => t.available).toList(),
+        styles,
+      );
     }
   }
 
@@ -523,6 +534,15 @@ class FlashcardService {
       'direction': down ? 'down' : 'up',
     });
     return _parseCardResponse(data);
+  }
+
+  /// Links orphan cards to a note record (legacy imports).
+  Future<int?> ensureCardNote(int cardId) async {
+    final data = await ApiService.post('flashcards/cards/$cardId/ensure-note', {});
+    if (data is! Map) return null;
+    final err = _extractError(data);
+    if (err != null) throw Exception(err);
+    return data['noteId'] as int?;
   }
 
   Future<Map<String, dynamic>> exportCardJson(int cardId) async {

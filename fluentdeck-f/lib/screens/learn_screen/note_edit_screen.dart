@@ -6,6 +6,7 @@ import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
 
 class NoteEditScreen extends StatefulWidget {
   const NoteEditScreen({super.key, this.note});
@@ -176,12 +177,9 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                         },
               ),
               if (_syncLearningLanguage && !widget.isEditing)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    'Synced to your learning language in Settings.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
+                const SyncedLearningLanguageHint(
+                  includeSettingsSuffix: true,
+                  padding: EdgeInsets.only(top: 6),
                 ),
               const SizedBox(height: 16),
             ],
@@ -191,7 +189,6 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
               text: _saving ? 'SAVING…' : 'SAVE',
               enabled: !_saving,
               onPressed: _save,
-              color: AppColors.primaryYellow,
             ),
           ],
         ),
@@ -210,10 +207,18 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           maxLines: maxLines,
           decoration: InputDecoration(
             filled: true,
-            fillColor: const Color(0xFFF2F2F5),
+            fillColor: Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
             ),
           ),
         ),

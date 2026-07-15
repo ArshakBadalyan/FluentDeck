@@ -7,6 +7,7 @@ import '../../services/speaking_preferences_service.dart';
 import '../../services/subscription_service.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../ui_elements/modern_page_widgets.dart';
+import '../../widgets/synced_learning_language_hint.dart';
 
 /// Result of the save-word-meaning sheet: the phrase and meaning to save, or
 /// null if the user cancelled.
@@ -227,12 +228,8 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                     },
           ),
           if (_syncLearningLanguage)
-            Padding(
-              padding: const EdgeInsets.only(top: 4, bottom: 8),
-              child: Text(
-                'Synced to your learning language.',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
+            const SyncedLearningLanguageHint(
+              padding: EdgeInsets.only(top: 4, bottom: 8),
             ),
           const SizedBox(height: 8),
           Row(

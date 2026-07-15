@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const jwkToPem = require('jwk-to-pem');
 const { getService } = require('../../node_modules/@strapi/plugin-users-permissions/server/utils');
@@ -27,12 +28,6 @@ async function fetchAppleJwks() {
   return cachedKeys;
 }
 
-/**
- * Verifies an Apple identity token (JWT) from Sign in with Apple.
- *
- * @param {string} identityToken
- * @param {string|string[]} audiences - bundle id and/or Services ID
- */
 async function verifyAppleIdentityToken(identityToken, audiences) {
   if (!identityToken || typeof identityToken !== 'string') {
     throw new Error('Missing Apple identity token');
@@ -64,6 +59,22 @@ async function verifyAppleIdentityToken(identityToken, audiences) {
     issuer: APPLE_ISSUER,
     audience: audienceList.length === 1 ? audienceList[0] : audienceList,
   });
+}
+
+function hashAppleNonce(plainNonce) {
+  return crypto.createHash('sha256').update(String(plainNonce)).digest('hex');
+}
+
+/** Apple identity tokens include the SHA-256 hash of the raw nonce sent to the client SDK. */
+function verifyAppleNonce(tokenPayload, plainNonce) {
+  if (!plainNonce || typeof plainNonce !== 'string' || !plainNonce.trim()) {
+    return false;
+  }
+  const tokenNonce = tokenPayload?.nonce;
+  if (!tokenNonce || typeof tokenNonce !== 'string') {
+    return false;
+  }
+  return tokenNonce === hashAppleNonce(plainNonce.trim());
 }
 
 function resolveAppleAudiences() {
@@ -167,6 +178,8 @@ async function findOrCreateAppleUser({
 
 module.exports = {
   verifyAppleIdentityToken,
+  verifyAppleNonce,
+  hashAppleNonce,
   resolveAppleAudiences,
   findOrCreateAppleUser,
 };

@@ -407,16 +407,29 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: Text(widget.section.title),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: _sectionChildren(),
+      body: AppPageBackground(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          children: [
+            Text(
+              widget.section.subtitle,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppPageColors.subtitleOf(context),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ..._sectionChildren(),
+          ],
+        ),
       ),
     );
   }
@@ -492,31 +505,39 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
 
   List<Widget> _newStudyScreen() {
     return [
-      decksSettingsPickerTile(
-        title: 'New card position',
-        subtitle: const Text('Order of new cards vs reviews in a session'),
-        valueLabel: newCardPositionLabel(_settings.newCardPosition),
-        onTap: _pickNewCardPosition,
-      ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Learn ahead limit'),
-        subtitle: Slider(
-          value: _settings.learnAheadMinutes.toDouble(),
-          min: 0,
-          max: 60,
-          divisions: 12,
-          label: '${_settings.learnAheadMinutes} min',
-          onChanged: (v) => _save(_settings.copyWith(learnAheadMinutes: v.round())),
+      AppSettingsGroup(
+        title: 'New card order',
+        subtitle: 'Where new cards appear relative to reviews.',
+        child: decksSettingsPickerTile(
+          title: 'New card position',
+          subtitle: const Text('Order of new cards vs reviews in a session'),
+          valueLabel: newCardPositionLabel(_settings.newCardPosition),
+          onTap: _pickNewCardPosition,
         ),
       ),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Show remaining due counts'),
-        subtitle: const Text('Display new/learning/review counts during study'),
-        value: _settings.showDueCountInStudy,
-        activeThumbColor: AppColors.primaryPurple,
-        onChanged: (v) => _save(_settings.copyWith(showDueCountInStudy: v)),
+      AppSettingsGroup(
+        title: 'Session display',
+        subtitle: 'What you see while studying.',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppSliderRow(
+              title: 'Learn ahead limit',
+              value: _settings.learnAheadMinutes.toDouble(),
+              min: 0,
+              max: 60,
+              divisions: 12,
+              label: '${_settings.learnAheadMinutes} min',
+              onChanged: (v) => _save(_settings.copyWith(learnAheadMinutes: v.round())),
+            ),
+            AppToggleRow(
+              title: 'Show remaining due counts',
+              subtitle: 'Display new, learning, and review counts during study',
+              value: _settings.showDueCountInStudy,
+              onChanged: (v) => _save(_settings.copyWith(showDueCountInStudy: v)),
+            ),
+          ],
+        ),
       ),
       decksSettingsNote(
         'Learn ahead may show cards due slightly early when supported by the scheduler.',
@@ -812,84 +833,186 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
 
   List<Widget> _backups() {
     return [
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Automatic backup'),
-        subtitle: Text(
-          kIsWeb
-              ? 'On web, auto-backup stores JSON locally in browser'
-              : 'Saves JSON to device every ${_settings.autoBackupIntervalDays} days',
+      AppSettingsGroup(
+        title: 'Automatic backup',
+        subtitle:
+            kIsWeb
+                ? 'On web, auto-backup stores JSON in browser storage.'
+                : 'Save a JSON snapshot of your collection on a schedule.',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppToggleRow(
+              title: 'Automatic backup',
+              subtitle:
+                  _settings.autoBackupEnabled
+                      ? 'Every ${_settings.autoBackupIntervalDays} day${_settings.autoBackupIntervalDays == 1 ? '' : 's'}'
+                      : 'Off',
+              value: _settings.autoBackupEnabled,
+              onChanged: (v) => _save(_settings.copyWith(autoBackupEnabled: v)),
+            ),
+            if (_settings.autoBackupEnabled)
+              decksSettingsPickerTile(
+                title: 'Backup interval',
+                valueLabel: switch (_settings.autoBackupIntervalDays) {
+                  1 => 'Daily',
+                  3 => 'Every 3 days',
+                  7 => 'Weekly',
+                  14 => 'Every 2 weeks',
+                  30 => 'Monthly',
+                  _ => '${_settings.autoBackupIntervalDays} days',
+                },
+                onTap: () async {
+                  final picked = await showModalBottomSheet<int>(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    builder: (ctx) {
+                      return Material(
+                        color: AppPageColors.cardBgOf(ctx),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                        child: SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const AppSheetHandle(),
+                              const Padding(
+                                padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Backup interval',
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              for (final days in [1, 3, 7, 14, 30])
+                                ListTile(
+                                  title: Text(switch (days) {
+                                    1 => 'Daily',
+                                    3 => 'Every 3 days',
+                                    7 => 'Weekly',
+                                    14 => 'Every 2 weeks',
+                                    30 => 'Monthly',
+                                    _ => '$days days',
+                                  }),
+                                  trailing: decksSettingsCheckIcon(
+                                    _settings.autoBackupIntervalDays == days,
+                                  ),
+                                  onTap: () => Navigator.pop(ctx, days),
+                                ),
+                              const SizedBox(height: 8),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                  if (picked != null) {
+                    await _save(_settings.copyWith(autoBackupIntervalDays: picked));
+                  }
+                },
+              ),
+          ],
         ),
-        value: _settings.autoBackupEnabled,
-        activeThumbColor: AppColors.primaryPurple,
-        onChanged: (v) => _save(_settings.copyWith(autoBackupEnabled: v)),
       ),
-      if (_settings.autoBackupEnabled)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Backup interval'),
-          trailing: DropdownButton<int>(
-            value: _settings.autoBackupIntervalDays,
-            items: const [
-              DropdownMenuItem(value: 1, child: Text('Daily')),
-              DropdownMenuItem(value: 3, child: Text('Every 3 days')),
-              DropdownMenuItem(value: 7, child: Text('Weekly')),
-              DropdownMenuItem(value: 14, child: Text('Every 2 weeks')),
-              DropdownMenuItem(value: 30, child: Text('Monthly')),
+      AppSettingsGroup(
+        title: 'Status',
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.primaryPurple.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.14)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.schedule_rounded, color: AppColors.primaryPurple, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Last backup',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.lastBackupLabel,
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
             ],
-            onChanged:
-                (v) =>
-                    v == null ? null : _save(_settings.copyWith(autoBackupIntervalDays: v)),
           ),
         ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Last backup'),
-        subtitle: Text(widget.lastBackupLabel),
       ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Back up now'),
-        subtitle: const Text('Export full collection JSON'),
-        trailing: const Icon(Icons.backup_outlined),
-        onTap: widget.onBackupNow,
-      ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Restore from backup'),
-        subtitle: const Text('Import a JSON backup file'),
-        trailing: const Icon(Icons.restore_outlined),
-        onTap: _restoreBackup,
-      ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Export JSON'),
-        subtitle: const Text('Manual export to file or share'),
-        trailing: const Icon(Icons.download_outlined),
-        onTap: _exportJsonManual,
+      AppSettingsGroup(
+        title: 'Actions',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            decksSettingsActionTile(
+              icon: Icons.backup_outlined,
+              title: 'Back up now',
+              subtitle: 'Export full collection JSON',
+              onTap: widget.onBackupNow,
+            ),
+            decksSettingsActionTile(
+              icon: Icons.restore_outlined,
+              title: 'Restore from backup',
+              subtitle: 'Import a JSON backup file',
+              onTap: _restoreBackup,
+            ),
+            decksSettingsActionTile(
+              icon: Icons.download_outlined,
+              title: 'Export JSON',
+              subtitle: 'Manual export to file or share',
+              onTap: _exportJsonManual,
+            ),
+          ],
+        ),
       ),
     ];
   }
 
   List<Widget> _advanced() {
     return [
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Export review settings'),
-        trailing: const Icon(Icons.upload_outlined),
-        onTap: _exportSettings,
+      AppSettingsGroup(
+        title: 'Settings file',
+        subtitle: 'Export or import your review preferences as JSON.',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            decksSettingsActionTile(
+              icon: Icons.upload_outlined,
+              title: 'Export review settings',
+              subtitle: 'Share a JSON file of your preferences',
+              onTap: _exportSettings,
+            ),
+            decksSettingsActionTile(
+              icon: Icons.download_outlined,
+              title: 'Import review settings',
+              subtitle: 'Load preferences from a JSON file',
+              onTap: _importSettings,
+            ),
+          ],
+        ),
       ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Import review settings'),
-        trailing: const Icon(Icons.download_outlined),
-        onTap: _importSettings,
-      ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Reset review settings'),
-        trailing: const Icon(Icons.restart_alt),
-        onTap: _resetSettings,
+      AppSettingsGroup(
+        title: 'Reset',
+        subtitle: 'Restore all Decks review preferences to factory defaults.',
+        child: decksSettingsActionTile(
+          icon: Icons.restart_alt_rounded,
+          title: 'Reset review settings',
+          subtitle: 'Cannot be undone',
+          destructive: true,
+          onTap: _resetSettings,
+        ),
       ),
     ];
   }

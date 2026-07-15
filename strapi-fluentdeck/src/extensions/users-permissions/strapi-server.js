@@ -41,6 +41,7 @@ const plugins = require("../../../config/plugins");
 const {
   verifyAppleIdentityToken,
   resolveAppleAudiences,
+  verifyAppleNonce,
   findOrCreateAppleUser,
 } = require("../../utils/apple-sign-in");
 const {
@@ -279,11 +280,14 @@ module.exports = (plugin) => {
     ctx.send({ ok: true });
       },
       appleMobile: async (ctx) => {
-        const { identityToken, firstName, lastName, email } =
+        const { identityToken, firstName, lastName, nonce } =
           ctx.request.body ?? {};
 
         if (!identityToken) {
           return ctx.badRequest("Missing identityToken");
+        }
+        if (!nonce || typeof nonce !== "string" || !nonce.trim()) {
+          return ctx.badRequest("Missing nonce");
         }
 
         const audiences = resolveAppleAudiences();
@@ -299,6 +303,11 @@ module.exports = (plugin) => {
           );
         } catch (err) {
           strapi.log.warn(`[appleMobile] token verification failed: ${err.message}`);
+          throw new ApplicationError("Invalid Apple identity token");
+        }
+
+        if (!verifyAppleNonce(tokenPayload, nonce)) {
+          strapi.log.warn("[appleMobile] nonce mismatch");
           throw new ApplicationError("Invalid Apple identity token");
         }
 
@@ -431,8 +440,16 @@ module.exports = (plugin) => {
     return {
       ...originalUser,
       findOne: async (ctx) => {
-        await originalFindOne(ctx);
         const auth = ctx.state.user;
+        const requesterIsAdmin = await isAdmin(ctx);
+        if (
+          auth &&
+          !requesterIsAdmin &&
+          String(auth.id) !== String(ctx.params.id)
+        ) {
+          throw new ForbiddenError("You can only view your own profile.");
+        }
+        await originalFindOne(ctx);
         if (
           ctx.body &&
           auth &&

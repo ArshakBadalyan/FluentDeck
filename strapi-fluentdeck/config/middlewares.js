@@ -18,6 +18,7 @@ const parseCorsOrigins = (env) => {
 
 module.exports = ({ env }) => [
   "strapi::errors",
+  "global::auth-rate-limit",
   {
     name: 'strapi::cors',
     config: {

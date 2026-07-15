@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/data/decks_help_content.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
@@ -16,11 +18,14 @@ import 'package:fluentdeck/screens/learn_screen/widgets/card_browser_options_men
 import 'package:fluentdeck/screens/learn_screen/widgets/card_browser_bulk_actions.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/card_row_actions.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
+import 'package:fluentdeck/services/card_browser_order_store.dart';
 import 'package:fluentdeck/services/card_tag_undo_store.dart';
 import 'package:fluentdeck/services/decks_help_hints_store.dart';
 import 'package:fluentdeck/widgets/card_preview_sheet.dart';
+import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class CardBrowserScreen extends StatefulWidget {
@@ -46,6 +51,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   final _searchCtrl = TextEditingController();
   final _tagCtrl = TextEditingController();
+  Timer? _searchDebounce;
+  bool _suppressSearchDebounce = false;
 
   int? _deckFilter;
   String _stateFilter = 'all';
@@ -69,11 +76,193 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   static const _minColType = 56;
   static const _minColDue = 56;
   static const _minColDeck = 72;
+  static const _dragColumnWidth = 32.0;
+  static const _searchDebounceDuration = Duration(milliseconds: 500);
+
+  String get _orderScopeKey => CardBrowserOrderStore.scopeKey(
+    deckId: _deckFilter,
+    stateFilter: _stateFilter,
+    languageCode: _effectiveLanguageCode,
+    search: _searchCtrl.text,
+    tag: _tagCtrl.text,
+  );
+
+  double _tableContentWidth({
+    required bool narrow,
+    required double qWidth,
+    required double typeWidth,
+    required double dueWidth,
+    required double deckWidth,
+  }) {
+    if (narrow) return MediaQuery.sizeOf(context).width;
+    return _dragColumnWidth +
+        68 +
+        qWidth +
+        typeWidth +
+        dueWidth +
+        deckWidth +
+        40 +
+        48;
+  }
+
+  Widget _reorderProxyDecorator(
+    Widget child,
+    int index,
+    Animation<double> animation, {
+    double? fixedWidth,
+  }) {
+    Widget content = child;
+    if (fixedWidth != null) {
+      content = SizedBox(width: fixedWidth, child: child);
+    }
+
+    return Material(
+      elevation: 3,
+      color: Colors.white,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
+      child: content,
+    );
+  }
+
+  List<FlashcardModel> _finalizeLoadedCards(
+    List<FlashcardModel> cards,
+    List<int> storedOrder,
+  ) {
+    if (_sortField != null && _sortDir != null) {
+      return sortBrowserCards(cards, _sortField, _sortDir);
+    }
+    return CardBrowserOrderStore.applyOrder(cards, storedOrder);
+  }
+
+  Future<void> _persistCardOrder() async {
+    final ids = _cards.map((c) => c.id).toList();
+    await CardBrowserOrderStore.instance.save(_orderScopeKey, ids);
+  }
+
+  void _applyCardOrderMutation(int oldIndex, int targetIndex) {
+    setState(() {
+      final moved = _cards.removeAt(oldIndex);
+      _cards.insert(targetIndex, moved);
+      _sortField = null;
+      _sortDir = null;
+    });
+  }
+
+  /// ReorderableListView drag callback.
+  void _onReorder(int oldIndex, int newIndex) {
+    if (_selectMode || oldIndex == newIndex) return;
+    var target = newIndex;
+    if (target > oldIndex) target -= 1;
+    _scheduleCardOrderMutation(oldIndex, target);
+  }
+
+  void _scheduleCardOrderMutation(int oldIndex, int targetIndex) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      if (oldIndex < 0 ||
+          targetIndex < 0 ||
+          oldIndex >= _cards.length ||
+          targetIndex >= _cards.length ||
+          oldIndex == targetIndex) {
+        return;
+      }
+      _applyCardOrderMutation(oldIndex, targetIndex);
+      await _persistCardOrder();
+    });
+  }
+
+  /// Menu-driven move — deferred to avoid layout mutation during popup close.
+  Future<void> _moveCardInList(int fromIndex, int toIndex) {
+    final completer = Completer<void>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        completer.complete();
+        return;
+      }
+      if (fromIndex < 0 ||
+          toIndex < 0 ||
+          fromIndex >= _cards.length ||
+          toIndex >= _cards.length ||
+          fromIndex == toIndex) {
+        completer.complete();
+        return;
+      }
+      _applyCardOrderMutation(fromIndex, toIndex);
+      unawaited(_persistCardOrder().then((_) {
+        completer.complete();
+      }));
+    });
+    return completer.future;
+  }
+
+  void _showListEdgeSnack(String message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    });
+  }
+
+  Future<bool> _repositionInBrowserList(int cardId, {required bool down}) async {
+    final index = _cards.indexWhere((c) => c.id == cardId);
+    if (index < 0) return false;
+
+    if (down) {
+      if (index >= _cards.length - 1) {
+        _showListEdgeSnack('Already at the bottom of the list');
+        return false;
+      }
+      await _moveCardInList(index, index + 1);
+      return true;
+    }
+
+    if (index <= 0) {
+      _showListEdgeSnack('Already at the top of the list');
+      return false;
+    }
+    await _moveCardInList(index, index - 1);
+    return true;
+  }
+
+  Widget _dragHandle(int index) {
+    final icon = Icon(
+      Icons.drag_indicator_rounded,
+      size: 20,
+      color: _selectMode ? Colors.grey.shade300 : Colors.grey.shade500,
+    );
+
+    if (_selectMode) {
+      return SizedBox(
+        width: _dragColumnWidth,
+        child: Center(child: icon),
+      );
+    }
+
+    return SizedBox(
+      width: _dragColumnWidth,
+      child: ReorderableDragStartListener(
+        index: index,
+        child: Tooltip(
+          message: 'Drag to reorder',
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Center(child: icon),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
     _deckFilter = widget.deckId;
+    _searchCtrl.addListener(_onSearchTextChanged);
     _init();
     if (widget.embedInShell) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -90,9 +279,29 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchCtrl.removeListener(_onSearchTextChanged);
     _searchCtrl.dispose();
     _tagCtrl.dispose();
     super.dispose();
+  }
+
+  void _onSearchTextChanged() {
+    if (_suppressSearchDebounce) return;
+    _scheduleDebouncedSearch();
+  }
+
+  void _scheduleDebouncedSearch() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(_searchDebounceDuration, () {
+      if (!mounted) return;
+      _load(showFullLoading: false);
+    });
+  }
+
+  void _triggerSearchNow() {
+    _searchDebounce?.cancel();
+    _load(showFullLoading: false);
   }
 
   Future<void> _loadNoteTypes() async {
@@ -122,15 +331,15 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   InputDecoration _filledFieldDecoration() {
     return InputDecoration(
       filled: true,
-      fillColor: AppPageColors.fieldBg,
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.04)),
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -185,11 +394,15 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   List<MapEntry<String, String>> get _languageFilterOptions =>
       LearningLanguageUtils.filterOptions();
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  Future<void> _load({bool showFullLoading = true}) async {
+    if (showFullLoading) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    } else {
+      setState(() => _error = null);
+    }
     try {
       final cards = await FlashcardService.instance.browseCards(
         deckId: _deckFilter,
@@ -200,9 +413,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
         flag: _flagFilter,
         languageCode: _effectiveLanguageCode,
       );
+      final storedOrder = await CardBrowserOrderStore.instance.load(_orderScopeKey);
       if (!mounted) return;
       setState(() {
-        _cards = sortBrowserCards(cards, _sortField, _sortDir);
+        _cards = _finalizeLoadedCards(cards, storedOrder);
         _loading = false;
         _selected.removeWhere((id) => !_cards.any((c) => c.id == id));
       });
@@ -599,14 +813,17 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       _stateFilter = 'all';
       _markedFilter = null;
       _flagFilter = null;
+      _suppressSearchDebounce = true;
       _searchCtrl.clear();
       _tagCtrl.clear();
+      _suppressSearchDebounce = false;
       if (_syncLearningLanguage) {
         _languageFilter = _practiceLanguage;
       } else {
         _languageFilter = 'all';
       }
     });
+    _searchDebounce?.cancel();
     _load();
   }
 
@@ -753,7 +970,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
                 ),
               ),
-              onSubmitted: (_) => _load(),
+              onSubmitted: (_) => _triggerSearchNow(),
             ),
           ),
           IconButton(
@@ -858,20 +1075,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
               ),
             ),
-            onSubmitted: (_) => _load(),
+            onSubmitted: (_) => _triggerSearchNow(),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _tagCtrl,
-            decoration: InputDecoration(
+            decoration: _filledFieldDecoration().copyWith(
               hintText: 'Filter by tag…',
               prefixIcon: const Icon(Icons.label_outline),
-              filled: true,
-              fillColor: AppPageColors.fieldBg,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none,
-              ),
             ),
             onSubmitted: (_) => _load(),
           ),
@@ -996,33 +1207,15 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     var tag = _tagCtrl.text;
     var language = _languageFilter;
 
-    final applied = await showModalBottomSheet<bool>(
+    final applied = await showFrostedBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       isDismissible: true,
       enableDrag: true,
       useSafeArea: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
+      builder: (sheetCtx) {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
-            InputDecoration filledDecoration() => InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-              ),
-            );
-
             TextStyle fieldLabelStyle = TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -1040,6 +1233,23 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               );
             }
 
+            Widget flagChip({
+              required String label,
+              required int? value,
+              Color? color,
+            }) {
+              final selected = flag == value;
+              return FilterChip(
+                label: Text(label),
+                avatar: color == null ? null : Icon(Icons.flag_rounded, size: 16, color: color),
+                selected: selected,
+                showCheckmark: true,
+                selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+                checkmarkColor: AppColors.primaryPurple,
+                onSelected: (_) => setSheetState(() => flag = value),
+              );
+            }
+
             return DraggableScrollableSheet(
               expand: false,
               initialChildSize: 0.72,
@@ -1047,72 +1257,42 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               maxChildSize: 0.92,
               builder: (context, scrollController) {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10, bottom: 6),
-                      child: Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+                    const AppSheetHandle(),
+                    AppSheetHeader(
+                      title: 'Filters',
+                      subtitle:
+                          '${_visibleCards.length} card${_visibleCards.length == 1 ? '' : 's'}',
+                      icon: Icons.filter_list_rounded,
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            setSheetState(() {
+                              deck = null;
+                              state = 'all';
+                              marked = false;
+                              flag = null;
+                              tag = '';
+                              language =
+                                  _syncLearningLanguage ? _practiceLanguage : 'all';
+                            });
+                          },
+                          child: const Text('Clear all'),
                         ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            tooltip: 'Close',
-                            onPressed: () => Navigator.pop(ctx, false),
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Filters',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                                ),
-                                Text(
-                                  '${_visibleCards.length} card${_visibleCards.length == 1 ? '' : 's'}',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                                ),
-                              ],
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              setSheetState(() {
-                                deck = null;
-                                state = 'all';
-                                marked = false;
-                                flag = null;
-                                tag = '';
-                                language =
-                                    _syncLearningLanguage ? _practiceLanguage : 'all';
-                              });
-                            },
-                            child: const Text('Clear all'),
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
                     Expanded(
                       child: ListView(
                         controller: scrollController,
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                         children: [
                           labeledField(
                             'Deck',
                             DropdownButtonFormField<int?>(
                               value: _safeDeckDropdownValue(deck),
                               isExpanded: true,
-                              decoration: filledDecoration(),
+                              decoration: appSheetFieldDecoration(),
                               items: [
                                 const DropdownMenuItem<int?>(value: null, child: Text('All decks')),
                                 ..._decks.map(
@@ -1128,7 +1308,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                             DropdownButtonFormField<String>(
                               value: language,
                               isExpanded: true,
-                              decoration: filledDecoration(),
+                              decoration: appSheetFieldDecoration(),
                               items:
                                   _languageFilterOptions
                                       .map(
@@ -1148,34 +1328,18 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                             ),
                           ),
                           if (_syncLearningLanguage)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Synced to your learning language.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ),
+                            const SyncedLearningLanguageHint(),
                           const SizedBox(height: 16),
                           labeledField(
                             'Tag',
                             TextFormField(
                               initialValue: tag,
-                              decoration: filledDecoration(),
+                              decoration: appSheetFieldDecoration(hint: 'Filter by tag'),
                               onChanged: (v) => tag = v,
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            'Card state',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
+                          Text('Card state', style: fieldLabelStyle),
                           const SizedBox(height: 8),
                           Wrap(
                             spacing: 8,
@@ -1200,69 +1364,44 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                                   ),
                                 ).toList(),
                           ),
-                          const SizedBox(height: 8),
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('Marked only'),
+                          const SizedBox(height: 12),
+                          AppToggleRow(
+                            title: 'Marked only',
                             value: marked,
-                            activeThumbColor: AppColors.primaryPurple,
                             onChanged: (v) => setSheetState(() => marked = v),
                           ),
-                          const Divider(height: 1),
-                          Text(
-                            'Flag',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
-                            ),
+                          const SizedBox(height: 12),
+                          Text('Flag', style: fieldLabelStyle),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              flagChip(label: 'Any flag', value: null),
+                              flagChip(label: 'No flag', value: 0),
+                              for (final e in flagColors.entries)
+                                flagChip(label: 'Flag ${e.key}', value: e.key, color: e.value),
+                            ],
                           ),
-                          RadioListTile<int?>(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            value: null,
-                            groupValue: flag,
-                            title: const Text('Any flag'),
-                            activeColor: AppColors.primaryPurple,
-                            onChanged: (_) => setSheetState(() => flag = null),
-                          ),
-                          RadioListTile<int?>(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            value: 0,
-                            groupValue: flag,
-                            title: const Text('No flag'),
-                            activeColor: AppColors.primaryPurple,
-                            onChanged: (_) => setSheetState(() => flag = 0),
-                          ),
-                          for (final e in flagColors.entries)
-                            RadioListTile<int?>(
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                              value: e.key,
-                              groupValue: flag,
-                              title: Text('Flag ${e.key}'),
-                              secondary: Icon(Icons.flag, color: e.value),
-                              activeColor: AppColors.primaryPurple,
-                              onChanged: (_) => setSheetState(() => flag = e.key),
-                            ),
-                          if (_selectMode)
-                            ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: const Icon(Icons.select_all),
-                              title: const Text('Select all visible'),
+                          if (_selectMode) ...[
+                            const SizedBox(height: 12),
+                            AppSheetActionTile(
+                              icon: Icons.select_all_rounded,
+                              title: 'Select all visible',
+                              showChevron: false,
                               onTap: () {
                                 Navigator.pop(ctx, false);
                                 _selectAll();
                               },
                             ),
+                          ],
                         ],
                       ),
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                        color: AppPageColors.cardBgOf(ctx),
+                        border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(ctx))),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.04),
@@ -1280,6 +1419,13 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                       child: SizedBox(
                         width: double.infinity,
                         child: FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primaryPurple,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
                           onPressed: () => Navigator.pop(ctx, true),
                           child: const Text('Apply filters'),
                         ),
@@ -1430,71 +1576,194 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 560;
+    final maxWidth = MediaQuery.sizeOf(context).width;
+    final narrow = maxWidth < 560;
 
-        if (narrow) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _mobileTableHeader(),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _visibleCards.length,
-                  itemBuilder: (context, index) => _wrapSwipeRow(
-                    _visibleCards[index],
-                    _mobileDenseRow(_visibleCards[index]),
-                  ),
-                ),
+    if (narrow) {
+      const tableInset = 12.0;
+      final viewportWidth = MediaQuery.sizeOf(context).width;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(tableInset, 0, tableInset, 8),
+            child: _mobileTableHeader(),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: tableInset),
+              child: ReorderableListView.builder(
+                padding: const EdgeInsets.only(bottom: 12),
+                buildDefaultDragHandles: false,
+                itemCount: _visibleCards.length,
+                onReorder: _onReorder,
+                proxyDecorator: (child, index, animation) {
+                  return _reorderProxyDecorator(
+                    child,
+                    index,
+                    animation,
+                    fixedWidth: viewportWidth - (tableInset * 2),
+                  );
+                },
+                itemBuilder: (context, index) {
+                  final card = _visibleCards[index];
+                  return KeyedSubtree(
+                    key: ValueKey('browser-row-${card.id}'),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: _wrapSwipeRow(
+                        card,
+                        _mobileDenseRow(card, index),
+                      ),
+                    ),
+                  );
+                },
               ),
-            ],
-          );
-        }
-
-        final qWidth = _colQuestion;
-        final typeWidth = _colType;
-        final dueWidth = _colDue;
-        final deckWidth = _colDeck;
-        final tableWidth = 68 + qWidth + typeWidth + dueWidth + deckWidth + 40 + 48;
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: tableWidth.clamp(constraints.maxWidth, double.infinity),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _tableHeader(
-                  narrow: false,
-                  qWidth: qWidth,
-                  typeWidth: typeWidth,
-                  dueWidth: dueWidth,
-                  deckWidth: deckWidth,
-                  showResize: true,
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _visibleCards.length,
-                    itemBuilder:
-                        (context, index) => _wrapSwipeRow(
-                          _visibleCards[index],
-                          _tableRow(
-                            _visibleCards[index],
-                            narrow: false,
-                            qWidth: qWidth,
-                            typeWidth: typeWidth,
-                            dueWidth: dueWidth,
-                            deckWidth: deckWidth,
-                          ),
-                        ),
-                  ),
-                ),
-              ],
             ),
           ),
-        );
-      },
+        ],
+      );
+    }
+
+    final qWidth = _colQuestion;
+    final typeWidth = _colType;
+    final dueWidth = _colDue;
+    final deckWidth = _colDeck;
+    const tableInset = 12.0;
+    final contentWidth = _tableContentWidth(
+      narrow: false,
+      qWidth: qWidth,
+      typeWidth: typeWidth,
+      dueWidth: dueWidth,
+      deckWidth: deckWidth,
+    );
+    final availableWidth = maxWidth - (tableInset * 2);
+    final needsHorizontalScroll = contentWidth > availableWidth;
+
+    // #region agent log
+    http
+        .post(
+          Uri.parse('http://127.0.0.1:7337/ingest/ea2fc602-e0ad-43b0-b0a8-176383aba938'),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': 'fcee54',
+          },
+          body: jsonEncode({
+            'sessionId': 'fcee54',
+            'location': 'card_browser_screen.dart:_buildBody',
+            'message': 'wide_table_layout',
+            'data': {
+              'maxWidth': maxWidth,
+              'contentWidth': contentWidth,
+              'availableWidth': availableWidth,
+              'needsHorizontalScroll': needsHorizontalScroll,
+              'tableInset': tableInset,
+            },
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+            'hypothesisId': 'H1',
+            'runId': 'post-fix',
+          }),
+        )
+        .catchError((_) => http.Response('', 0));
+    // #endregion
+
+    Widget buildTableList({double? itemWidth}) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _tableHeader(
+              narrow: false,
+              qWidth: qWidth,
+              typeWidth: typeWidth,
+              dueWidth: dueWidth,
+              deckWidth: deckWidth,
+              showResize: true,
+            ),
+          ),
+          Expanded(
+            child: ReorderableListView.builder(
+              padding: const EdgeInsets.only(bottom: 12),
+              buildDefaultDragHandles: false,
+              itemCount: _visibleCards.length,
+              onReorder: _onReorder,
+              proxyDecorator: (child, index, animation) {
+                return _reorderProxyDecorator(
+                  child,
+                  index,
+                  animation,
+                  fixedWidth: itemWidth ?? availableWidth,
+                );
+              },
+              itemBuilder: (context, index) {
+                final card = _visibleCards[index];
+                final row = SizedBox(
+                  width: double.infinity,
+                  child: _wrapSwipeRow(
+                    card,
+                    _tableRow(
+                      card,
+                      index: index,
+                      narrow: false,
+                      qWidth: qWidth,
+                      typeWidth: typeWidth,
+                      dueWidth: dueWidth,
+                      deckWidth: deckWidth,
+                    ),
+                  ),
+                );
+                return KeyedSubtree(
+                  key: ValueKey('browser-row-${card.id}'),
+                  child: itemWidth != null ? SizedBox(width: itemWidth, child: row) : row,
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (!needsHorizontalScroll) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: tableInset),
+        child: buildTableList(),
+      );
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: tableInset),
+        child: SizedBox(
+          width: contentWidth,
+          child: buildTableList(itemWidth: contentWidth),
+        ),
+      ),
+    );
+  }
+
+  BoxDecoration _browserHeaderDecoration() {
+    return BoxDecoration(
+      color: AppColors.primaryPurple.withValues(alpha: 0.06),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.14)),
+    );
+  }
+
+  BoxDecoration _browserRowDecoration({required bool selected}) {
+    return BoxDecoration(
+      color:
+          selected
+              ? AppColors.primaryPurple.withValues(alpha: 0.08)
+              : AppPageColors.cardBgOf(context),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color:
+            selected
+                ? AppColors.primaryPurple.withValues(alpha: 0.22)
+                : AppPageColors.subtleBorderOf(context),
+      ),
     );
   }
 
@@ -1524,12 +1793,17 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-      ),
+      decoration: _browserHeaderDecoration(),
       child: Row(
         children: [
+          SizedBox(
+            width: _dragColumnWidth,
+            child: Icon(
+              Icons.drag_indicator_rounded,
+              size: 16,
+              color: Colors.grey.shade400,
+            ),
+          ),
           if (_selectMode)
             SizedBox(
               width: 28,
@@ -1553,35 +1827,40 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     );
   }
 
-  Widget _mobileDenseRow(FlashcardModel card) {
+  Widget _mobileDenseRow(FlashcardModel card, int index) {
     final selected = _selected.contains(card.id);
     final flagColor = flagColorFor(card.flag);
 
-    return Material(
-      color: selected ? AppColors.primaryPurple.withValues(alpha: 0.06) : null,
-      child: InkWell(
-        onTap: () {
-          if (_selectMode) {
-            _toggleSelected(card.id);
-          } else {
-            CardPreviewSheet.show(context, card);
-          }
-        },
-        onLongPress: () {
-          if (!_selectMode) {
-            setState(() {
-              _selectMode = true;
-              _selected.add(card.id);
-            });
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-          ),
-          child: Row(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            if (_selectMode) {
+              _toggleSelected(card.id);
+            } else {
+              CardPreviewSheet.show(context, card);
+            }
+          },
+          onLongPress: () {
+            if (!_selectMode) {
+              setState(() {
+                _selectMode = true;
+                _selected.add(card.id);
+              });
+            }
+          },
+          child: Ink(
+            decoration: _browserRowDecoration(selected: selected),
+            child: SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Row(
             children: [
+              _dragHandle(index),
               if (_selectMode)
                 SizedBox(
                   width: 28,
@@ -1620,13 +1899,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 ),
               ),
               SizedBox(
-                width: 40,
-                child: Text(
-                  formatDueLabel(card),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
-                ),
+                width: 56,
+                child: CardDueLabel(card: card, width: 56),
               ),
               SizedBox(
                 width: 56,
@@ -1644,12 +1918,18 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   decks: _decks,
                   noteTypes: _noteTypes,
                   onChanged: _load,
+                  onBrowserReposition:
+                      ({required bool down}) =>
+                          _repositionInBrowserList(card.id, down: down),
                 ),
               ),
             ],
+              ),
+            ),
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -1679,11 +1959,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     required bool showResize,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: narrow ? 8 : 10),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: narrow ? 8 : 10),
+      decoration: _browserHeaderDecoration(),
       child: Row(
         children: [
           if (_selectMode)
@@ -1699,6 +1976,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               ),
             ),
           SizedBox(width: narrow ? 24 : 28),
+          SizedBox(
+            width: _dragColumnWidth,
+            child: Icon(
+              Icons.drag_indicator_rounded,
+              size: narrow ? 16 : 18,
+              color: Colors.grey.shade400,
+            ),
+          ),
           _sortableHeader('Question', CardBrowserSortField.front, width: qWidth),
           if (showResize) _columnResizeHandle('question'),
           _sortableHeader('Type', CardBrowserSortField.type, width: typeWidth),
@@ -1715,6 +2000,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   Widget _tableRow(
     FlashcardModel card, {
+    required int index,
     required bool narrow,
     required double qWidth,
     required double typeWidth,
@@ -1724,31 +2010,36 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     final selected = _selected.contains(card.id);
     final flagColor = flagColorFor(card.flag);
 
-    return Material(
-      color: selected ? AppColors.primaryPurple.withValues(alpha: 0.06) : null,
-      child: InkWell(
-        onTap: () {
-          if (_selectMode) {
-            _toggleSelected(card.id);
-          } else {
-            CardPreviewSheet.show(context, card);
-          }
-        },
-        onLongPress: () {
-          if (!_selectMode) {
-            setState(() {
-              _selectMode = true;
-              _selected.add(card.id);
-            });
-          }
-        },
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: narrow ? 8 : 12, vertical: narrow ? 8 : 10),
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-          ),
-          child: Row(
-            children: [
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            if (_selectMode) {
+              _toggleSelected(card.id);
+            } else {
+              CardPreviewSheet.show(context, card);
+            }
+          },
+          onLongPress: () {
+            if (!_selectMode) {
+              setState(() {
+                _selectMode = true;
+                _selected.add(card.id);
+              });
+            }
+          },
+          child: Ink(
+            decoration: _browserRowDecoration(selected: selected),
+            child: SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: narrow ? 10 : 12, vertical: narrow ? 8 : 10),
+                child: Row(
+                  children: [
+              _dragHandle(index),
               if (_selectMode)
                 SizedBox(
                   width: narrow ? 32 : 40,
@@ -1787,10 +2078,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               if (!narrow) const SizedBox(width: 12),
               SizedBox(
                 width: dueWidth,
-                child: Text(
-                  formatDueLabel(card),
-                  style: TextStyle(fontSize: narrow ? 11 : 12, color: Colors.grey.shade700),
-                ),
+                child: CardDueLabel(card: card, width: dueWidth),
               ),
               if (!narrow) const SizedBox(width: 12),
               SizedBox(
@@ -1807,11 +2095,17 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 decks: _decks,
                 noteTypes: _noteTypes,
                 onChanged: _load,
+                onBrowserReposition:
+                    ({required bool down}) =>
+                        _repositionInBrowserList(card.id, down: down),
               ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -1822,12 +2116,14 @@ class _CardRowMenu extends StatefulWidget {
     required this.decks,
     required this.noteTypes,
     required this.onChanged,
+    required this.onBrowserReposition,
   });
 
   final FlashcardModel card;
   final List<FlashcardDeckModel> decks;
   final List<NoteTypeModel> noteTypes;
   final VoidCallback onChanged;
+  final Future<bool> Function({required bool down}) onBrowserReposition;
 
   @override
   State<_CardRowMenu> createState() => _CardRowMenuState();
@@ -1856,6 +2152,7 @@ class _CardRowMenuState extends State<_CardRowMenu> {
       decks: widget.decks,
       noteTypes: widget.noteTypes,
       onChanged: widget.onChanged,
+      onBrowserReposition: widget.onBrowserReposition,
     );
 
     return PopupMenuButton<String>(

@@ -15,7 +15,8 @@ const {
   endOfLocalDay,
 } = require('../../../utils/flashcard-helpers');
 const { getFeatureConfig, isPremiumUser } = require('../../../utils/app-feature-config');
-const { createNoteAndCards, deleteNoteAndCards, updateNoteAndCards, repairCardsDeckFromNotes } = require('../../../utils/flashcard-note-sync');
+const { createNoteAndCards, deleteNoteAndCards, updateNoteAndCards, repairCardsDeckFromNotes, ensureCardHasNote } = require('../../../utils/flashcard-note-sync');
+const { formatNote } = require('../../../utils/flashcard-note-types');
 const { recordFlashcardReviewStreak,
   getFlashcardReviewStreak,
 } = require('../../../utils/flashcard-streak');
@@ -725,10 +726,19 @@ module.exports = createCoreController(
 
       const now = new Date();
 
+      const noteSiblingCounts = {};
+      for (const card of cards) {
+        const nid = card.flashcardNote?.id ?? card.flashcard_note;
+        if (nid) noteSiblingCounts[nid] = (noteSiblingCounts[nid] ?? 0) + 1;
+      }
+
       const data = cards
         .map((card) => {
           const st = reviews.find((r) => (r.flashcard?.id ?? r.flashcard) === card.id);
-          return formatCard(card, st);
+          const nid = card.flashcardNote?.id ?? card.flashcard_note;
+          return formatCard(card, st, {
+            siblingCardCount: nid ? noteSiblingCounts[nid] ?? 1 : 1,
+          });
         })
         .filter((card) => cardMatchesFilter(card, card.reviewState, filter, now));
 
@@ -1234,6 +1244,56 @@ module.exports = createCoreController(
       try {
         const card = await applyRepositionCard(strapi, userId, cardId, direction);
         ctx.body = { ok: true, card };
+      } catch (err) {
+        const status = err.status ?? 400;
+        return ctx.throw(status, err.message);
+      }
+    },
+
+    async ensureCardNote(ctx) {
+      const userId = await getAuthenticatedUserId(ctx, strapi);
+      if (!userId) return ctx.unauthorized('Authentication required');
+
+      const cardId = parseInt(String(ctx.params.cardId), 10);
+      const card = await strapi.db.query('api::flashcard.flashcard').findOne({
+        where: { id: cardId, user: userId },
+        populate: ['deck', 'flashcardNote'],
+      });
+      if (!card) return ctx.notFound('Card not found');
+
+      try {
+        const noteId = await ensureCardHasNote(strapi, userId, card);
+        const note = await strapi.db.query('api::flashcard-note.flashcard-note').findOne({
+          where: { id: noteId, user: userId },
+          populate: ['deck'],
+        });
+        const siblings = await strapi.db.query('api::flashcard.flashcard').findMany({
+          where: { flashcardNote: noteId, user: userId },
+          orderBy: { templateOrdinal: 'asc' },
+        });
+        const siblingIds = siblings.map((c) => c.id);
+        const reviews =
+          siblingIds.length
+            ? await strapi.db.query('api::card-review-state.card-review-state').findMany({
+                where: { user: userId, flashcard: { $in: siblingIds } },
+              })
+            : [];
+        const formattedCards = siblings.map((c) => {
+          const st = reviews.find((r) => (r.flashcard?.id ?? r.flashcard) === c.id);
+          return formatCard(c, st, { siblingCardCount: siblings.length });
+        });
+        const review = await ensureReviewState(strapi, userId, cardId);
+        const formattedCard = formatCard(
+          siblings.find((c) => c.id === cardId) ?? card,
+          review,
+          { siblingCardCount: siblings.length },
+        );
+        ctx.body = {
+          ok: true,
+          noteId,
+          note: note ? formatNote(note, formattedCards) : null,
+          card: formattedCard,
+        };
       } catch (err) {
         const status = err.status ?? 400;
         return ctx.throw(status, err.message);

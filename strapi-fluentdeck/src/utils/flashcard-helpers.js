@@ -17,9 +17,13 @@ async function getAuthenticatedUserId(ctx, strapi) {
   return token?.id ?? null;
 }
 
-function formatCard(row, reviewRow) {
+function formatCard(row, reviewRow, extras = {}) {
   const deck = row.deck ?? row.deck_id;
   const note = row.flashcardNote ?? row.flashcard_note;
+  const noteId =
+    typeof note === 'object'
+      ? note?.id
+      : note ?? row.flashcard_note_id ?? row.noteId ?? null;
   return {
     id: row.id,
     front: row.front,
@@ -29,13 +33,11 @@ function formatCard(row, reviewRow) {
     clozeIndex: row.clozeIndex ?? row.cloze_index ?? null,
     templateName: row.templateName ?? row.template_name ?? 'Card 1',
     templateOrdinal: row.templateOrdinal ?? row.template_ordinal ?? 0,
-    noteId:
-      typeof note === 'object'
-        ? note?.id
-        : note ?? row.flashcard_note_id ?? row.noteId ?? null,
+    noteId,
     noteTypeId:
       typeof note === 'object' ? note?.noteType ?? note?.note_type ?? null : null,
     noteMarked: typeof note === 'object' ? note?.marked === true : false,
+    siblingCardCount: extras.siblingCardCount ?? null,
     tags: row.tags ?? [],
     mediaUrl: row.mediaUrl ?? row.media_url ?? null,
     flag: row.flag ?? 0,

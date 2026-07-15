@@ -90,6 +90,7 @@ class FlashcardModel {
   final int? clozeIndex;
   final String templateName;
   final int templateOrdinal;
+  final int? siblingCardCount;
   final List<String> tags;
   final String? mediaUrl;
   final int flag;
@@ -111,6 +112,7 @@ class FlashcardModel {
     this.clozeIndex,
     this.templateName = 'Card 1',
     this.templateOrdinal = 0,
+    this.siblingCardCount,
     this.tags = const [],
     this.mediaUrl,
     this.flag = 0,
@@ -142,6 +144,7 @@ class FlashcardModel {
       clozeIndex: json['clozeIndex'] as int?,
       templateName: json['templateName'] as String? ?? 'Card 1',
       templateOrdinal: json['templateOrdinal'] as int? ?? 0,
+      siblingCardCount: json['siblingCardCount'] as int?,
       tags:
           rawTags is List
               ? rawTags.map((e) => e.toString()).toList()
@@ -177,6 +180,7 @@ class FlashcardModel {
     if (clozeIndex != null) 'clozeIndex': clozeIndex,
     'templateName': templateName,
     'templateOrdinal': templateOrdinal,
+    if (siblingCardCount != null) 'siblingCardCount': siblingCardCount,
     'tags': tags,
     'mediaUrl': mediaUrl,
     'flag': flag,

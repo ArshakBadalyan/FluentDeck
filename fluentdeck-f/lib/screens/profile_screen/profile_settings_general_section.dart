@@ -60,89 +60,79 @@ class _ProfileSettingsGeneralSectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          context.tr('profile.account.language'),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey.shade700,
+        AppSettingsGroup(
+          title: 'App language',
+          child: DropdownButtonFormField<String>(
+            initialValue: _selectedLanguage,
+            decoration: appDropdownDecoration(context.tr('profile.account.language')),
+            items: [
+              DropdownMenuItem(
+                value: 'en',
+                child: Text(context.tr('profile.account.language-en')),
+              ),
+              DropdownMenuItem(
+                value: 'de',
+                child: Text(context.tr('profile.account.language-de')),
+              ),
+            ],
+            onChanged: _changeLanguage,
           ),
         ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          initialValue: _selectedLanguage,
-          decoration: appDropdownDecoration(context.tr('profile.account.language')),
-          items: [
-            DropdownMenuItem(
-              value: 'en',
-              child: Text(context.tr('profile.account.language-en')),
-            ),
-            DropdownMenuItem(
-              value: 'de',
-              child: Text(context.tr('profile.account.language-de')),
-            ),
-          ],
-          onChanged: _changeLanguage,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Appearance',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey.shade700,
+        AppSettingsGroup(
+          title: 'Appearance',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ListenableBuilder(
+                listenable: ThemeSettingsStore.instance,
+                builder: (context, _) => AppNavRow(
+                  title:
+                      'App theme  ·  ${ThemeSettingsStore.instance.label(ThemeSettingsStore.instance.themeMode)}',
+                  icon: Icons.palette_outlined,
+                  onTap: () => _showThemeModeSheet(context),
+                ),
+              ),
+              AppToggleRow(
+                title: 'Dark mode (Decks)',
+                subtitle: 'Dark theme in the Decks section only',
+                value: _settings.darkMode,
+                onChanged: (v) => _save(_settings.copyWith(darkMode: v)),
+              ),
+              AppToggleRow(
+                title: 'Keep screen on',
+                subtitle: 'Prevent sleep during review sessions',
+                value: _settings.keepScreenOn,
+                onChanged: (v) => _save(_settings.copyWith(keepScreenOn: v)),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        ListenableBuilder(
-          listenable: ThemeSettingsStore.instance,
-          builder: (context, _) => AppNavRow(
-            title:
-                'App theme  ·  ${ThemeSettingsStore.instance.label(ThemeSettingsStore.instance.themeMode)}',
-            icon: Icons.palette_outlined,
-            onTap: () => _showThemeModeSheet(context),
+        AppSettingsGroup(
+          title: 'Accessibility',
+          subtitle: 'Adjust text and button sizes during review.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppSliderRow(
+                title: 'Card text size',
+                value: _settings.cardTextScale,
+                min: 0.8,
+                max: 1.6,
+                divisions: 8,
+                label: '${(_settings.cardTextScale * 100).round()}%',
+                onChanged: (v) => _save(_settings.copyWith(cardTextScale: v)),
+              ),
+              AppSliderRow(
+                title: 'Review button size',
+                value: _settings.reviewButtonScale,
+                min: 0.8,
+                max: 1.5,
+                divisions: 7,
+                label: '${(_settings.reviewButtonScale * 100).round()}%',
+                onChanged: (v) => _save(_settings.copyWith(reviewButtonScale: v)),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 4),
-        AppToggleRow(
-          title: 'Dark mode (Decks)',
-          subtitle: 'Use dark theme in the Decks section, regardless of app theme',
-          value: _settings.darkMode,
-          onChanged: (v) => _save(_settings.copyWith(darkMode: v)),
-        ),
-        AppToggleRow(
-          title: 'Keep screen on',
-          subtitle: 'Prevent sleep during review sessions',
-          value: _settings.keepScreenOn,
-          onChanged: (v) => _save(_settings.copyWith(keepScreenOn: v)),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Accessibility',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey.shade700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        AppSliderRow(
-          title: 'Card text size',
-          value: _settings.cardTextScale,
-          min: 0.8,
-          max: 1.6,
-          divisions: 8,
-          label: '${(_settings.cardTextScale * 100).round()}%',
-          onChanged: (v) => _save(_settings.copyWith(cardTextScale: v)),
-        ),
-        AppSliderRow(
-          title: 'Review button size',
-          value: _settings.reviewButtonScale,
-          min: 0.8,
-          max: 1.5,
-          divisions: 7,
-          label: '${(_settings.reviewButtonScale * 100).round()}%',
-          onChanged: (v) => _save(_settings.copyWith(reviewButtonScale: v)),
         ),
       ],
     );

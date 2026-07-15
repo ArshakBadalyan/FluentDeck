@@ -198,6 +198,58 @@ async function deleteNoteAndCards(strapi, userId, noteId) {
   return { ok: true };
 }
 
+async function ensureCardHasNote(strapi, userId, card) {
+  const existingId = card.flashcardNote?.id ?? card.flashcard_note ?? card.flashcardNote;
+  if (existingId) {
+    const note = await strapi.db.query('api::flashcard-note.flashcard-note').findOne({
+      where: { id: existingId, user: userId },
+    });
+    if (note) return existingId;
+
+    // Stale link: card points at a deleted/missing note — clear and recreate.
+    await strapi.db.query('api::flashcard.flashcard').update({
+      where: { id: card.id },
+      data: { flashcardNote: null },
+    });
+  }
+
+  const deckId = card.deck?.id ?? card.deck;
+  if (!deckId) {
+    throw Object.assign(new Error('Card has no deck'), { status: 400 });
+  }
+
+  const noteType = card.cardType === 'cloze' ? 'cloze' : 'basic';
+  const fields =
+    noteType === 'cloze'
+      ? { Text: card.clozeText || card.front, Back: card.back }
+      : { Front: card.front, Back: card.back };
+
+  const note = await strapi.db.query('api::flashcard-note.flashcard-note').create({
+    data: {
+      noteType,
+      fields,
+      tags: card.tags ?? [],
+      marked: false,
+      createReverse: false,
+      mediaUrl: card.mediaUrl ?? card.media_url ?? null,
+      deck: deckId,
+      user: userId,
+      languageCode: card.languageCode ?? card.language_code ?? 'en',
+    },
+  });
+
+  await strapi.db.query('api::flashcard.flashcard').update({
+    where: { id: card.id },
+    data: {
+      flashcardNote: note.id,
+      templateName: card.templateName ?? card.template_name ?? 'Card 1',
+      templateOrdinal: card.templateOrdinal ?? card.template_ordinal ?? 0,
+    },
+  });
+
+  return note.id;
+}
+
 async function migrateLegacyCardsToNotes(strapi) {
   let cards;
   try {
@@ -279,6 +331,7 @@ module.exports = {
   updateNoteAndCards,
   deleteNoteAndCards,
   syncCardsForNote,
+  ensureCardHasNote,
   migrateLegacyCardsToNotes,
   repairCardsDeckFromNotes,
 };

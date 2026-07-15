@@ -30,12 +30,14 @@ class AppleAuthService {
     }
 
     try {
+      final rawNonce = _generateNonce();
+      final hashedNonce = _sha256ofString(rawNonce);
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
-        nonce: _sha256ofString(_generateNonce()),
+        nonce: hashedNonce,
       );
 
       final identityToken = credential.identityToken;
@@ -48,6 +50,7 @@ class AppleAuthService {
 
       final dynamic data = await ApiService.post('auth/apple/mobile', {
         'identityToken': identityToken,
+        'nonce': rawNonce,
         if (credential.email != null && credential.email!.isNotEmpty)
           'email': credential.email,
         if (credential.givenName != null && credential.givenName!.isNotEmpty)

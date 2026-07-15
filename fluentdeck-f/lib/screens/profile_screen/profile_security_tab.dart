@@ -141,7 +141,6 @@ class _ProfileSecurityTabState extends State<ProfileSecurityTab> {
                       : context.tr('buttons.save').toUpperCase(),
               enabled: _isFormValid && !_saving,
               onPressed: _changePassword,
-              color: AppColors.primaryYellow,
             ),
           ],
         ),

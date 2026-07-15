@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/card_browser_utils.dart';
 
 /// Browser state shown in menu labels (checkmarks / subtitles).
@@ -23,95 +25,55 @@ class CardBrowserOptionsState {
 
 /// Card browser overflow menu.
 class CardBrowserOptionsMenu {
+  static Widget _checkTrailing(bool active) {
+    if (!active) return const SizedBox.shrink();
+    return const Icon(Icons.check_rounded, color: AppColors.primaryPurple, size: 22);
+  }
+
   static Future<T?> _showSheet<T>(
     BuildContext context, {
-    required Widget Function(BuildContext sheetContext) builder,
+    required String title,
+    String? subtitle,
+    IconData icon = Icons.tune_rounded,
+    required List<Widget> children,
+    double initialSize = 0.62,
+    double minSize = 0.38,
+    double maxSize = 0.82,
   }) {
-    return showModalBottomSheet<T>(
+    return showFrostedBottomSheet<T>(
       context: context,
       isScrollControlled: true,
       isDismissible: true,
       enableDrag: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.45),
-      builder: builder,
-    );
-  }
-
-  static Widget _sheetShell({
-    required BuildContext sheetContext,
-    required String title,
-    String? trailing,
-    required List<Widget> children,
-  }) {
-    final maxHeight = MediaQuery.sizeOf(sheetContext).height * 0.75;
-
-    return Material(
-      color: Colors.white,
-      elevation: 16,
-      clipBehavior: Clip.antiAlias,
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                    ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: initialSize,
+          minChildSize: minSize,
+          maxChildSize: maxSize,
+          builder: (context, scrollController) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AppSheetHandle(),
+                AppSheetHeader(
+                  title: title,
+                  subtitle: subtitle,
+                  icon: icon,
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    children: children,
                   ),
-                  if (trailing != null)
-                    Text(
-                      trailing,
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                    ),
-                ],
-              ),
-            ),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                padding: const EdgeInsets.only(bottom: 8),
-                children: children,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static Widget _menuTile({
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    Widget? trailing,
-    bool enabled = true,
-    Color? iconColor,
-    VoidCallback? onTap,
-  }) {
-    return Material(
-      color: Colors.white,
-      child: ListTile(
-        enabled: enabled,
-        leading: Icon(icon, color: iconColor),
-        title: Text(title),
-        subtitle: subtitle == null ? null : Text(subtitle),
-        trailing: trailing,
-        onTap: onTap,
-      ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -130,87 +92,82 @@ class CardBrowserOptionsMenu {
     required VoidCallback onClearFilters,
     required VoidCallback onRefresh,
   }) async {
+    final cardLabel = '${state.visibleCount} card${state.visibleCount == 1 ? '' : 's'}';
     final action = await _showSheet<String>(
       context,
-      builder:
-          (sheetContext) => _sheetShell(
-            sheetContext: sheetContext,
-            title: 'Options',
-            trailing: '${state.visibleCount} card${state.visibleCount == 1 ? '' : 's'}',
-            children: [
-              _menuTile(
-                icon: Icons.sort,
-                title: 'Change display order',
-                subtitle: state.sortLabel,
-                onTap: () => Navigator.pop(sheetContext, 'sort'),
-              ),
-              _menuTile(
-                icon: Icons.bookmark_outline,
-                title: 'Filter marked',
-                trailing:
-                    state.markedFilter
-                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
-                        : null,
-                onTap: () => Navigator.pop(sheetContext, 'filter_marked'),
-              ),
-              _menuTile(
-                icon: Icons.pause_circle_outline,
-                title: 'Filter suspended',
-                trailing:
-                    state.suspendedFilter
-                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
-                        : null,
-                onTap: () => Navigator.pop(sheetContext, 'filter_suspended'),
-              ),
-              _menuTile(
-                icon: Icons.label_outline,
-                title: 'Filter by tag',
-                onTap: () => Navigator.pop(sheetContext, 'filter_tag'),
-              ),
-              _menuTile(
-                icon: Icons.flag_outlined,
-                title: 'Filter by flag',
-                iconColor: state.flagFilter != null ? AppColors.primaryPurple : null,
-                subtitle:
-                    state.flagFilter == null
-                        ? null
-                        : state.flagFilter == 0
-                        ? 'No flag'
-                        : 'Flag ${state.flagFilter}',
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.pop(sheetContext, 'filter_flag'),
-              ),
-              _menuTile(
-                icon: Icons.visibility_outlined,
-                title: 'Preview',
-                subtitle: 'Preview first card in list',
-                onTap: () => Navigator.pop(sheetContext, 'preview'),
-              ),
-              _menuTile(
-                icon: state.selectMode ? Icons.close : Icons.checklist,
-                title: state.selectMode ? 'Exit select mode' : 'Select cards',
-                onTap: () => Navigator.pop(sheetContext, 'toggle_select'),
-              ),
-              _menuTile(
-                icon: Icons.select_all,
-                title: 'Select all',
-                enabled: state.visibleCount > 0,
-                onTap: () => Navigator.pop(sheetContext, 'select_all'),
-              ),
-              _menuTile(
-                icon: Icons.filter_list,
-                title: 'Create filtered deck',
-                subtitle: 'Save current search as a study deck',
-                onTap: () => Navigator.pop(sheetContext, 'filtered_deck'),
-              ),
-              _menuTile(
-                icon: Icons.tune,
-                title: 'Browser options',
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.pop(sheetContext, 'browser_options'),
-              ),
-            ],
-          ),
+      title: 'Options',
+      subtitle: cardLabel,
+      icon: Icons.tune_rounded,
+      initialSize: 0.68,
+      maxSize: 0.88,
+      children: [
+        AppSheetActionTile(
+          icon: Icons.sort_rounded,
+          title: 'Change display order',
+          subtitle: state.sortLabel,
+          onTap: () => Navigator.pop(context, 'sort'),
+        ),
+        AppSheetActionTile(
+          icon: Icons.bookmark_outline_rounded,
+          title: 'Filter marked',
+          trailing: _checkTrailing(state.markedFilter),
+          showChevron: false,
+          onTap: () => Navigator.pop(context, 'filter_marked'),
+        ),
+        AppSheetActionTile(
+          icon: Icons.pause_circle_outline_rounded,
+          title: 'Filter suspended',
+          trailing: _checkTrailing(state.suspendedFilter),
+          showChevron: false,
+          onTap: () => Navigator.pop(context, 'filter_suspended'),
+        ),
+        AppSheetActionTile(
+          icon: Icons.label_outline_rounded,
+          title: 'Filter by tag',
+          onTap: () => Navigator.pop(context, 'filter_tag'),
+        ),
+        AppSheetActionTile(
+          icon: Icons.flag_outlined,
+          title: 'Filter by flag',
+          iconColor: state.flagFilter != null ? AppColors.primaryPurple : null,
+          subtitle:
+              state.flagFilter == null
+                  ? null
+                  : state.flagFilter == 0
+                  ? 'No flag'
+                  : 'Flag ${state.flagFilter}',
+          onTap: () => Navigator.pop(context, 'filter_flag'),
+        ),
+        AppSheetActionTile(
+          icon: Icons.visibility_outlined,
+          title: 'Preview',
+          subtitle: 'Preview first card in list',
+          onTap: () => Navigator.pop(context, 'preview'),
+        ),
+        AppSheetActionTile(
+          icon: state.selectMode ? Icons.close_rounded : Icons.checklist_rounded,
+          title: state.selectMode ? 'Exit select mode' : 'Select cards',
+          onTap: () => Navigator.pop(context, 'toggle_select'),
+        ),
+        AppSheetActionTile(
+          icon: Icons.select_all_rounded,
+          title: 'Select all',
+          enabled: state.visibleCount > 0,
+          showChevron: false,
+          onTap: () => Navigator.pop(context, 'select_all'),
+        ),
+        AppSheetActionTile(
+          icon: Icons.filter_list_rounded,
+          title: 'Create filtered deck',
+          subtitle: 'Save current search as a study deck',
+          onTap: () => Navigator.pop(context, 'filtered_deck'),
+        ),
+        AppSheetActionTile(
+          icon: Icons.settings_outlined,
+          title: 'Browser options',
+          onTap: () => Navigator.pop(context, 'browser_options'),
+        ),
+      ],
     );
 
     if (!context.mounted || action == null) return;
@@ -254,37 +211,34 @@ class CardBrowserOptionsMenu {
   }) async {
     final value = await _showSheet<int?>(
       context,
-      builder:
-          (sheetContext) => _sheetShell(
-            sheetContext: sheetContext,
-            title: 'Filter by flag',
-            children: [
-              _menuTile(
-                icon: Icons.flag_outlined,
-                title: 'Any flag',
-                trailing:
-                    current == null ? const Icon(Icons.check, color: AppColors.primaryPurple) : null,
-                onTap: () => Navigator.pop(sheetContext, -1),
-              ),
-              _menuTile(
-                icon: Icons.outlined_flag,
-                title: 'No flag',
-                trailing: current == 0 ? const Icon(Icons.check, color: AppColors.primaryPurple) : null,
-                onTap: () => Navigator.pop(sheetContext, 0),
-              ),
-              for (final e in flagColors.entries)
-                _menuTile(
-                  icon: Icons.flag,
-                  iconColor: e.value,
-                  title: 'Flag ${e.key}',
-                  trailing:
-                      current == e.key
-                          ? const Icon(Icons.check, color: AppColors.primaryPurple)
-                          : null,
-                  onTap: () => Navigator.pop(sheetContext, e.key),
-                ),
-            ],
+      title: 'Filter by flag',
+      icon: Icons.flag_outlined,
+      initialSize: 0.52,
+      children: [
+        AppSheetActionTile(
+          icon: Icons.flag_outlined,
+          title: 'Any flag',
+          trailing: _checkTrailing(current == null),
+          showChevron: false,
+          onTap: () => Navigator.pop(context, -1),
+        ),
+        AppSheetActionTile(
+          icon: Icons.outlined_flag,
+          title: 'No flag',
+          trailing: _checkTrailing(current == 0),
+          showChevron: false,
+          onTap: () => Navigator.pop(context, 0),
+        ),
+        for (final e in flagColors.entries)
+          AppSheetActionTile(
+            icon: Icons.flag_rounded,
+            iconColor: e.value,
+            title: 'Flag ${e.key}',
+            trailing: _checkTrailing(current == e.key),
+            showChevron: false,
+            onTap: () => Navigator.pop(context, e.key),
           ),
+      ],
     );
 
     if (!context.mounted) return;
@@ -299,23 +253,23 @@ class CardBrowserOptionsMenu {
   }) async {
     final action = await _showSheet<String>(
       context,
-      builder:
-          (sheetContext) => _sheetShell(
-            sheetContext: sheetContext,
-            title: 'Browser options',
-            children: [
-              _menuTile(
-                icon: Icons.filter_alt_off_outlined,
-                title: 'Clear all filters',
-                onTap: () => Navigator.pop(sheetContext, 'clear'),
-              ),
-              _menuTile(
-                icon: Icons.refresh,
-                title: 'Refresh',
-                onTap: () => Navigator.pop(sheetContext, 'refresh'),
-              ),
-            ],
-          ),
+      title: 'Browser options',
+      icon: Icons.settings_outlined,
+      initialSize: 0.42,
+      children: [
+        AppSheetActionTile(
+          icon: Icons.filter_alt_off_outlined,
+          title: 'Clear all filters',
+          subtitle: 'Reset search and filter chips',
+          onTap: () => Navigator.pop(context, 'clear'),
+        ),
+        AppSheetActionTile(
+          icon: Icons.refresh_rounded,
+          title: 'Refresh',
+          subtitle: 'Reload cards from the server',
+          onTap: () => Navigator.pop(context, 'refresh'),
+        ),
+      ],
     );
 
     if (!context.mounted || action == null) return;
@@ -337,83 +291,77 @@ class CardBrowserOptionsMenu {
   }) async {
     return _showSheet<({CardBrowserSortField? field, CardBrowserSortDir? dir})>(
       context,
-      builder:
-          (sheetContext) => _sheetShell(
-            sheetContext: sheetContext,
-            title: 'Change display order',
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: Text(
-                  'Sort field',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              ),
-              for (final field in CardBrowserSortField.values)
-                _menuTile(
-                  icon: Icons.sort_by_alpha,
-                  title: fieldLabel(field),
-                  trailing:
-                      currentField == field && currentDir != null
-                          ? const Icon(Icons.check, color: AppColors.primaryPurple)
-                          : null,
-                  onTap: () {
-                    Navigator.pop(
-                      sheetContext,
-                      (field: field, dir: currentDir ?? CardBrowserSortDir.asc),
-                    );
-                  },
-                ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Text(
-                  'Direction',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              ),
-              _menuTile(
-                icon: Icons.restart_alt,
-                title: 'Default (no sort)',
-                trailing:
-                    currentField == null || currentDir == null
-                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
-                        : null,
-                onTap: () => Navigator.pop(sheetContext, (field: null, dir: null)),
-              ),
-              _menuTile(
-                icon: Icons.arrow_upward,
-                title: 'Ascending',
-                trailing:
-                    currentDir == CardBrowserSortDir.asc
-                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
-                        : null,
-                onTap: () => Navigator.pop(
-                  sheetContext,
-                  (field: currentField ?? CardBrowserSortField.front, dir: CardBrowserSortDir.asc),
-                ),
-              ),
-              _menuTile(
-                icon: Icons.arrow_downward,
-                title: 'Descending',
-                trailing:
-                    currentDir == CardBrowserSortDir.desc
-                        ? const Icon(Icons.check, color: AppColors.primaryPurple)
-                        : null,
-                onTap: () => Navigator.pop(
-                  sheetContext,
-                  (field: currentField ?? CardBrowserSortField.front, dir: CardBrowserSortDir.desc),
-                ),
-              ),
-            ],
+      title: 'Change display order',
+      subtitle: 'Pick a column and sort direction',
+      icon: Icons.sort_rounded,
+      initialSize: 0.62,
+      maxSize: 0.88,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8, top: 4),
+          child: Text(
+            'Sort field',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
           ),
+        ),
+        for (final field in CardBrowserSortField.values)
+          AppSheetActionTile(
+            icon: Icons.sort_by_alpha_rounded,
+            title: fieldLabel(field),
+            trailing: _checkTrailing(currentField == field && currentDir != null),
+            showChevron: false,
+            onTap: () {
+              Navigator.pop(
+                context,
+                (field: field, dir: currentDir ?? CardBrowserSortDir.asc),
+              );
+            },
+          ),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8, top: 12),
+          child: Text(
+            'Direction',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ),
+        AppSheetActionTile(
+          icon: Icons.restart_alt_rounded,
+          title: 'Default (no sort)',
+          trailing: _checkTrailing(currentField == null || currentDir == null),
+          showChevron: false,
+          onTap: () => Navigator.pop(context, (field: null, dir: null)),
+        ),
+        AppSheetActionTile(
+          icon: Icons.arrow_upward_rounded,
+          title: 'Ascending',
+          trailing: _checkTrailing(currentDir == CardBrowserSortDir.asc),
+          showChevron: false,
+          onTap:
+              () => Navigator.pop(
+                context,
+                (field: currentField ?? CardBrowserSortField.front, dir: CardBrowserSortDir.asc),
+              ),
+        ),
+        AppSheetActionTile(
+          icon: Icons.arrow_downward_rounded,
+          title: 'Descending',
+          trailing: _checkTrailing(currentDir == CardBrowserSortDir.desc),
+          showChevron: false,
+          onTap:
+              () => Navigator.pop(
+                context,
+                (field: currentField ?? CardBrowserSortField.front, dir: CardBrowserSortDir.desc),
+              ),
+        ),
+      ],
     );
   }
 }

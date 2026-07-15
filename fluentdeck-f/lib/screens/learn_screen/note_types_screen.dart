@@ -181,7 +181,7 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (ctx, i) => _NoteTypeCard(
         type: _types[i],
-        onTap: _types[i].isCustom ? () => _openEditor(existing: _types[i]) : null,
+        onTap: () => _openEditor(existing: _types[i]),
         onDelete: _types[i].isCustom ? () => _deleteType(_types[i]) : null,
       ),
     );
@@ -264,8 +264,24 @@ class _NoteTypeCard extends StatelessWidget {
                       tooltip: 'Delete',
                       onPressed: onDelete,
                     ),
-                  ] else
-                    Icon(Icons.lock_outline_rounded, size: 16, color: Colors.grey.shade400),
+                  ] else ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Style',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryPurple,
+                        ),
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, size: 20, color: Colors.grey.shade500),
+                  ],
                 ],
               ),
               if (type.cardTemplateNames.isNotEmpty || type.fields.isNotEmpty) ...[

@@ -222,7 +222,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
         try {
           final noteTypes = await FlashcardService.instance.fetchNoteTypesWithCache();
           _themeByNoteTypeId = {
-            for (final t in noteTypes.where((t) => t.isCustom))
+            for (final t in noteTypes)
               t.id: CardStylePreset.byId(t.themeId),
           };
         } catch (_) {

@@ -23,34 +23,38 @@ class DeckCountButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final counts = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DeckCountButton(
+            count: newCount,
+            kind: DeckCountKind.newCards,
+            size: size,
+          ),
+          SizedBox(width: size == DeckCountButtonSize.compact ? 6 : 10),
+          DeckCountButton(
+            count: learningCount,
+            kind: DeckCountKind.learning,
+            size: size,
+          ),
+          SizedBox(width: size == DeckCountButtonSize.compact ? 6 : 10),
+          DeckCountButton(
+            count: reviewCount,
+            kind: DeckCountKind.review,
+            size: size,
+          ),
+        ],
+      ),
+    );
+
+    if (onTap == null) return counts;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DeckCountButton(
-              count: newCount,
-              kind: DeckCountKind.newCards,
-              size: size,
-            ),
-            SizedBox(width: size == DeckCountButtonSize.compact ? 6 : 10),
-            DeckCountButton(
-              count: learningCount,
-              kind: DeckCountKind.learning,
-              size: size,
-            ),
-            SizedBox(width: size == DeckCountButtonSize.compact ? 6 : 10),
-            DeckCountButton(
-              count: reviewCount,
-              kind: DeckCountKind.review,
-              size: size,
-            ),
-          ],
-        ),
-      ),
+      child: counts,
     );
   }
 }

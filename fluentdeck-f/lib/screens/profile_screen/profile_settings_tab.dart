@@ -1,16 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
-import 'package:fluentdeck/services/note_service.dart';
+import 'package:fluentdeck/services/main_navigation_coordinator.dart';
+import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
-import 'profile_settings_general_section.dart';
-import 'profile_settings_speaking_tab.dart';
+import 'profile_settings_category_screen.dart';
 
 /// Scroll Profile → Settings to a section (`ai-speaking`, `decks`, `general`).
 class ProfileSettingsNavigation {
   ProfileSettingsNavigation._();
 
-  static void Function(String sectionId)? scrollToSection;
+  static void Function(String sectionId)? openCategory;
+  static String? pendingSectionId;
+
+  static const aiSpeakingSectionId = 'ai-speaking';
+
+  /// Profile → Settings → AI Speaking (Sync deck language toggle).
+  static void openAiSpeakingSection({BuildContext? context}) {
+    if (context != null) {
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) navigator.pop();
+    }
+    pendingSectionId = aiSpeakingSectionId;
+    MainNavigationCoordinator.goToTab(
+      MainTabId.profile,
+      subIndex: kProfileSettingsTabIndex,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => flushPendingOpen());
+  }
+
+  static void flushPendingOpen() {
+    final id = pendingSectionId;
+    if (id == null) return;
+    openCategory?.call(id);
+    pendingSectionId = null;
+  }
+
+  static ProfileSettingsCategory categoryFor(String sectionId) {
+    return switch (sectionId) {
+      'decks' => ProfileSettingsCategory.decks,
+      'general' => ProfileSettingsCategory.general,
+      _ => ProfileSettingsCategory.aiSpeaking,
+    };
+  }
 }
 
 class ProfileSettingsTab extends StatefulWidget {
@@ -21,153 +52,75 @@ class ProfileSettingsTab extends StatefulWidget {
 }
 
 class ProfileSettingsTabState extends State<ProfileSettingsTab> {
-  final _scrollController = ScrollController();
-  final _aiSpeakingKey = GlobalKey();
-  final _decksKey = GlobalKey();
-  final _generalKey = GlobalKey();
-
-  bool _studyLoading = true;
-  bool _studySaving = false;
-  bool _autoCreateFlashcards = true;
-
   @override
   void initState() {
     super.initState();
-    ProfileSettingsNavigation.scrollToSection = _scrollToSection;
-    _loadStudySettings();
+    ProfileSettingsNavigation.openCategory = _openCategory;
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => ProfileSettingsNavigation.flushPendingOpen(),
+    );
   }
 
   @override
   void dispose() {
-    if (ProfileSettingsNavigation.scrollToSection == _scrollToSection) {
-      ProfileSettingsNavigation.scrollToSection = null;
+    if (ProfileSettingsNavigation.openCategory == _openCategory) {
+      ProfileSettingsNavigation.openCategory = null;
     }
-    _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadStudySettings() async {
-    setState(() => _studyLoading = true);
-    try {
-      final settings = await NoteService.instance.fetchStudySettings();
-      if (!mounted) return;
-      setState(() {
-        _autoCreateFlashcards = settings.autoCreateFlashcards;
-        _studyLoading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _studyLoading = false);
-    }
+  void _openCategory(String sectionId) {
+    if (!mounted) return;
+    final category = ProfileSettingsNavigation.categoryFor(sectionId);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProfileSettingsCategoryScreen(category: category),
+      ),
+    );
   }
 
-  void _scrollToSection(String sectionId) {
-    if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final key = switch (sectionId) {
-        'decks' => _decksKey,
-        'general' => _generalKey,
-        _ => _aiSpeakingKey,
-      };
-      final context = key.currentContext;
-      if (context == null) return;
-      Scrollable.ensureVisible(
-        context,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-        alignment: 0.05,
-      );
-    });
-  }
-
-  Future<void> _toggleAutoCreate(bool value) async {
-    setState(() {
-      _autoCreateFlashcards = value;
-      _studySaving = true;
-    });
-
-    final ok = await NoteService.instance.updateAutoCreateFlashcards(value);
-    if (!mounted) return;
-
-    setState(() => _studySaving = false);
-
-    if (!ok) {
-      setState(() => _autoCreateFlashcards = !value);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not update setting')),
-      );
-    }
+  void _open(ProfileSettingsCategory category) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProfileSettingsCategoryScreen(category: category),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return AppPageBackground(
-      child: SingleChildScrollView(
-        controller: _scrollController,
+      child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            KeyedSubtree(
-              key: _aiSpeakingKey,
-              child: const AppSectionCard(
-                title: 'AI Speaking',
-                icon: Icons.record_voice_over_outlined,
-                subtitle: 'Tutor language, translations, and conversation flow.',
-                child: ProfileSettingsSpeakingSection(),
-              ),
+        children: [
+          Text(
+            'Choose a category to manage your preferences.',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppPageColors.subtitleOf(context),
+              height: 1.4,
             ),
-            const SizedBox(height: 16),
-            KeyedSubtree(
-              key: _decksKey,
-              child: AppSectionCard(
-                title: 'Decks & flashcards',
-                icon: Icons.style_outlined,
-                subtitle: 'Deck review, sync, and flashcard behavior.',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_studyLoading)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: LinearProgressIndicator(minHeight: 2),
-                      )
-                    else
-                      AppToggleRow(
-                        title: 'Auto-create flashcards',
-                        subtitle:
-                            'When you save a word or correction, add a card to Saved words or From speaking.',
-                        value: _autoCreateFlashcards,
-                        enabled: !_studySaving,
-                        onChanged: _toggleAutoCreate,
-                      ),
-                    if (_studySaving)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 8),
-                        child: LinearProgressIndicator(minHeight: 2),
-                      ),
-                    const SizedBox(height: 8),
-                    const DecksSettingsScreen(
-                      embedInShell: true,
-                      inlineInScroll: true,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            KeyedSubtree(
-              key: _generalKey,
-              child: const AppSectionCard(
-                title: 'General',
-                icon: Icons.tune_rounded,
-                subtitle: 'Language, appearance, and accessibility for the app.',
-                child: ProfileSettingsGeneralSection(),
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          AppSettingsCategoryTile(
+            icon: Icons.record_voice_over_outlined,
+            title: 'AI Speaking',
+            subtitle: 'Learning language, tutor voice, chat, and daily goals',
+            onTap: () => _open(ProfileSettingsCategory.aiSpeaking),
+          ),
+          AppSettingsCategoryTile(
+            icon: Icons.style_outlined,
+            title: 'Decks & flashcards',
+            subtitle: 'Study screen, review, sync, backups, and gestures',
+            onTap: () => _open(ProfileSettingsCategory.decks),
+          ),
+          AppSettingsCategoryTile(
+            icon: Icons.tune_rounded,
+            title: 'General',
+            subtitle: 'App language, theme, and accessibility',
+            onTap: () => _open(ProfileSettingsCategory.general),
+          ),
+        ],
       ),
     );
   }

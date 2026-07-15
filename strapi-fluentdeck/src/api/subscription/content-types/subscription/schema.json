@@ -27,10 +27,12 @@
       "required": true
     },
     "originalTransactionId": {
-      "type": "string"
+      "type": "string",
+      "unique": true
     },
     "purchaseToken": {
-      "type": "text"
+      "type": "text",
+      "unique": true
     },
     "subscriptionStatus": {
       "type": "enumeration",

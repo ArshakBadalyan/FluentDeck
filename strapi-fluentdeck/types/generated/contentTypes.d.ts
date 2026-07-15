@@ -1311,12 +1311,12 @@ export interface ApiSubscriptionSubscription
       'api::subscription.subscription'
     > &
       Schema.Attribute.Private;
-    originalTransactionId: Schema.Attribute.String;
+    originalTransactionId: Schema.Attribute.String & Schema.Attribute.Unique;
     platform: Schema.Attribute.Enumeration<['ios', 'android']> &
       Schema.Attribute.Required;
     productId: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
-    purchaseToken: Schema.Attribute.Text;
+    purchaseToken: Schema.Attribute.Text & Schema.Attribute.Unique;
     subscriptionStatus: Schema.Attribute.Enumeration<
       ['active', 'expired', 'cancelled', 'grace_period', 'billing_retry']
     > &
@@ -1899,6 +1899,7 @@ export interface PluginUsersPermissionsUser
   };
   attributes: {
     ai_session_opens_count: Schema.Attribute.Integer &
+      Schema.Attribute.Private &
       Schema.Attribute.SetMinMax<
         {
           min: 0;
@@ -1906,8 +1907,9 @@ export interface PluginUsersPermissionsUser
         number
       > &
       Schema.Attribute.DefaultTo<0>;
-    ai_session_opens_date: Schema.Attribute.String;
+    ai_session_opens_date: Schema.Attribute.String & Schema.Attribute.Private;
     ai_turns_count: Schema.Attribute.Integer &
+      Schema.Attribute.Private &
       Schema.Attribute.SetMinMax<
         {
           min: 0;
@@ -1915,8 +1917,8 @@ export interface PluginUsersPermissionsUser
         number
       > &
       Schema.Attribute.DefaultTo<0>;
-    ai_turns_date: Schema.Attribute.String;
-    app_opened_datetime: Schema.Attribute.DateTime;
+    ai_turns_date: Schema.Attribute.String & Schema.Attribute.Private;
+    app_opened_datetime: Schema.Attribute.DateTime & Schema.Attribute.Private;
     auto_conversation: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     auto_create_flashcards: Schema.Attribute.Boolean &
@@ -1962,7 +1964,8 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.Private;
     daily_reminder_enabled: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
-    daily_reminder_last_sent_date: Schema.Attribute.String;
+    daily_reminder_last_sent_date: Schema.Attribute.String &
+      Schema.Attribute.Private;
     daily_reminder_time: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'09:00'>;
     email: Schema.Attribute.Email &
@@ -2020,6 +2023,7 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.DefaultTo<false>;
     sound: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     speaking_auto_notes_count: Schema.Attribute.Integer &
+      Schema.Attribute.Private &
       Schema.Attribute.SetMinMax<
         {
           min: 0;
@@ -2052,7 +2056,9 @@ export interface PluginUsersPermissionsUser
       ]
     > &
       Schema.Attribute.DefaultTo<'none'>;
-    tutor_memory: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
+    tutor_memory: Schema.Attribute.JSON &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<[]>;
     tutor_voice: Schema.Attribute.Enumeration<
       ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
     > &
@@ -2066,7 +2072,7 @@ export interface PluginUsersPermissionsUser
       'oneToOne',
       'api::user-progress.user-progress'
     >;
-    user_timezone: Schema.Attribute.String;
+    user_timezone: Schema.Attribute.String & Schema.Attribute.Private;
     username: Schema.Attribute.String &
       Schema.Attribute.Unique &
       Schema.Attribute.SetMinMaxLength<{

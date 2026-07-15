@@ -211,6 +211,11 @@ module.exports = {
       handler: 'flashcard-deck.repositionCard',
     },
     {
+      method: 'POST',
+      path: '/flashcards/cards/:cardId/ensure-note',
+      handler: 'flashcard-deck.ensureCardNote',
+    },
+    {
       method: 'GET',
       path: '/flashcards/cards/:cardId/export',
       handler: 'flashcard-deck.exportCardJson',

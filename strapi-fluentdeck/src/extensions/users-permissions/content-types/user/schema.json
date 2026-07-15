@@ -77,10 +77,12 @@
       "mappedBy": "users_permissions_user"
     },
     "user_timezone": {
-      "type": "string"
+      "type": "string",
+      "private": true
     },
     "app_opened_datetime": {
-      "type": "datetime"
+      "type": "datetime",
+      "private": true
     },
     "push_subscribed": {
       "type": "boolean",
@@ -169,27 +171,33 @@
     "speaking_auto_notes_count": {
       "type": "integer",
       "default": 0,
-      "min": 0
+      "min": 0,
+      "private": true
     },
     "tutor_memory": {
       "type": "json",
-      "default": []
+      "default": [],
+      "private": true
     },
     "ai_turns_date": {
-      "type": "string"
+      "type": "string",
+      "private": true
     },
     "ai_turns_count": {
       "type": "integer",
       "default": 0,
-      "min": 0
+      "min": 0,
+      "private": true
     },
     "ai_session_opens_date": {
-      "type": "string"
+      "type": "string",
+      "private": true
     },
     "ai_session_opens_count": {
       "type": "integer",
       "default": 0,
-      "min": 0
+      "min": 0,
+      "private": true
     },
     "correct_sentences_today_date": {
       "type": "string"
@@ -222,7 +230,8 @@
       "default": "09:00"
     },
     "daily_reminder_last_sent_date": {
-      "type": "string"
+      "type": "string",
+      "private": true
     },
     "tutor_voice": {
       "type": "enumeration",
