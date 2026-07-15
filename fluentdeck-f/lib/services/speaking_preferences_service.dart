@@ -41,9 +41,9 @@ class SpeakingPreferencesService {
     if (data is Map && data['error'] == null) {
       _cached = preferences.copyWith(
         translationLanguage:
-            preferences.showTranslations
-                ? preferences.translationLanguage
-                : 'none',
+            preferences.translationLanguage == 'none'
+                ? 'none'
+                : preferences.translationLanguage,
       );
       return (ok: true, errorMessage: null);
     }

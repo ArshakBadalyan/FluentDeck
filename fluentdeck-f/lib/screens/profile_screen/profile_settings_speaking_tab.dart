@@ -225,6 +225,43 @@ class _ProfileSettingsSpeakingSectionState
         ),
         const SizedBox(height: 16),
         Text(
+          'Translation helper',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Language for tutor message translations. Tap the translate icon on any message in chat.',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.35),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          initialValue: _speakingPrefs.translationLanguage,
+          decoration: appDropdownDecoration('Translation language'),
+          items:
+              SpeakingPreferences.translationLanguageOptions.entries
+                  .map(
+                    (entry) => DropdownMenuItem(
+                      value: entry.key,
+                      child: Text(entry.value),
+                    ),
+                  )
+                  .toList(),
+          onChanged:
+              _saving
+                  ? null
+                  : (value) {
+                    if (value == null) return;
+                    _saveSpeakingPreferences(
+                      _speakingPrefs.copyWith(translationLanguage: value),
+                    );
+                  },
+        ),
+        const SizedBox(height: 16),
+        Text(
           'Chat',
           style: TextStyle(
             fontSize: 14,
@@ -328,17 +365,6 @@ class _ProfileSettingsSpeakingSectionState
             );
           },
         ),
-        AppToggleRow(
-          title: 'Show translations',
-          subtitle: 'Display a helper translation under each tutor message.',
-          value: _speakingPrefs.showTranslations,
-          enabled: !_saving,
-          onChanged: (value) {
-            _saveSpeakingPreferences(
-              _speakingPrefs.copyWith(showTranslations: value),
-            );
-          },
-        ),
         const SizedBox(height: 8),
         AppSliderRow(
           title: 'Correct sentence goal',
@@ -361,35 +387,6 @@ class _ProfileSettingsSpeakingSectionState
           today: _speakingPrefs.correctSentencesToday,
           goal: _speakingPrefs.correctSentenceGoal,
         ),
-        if (_speakingPrefs.showTranslations) ...[
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            initialValue:
-                _speakingPrefs.translationLanguage == 'none'
-                    ? 'en'
-                    : _speakingPrefs.translationLanguage,
-            decoration: appDropdownDecoration('Translation language'),
-            items:
-                SpeakingPreferences.translationLanguageOptions.entries
-                    .where((entry) => entry.key != 'none')
-                    .map(
-                      (entry) => DropdownMenuItem(
-                        value: entry.key,
-                        child: Text(entry.value),
-                      ),
-                    )
-                    .toList(),
-            onChanged:
-                _saving
-                    ? null
-                    : (value) {
-                      if (value == null) return;
-                      _saveSpeakingPreferences(
-                        _speakingPrefs.copyWith(translationLanguage: value),
-                      );
-                    },
-          ),
-        ],
         if (_saving)
           const Padding(
             padding: EdgeInsets.only(top: 8),

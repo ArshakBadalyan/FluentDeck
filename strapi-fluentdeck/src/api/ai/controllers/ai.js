@@ -6,6 +6,7 @@ const {
   transcribeAudio,
   looksLikeWhisperHallucination,
   getTutorReply,
+  translateMessage,
   synthesizeSpeech,
   evaluateSession: evaluateSpeakingSession,
   loadUserTutorContext,
@@ -249,13 +250,17 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         memoryFacts = memoryResult.facts;
       }
 
-      const speakingStats = await recordSpeakingTurnStats(strapi, userId, {
-        userText: trimmedMessage,
-        corrections: result.corrections,
-      });
+      const speakingStats = openingSession
+        ? null
+        : await recordSpeakingTurnStats(strapi, userId, {
+            userText: trimmedMessage,
+            corrections: result.corrections,
+          });
 
-      // Only real tutor turns (including session openings) consume the free daily limit.
-      const usageAfter = await recordConversationTurn(strapi, userId);
+      // Session opening (first AI greeting) is free — count starts after the user engages.
+      const usageAfter = openingSession
+        ? usageBefore
+        : await recordConversationTurn(strapi, userId);
 
       ctx.body = {
         ...result,
@@ -302,6 +307,32 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     } catch (error) {
       strapi.log.error("[ai.evaluateSession]", error);
       return ctx.internalServerError("Session evaluation failed");
+    }
+  },
+
+  async translateMessage(ctx) {
+    const userId = await getAuthenticatedUserId(ctx, strapi);
+    if (!userId) {
+      return ctx.unauthorized("Authentication required");
+    }
+
+    const { text, targetLanguage } = ctx.request.body ?? {};
+    if (!text || !String(text).trim()) {
+      return ctx.badRequest("text is required");
+    }
+    if (!targetLanguage || !String(targetLanguage).trim()) {
+      return ctx.badRequest("targetLanguage is required");
+    }
+
+    try {
+      const translation = await translateMessage({
+        text: String(text).trim(),
+        targetLanguage: String(targetLanguage).trim(),
+      });
+      ctx.body = { translation };
+    } catch (error) {
+      strapi.log.error("[ai.translateMessage]", error);
+      return ctx.internalServerError("Translation request failed");
     }
   },
 

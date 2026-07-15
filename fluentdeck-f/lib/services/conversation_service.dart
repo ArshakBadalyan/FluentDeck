@@ -387,9 +387,7 @@ class ConversationService {
     if (!sessionContext.isFreeChat) return;
 
     _chatActive = true;
-    await refreshSpeakingSettings();
-    _seedStaticOpening(context: sessionContext);
-    _notify();
+    await _bootstrapSessionOpening();
   }
 
   Future<void> _bootstrapSessionOpening({
@@ -399,8 +397,9 @@ class ConversationService {
     await refreshSpeakingSettings();
     if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
 
-    final shouldGenerate =
-        trainingSession.isActive || !sessionContext.isFreeChat;
+    // Generate via tutor API unless the caller supplied a curated opener string.
+    // Free chat used to seed hardcoded English — now respects practice/response language.
+    final shouldGenerate = openingMessageOverride?.trim().isNotEmpty != true;
 
     if (!shouldGenerate) {
       _seedStaticOpening(
@@ -482,9 +481,17 @@ class ConversationService {
       throw Exception('Unexpected tutor response');
     }
 
+    if (data['usage'] is Map) {
+      ConversationLimitService.instance.applyServerUsage(
+        Map<String, dynamic>.from(data['usage'] as Map),
+      );
+    }
+
+    final translation = _sanitizeTranslation(_optionalString(data['translation']));
+
     return (
       reply: _sanitizeTutorReply(data['reply']?.toString() ?? ''),
-      translation: _sanitizeTranslation(_optionalString(data['translation'])),
+      translation: translation,
       trainingSession: ConversationTrainingSession.fromJson(
         data['trainingSession'] is Map
             ? Map<String, dynamic>.from(data['trainingSession'] as Map)
@@ -1091,9 +1098,11 @@ class ConversationService {
                 'Free auto-save limit reached (10 notes). Upgrade for unlimited deck notes.')
             : null;
 
+    final translation = _sanitizeTranslation(_optionalString(data['translation']));
+
     return (
       reply: _sanitizeTutorReply(data['reply']?.toString() ?? ''),
-      translation: _sanitizeTranslation(_optionalString(data['translation'])),
+      translation: translation,
       corrections: data['corrections'] is List ? data['corrections'] as List : [],
       trainingSession: ConversationTrainingSession.fromJson(
         data['trainingSession'] is Map
@@ -1128,6 +1137,37 @@ class ConversationService {
       return null;
     }
     return translation;
+  }
+
+  Future<String?> fetchMessageTranslation(String text) async {
+    await refreshSpeakingSettings();
+    final lang = SpeakingPreferencesService.instance.current.translationLanguage;
+    if (lang == 'none' || text.trim().isEmpty) return null;
+
+    final data = await ApiService.post('ai/translate-message', {
+      'text': text.trim(),
+      'targetLanguage': lang,
+    });
+    if (data is Map && data['error'] != null) return null;
+    if (data is! Map) return null;
+
+    final translation = _sanitizeTranslation(_optionalString(data['translation']));
+
+    return translation;
+  }
+
+  void setTurnTranslation(int index, String translation) {
+    if (index < 0 || index >= turns.length) return;
+    final turn = turns[index];
+    turns[index] = ConversationTurnModel(
+      speaker: turn.speaker,
+      text: turn.text,
+      audioUrl: turn.audioUrl,
+      translation: translation,
+      corrections: turn.corrections,
+      timestamp: turn.timestamp,
+    );
+    _notify();
   }
 
   Future<void> _playTutorReply(

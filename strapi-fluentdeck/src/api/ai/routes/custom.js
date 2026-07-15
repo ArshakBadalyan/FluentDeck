@@ -40,5 +40,10 @@ module.exports = {
       path: "/ai/word-meaning",
       handler: "ai.wordMeaning",
     },
+    {
+      method: "POST",
+      path: "/ai/translate-message",
+      handler: "ai.translateMessage",
+    },
   ],
 };

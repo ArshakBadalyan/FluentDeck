@@ -123,6 +123,7 @@ module.exports = {
       "api::ai.ai.tts",
       "api::ai.ai.evaluateSession",
       "api::ai.ai.wordMeaning",
+      "api::ai.ai.translateMessage",
       "api::subscription.subscription.status",
       "api::subscription.subscription.verifyApple",
       "api::subscription.subscription.verifyGoogle",

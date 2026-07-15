@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/models/conversation_turn_model.dart';
 import 'package:fluentdeck/models/grammar_correction.dart';
 import 'package:fluentdeck/models/speaking_session_context.dart';
@@ -33,13 +34,39 @@ class _ConversationScreenState extends State<ConversationScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   ConversationUsageStatus? _usage;
+  String _translationLanguage = 'none';
+
+  bool get _hasTranslationHelper =>
+      _translationLanguage != 'none' &&
+      SpeakingPreferences.translationLanguageOptions.containsKey(
+        _translationLanguage,
+      );
+
+  String get _translationHelperLabel =>
+      SpeakingPreferences.translationLanguageOptions[_translationLanguage] ??
+      _translationLanguage;
 
   @override
   void initState() {
     super.initState();
     _service.onStateChanged = _onServiceUpdate;
+    unawaited(_loadSpeakingPrefs());
     unawaited(_service.refreshSpeakingSettings());
     _loadUsage();
+  }
+
+  Future<void> _loadSpeakingPrefs() async {
+    final prefs = await SpeakingPreferencesService.instance.load();
+    if (!mounted) return;
+    setState(() => _translationLanguage = prefs.translationLanguage);
+  }
+
+  Future<String?> _translateTurn(int turnIndex, String text) async {
+    final translation = await _service.fetchMessageTranslation(text);
+    if (translation != null && translation.isNotEmpty) {
+      _service.setTurnTranslation(turnIndex, translation);
+    }
+    return translation;
   }
 
   Future<void> _loadUsage() async {
@@ -66,6 +93,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   void _onServiceUpdate() {
     if (!mounted) return;
     setState(() {});
+    unawaited(_loadSpeakingPrefs());
     unawaited(_loadUsage());
     _scrollToBottom();
   }
@@ -314,9 +342,13 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 final isPlayingAi =
                     _service.isPlayingTts && index == _service.ttsTurnIndex;
                 return _TurnBubble(
+                  turnIndex: index,
                   turn: turn,
-                  showTranslations:
-                      SpeakingPreferencesService.instance.current.showTranslations,
+                  translationLanguage:
+                      _hasTranslationHelper ? _translationLanguage : null,
+                  translationHelperLabel:
+                      _hasTranslationHelper ? _translationHelperLabel : null,
+                  onTranslateTurn: _hasTranslationHelper ? _translateTurn : null,
                   vocabularyHighlights:
                       turn.isUser
                           ? const []
@@ -361,16 +393,22 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
 class _TurnBubble extends StatefulWidget {
   const _TurnBubble({
+    required this.turnIndex,
     required this.turn,
-    this.showTranslations = false,
+    this.translationLanguage,
+    this.translationHelperLabel,
+    this.onTranslateTurn,
     this.vocabularyHighlights = const [],
     this.onPlayAi,
     this.isPlayingAi = false,
     this.onSaveSelection,
   });
 
+  final int turnIndex;
   final ConversationTurnModel turn;
-  final bool showTranslations;
+  final String? translationLanguage;
+  final String? translationHelperLabel;
+  final Future<String?> Function(int turnIndex, String text)? onTranslateTurn;
   final List<String> vocabularyHighlights;
   final VoidCallback? onPlayAi;
   final bool isPlayingAi;
@@ -382,9 +420,42 @@ class _TurnBubble extends StatefulWidget {
 
 class _TurnBubbleState extends State<_TurnBubble> {
   String? _selectedText;
+  bool _showTranslation = false;
+  bool _loadingTranslation = false;
 
   ConversationTurnModel get turn => widget.turn;
   bool get isUser => turn.isUser;
+
+  bool get _hasTranslateAction =>
+      !isUser &&
+      widget.translationLanguage != null &&
+      widget.translationLanguage != 'none' &&
+      widget.onTranslateTurn != null;
+
+  Future<void> _onTranslateTap() async {
+    if (_showTranslation) {
+      setState(() => _showTranslation = false);
+      return;
+    }
+
+    final existing = turn.translation?.trim();
+    if (existing != null && existing.isNotEmpty) {
+      setState(() => _showTranslation = true);
+      return;
+    }
+
+    final onTranslate = widget.onTranslateTurn;
+    if (onTranslate == null) return;
+
+    setState(() => _loadingTranslation = true);
+    final fetched = await onTranslate(widget.turnIndex, turn.text);
+    if (!mounted) return;
+
+    setState(() {
+      _loadingTranslation = false;
+      _showTranslation = fetched != null && fetched.isNotEmpty;
+    });
+  }
 
   void _onSelectionChanged(
     TextSelection selection,
@@ -421,7 +492,11 @@ class _TurnBubbleState extends State<_TurnBubble> {
         turn.corrections.isEmpty &&
         turn.text.trim().isNotEmpty;
     final translation =
-        widget.showTranslations ? turn.translation?.trim() : null;
+        !isUser && _showTranslation ? turn.translation?.trim() : null;
+    final actionIconCount =
+        (_hasTranslateAction ? 1 : 0) +
+        (widget.onSaveSelection != null ? 1 : 0);
+    final actionPadding = actionIconCount * 28.0;
     final baseStyle = TextStyle(
       color: isUser ? Colors.white : Colors.black87,
       fontSize: 15,
@@ -490,7 +565,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                     children: [
                       Padding(
                         padding: EdgeInsets.only(
-                          right: widget.onSaveSelection != null ? 28 : 0,
+                          right: actionPadding,
                         ),
                         child: SelectableText.rich(
                           TextSpan(children: messageSpans),
@@ -529,30 +604,82 @@ class _TurnBubbleState extends State<_TurnBubble> {
                           },
                         ),
                       ),
-                      if (widget.onSaveSelection != null)
+                      if (_hasTranslateAction || widget.onSaveSelection != null)
                         Positioned(
                           top: -6,
                           right: -6,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: IconButton(
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 32,
-                                minHeight: 32,
-                              ),
-                              tooltip: 'Save to deck',
-                              icon: Icon(
-                                Icons.bookmark_add_outlined,
-                                size: 20,
-                                color:
-                                    isUser
-                                        ? Colors.white.withValues(alpha: 0.9)
-                                        : AppColors.primaryPurple,
-                              ),
-                              onPressed: () => _openSaveSheet(turn.text.trim()),
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_hasTranslateAction)
+                                Material(
+                                  color: Colors.transparent,
+                                  child: IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    tooltip:
+                                        _showTranslation
+                                            ? 'Hide ${widget.translationHelperLabel ?? 'translation'}'
+                                            : 'Show ${widget.translationHelperLabel ?? 'translation'}',
+                                    icon:
+                                        _loadingTranslation
+                                            ? SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color:
+                                                    isUser
+                                                        ? Colors.white
+                                                            .withValues(alpha: 0.9)
+                                                        : AppColors.primaryPurple,
+                                              ),
+                                            )
+                                            : Icon(
+                                              _showTranslation
+                                                  ? Icons.translate
+                                                  : Icons.translate_outlined,
+                                              size: 20,
+                                              color:
+                                                  isUser
+                                                      ? Colors.white.withValues(
+                                                        alpha: 0.9,
+                                                      )
+                                                      : AppColors.primaryPurple,
+                                            ),
+                                    onPressed:
+                                        _loadingTranslation
+                                            ? null
+                                            : _onTranslateTap,
+                                  ),
+                                ),
+                              if (widget.onSaveSelection != null)
+                                Material(
+                                  color: Colors.transparent,
+                                  child: IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    tooltip: 'Save to deck',
+                                    icon: Icon(
+                                      Icons.bookmark_add_outlined,
+                                      size: 20,
+                                      color:
+                                          isUser
+                                              ? Colors.white.withValues(alpha: 0.9)
+                                              : AppColors.primaryPurple,
+                                    ),
+                                    onPressed: () => _openSaveSheet(turn.text.trim()),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                     ],
@@ -606,16 +733,24 @@ class _TurnBubbleState extends State<_TurnBubble> {
                 ),
               ),
             ),
-          if (!isUser && translation != null && translation.isNotEmpty)
+          if (translation != null && translation.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 44, top: 4, right: 8),
-              child: Text(
-                translation,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade700,
-                  fontStyle: FontStyle.italic,
-                  height: 1.3,
+              padding: EdgeInsets.only(
+                left: isUser ? 0 : 44,
+                top: 4,
+                right: isUser ? 0 : 8,
+              ),
+              child: Align(
+                alignment:
+                    isUser ? Alignment.centerRight : Alignment.centerLeft,
+                child: Text(
+                  translation,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
+                    fontStyle: FontStyle.italic,
+                    height: 1.3,
+                  ),
                 ),
               ),
             ),

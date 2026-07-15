@@ -25,6 +25,11 @@ const LANGUAGE_LABELS = {
   zh: "Mandarin Chinese",
   ja: "Japanese",
   ru: "Russian",
+  ar: "Arabic",
+  hy: "Armenian",
+  ko: "Korean",
+  tr: "Turkish",
+  uk: "Ukrainian",
   none: "None",
 };
 
@@ -194,9 +199,6 @@ function formatCustomizationBlock(speakingPreferences, practiceLanguage = 'en') 
       speakingPreferences.translation_language ??
       "none",
   ).trim();
-  const showTranslations =
-    speakingPreferences.showTranslations === true ||
-    speakingPreferences.show_translations === true;
 
   const lines = [];
 
@@ -209,11 +211,12 @@ function formatCustomizationBlock(speakingPreferences, practiceLanguage = 'en') 
     );
   }
 
-  if (showTranslations && translationLang !== "none") {
+  if (translationLang !== "none") {
     const helperLang =
       responseLang !== practiceLang ? responseLang : translationLang;
+    const helperLabel = languageLabel(helperLang);
     lines.push(
-      `Provide TRANSLATION: a natural ${languageLabel(helperLang)} translation of your REPLY on the TRANSLATION line.`,
+      `Provide TRANSLATION: a natural ${helperLabel} translation of your entire REPLY on the TRANSLATION line. Use ${helperLabel} only — never English unless the helper language is English.`,
     );
   } else {
     lines.push("Leave TRANSLATION empty unless instructed above.");
@@ -259,7 +262,13 @@ function buildTutorUserPrompt({
   if (trainingStarted && trainingSession?.active) {
     userBlock += `\n\n[System: user just started vocabulary training from "${trainingSession.sourceLabel}". Respond by teaching the first listed word — do not ask what deck names mean.]`;
   } else if (sessionStart) {
-    userBlock += '\n\n[System: the user just opened this speaking session. Open with a short, engaging first message based on the session context — do not wait for them to speak first.]';
+    const responseLang = String(
+      speakingPreferences.responseLanguage ??
+        speakingPreferences.response_language ??
+        practiceLanguage ??
+        'en',
+    ).trim();
+    userBlock += `\n\n[System: the user just opened this speaking session. Open with a short, engaging first message based on the session context — do not wait for them to speak first. Write your entire REPLY in ${languageLabel(responseLang)}.]`;
   }
 
   return { system, user: userBlock };
@@ -556,6 +565,33 @@ async function getTutorReply({
   return parseTutorResponse(raw);
 }
 
+async function translateMessage({ text, targetLanguage }) {
+  const trimmed = String(text ?? "").trim();
+  const lang = String(targetLanguage ?? "none").trim();
+  if (!trimmed || lang === "none") {
+    return "";
+  }
+
+  const openai = getOpenAIClient();
+  const label = languageLabel(lang);
+  const completion = await openai.chat.completions.create({
+    model: TUTOR_MODEL,
+    messages: [
+      {
+        role: "system",
+        content: `Translate the message into natural ${label}. Output only the translation text — no labels, quotes, or explanation.`,
+      },
+      { role: "user", content: trimmed },
+    ],
+    temperature: 0.2,
+    max_tokens: 300,
+  });
+
+  const translated = completion.choices?.[0]?.message?.content?.trim() ?? "";
+
+  return translated;
+}
+
 async function synthesizeSpeech(text, voicePreference) {
   const voice = resolveTutorVoice(voicePreference);
   const { readCachedAudio, writeCachedAudio } = require('./tts-cache');
@@ -717,6 +753,7 @@ module.exports = {
   transcribeAudio,
   looksLikeWhisperHallucination,
   getTutorReply,
+  translateMessage,
   synthesizeSpeech,
   evaluateSession,
   parseTutorResponse,

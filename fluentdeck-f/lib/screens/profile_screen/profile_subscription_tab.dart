@@ -245,6 +245,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
                   isCurrent: _status.isPremium && _status.productId == plan.productId,
                   badge: plan.badge,
                   maxDailyTurns: kDailyTurnsSliderConfig.max,
+                  baselineDailyTurns: kDailyTurnsSliderConfig.defaultTurns,
                   priceScale:
                       _selectedDailyTurns /
                       (kFluentDeckPlans
@@ -558,6 +559,7 @@ class _PlanCard extends StatelessWidget {
     required this.onTap,
     required this.isCurrent,
     required this.maxDailyTurns,
+    required this.baselineDailyTurns,
     required this.priceScale,
     this.badge,
   });
@@ -567,6 +569,7 @@ class _PlanCard extends StatelessWidget {
   final bool selected;
   final bool isCurrent;
   final int maxDailyTurns;
+  final int baselineDailyTurns;
   final double priceScale;
   final VoidCallback onTap;
   final String? badge;
@@ -589,9 +592,13 @@ class _PlanCard extends StatelessWidget {
     }
   }
 
+  /// Fill from baseline (default package size) → slider max, so default shows empty bar.
   double get _capacity {
-    final max = maxDailyTurns <= 0 ? 60 : maxDailyTurns;
-    return (plan.dailyConversationTurns / max).clamp(0.0, 1.0);
+    final max = maxDailyTurns <= 0 ? baselineDailyTurns : maxDailyTurns;
+    final baseline = baselineDailyTurns <= 0 ? 60 : baselineDailyTurns;
+    if (max <= baseline) return 1.0;
+    return ((plan.dailyConversationTurns - baseline) / (max - baseline))
+        .clamp(0.0, 1.0);
   }
 
   @override
