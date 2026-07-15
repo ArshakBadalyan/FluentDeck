@@ -7,14 +7,21 @@ const s3MediaOrigin = ({ env }) => {
   return `https://${bucket}.s3.${region}.amazonaws.com`;
 };
 
+const parseCorsOrigins = (env) => {
+  const raw = env("CORS_ORIGIN", "*");
+  if (!raw || raw.trim() === "*") return "*";
+  return raw
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+};
+
 module.exports = ({ env }) => [
   "strapi::errors",
   {
     name: 'strapi::cors',
     config: {
-      // Must be the string '*' (or explicit URLs). Arrays are matched with
-      // includes(Origin)—so ['*'] never matches real browser origins → CORS failure.
-      origin: '*',
+      origin: parseCorsOrigins(env),
       maxAge: 86400,
       headers: [
         'Content-Type',

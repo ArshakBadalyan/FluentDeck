@@ -21,7 +21,12 @@ const { recordSpeakingTurnStats } = require("../../../utils/speaking-stats-utils
 const {
   getConversationUsage,
   recordConversationTurn,
+  validateSessionOpening,
+  clampHistory,
+  clampTtsText,
+  ensureConversationAllowed,
 } = require("../../../utils/ai-rate-limit");
+const { assertSpeakingSessionAllowed } = require("../../../utils/speaking-session-access");
 const {
   autoSaveCorrectionsFromTurn,
 } = require("../../../utils/auto-save-corrections");
@@ -83,6 +88,9 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       return ctx.unauthorized("Authentication required");
     }
 
+    const usageBefore = await ensureConversationAllowed(ctx, strapi, userId);
+    if (!usageBefore) return;
+
     const files = ctx.request.files;
     const audioFile =
       files?.audio ?? files?.file ?? (Array.isArray(files) ? files[0] : null);
@@ -113,6 +121,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         text: transcription.text,
         language,
         segments: transcription.segments,
+        usage: await recordConversationTurn(strapi, userId),
       };
     } catch (error) {
       strapi.log.error("[ai.transcribe]", error);
@@ -164,6 +173,41 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
 
     const openingSession = sessionStart === true;
     const trimmedMessage = message.trim();
+
+    if (openingSession) {
+      const openingCheck = await validateSessionOpening(strapi, userId, {
+        history: Array.isArray(history) ? history : [],
+      });
+      if (!openingCheck.allowed) {
+        ctx.status = openingCheck.usedToday != null ? 429 : 400;
+        ctx.body = {
+          error: {
+            message: openingCheck.reason ?? 'Invalid session opening',
+            status: ctx.status,
+          },
+          usage: usageBefore,
+        };
+        return;
+      }
+    }
+
+    const sessionAccess = await assertSpeakingSessionAllowed(
+      strapi,
+      userId,
+      sessionContext && typeof sessionContext === "object" ? sessionContext : null,
+    );
+    if (!sessionAccess.ok) {
+      ctx.status = sessionAccess.status ?? 402;
+      ctx.body = {
+        error: {
+          status: ctx.status,
+          name: "PremiumRequired",
+          message: sessionAccess.message,
+        },
+      };
+      return;
+    }
+
     // Only block clear Whisper/YouTube junk on tutor text. Typed short messages
     // like "hi" must pass (hallucination heuristics need Whisper segments).
     if (!openingSession && looksLikeWhisperHallucination(trimmedMessage)) {
@@ -189,7 +233,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       const deckCatalog = await loadUserDeckCatalog(strapi, userId);
       const result = await getTutorReply({
         message: trimmedMessage,
-        history: Array.isArray(history) ? history : [],
+        history: clampHistory(history),
         userLevel,
         weakAreas,
         tutorMemory,
@@ -288,22 +332,46 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       return ctx.unauthorized("Authentication required");
     }
 
+    const usageBefore = await ensureConversationAllowed(ctx, strapi, userId);
+    if (!usageBefore) return;
+
     const { history, sessionContext } = ctx.request.body ?? {};
-    if (!Array.isArray(history) || history.length < 2) {
+    const safeHistory = clampHistory(history);
+    if (!Array.isArray(safeHistory) || safeHistory.length < 2) {
       return ctx.badRequest("history must contain at least 2 turns");
+    }
+
+    const sessionAccess = await assertSpeakingSessionAllowed(
+      strapi,
+      userId,
+      sessionContext && typeof sessionContext === "object" ? sessionContext : null,
+    );
+    if (!sessionAccess.ok) {
+      ctx.status = sessionAccess.status ?? 402;
+      ctx.body = {
+        error: {
+          status: ctx.status,
+          name: "PremiumRequired",
+          message: sessionAccess.message,
+        },
+      };
+      return;
     }
 
     try {
       const { userLevel } = await loadUserTutorContext(strapi, userId);
       const result = await evaluateSpeakingSession({
-        history,
+        history: safeHistory,
         sessionContext:
           sessionContext && typeof sessionContext === "object"
             ? sessionContext
             : { mode: "chat", title: "Free conversation" },
         userLevel,
       });
-      ctx.body = result;
+      ctx.body = {
+        ...result,
+        usage: await recordConversationTurn(strapi, userId),
+      };
     } catch (error) {
       strapi.log.error("[ai.evaluateSession]", error);
       return ctx.internalServerError("Session evaluation failed");
@@ -316,9 +384,16 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       return ctx.unauthorized("Authentication required");
     }
 
+    const usageBefore = await ensureConversationAllowed(ctx, strapi, userId);
+    if (!usageBefore) return;
+
     const { text, targetLanguage } = ctx.request.body ?? {};
-    if (!text || !String(text).trim()) {
+    const trimmed = String(text ?? '').trim();
+    if (!trimmed) {
       return ctx.badRequest("text is required");
+    }
+    if (trimmed.length > 4000) {
+      return ctx.badRequest("text is too long");
     }
     if (!targetLanguage || !String(targetLanguage).trim()) {
       return ctx.badRequest("targetLanguage is required");
@@ -326,10 +401,13 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
 
     try {
       const translation = await translateMessage({
-        text: String(text).trim(),
+        text: trimmed,
         targetLanguage: String(targetLanguage).trim(),
       });
-      ctx.body = { translation };
+      ctx.body = {
+        translation,
+        usage: await recordConversationTurn(strapi, userId),
+      };
     } catch (error) {
       strapi.log.error("[ai.translateMessage]", error);
       return ctx.internalServerError("Translation request failed");
@@ -341,6 +419,9 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     if (!userId) {
       return ctx.unauthorized("Authentication required");
     }
+
+    const usageBefore = await ensureConversationAllowed(ctx, strapi, userId);
+    if (!usageBefore) return;
 
     const premium = await isPremiumUser(strapi, userId);
     if (!premium) {
@@ -365,7 +446,10 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         word: String(word).trim(),
         context: context ? String(context).trim() : undefined,
       });
-      ctx.body = result;
+      ctx.body = {
+        ...result,
+        usage: await recordConversationTurn(strapi, userId),
+      };
     } catch (error) {
       strapi.log.error("[ai.wordMeaning]", error);
       return ctx.internalServerError("Could not generate word meaning");
@@ -378,8 +462,12 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       return ctx.unauthorized("Authentication required");
     }
 
+    const usageBefore = await ensureConversationAllowed(ctx, strapi, userId);
+    if (!usageBefore) return;
+
     const { text } = ctx.request.body ?? {};
-    if (!text || typeof text !== "string" || !text.trim()) {
+    const safeText = clampTtsText(text);
+    if (!safeText) {
       return ctx.badRequest("text is required");
     }
 
@@ -389,12 +477,13 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         fields: ["tutor_voice"],
       });
       const audioBuffer = await synthesizeSpeech(
-        text.trim(),
+        safeText,
         user?.tutor_voice
       );
       ctx.body = {
         audioBase64: audioBuffer.toString("base64"),
         contentType: "audio/mpeg",
+        usage: await recordConversationTurn(strapi, userId),
       };
     } catch (error) {
       strapi.log.error("[ai.tts]", error);

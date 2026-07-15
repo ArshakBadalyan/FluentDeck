@@ -183,6 +183,14 @@
       "default": 0,
       "min": 0
     },
+    "ai_session_opens_date": {
+      "type": "string"
+    },
+    "ai_session_opens_count": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
     "correct_sentences_today_date": {
       "type": "string"
     },

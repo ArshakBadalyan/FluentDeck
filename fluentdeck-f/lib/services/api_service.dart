@@ -1,17 +1,22 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluentdeck/services/token_storage.dart';
 import 'package:fluentdeck/utils/api_exception.dart';
 
 class ApiService {
+  static Future<void> Function()? onUnauthorized;
+
   static String get baseUrl {
-    return dotenv.env['API_URL']!;
+    final url = dotenv.env['API_URL'];
+    if (url == null || url.trim().isEmpty) {
+      throw StateError('API_URL is not configured');
+    }
+    return url;
   }
 
   static Future<Map<String, String>> _headers() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final token = await TokenStorage.getToken();
     final format = dotenv.env['STRAPI_RESPONSE_FORMAT']?.trim().toLowerCase();
     final useV4Header = format != 'v5' && format != '5';
 
@@ -26,6 +31,9 @@ class ApiService {
   static Future<Map<String, String>> requestHeaders() async => _headers();
 
   static dynamic _decodeResponse(http.Response res) {
+    if (res.statusCode == 401 && onUnauthorized != null) {
+      onUnauthorized!();
+    }
     if (res.statusCode < 200 || res.statusCode >= 300) {
       String message = 'Request failed (${res.statusCode})';
       dynamic body;

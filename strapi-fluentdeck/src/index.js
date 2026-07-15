@@ -42,13 +42,6 @@ module.exports = {
       "api::user-progress.user-progress.create",
       "api::user-progress.user-progress.update",
       "api::user-progress.user-progress.languageLevels",
-      "api::notification.notification.find",
-      "api::notification.notification.findOne",
-      "api::user-note.user-note.find",
-      "api::user-note.user-note.findOne",
-      "api::user-note.user-note.create",
-      "api::user-note.user-note.update",
-      "api::user-note.user-note.delete",
       "api::user-note.user-note.listNotes",
       "api::user-note.user-note.createNote",
       "api::user-note.user-note.updateNote",
@@ -112,8 +105,6 @@ module.exports = {
       "api::custom-flashcard-note-type.custom-flashcard-note-type.createCustom",
       "api::custom-flashcard-note-type.custom-flashcard-note-type.updateCustom",
       "api::custom-flashcard-note-type.custom-flashcard-note-type.deleteCustom",
-      "api::card-review-state.card-review-state.find",
-      "api::card-review-state.card-review-state.findOne",
     ];
 
     const AI_PROXY_ACTIONS = [

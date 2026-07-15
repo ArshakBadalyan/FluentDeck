@@ -204,6 +204,11 @@ function dailyTurnsForProductId(productId) {
     : fallback;
 }
 
+function isAllowedSubscriptionProductId(productId) {
+  if (!productId) return false;
+  return getSubscriptionPlans().some((plan) => plan.productId === productId);
+}
+
 module.exports = {
   getSubscriptionPlans,
   getSubscriptionPlansForDailyTurns,
@@ -211,6 +216,7 @@ module.exports = {
   clampDailyConversationTurns,
   scalePlanPrice,
   dailyTurnsForProductId,
+  isAllowedSubscriptionProductId,
   formatPrice,
   periodSuffix,
   DEFAULT_PLAN_SPECS,

@@ -60,13 +60,20 @@ class _AppStartState extends State<AppStart> {
   Future<void> _routeInitialScreenAfterAuth({
     MobileSoftUpdateOffer? softOffer,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    final token = prefs.getString('token');
-    final userId = prefs.getInt('user_id');
+    final token = await TokenStorage.getToken();
+    final userId = await TokenStorage.getUserId();
 
     Widget next;
     if (token != null && token.isNotEmpty && userId != null) {
+      final valid = await AuthService.validateStoredSession();
+      if (!valid) {
+        await AuthService.logout();
+        final prefs = await SharedPreferences.getInstance();
+        final seen = prefs.getBool(kEnglishOnboardingSeenPrefsKey) ?? false;
+        next = seen ? const EnglishOnboardingScreen(startAtAuth: true) : const EnglishOnboardingScreen();
+        _go(softOffer == null ? next : MobileSoftUpdateHost(offer: softOffer, child: next));
+        return;
+      }
       unawaited(AnalyticsService.instance.setUserId(userId.toString()));
       syncClarityCustomUserId(userId.toString());
       unawaited(AuthService.sendAppInfo());
@@ -77,6 +84,7 @@ class _AppStartState extends State<AppStart> {
       await _initPushNotifications();
       next = const EnglishMainScreen();
     } else {
+      final prefs = await SharedPreferences.getInstance();
       final seen = prefs.getBool(kEnglishOnboardingSeenPrefsKey) ?? false;
       next = seen ? const EnglishOnboardingScreen(startAtAuth: true) : const EnglishOnboardingScreen();
     }

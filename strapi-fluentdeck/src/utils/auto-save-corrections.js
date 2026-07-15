@@ -5,6 +5,7 @@ const { createNoteAndCards } = require('./flashcard-note-sync');
 const { resolveUserLanguageCode } = require('./user-language');
 const { FREE_AUTO_NOTE_LIMIT } = require('./speaking-note-actions');
 const { updateByNumericId } = require('./document-service');
+const { isPremiumUser } = require('./app-feature-config');
 
 function extractAutoSaveCandidates(corrections) {
   if (!Array.isArray(corrections)) return [];
@@ -66,7 +67,7 @@ async function autoSaveCorrectionsFromTurn(strapi, userId, corrections) {
     return { saved: [], limitReached: false };
   }
 
-  const isPremium = user?.special === true;
+  const isPremium = await isPremiumUser(strapi, userId);
   const usedCount = Number(user?.speaking_auto_notes_count ?? 0);
   const remaining = isPremium ? Infinity : FREE_AUTO_NOTE_LIMIT - usedCount;
   if (!isPremium && remaining <= 0) {

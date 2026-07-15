@@ -69,12 +69,18 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized("Authentication required");
 
-    const { receiptData, dailyConversationTurns } = ctx.request.body ?? {};
+    const { receiptData } = ctx.request.body ?? {};
     if (!receiptData) return ctx.badRequest("receiptData is required");
 
     try {
-      const { clampDailyConversationTurns } = require("../../../utils/subscription-plans");
+      const {
+        dailyTurnsForProductId,
+        isAllowedSubscriptionProductId,
+      } = require("../../../utils/subscription-plans");
       const verified = await verifyAppleReceipt({ receiptData });
+      if (!isAllowedSubscriptionProductId(verified.productId)) {
+        return ctx.badRequest("Unknown subscription product");
+      }
       const sub = await upsertSubscription(strapi, userId, {
         platform: "ios",
         productId: verified.productId,
@@ -82,9 +88,7 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
         subscriptionStatus: "active",
         currentPeriodEnd: verified.currentPeriodEnd,
         autoRenewing: verified.autoRenewing,
-        dailyConversationTurns: clampDailyConversationTurns(
-          dailyConversationTurns,
-        ),
+        dailyConversationTurns: dailyTurnsForProductId(verified.productId),
         rawPayload: verified.rawPayload,
       });
       ctx.body = {
@@ -102,14 +106,19 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized("Authentication required");
 
-    const { productId, purchaseToken, dailyConversationTurns } =
-      ctx.request.body ?? {};
+    const { productId, purchaseToken } = ctx.request.body ?? {};
     if (!productId || !purchaseToken) {
       return ctx.badRequest("productId and purchaseToken are required");
     }
 
     try {
-      const { clampDailyConversationTurns } = require("../../../utils/subscription-plans");
+      const {
+        dailyTurnsForProductId,
+        isAllowedSubscriptionProductId,
+      } = require("../../../utils/subscription-plans");
+      if (!isAllowedSubscriptionProductId(productId)) {
+        return ctx.badRequest("Unknown subscription product");
+      }
       const verified = await verifyGoogleSubscription({ productId, purchaseToken });
       const sub = await upsertSubscription(strapi, userId, {
         platform: "android",
@@ -118,9 +127,7 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
         subscriptionStatus: verified.status,
         currentPeriodEnd: verified.currentPeriodEnd,
         autoRenewing: verified.autoRenewing,
-        dailyConversationTurns: clampDailyConversationTurns(
-          dailyConversationTurns,
-        ),
+        dailyConversationTurns: dailyTurnsForProductId(verified.productId),
         rawPayload: verified.rawPayload,
       });
       ctx.body = {

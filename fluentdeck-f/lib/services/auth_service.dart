@@ -82,17 +82,25 @@ class AuthService {
     String provider,
     String accessToken,
   ) async {
-    final data = await ApiService.get('auth/$provider/callback$accessToken');
+    try {
+      final data = await ApiService.get('auth/$provider/callback$accessToken');
 
-    if (data['error'] == null) {
-      await completeProviderSession(
-        Map<String, dynamic>.from(data as Map),
-        analyticsMethod: provider,
-        isNewUser: false,
-      );
-      return {'status': 'success'};
+      if (data['error'] == null) {
+        await completeProviderSession(
+          Map<String, dynamic>.from(data as Map),
+          analyticsMethod: provider,
+          isNewUser: false,
+        );
+        return {'status': 'success'};
+      }
+      return {'status': 'error', 'message': data['error']?['message']};
+    } catch (e, st) {
+      debugPrint('AuthService.loginViaProvider failed: $e\n$st');
+      return {
+        'status': 'error',
+        'messageKey': userFacingErrorLocalizationKey(e),
+      };
     }
-    return {'status': 'error', 'message': data['error']?['message']};
   }
 
   /// Persists JWT/user after a successful OAuth or Apple mobile auth response.
@@ -147,27 +155,52 @@ class AuthService {
 
 
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
-    final data = await ApiService.post('auth/forgot-password', {
-      'email': email,
-    });
+    try {
+      final data = await ApiService.post('auth/forgot-password', {
+        'email': email,
+      });
 
-    return data['error'] == null
-        ? {'status': 'success'}
-        : {'status': 'error', 'message': data['error']?['message']};
+      return data['error'] == null
+          ? {'status': 'success'}
+          : {'status': 'error', 'message': data['error']?['message']};
+    } catch (e, st) {
+      debugPrint('AuthService.forgotPassword failed: $e\n$st');
+      return {
+        'status': 'error',
+        'messageKey': userFacingErrorLocalizationKey(e),
+      };
+    }
   }
 
 
   static Future<Map<String, dynamic>> resetPassword(
     Map<String, dynamic> body,
   ) async {
-    final data = await ApiService.post('auth/reset-password', body);
+    try {
+      final data = await ApiService.post('auth/reset-password', body);
 
-    if (data['error'] == null) {
-      await _storeJwtAndUser(data);
-      unawaited(sendAppInfo());
-      return {'status': 'success'};
+      if (data['error'] == null) {
+        await _storeJwtAndUser(data);
+        unawaited(sendAppInfo());
+        return {'status': 'success'};
+      }
+      return {'status': 'error', 'message': data['error']?['message']};
+    } catch (e, st) {
+      debugPrint('AuthService.resetPassword failed: $e\n$st');
+      return {
+        'status': 'error',
+        'messageKey': userFacingErrorLocalizationKey(e),
+      };
     }
-    return {'status': 'error', 'message': data['error']?['message']};
+  }
+
+  /// Returns true when a stored JWT still validates with the server.
+  static Future<bool> validateStoredSession() async {
+    final token = await TokenStorage.getToken();
+    final userId = await TokenStorage.getUserId();
+    if (token == null || token.isEmpty || userId == null) return false;
+    final result = await getUser();
+    return result['status'] == 'success';
   }
 
   static Future<Map<String, dynamic>> getUser() async {
@@ -329,9 +362,18 @@ class AuthService {
   }
 
   static Future<void> _storeJwtAndUser(Map<String, dynamic> data) async {
-    final user = data['user'] as Map<String, dynamic>;
-    await TokenStorage.saveToken(data['jwt']);
-    await TokenStorage.saveUserId(user['id']);
+    final jwt = data['jwt'];
+    final userRaw = data['user'];
+    if (jwt is! String || jwt.isEmpty || userRaw is! Map) {
+      throw StateError('Invalid auth response');
+    }
+    final user = Map<String, dynamic>.from(userRaw);
+    final userId = user['id'];
+    if (userId == null) {
+      throw StateError('Invalid auth user id');
+    }
+    await TokenStorage.saveToken(jwt);
+    await TokenStorage.saveUserId(userId is int ? userId : int.parse('$userId'));
     await TokenStorage.saveIsAdmin(user['is_admin'] == true);
     final accountType = user['account_type']?.toString();
     if (accountType == 'teacher') {

@@ -4,6 +4,7 @@ const { getOrCreateDefaultDeck } = require('./flashcard-auto-create');
 const { createNoteAndCards } = require('./flashcard-note-sync');
 const { resolveUserLanguageCode } = require('./user-language');
 const { findUserById, updateByNumericId } = require('./document-service');
+const { isPremiumUser } = require('./app-feature-config');
 
 const FREE_AUTO_NOTE_LIMIT = 10;
 
@@ -76,9 +77,9 @@ async function processSpeakingNoteAction(strapi, userId, noteAction, options = {
   }
 
   const user = await findUserById(strapi, userId, {
-    fields: ['special', 'speaking_auto_notes_count'],
+    fields: ['speaking_auto_notes_count'],
   });
-  const isPremium = user?.special === true;
+  const isPremium = await isPremiumUser(strapi, userId);
   const usedCount = Number(user?.speaking_auto_notes_count ?? 0);
 
   if (!isPremium && usedCount >= FREE_AUTO_NOTE_LIMIT) {

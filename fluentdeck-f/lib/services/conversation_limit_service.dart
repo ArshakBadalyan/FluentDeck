@@ -119,7 +119,7 @@ class ConversationLimitService {
             : 0;
     final limit = _defaultDailyLimit(isPremium: isPremium);
     _cached = ConversationUsageStatus(
-      allowed: true,
+      allowed: false,
       usedToday: 0,
       dailyLimit: limit,
       isPremium: isPremium,

@@ -92,37 +92,25 @@ module.exports = (plugin) => {
 
     const { register } = strapi.config.get("plugin::users-permissions");
     const alwaysAllowedKeys = ["username", "password", "email"];
-    const userModel = strapi.contentTypes["plugin::users-permissions.user"];
-    const { attributes } = userModel;
-    const nonWritable = getNonWritableAttributes(userModel);
+    const privilegedDenylist = [
+      "special",
+      "is_admin",
+      "account_type",
+      "teacher_approved",
+      "is_institution_admin",
+      "tutor_memory",
+      "ai_turns_date",
+      "ai_turns_count",
+      "ai_session_opens_date",
+      "ai_session_opens_count",
+    ];
 
     const allowedKeys = _.compact(
       _.concat(
         alwaysAllowedKeys,
-        _.isArray(register?.allowedFields)
-          ? register.allowedFields
-          : Object.keys(attributes).filter(
-              (key) =>
-                !nonWritable.includes(key) &&
-                !attributes[key].private &&
-                ![
-                  "confirmed",
-                  "blocked",
-                  "confirmationToken",
-                  "resetPasswordToken",
-                  "provider",
-                  "id",
-                  "role",
-                  "createdAt",
-                  "updatedAt",
-                  "createdBy",
-                  "updatedBy",
-                  "publishedAt",
-                  "strapi_reviewWorkflows_stage",
-                ].includes(key)
-            )
-      )
-    );
+        _.isArray(register?.allowedFields) ? register.allowedFields : [],
+      ),
+    ).filter((key) => !privilegedDenylist.includes(key));
 
     const params = {
       ..._.pick(ctx.request.body, allowedKeys),
@@ -236,7 +224,7 @@ module.exports = (plugin) => {
     // Generate random token.
     const userInfo = await sanitizeUser(user, ctx);
 
-    const resetPasswordToken = crypto.randomBytes(4).toString("hex");
+    const resetPasswordToken = crypto.randomBytes(32).toString("hex");
 
     const resetPasswordSettings = _.get(
       emailSettings,
@@ -320,8 +308,7 @@ module.exports = (plugin) => {
         }
 
         const tokenEmail = normalizeAppleEmail(tokenPayload?.email);
-        const bodyEmail = normalizeAppleEmail(email);
-        const resolvedEmail = bodyEmail || tokenEmail;
+        const resolvedEmail = tokenEmail;
 
         let result;
         try {
@@ -380,9 +367,11 @@ module.exports = (plugin) => {
           throw new ApplicationError("Invalid Google ID token");
         }
 
-        const tokenEmail = normalizeAppleEmail(tokenPayload?.email);
-        const bodyEmail = normalizeAppleEmail(email);
-        const resolvedEmail = bodyEmail || tokenEmail;
+        const tokenEmail =
+          tokenPayload?.email_verified === true
+            ? normalizeAppleEmail(tokenPayload?.email)
+            : null;
+        const resolvedEmail = tokenEmail;
 
         let result;
         try {
@@ -752,6 +741,14 @@ module.exports = (plugin) => {
     }
       },
       deleteNicknamedUser: async (ctx) => {
+        const requesterId = ctx.state?.user?.id;
+        const targetId = Number.parseInt(String(ctx.params.id), 10);
+        if (!requesterId) {
+          return ctx.unauthorized("Authentication required");
+        }
+        if (!Number.isFinite(targetId) || Number(requesterId) !== targetId) {
+          return ctx.forbidden("You can only delete your own account");
+        }
         return deleteByNumericId(
           strapi,
           "plugin::users-permissions.user",

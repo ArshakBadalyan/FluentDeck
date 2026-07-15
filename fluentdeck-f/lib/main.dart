@@ -21,6 +21,8 @@ import 'app_theme.dart';
 import 'package:fluentdeck/ui_elements/app_scroll_behavior.dart';
 import 'package:fluentdeck/ui_elements/responsive_layout.dart';
 import 'services/theme_settings_store.dart';
+import 'services/api_service.dart';
+import 'services/auth_service.dart';
 import 'clarity_wrap.dart' if (dart.library.html) 'clarity_wrap_stub.dart';
 import 'firebase_options.dart';
 import 'services/clarity_route_observer.dart';
@@ -67,8 +69,13 @@ final ClarityRouteObserver _clarityRouteObserver = ClarityRouteObserver();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('FlutterError: ${details.exceptionAsString()}');
+  };
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await _loadDotenv();
+  ApiService.onUnauthorized = AuthService.logout;
   await AppLocalizations.instance.load();
   if (AdIds.adsEnabled) {
     await AdConsentService.prepare();

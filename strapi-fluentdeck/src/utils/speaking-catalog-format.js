@@ -36,13 +36,16 @@ function formatSpeakingTopic(row, { isPremiumLocked, accessMode }) {
   };
 }
 
-function formatSpeakingGame(row, { isPremiumLocked, accessMode }) {
+function formatSpeakingGame(row, { isPremiumLocked, accessMode, includeSystemPrompt = false }) {
+  const prompt = row.systemPrompt ?? row.system_prompt ?? '';
   return {
     id: row.id,
     title: row.title ?? '',
     slug: row.slug ?? '',
     description: row.description ?? '',
-    systemPrompt: row.systemPrompt ?? row.system_prompt ?? '',
+    ...((includeSystemPrompt || !isPremiumLocked) && prompt
+      ? { systemPrompt: prompt }
+      : {}),
     openingMessage: row.openingMessage ?? row.opening_message ?? '',
     iconKey: row.iconKey ?? row.icon_key ?? '',
     order: row.order ?? 0,

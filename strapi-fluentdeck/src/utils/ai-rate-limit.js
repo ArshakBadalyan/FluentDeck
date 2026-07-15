@@ -16,10 +16,24 @@ const DEFAULT_PREMIUM_DAILY = getPremiumDailyConversationTurns(
   HARD_DEFAULT_PREMIUM_DAILY,
 );
 
+function isProductionRuntime() {
+  const nodeEnv = String(process.env.NODE_ENV ?? '').trim().toLowerCase();
+  const envName = String(process.env.ENVIRONMENT ?? '').trim().toLowerCase();
+  return nodeEnv === 'production' || envName === 'production';
+}
+
 function isDailyConversationLimitDisabled(strapi) {
   const raw = String(process.env.DISABLE_DAILY_CONVERSATION_LIMIT ?? '')
     .trim()
     .toLowerCase();
+  if (isProductionRuntime()) {
+    if (['1', 'true', 'yes', 'on'].includes(raw)) {
+      strapi?.log?.warn?.(
+        '[ai-rate-limit] DISABLE_DAILY_CONVERSATION_LIMIT is set but ignored in production',
+      );
+    }
+    return false;
+  }
   if (['1', 'true', 'yes', 'on'].includes(raw)) return true;
   if (['0', 'false', 'no', 'off'].includes(raw)) return false;
 
@@ -222,6 +236,95 @@ async function recordConversationTurn(strapi, userId) {
   };
 }
 
+const MAX_SESSION_OPENINGS_PER_DAY = 5;
+const MAX_AI_HISTORY_TURNS = 40;
+const MAX_TTS_CHARS = 4000;
+
+async function loadSessionOpeningCounters(strapi, userId) {
+  const user = await strapi.db.query('plugin::users-permissions.user').findOne({
+    where: { id: userId },
+    select: ['ai_session_opens_date', 'ai_session_opens_count', 'special'],
+  });
+  const today = todayKey();
+  const storedDate = user?.ai_session_opens_date ?? '';
+  let usedToday = Number(user?.ai_session_opens_count ?? 0);
+  if (storedDate !== today) {
+    usedToday = 0;
+  }
+  return { user, today, usedToday, isSpecial: user?.special === true };
+}
+
+/**
+ * Opening greetings are free but capped per day and only when history is empty.
+ */
+async function validateSessionOpening(strapi, userId, { history }) {
+  if (Array.isArray(history) && history.length > 0) {
+    return {
+      allowed: false,
+      reason: 'sessionStart requires empty conversation history',
+    };
+  }
+
+  if (isDailyConversationLimitDisabled(strapi)) {
+    return { allowed: true };
+  }
+
+  const { today, usedToday, isSpecial } = await loadSessionOpeningCounters(strapi, userId);
+  if (isSpecial) {
+    return { allowed: true };
+  }
+
+  if (usedToday >= MAX_SESSION_OPENINGS_PER_DAY) {
+    return {
+      allowed: false,
+      reason: 'Daily session opening limit reached',
+      usedToday,
+      dailyLimit: MAX_SESSION_OPENINGS_PER_DAY,
+    };
+  }
+
+  await strapi.db.query('plugin::users-permissions.user').update({
+    where: { id: userId },
+    data: {
+      ai_session_opens_date: today,
+      ai_session_opens_count: usedToday + 1,
+    },
+  });
+
+  return { allowed: true, usedToday: usedToday + 1 };
+}
+
+function clampHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history.slice(-MAX_AI_HISTORY_TURNS);
+}
+
+function clampTtsText(text) {
+  const trimmed = String(text ?? '').trim();
+  if (trimmed.length <= MAX_TTS_CHARS) return trimmed;
+  return trimmed.slice(0, MAX_TTS_CHARS);
+}
+
+async function ensureConversationAllowed(ctx, strapi, userId) {
+  const usage = await getConversationUsage(strapi, userId);
+  if (!usage.allowed) {
+    ctx.status = 429;
+    ctx.body = {
+      error: {
+        message: 'Daily conversation limit reached',
+        status: 429,
+      },
+      limitReached: true,
+      usedToday: usage.usedToday,
+      dailyLimit: usage.dailyLimit,
+      isPremium: usage.isPremium,
+      unlimited: usage.unlimited === true,
+    };
+    return null;
+  }
+  return usage;
+}
+
 module.exports = {
   todayKey,
   pickDailyLimit,
@@ -234,4 +337,12 @@ module.exports = {
   getPremiumDailyConversationTurns,
   getConversationUsage,
   recordConversationTurn,
+  validateSessionOpening,
+  clampHistory,
+  clampTtsText,
+  ensureConversationAllowed,
+  MAX_SESSION_OPENINGS_PER_DAY,
+  MAX_AI_HISTORY_TURNS,
+  MAX_TTS_CHARS,
+  isProductionRuntime,
 };

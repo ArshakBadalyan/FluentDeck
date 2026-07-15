@@ -15,6 +15,12 @@ const APPLE_ROOT_CA_PATH = path.join(__dirname, "certs", "AppleRootCA-G3.cer");
 
 const SUBSCRIPTION_UID = "api::subscription.subscription";
 
+function isProductionRuntime() {
+  const nodeEnv = String(process.env.NODE_ENV ?? '').trim().toLowerCase();
+  const envName = String(process.env.ENVIRONMENT ?? '').trim().toLowerCase();
+  return nodeEnv === 'production' || envName === 'production';
+}
+
 /** Active/grace period + not yet expired = premium. Cancelled users keep access until period end. */
 function computeIsPremiumFromSubscription(subscription) {
   if (!subscription) return false;
@@ -31,8 +37,35 @@ async function getUserSubscription(strapi, userId) {
   return strapi.db.query(SUBSCRIPTION_UID).findOne({ where: { user: userId } });
 }
 
+async function findSubscriptionByPurchaseIdentifiers({
+  originalTransactionId,
+  purchaseToken,
+}) {
+  if (originalTransactionId) {
+    return strapi.db.query(SUBSCRIPTION_UID).findOne({
+      where: { originalTransactionId },
+    });
+  }
+  if (purchaseToken) {
+    return strapi.db.query(SUBSCRIPTION_UID).findOne({
+      where: { purchaseToken },
+    });
+  }
+  return null;
+}
+
+async function assertPurchaseNotOwnedByOtherUser(strapi, userId, data) {
+  const conflict = await findSubscriptionByPurchaseIdentifiers(data);
+  if (!conflict) return;
+  const ownerId = conflict.user?.id ?? conflict.user;
+  if (ownerId != null && Number(ownerId) !== Number(userId)) {
+    throw new Error('This purchase is already linked to another account');
+  }
+}
+
 /** Creates or updates the user's single subscription row (one row per user — latest state, not a full ledger). */
 async function upsertSubscription(strapi, userId, data) {
+  await assertPurchaseNotOwnedByOtherUser(strapi, userId, data);
   const existing = await getUserSubscription(strapi, userId);
   const payload = {
     user: userId,
@@ -95,6 +128,9 @@ async function verifyAppleReceipt({ receiptData }) {
 
   let result = await callVerify(APPLE_VERIFY_RECEIPT_PRODUCTION);
   if (result.status === APPLE_SANDBOX_STATUS) {
+    if (isProductionRuntime()) {
+      throw new Error('Sandbox receipts are not accepted in production');
+    }
     result = await callVerify(APPLE_VERIFY_RECEIPT_SANDBOX);
   }
 
@@ -106,7 +142,7 @@ async function verifyAppleReceipt({ receiptData }) {
     ? result.latest_receipt_info
     : [];
   const latest = latestReceiptInfo
-    .filter((entry) => entry.bundle_id === bundleId || !entry.bundle_id)
+    .filter((entry) => entry.bundle_id === bundleId)
     .sort((a, b) => Number(b.expires_date_ms) - Number(a.expires_date_ms))[0];
 
   if (!latest) {
@@ -257,7 +293,7 @@ async function updateSubscriptionByOriginalTransactionId(strapi, originalTransac
   });
 }
 
-/** Verifies the shared token Google Pub/Sub push appends as `?token=` on the webhook URL. */
+/** Verifies the shared token for Google Pub/Sub push (query param or Authorization header). */
 function verifyGooglePubSubToken(ctx) {
   const expected = process.env.GOOGLE_PUBSUB_WEBHOOK_TOKEN;
   if (!expected) {
@@ -265,7 +301,10 @@ function verifyGooglePubSubToken(ctx) {
       "Google webhook verification not configured: set GOOGLE_PUBSUB_WEBHOOK_TOKEN in .env",
     );
   }
-  return ctx.query?.token === expected;
+  if (ctx.query?.token === expected) return true;
+  const auth = String(ctx.request?.headers?.authorization ?? '');
+  if (auth.startsWith('Bearer ') && auth.slice(7) === expected) return true;
+  return false;
 }
 
 /** Decodes the base64 JSON body of a Google Play Real-Time Developer Notification Pub/Sub push. */
@@ -311,6 +350,8 @@ async function expireStaleSubscriptions(strapi) {
 module.exports = {
   computeIsPremiumFromSubscription,
   getUserSubscription,
+  findSubscriptionByPurchaseIdentifiers,
+  assertPurchaseNotOwnedByOtherUser,
   upsertSubscription,
   verifyAppleReceipt,
   verifyGoogleSubscription,
@@ -321,4 +362,5 @@ module.exports = {
   verifyGooglePubSubToken,
   decodeGooglePubSubMessage,
   updateSubscriptionByPurchaseToken,
+  isProductionRuntime,
 };

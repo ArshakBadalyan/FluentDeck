@@ -1898,6 +1898,15 @@ export interface PluginUsersPermissionsUser
     draftAndPublish: false;
   };
   attributes: {
+    ai_session_opens_count: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    ai_session_opens_date: Schema.Attribute.String;
     ai_turns_count: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {

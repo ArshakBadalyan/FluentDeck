@@ -1,12 +1,20 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenStorage {
   static const _keyToken = 'token';
+  static const _legacyTokenKey = 'token';
   static const _keyUserId = 'user_id';
   static const _isAdmin = 'is_admin';
   static const _accountType = 'account_type';
   static const _hideScreenExplanation = 'hide_screen_explanation';
   static const _teacherApproved = 'teacher_approved';
+
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
 
   static Future<void> saveIsAdmin(bool isAdmin) async {
     final prefs = await SharedPreferences.getInstance();
@@ -60,17 +68,33 @@ class TokenStorage {
     return prefs.getBool(_hideScreenExplanation);
   }
 
-
   static Future<void> saveToken(String token) async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_legacyTokenKey, token);
+      return;
+    }
+    await _secureStorage.write(key: _keyToken, value: token);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyToken, token);
+    await prefs.remove(_legacyTokenKey);
   }
 
   static Future<String?> getToken() async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_legacyTokenKey);
+    }
+    final secure = await _secureStorage.read(key: _keyToken);
+    if (secure != null && secure.isNotEmpty) return secure;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyToken);
+    final legacy = prefs.getString(_legacyTokenKey);
+    if (legacy != null && legacy.isNotEmpty) {
+      await _secureStorage.write(key: _keyToken, value: legacy);
+      await prefs.remove(_legacyTokenKey);
+      return legacy;
+    }
+    return null;
   }
-
 
   static Future<void> saveUserId(int userId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -82,10 +106,12 @@ class TokenStorage {
     return prefs.getInt(_keyUserId);
   }
 
-
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_keyToken);
+    if (!kIsWeb) {
+      await _secureStorage.delete(key: _keyToken);
+    }
+    await prefs.remove(_legacyTokenKey);
     await prefs.remove(_keyUserId);
     await prefs.remove(_isAdmin);
     await prefs.remove(_accountType);
