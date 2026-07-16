@@ -1,0 +1,68 @@
+{
+  "kind": "singleType",
+  "collectionName": "app_feature_configs",
+  "info": {
+    "singularName": "app-feature-config",
+    "pluralName": "app-feature-configs",
+    "displayName": "App Feature Config",
+    "description": "Free vs premium limits for decks, notes, and speaking."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "freeMaxSavedWords": {
+      "type": "integer",
+      "default": 20,
+      "min": 0
+    },
+    "freeMaxDecks": {
+      "type": "integer",
+      "default": 1,
+      "min": 0
+    },
+    "freeMaxNewCardsPerDay": {
+      "type": "integer",
+      "default": 10,
+      "min": 0
+    },
+    "freeDailyConversationTurns": {
+      "type": "integer",
+      "default": 10,
+      "min": 0
+    },
+    "premiumDailyConversationTurns": {
+      "type": "integer",
+      "default": 60,
+      "min": 0
+    },
+    "freeRolePlayPerCategory": {
+      "type": "integer",
+      "default": 2,
+      "min": 0
+    },
+    "freeTopicLevelGroups": {
+      "type": "json",
+      "default": ["intermediate"]
+    },
+    "freeGamesCount": {
+      "type": "integer",
+      "default": 10,
+      "min": 0
+    },
+    "defaultLearningStepsMinutes": {
+      "type": "json",
+      "default": [2, 8, 10]
+    },
+    "defaultEasyIntervalDays": {
+      "type": "decimal",
+      "default": 5,
+      "min": 0.01
+    },
+    "hiddenSpeakingTabs": {
+      "type": "json",
+      "default": []
+    }
+  }
+}

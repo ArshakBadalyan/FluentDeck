@@ -1,0 +1,82 @@
+{
+  "kind": "collectionType",
+  "collectionName": "speaking_role_plays",
+  "info": {
+    "singularName": "speaking-role-play",
+    "pluralName": "speaking-role-plays",
+    "displayName": "Speaking Role Play",
+    "description": "Curated role-play scenarios for speaking practice (never mixed with user-submitted custom scenarios, which stay client-side)"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "scenario": {
+      "type": "text",
+      "required": true
+    },
+    "difficultyLevel": {
+      "type": "enumeration",
+      "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
+      "required": true
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "daily_life",
+        "career",
+        "travel",
+        "relationships",
+        "language_testing",
+        "business",
+        "health",
+        "education",
+        "technology",
+        "finance",
+        "housing",
+        "emergencies",
+        "customer_service",
+        "entertainment",
+        "social",
+        "debate",
+        "storytelling",
+        "fantasy",
+        "survival",
+        "mystery",
+        "science_fiction"
+      ],
+      "default": "daily_life"
+    },
+    "userRole": {
+      "type": "string"
+    },
+    "tutorRole": {
+      "type": "string"
+    },
+    "iconKey": {
+      "type": "string"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "suggestedVocabulary": {
+      "type": "json"
+    },
+    "accessMode": {
+      "type": "enumeration",
+      "enum": ["automatic", "free", "premium"],
+      "default": "automatic"
+    },
+    "isVisible": {
+      "type": "boolean",
+      "default": true,
+      "required": true
+    }
+  }
+}

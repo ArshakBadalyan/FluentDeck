@@ -1,0 +1,35 @@
+{
+    "name": "FluentDeck — AI English Tutor",
+    "short_name": "FluentDeck",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#6B4EFF",
+    "theme_color": "#6B4EFF",
+    "description": "Practice English speaking with an AI tutor, flashcard decks, and personalized feedback.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

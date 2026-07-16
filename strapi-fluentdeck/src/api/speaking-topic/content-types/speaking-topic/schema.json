@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "speaking_topics",
+  "info": {
+    "singularName": "speaking-topic",
+    "pluralName": "speaking-topics",
+    "displayName": "Speaking Topic",
+    "description": "Topic-based conversation starters grouped by proficiency"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "levelGroup": {
+      "type": "enumeration",
+      "enum": ["intermediate", "advanced", "expert"],
+      "required": true
+    },
+    "starterPrompt": {
+      "type": "text",
+      "required": true
+    },
+    "iconKey": {
+      "type": "string"
+    },
+    "suggestedVocabulary": {
+      "type": "json"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "accessMode": {
+      "type": "enumeration",
+      "enum": ["automatic", "free", "premium"],
+      "default": "automatic"
+    },
+    "isVisible": {
+      "type": "boolean",
+      "default": true,
+      "required": true
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "kind": "collectionType",
+  "collectionName": "flashcard_notes",
+  "info": {
+    "singularName": "flashcard-note",
+    "pluralName": "flashcard-notes",
+    "displayName": "Flashcard Note",
+    "description": "A note — generates one or more flashcards."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "noteType": {
+      "type": "enumeration",
+      "enum": [
+        "basic",
+        "basic_reversed",
+        "basic_optional_reversed",
+        "basic_type_answer",
+        "cloze",
+        "image_occlusion"
+      ],
+      "default": "basic",
+      "required": true
+    },
+    "fields": {
+      "type": "json",
+      "default": {}
+    },
+    "tags": {
+      "type": "json",
+      "default": []
+    },
+    "marked": {
+      "type": "boolean",
+      "default": false
+    },
+    "createReverse": {
+      "type": "boolean",
+      "default": false
+    },
+    "mediaUrl": {
+      "type": "string"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "deck": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::flashcard-deck.flashcard-deck"
+    },
+    "userNote": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::user-note.user-note"
+    },
+    "flashcards": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::flashcard.flashcard",
+      "mappedBy": "flashcardNote"
+    }
+  }
+}

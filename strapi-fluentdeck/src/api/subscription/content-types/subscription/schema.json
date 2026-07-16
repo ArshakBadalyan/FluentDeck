@@ -1,0 +1,64 @@
+{
+  "kind": "collectionType",
+  "collectionName": "subscriptions",
+  "info": {
+    "singularName": "subscription",
+    "pluralName": "subscriptions",
+    "displayName": "Subscription",
+    "description": "Per-user premium subscription state, verified against Apple/Google."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "platform": {
+      "type": "enumeration",
+      "enum": ["ios", "android"],
+      "required": true
+    },
+    "productId": {
+      "type": "string",
+      "required": true
+    },
+    "originalTransactionId": {
+      "type": "string",
+      "unique": true
+    },
+    "purchaseToken": {
+      "type": "text",
+      "unique": true
+    },
+    "subscriptionStatus": {
+      "type": "enumeration",
+      "enum": ["active", "expired", "cancelled", "grace_period", "billing_retry"],
+      "default": "active",
+      "required": true
+    },
+    "currentPeriodEnd": {
+      "type": "datetime",
+      "required": true
+    },
+    "autoRenewing": {
+      "type": "boolean",
+      "default": true
+    },
+    "dailyConversationTurns": {
+      "type": "integer",
+      "min": 1,
+      "max": 500,
+      "default": 60
+    },
+    "lastVerifiedAt": {
+      "type": "datetime"
+    },
+    "lastEventPayload": {
+      "type": "json"
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "basic": {
+    "thanks": "Danke",
+    "something-went-wrong": "Etwas ist schiefgelaufen"
+  },
+  "errors": {
+    "register-action-disabled": "Die Registrierungsfunktion ist momentan deaktiviert",
+    "nickname-required": "Spitzname ist erforderlich",
+    "find-default-role": "Es ist unmöglich, die Standardrolle zu finden",
+    "nickname-already-taken": "Spitzname ist bereits vergeben",
+    "register-email-or-nickname-taken": "Entweder die E-Mail-Adresse oder der Spitzname ist bereits vergeben (oder beides).",
+    "school-email-required": "Für diesen Kontotyp ist eine Schul-E-Mail-Adresse erforderlich.",
+    "school-email-invalid": "Bitte geben Sie eine gültige Schul-E-Mail-Adresse ein.",
+    "school-email-public-domain": "Bitte verwenden Sie Ihre Schul-E-Mail, kein privates Konto (z. B. Gmail).",
+    "school-email-domain-unknown": "Diese E-Mail-Domain ist keiner Schule zugeordnet. Fragen Sie Ihre Lehrkraft oder nutzen Sie Ihre offizielle Schul-E-Mail.",
+    "school-email-pick-institution": "Mehrere Schulen nutzen diese E-Mail-Domain. Bitte wählen Sie Ihre Schule.",
+    "teacher-invite-required": "Bitte geben Sie den Lehrer-Einladungscode Ihrer Schule ein.",
+    "teacher-invite-invalid": "Ungültiger oder abgelaufener Lehrer-Code für {{year}}. Fragen Sie die Schulverwaltung.",
+    "teacher-not-approved": "Ihr Lehrerkonto wartet auf Freigabe.",
+    "class-report": {
+      "generated": "Erstellt",
+      "roster": "Klassenliste",
+      "weak-topics": "Themen mit Nachholbedarf",
+      "email-subject": "Klassenbericht"
+    },
+    "find-teacher-role": "Die Lehrer-Rolle ist auf dem Server nicht eingerichtet. Bitte kontaktieren Sie den Support.",
+    "fill-institution": "Bitte füllen Sie Ihre Schule/Universität/College aus, bevor Sie den Kurs angeben",
+    "same-parent-email": "Sie können die gleiche E-Mail nicht mehr als einmal hinzufügen",
+    "four-emails": "Sie können nicht mehr als 4 E-Mails hinzufügen",
+    "question-already-answered": "Sie haben diese Frage bereits beantwortet"
+  },
+  "forgot-password": {
+    "we-heard": "Wir haben gehört, dass Sie Ihr Passwort verloren haben. Das tut uns leid!",
+    "dont-worry": "Aber keine Sorge! Sie können den Code verwenden, um Ihr Passwort zurückzusetzen — fügen Sie ihn einfach in das Feld \"Code\" im Formular zum Zurücksetzen des Passworts ein:"
+  },
+  "notifications": {
+    "everyday-goal": {
+      "title": "Glückwunsch! Sie haben das heutige Ziel erreicht!",
+      "text": "Machen Sie weiter so & bald werden Sie der/die Beste unter den Schülern Ihrer Schule sein."
+    },
+    "not-reached-everyday-goal": {
+      "title": "Vergessen Sie nicht, Ihr tägliches Ziel zu erreichen",
+      "text": "Machen Sie weiter so und erreichen Sie Ihr tägliches Ziel, um an die Spitze zu gelangen"
+    },
+    "new-assignment": {
+      "title": "Neue Aufgabe von Ihrem Lehrer",
+      "text": "{{title}} — {{classroom}}"
+    },
+    "assignment-solution-before-answer": {
+      "title": "Schüler hat Lösung vorab angesehen",
+      "text": "{{student}} hat die Lösung vor der Beantwortung in \"{{assignment}}\" geöffnet ({{exercise}})"
+    },
+    "class-membership": {
+      "teacher-join-requested": {
+        "title": "Neue Beitrittsanfrage",
+        "text": "{{student}} möchte {{classroom}} beitreten"
+      },
+      "teacher-leave-requested": {
+        "title": "Austrittsanfrage",
+        "text": "{{student}} möchte {{classroom}} verlassen"
+      },
+      "student-join-accepted": {
+        "title": "Willkommen in der Klasse",
+        "text": "Sie wurden in {{classroom}} aufgenommen"
+      },
+      "student-join-rejected": {
+        "title": "Beitritt abgelehnt",
+        "text": "Ihre Anfrage für {{classroom}} wurde abgelehnt"
+      },
+      "student-leave-approved": {
+        "title": "Klasse verlassen",
+        "text": "Sie haben {{classroom}} verlassen"
+      },
+      "student-leave-denied": {
+        "title": "In der Klasse bleiben",
+        "text": "Ihr Lehrer hat den Austritt aus {{classroom}} abgelehnt"
+      }
+    }
+  },
+  "daily-report": {
+    "title": "Hi 👋",
+    "subtitle": "Einige Nutzer der Mathe App möchten Ihnen ihren täglichen Fortschritt mitteilen. Hier ist der Bericht für {{date}}:",
+    "has-answered-questions": "<b>{{username}}</b> hat {{questions}} Fragen beantwortet",
+    "answered-questions-details": "{{correctQuestions}} – richtig, {{wrongQuestions}} – falsch, {{skippedQuestions}} – übersprungen",
+    "has-played-practices": "{{username}} hat an {{practices}} praktischen Herausforderungen teilgenommen",
+    "has-played-practices-first": "<b>{{username}}</b> hat an {{practices}} praktischen Herausforderungen teilgenommen",
+    "played-practices-details": "{{wonPractices}} – gewonnen, {{lostPractices}} – verloren, {{drawPractices}} – unentschieden",
+    "has-no-activity": "Leider gab es gestern keine Aktivität von <b>{{username}}</b>.",
+    "has-points": "{{username}} hat derzeit {{points}} Punkte.",
+    "world-rank": "Unter allen Nutzern auf Platz {{rankWorld}}",
+    "rank-in": "in {{level}} auf Platz {{rank}}",
+    "class-rank": "und in {{class}} ist auf Platz {{rankClass}}",
+    "thanks": "Danke, dass Sie unseren Nutzern folgen. Wenn Sie uns kontaktieren möchten, zögern Sie bitte nicht, dies zu tun.",
+    "daily-report": "Täglicher Bericht",
+    "br": "Viele Grüße",
+    "sender": "Leonie von FluentDeck",
+    "subscribe-unsubscribe": "Abonnieren/Abmelden",
+    "unsubscribe-user": "Abmelden"
+  },
+  "dates": {
+    "%s year": {
+      "one": "%s Jahr",
+      "other": "%s Jahre"
+    },
+    "%s month": {
+      "one": "%s Monat",
+      "other": "%s Monate"
+    },
+    "%s day": {
+      "one": "%s Tag",
+      "other": "%s Tage"
+    },
+    "%s hour": {
+      "one": "%s Stunde",
+      "other": "%s Stunden"
+    },
+    "recently": "vor kurzem"
+  },
+  "helpers": {
+    "and": "und"
+  }
+}

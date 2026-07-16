@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_notes",
+  "info": {
+    "singularName": "user-note",
+    "pluralName": "user-notes",
+    "displayName": "User Note",
+    "description": "Personal vocabulary notes from speaking or manual entry."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "word": {
+      "type": "string",
+      "required": true
+    },
+    "definition": {
+      "type": "text"
+    },
+    "exampleSentence": {
+      "type": "text"
+    },
+    "tags": {
+      "type": "json",
+      "default": []
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": ["speaking", "manual"],
+      "default": "manual",
+      "required": true
+    },
+    "languageCode": {
+      "type": "string",
+      "default": "en"
+    },
+    "cefrLevel": {
+      "type": "string"
+    },
+    "topic": {
+      "type": "string"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "flashcards": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::flashcard.flashcard",
+      "mappedBy": "userNote"
+    }
+  }
+}

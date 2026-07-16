@@ -1,4 +1,4 @@
-# Speakstack — Project Documentation
+# FluentDeck — Project Documentation
 
 > Temporary reference doc for when Cursor history is lost. Safe to delete later.
 
@@ -21,27 +21,27 @@
 
 ## Overview
 
-**Speakstack** is an AI-powered English language-learning platform. Users practice speaking with an AI tutor, study vocabulary, use Anki-style flashcards, complete structured lessons, and track progress.
+**FluentDeck** is an AI-powered English language-learning platform. Users practice speaking with an AI tutor, study vocabulary, use Anki-style flashcards, complete structured lessons, and track progress.
 
 | Component | Path | Stack |
 |-----------|------|-------|
-| Mobile/Web app | `speakstack-f/` | Flutter / Dart |
-| Backend API | `strapi-speakstack/` | Strapi 4.26 / Node / PostgreSQL |
+| Mobile/Web app | `fluentdeck-f/` | Flutter / Dart |
+| Backend API | `strapi-fluentdeck/` | Strapi 5.49 / Node 20 / PostgreSQL |
 
-Evolved from legacy **MatheApp** (`matheapp-f`). Internal names still reference it: package `untitled2`, Android ID `io.framework7.matheapp`, config `mathe_config.txt`.
+Evolved from legacy **MatheApp** (`fluentdeck-f`). Internal Dart package is now `fluentdeck`; Android ID `com.fluentdeck.app`.
 
 ### Monorepo Structure
 
 ```
-Speakstack/
-├── speakstack-f/          # Flutter app (iOS, Android, Web)
-├── strapi-speakstack/     # Strapi backend (22 API modules)
+FluentDeck/
+├── fluentdeck-f/          # Flutter app (iOS, Android, Web)
+├── strapi-fluentdeck/     # Strapi backend (22 API modules)
 └── PROJECT.md             # This file
 ```
 
 ### Core Features
 
-**Speaking & AI:** Free-form chat, role-play, topics, games · Whisper → GPT → TTS · Grammar corrections · Tutor memory · 10 turns/day free (`user.special=true` = unlimited)
+**Speaking & AI:** Free-form chat, role-play, topics, games · Whisper → GPT → TTS · Grammar corrections · Tutor memory · 10 turns/day free · 60 turns/day premium · `user.special=true` = unlimited
 
 **Vocabulary:** CEFR catalog A1–C2 · Placement test · Lessons & exercises · User notes from corrections
 
@@ -55,34 +55,36 @@ Speakstack/
 
 | Task | Location |
 |------|----------|
-| New screen | `speakstack-f/lib/screens/` |
-| API call | `speakstack-f/lib/services/api_service.dart` + domain service |
-| Backend endpoint | `strapi-speakstack/src/api/<module>/routes/` |
-| Freemium limits | `strapi-speakstack/src/utils/app-feature-config.js` |
-| AI tutor | `strapi-speakstack/src/utils/ai-tutor.js` |
-| Flashcard SM-2 | `strapi-speakstack/src/utils/sm2.js` |
-| Permissions bootstrap | `strapi-speakstack/src/index.js` |
-| App startup | `speakstack-f/lib/main.dart` → `app_start.dart` → `english_main_screen.dart` |
+| New screen | `fluentdeck-f/lib/screens/` |
+| API call | `fluentdeck-f/lib/services/api_service.dart` + domain service |
+| Backend endpoint | `strapi-fluentdeck/src/api/<module>/routes/` |
+| Freemium limits | `strapi-fluentdeck/src/utils/app-feature-config.js` |
+| AI tutor | `strapi-fluentdeck/src/utils/ai-tutor.js` |
+| Flashcard SM-2 | `strapi-fluentdeck/src/utils/sm2.js` |
+| Permissions bootstrap | `strapi-fluentdeck/src/index.js` |
+| App startup | `fluentdeck-f/lib/main.dart` → `app_start.dart` → `english_main_screen.dart` |
 
 ### Legacy Warning
 
-Backend has MatheApp remnants (cron jobs, teacher stats utils). Math API modules are **removed** from `src/api/`. Trust `src/api/` and this doc, not old `strapi-speakstack/README.md`.
+Backend MatheApp classroom utilities were removed. Math API modules are **removed** from `src/api/`. Trust `src/api/` and this doc, not old `strapi-fluentdeck/README.md` teacher/classroom sections.
 
 ---
 
 ## Quick Start
 
 ```bash
-# Backend
-cd strapi-speakstack
+# Backend (Node 20 — use nvm)
+cd strapi-fluentdeck
 cp .env.example .env    # fill DATABASE_*, OPENAI_API_KEY, JWT_SECRET, APP_KEYS
-yarn install && yarn develop    # http://localhost:1337
+nvm use && npm install --legacy-peer-deps && npm run develop    # http://localhost:1337
 
 # Frontend
-cd speakstack-f
-cp .env.example assets/english_config.txt    # set API_URL=http://localhost:1337/api
+cd fluentdeck-f
+cp .env.example assets/fluentdeck_config.txt    # set API_URL=http://localhost:1337/api
 flutter pub get && flutter run
 ```
+
+**Strapi REST format:** Flutter sends `Strapi-Response-Format: v4` by default (`STRAPI_RESPONSE_FORMAT` in config). Set `STRAPI_RESPONSE_FORMAT=v5` to use native Strapi 5 flattened REST; parsers in `lib/utils/strapi_response.dart` support both.
 
 ---
 
@@ -95,13 +97,13 @@ flutter pub get && flutter run
 | Auth | JWT in SharedPreferences, Bearer via `ApiService` |
 | Offline flashcards | Isar local DB + sync pull/push to Strapi |
 | AI | All OpenAI calls proxied through Strapi (never from client) |
-| Config | Baked at build time into `assets/english_config.txt` |
+| Config | Baked at build time: `cp .env.example assets/fluentdeck_config.txt` |
 
 ---
 
 ## Flutter App
 
-**Path:** `speakstack-f/` · **Version:** 2.0.9+20009 · **Platforms:** Android, iOS, Web
+**Path:** `fluentdeck-f/` · **Version:** 2.0.9+20009 · **Platforms:** Android, iOS, Web
 
 ### Navigation Map
 
@@ -185,7 +187,7 @@ Strapi · Firebase Analytics · OneSignal (mobile) · AdMob + UMP · Microsoft C
 
 ## Strapi Backend
 
-**Path:** `strapi-speakstack/` · **Strapi 4.26.1** · **PostgreSQL**
+**Path:** `strapi-fluentdeck/` · **Strapi 4.26.1** · **PostgreSQL**
 
 ### API Modules (22)
 
@@ -325,7 +327,7 @@ All paths prefixed `/api`. JWT required unless noted **Public**.
 
 ## Configuration
 
-### Flutter (`speakstack-f`)
+### Flutter (`fluentdeck-f`)
 
 Baked at build time: `cp .env.example assets/english_config.txt` (rebuild after changes)
 
@@ -337,7 +339,7 @@ Baked at build time: `cp .env.example assets/english_config.txt` (rebuild after 
 | `CLARITY_PROJECT_ID` | No | Session replay (mobile) |
 | `ADMOB_*` | No | Interstitial ads |
 
-### Strapi (`strapi-speakstack`)
+### Strapi (`strapi-fluentdeck`)
 
 **Core:** `HOST`, `PORT`, `APP_KEYS`, `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT`
 
@@ -353,7 +355,7 @@ Baked at build time: `cp .env.example assets/english_config.txt` (rebuild after 
 
 **Ops:** `CRON_ENABLED`, `DROP_LEGACY_MATH_TABLES`, `MY_HEROKU_URL`
 
-Example files: `strapi-speakstack/.env.example`, `speakstack-f/.env.example`
+Example files: `strapi-fluentdeck/.env.example`, `fluentdeck-f/.env.example`
 
 ---
 
@@ -388,12 +390,12 @@ flutter build web --release --base-href /web/ --pwa-strategy none
 ### Staging
 
 ```bash
-cd strapi-speakstack
+cd strapi-fluentdeck
 ./deploy/scripts/compose-staging.sh up --build
 # postgres + strapi + nginx
 ```
 
-See `strapi-speakstack/STAGING-DEPLOYMENT.md`, `speakstack-f/deploy/CLIENT-STAGING.local.md`
+See `strapi-fluentdeck/STAGING-DEPLOYMENT.md`, `fluentdeck-f/deploy/CLIENT-STAGING.local.md`
 
 ### Test API
 

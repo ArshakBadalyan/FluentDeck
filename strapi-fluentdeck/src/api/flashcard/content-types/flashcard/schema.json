@@ -1,0 +1,93 @@
+{
+  "kind": "collectionType",
+  "collectionName": "flashcards",
+  "info": {
+    "singularName": "flashcard",
+    "pluralName": "flashcards",
+    "displayName": "Flashcard",
+    "description": "Generated study card from a flashcard note's card template."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "front": {
+      "type": "text",
+      "required": true
+    },
+    "back": {
+      "type": "text",
+      "required": true
+    },
+    "cardType": {
+      "type": "enumeration",
+      "enum": ["basic", "cloze", "reversed", "type_answer", "image_occlusion"],
+      "default": "basic",
+      "required": true
+    },
+    "clozeText": {
+      "type": "text"
+    },
+    "clozeIndex": {
+      "type": "integer"
+    },
+    "occlusionData": {
+      "type": "json"
+    },
+    "templateName": {
+      "type": "string",
+      "default": "Card 1"
+    },
+    "templateOrdinal": {
+      "type": "integer",
+      "default": 0
+    },
+    "tags": {
+      "type": "json",
+      "default": []
+    },
+    "mediaUrl": {
+      "type": "string"
+    },
+    "flag": {
+      "type": "integer",
+      "default": 0,
+      "min": 0,
+      "max": 7
+    },
+    "languageCode": {
+      "type": "string",
+      "default": "en"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "deck": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::flashcard-deck.flashcard-deck",
+      "inversedBy": "flashcards"
+    },
+    "flashcardNote": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::flashcard-note.flashcard-note",
+      "inversedBy": "flashcards"
+    },
+    "userNote": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::user-note.user-note",
+      "inversedBy": "flashcards"
+    },
+    "reviewState": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::card-review-state.card-review-state",
+      "mappedBy": "flashcard"
+    }
+  }
+}

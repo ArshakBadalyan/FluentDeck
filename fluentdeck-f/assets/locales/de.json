@@ -1,0 +1,1620 @@
+{
+  "top-bar": {
+    "questions": "Fragen",
+    "today-goal": "Dein Ziel heute",
+    "notifications": "Benachrichtigungen",
+    "explain-one-part-hint": "Bildschirm‑Tipps für diese Seite erneut"
+  },
+  "messages": {
+    "slow-connection": " Es sieht so aus, als ob deine Internetverbindung langsam ist. Danke für deine Geduld.",
+    "stable-connection": " Dein Internet ist jetzt stabil, lass uns fortfahren. ",
+    "no-connection-title": "Keine Internetverbindung",
+    "no-connection-text": "Du hast ein Problem mit deiner Internetverbindung, bitte warte, bis es sich wieder stabilisiert."
+  },
+  "app-update": {
+    "force-title": "Update nötig 📲✨",
+    "force-body": "Mit dieser Version klappt die Verbindung zu unseren Servern nicht mehr. Tippe auf „Aktualisieren“ — die neue FluentDeck ist da: schneller und besser als je zuvor! 🚀",
+    "soft-title": "Neues Update verfügbar",
+    "soft-default-body": "Es gibt neue Features und Verbesserungen. Hol dir die neue Version, wenn du eine Minute hast — dein Englisch wird noch besser. 🔥✨",
+    "update-action": "Aktualisieren",
+    "later-action": "Später"
+  },
+  "buttons": {
+    "skip": "überspringen",
+    "send": "abgeben",
+    "description": "Erklärung",
+    "next": "nächstes",
+    "wrong-answer": "falsche Antwort",
+    "save": "speichern",
+    "start": "Start",
+    "close": "Schließen",
+    "ok": "OK"
+  },
+  "inputs": {
+    "E-mail-address": "E-Mail Adresse",
+    "name": "Name",
+    "surname": "Nachname",
+    "nickname": "Spitzname",
+    "date-of-birth": "Geburtsdatum",
+    "country": "Land",
+    "your-country": "In welchem Land lebst du?",
+    "city": "Stadt",
+    "your-city": "In welcher Stadt lebst du?",
+    "educational-institution": "Schule",
+    "your-educational-institution": "Name deiner Schule",
+    "class/course": "Klasse",
+    "your-class/course": "Deine Klasse (z.B. 7a oder 7.1)",
+    "class-error": "Bitte gib den Namen deine Schule an",
+    "E-mail": "E-Mail",
+    "E-mail-optional": "E-Mail (für Passwort vergessen)",
+    "E-mail-nickname": "E-Mail oder Spitzname",
+    "your-email": "Deine E-Mail",
+    "paste-email": "Fügen Sie den Code aus der E-Mail ein",
+    "password": "Passwort",
+    "enter-password": "Passwort eingeben",
+    "enter-password-again": "Passwort erneut eingeben",
+    "confirm-password": "Passwort bestätigen",
+    "new-password": "Neues Passwort",
+    "confirm-new-password": "Neues Passwort bestätigen",
+    "enter-the-keyword": "Das Schlüsselwort eingeben",
+    "enter-the-result": "Ergebnis eingeben"
+  },
+  "popups": {
+    "leave-page-popup": {
+      "first-title": "Bist du sicher",
+      "second-title": "dass du diese Seite verlassen willst?",
+      "first-text": "Wenn du die Seite verlässt",
+      "second-text": "werden Informationen nicht gespeichert",
+      "save": "Speichern",
+      "leave": "Verlassen",
+      "save-failed": "Änderungen konnten nicht gespeichert werden. Bitte versuche es erneut."
+    },
+    "delete-page-popup": {
+      "first-title": "Sind Sie sicher, dass Sie",
+      "second-title": "Ihr Konto löschen möchten?",
+      "first-text": "Wenn Sie Ihr Konto jetzt löschen,",
+      "second-text": "können Sie diese Aktion nicht rückgängig machen, alle Ihre Daten werden dauerhaft gelöscht.",
+      "delete": "Löschen",
+      "cancel": "Abbrechen"
+    },
+    "success-message-popup": {
+      "title": "Fertig",
+      "got-it": "Verstanden"
+    },
+    "input-popup": {
+      "title": "Erechne das Ergebnis",
+      "error": "Nur Zahlen eingeben"
+    }
+  },
+  "over": {
+    "points": "Punkte",
+    "week": "Woche",
+    "month": "Monat",
+    "next": "Nächstes",
+    "prev": "Zurück",
+    "loading": "Es lädt",
+    "search": "Suche",
+    "class": "Klasse",
+    "no-search-results": "Leider gibt es keine Suchergebnisse für Ihre Anfrage. Bitte ändern Sie Ihre Anfrage oder wählen Sie aus der Liste unten."
+  },
+  "home": {
+    "welcome": "Willkommen",
+    "play-game": "Spiele das Spiel",
+    "improve-your-skills": "Verbessere deine Fähigkeiten",
+    "be-the-first": "Werde täglich besser",
+    "start-playing": "Spiel starten"
+  },
+  "onboarding": {
+    "skip": "Überspringen",
+    "next": "Weiter",
+    "get-started": "Jetzt loslegen",
+    "welcome": {
+      "title": "Willkommen bei FluentDeck!",
+      "description": "Mathe üben, mit Freunden wetteifern und Fortschritte sehen – alles in einer App.",
+      "bullet-1": "Tausende Aufgaben für Klasse 1 bis 12",
+      "bullet-2": "Top-Listen und Duelle mit deinen Mitschüler:innen",
+      "bullet-3": "Lösungen und Erklärungen zu jeder Aufgabe"
+    },
+    "school": {
+      "title": "Deine Schule finden",
+      "description": "Trag deine Schule ein, damit wir dir später Mitschüler:innen vorschlagen können und du in der Top-Liste deiner Schule erscheinst.",
+      "placeholder": "Name deiner Schule",
+      "hint": "Optional. Du kannst die Schule später im Profil ändern.",
+      "confirmation": "Nach der Anmeldung verbinden wir dein Konto automatisch mit „{school}“.",
+      "save-failed": "Wir konnten deine Schule nicht automatisch speichern. Du kannst sie später im Profil ergänzen."
+    },
+    "class": {
+      "title": "In welcher Klasse bist du?",
+      "description": "So zeigen wir dir gleich passende Aufgaben für deine Klassenstufe.",
+      "hint": "Optional. Du kannst deine Klasse jederzeit im Profil ändern.",
+      "grade-format": "{n}. Klasse"
+    },
+    "themes": {
+      "title": "Probiere ein Thema aus",
+      "description": "Tipp ein Thema an und löse {n} kurze Aufgaben.",
+      "pick-class": "Wähle zuerst deine Klasse aus.",
+      "loading": "Themen werden geladen…",
+      "empty": "Für deine Klassenstufe sind noch keine Themen verfügbar.",
+      "error": "Themen konnten nicht geladen werden. Versuche es später nochmal."
+    },
+    "exercise": {
+      "progress": "Aufgabe {current} von {total}",
+      "submit": "Prüfen",
+      "next": "Weiter",
+      "loading": "Aufgabe wird geladen…",
+      "no-questions": "Für dieses Thema sind noch keine Aufgaben verfügbar.",
+      "load-error": "Aufgabe konnte nicht geladen werden.",
+      "feedback-correct": "Richtig!",
+      "feedback-wrong": "Knapp daneben — die richtige Antwort ist markiert.",
+      "complete-title": "Toll gemacht!",
+      "complete-description": "Registriere dich kostenlos, um deinen Fortschritt zu speichern und mit deinen Freunden weiter zu üben.",
+      "register-cta": "Jetzt registrieren"
+    },
+    "apply-dialog": {
+      "title": "Daten aus dem Onboarding übernehmen?",
+      "description": "Wir haben gemerkt, dass dein Profil noch ein paar Lücken hat. Möchtest du folgende Angaben aus dem Onboarding übernehmen?",
+      "apply": "Übernehmen",
+      "skip": "Nein, danke"
+    }
+  },
+  "login-register": {
+    "sign-in": "Einloggen",
+    "sign-up": "Anmelden",
+    "registration": "Registrieren",
+    "only-nickname": "Nur Spitzname",
+    "remember-me": "Angemeldet bleiben",
+    "forgot-password": "Passwort vergessen",
+    "sign-in-using": "Einloggen mit",
+    "sign-up-using": "Anmelden mit",
+    "google": "Google",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "apple": "Apple",
+    "apple-unavailable": "Mit Apple anmelden ist auf diesem Gerät nicht verfügbar.",
+    "apple-auth-failed": "Apple-Anmeldung fehlgeschlagen. Bitte erneut versuchen.",
+    "apple-web-unavailable": "Mit Apple anmelden ist nur in der iOS- oder Android-App verfügbar.",
+    "google-auth-failed": "Google-Anmeldung fehlgeschlagen. Bitte erneut versuchen.",
+    "google-web-unavailable": "Mit Google anmelden ist nur in der iOS- oder Android-App verfügbar.",
+    "dont-have-account": "Nicht Mitglied?",
+    "already-have-account": "Ich habe schon einen Account",
+    "user-cancelled-login": "du hast die Anmeldung abgebrochen oder dich nicht vollständig autorisiert",
+    "user-cancelled-register": "du hast die Registrierung abgebrochen oder dich nicht vollständig autorisiert",
+    "account-type-student": "Schüler",
+    "account-type-teacher": "Lehrer",
+    "email-invalid": "Bitte eine gültige E-Mail eingeben.",
+    "school-email": "Schul-E-Mail",
+    "school-email-hint": "Offizielle Schul-Adresse verwenden (kein Gmail, Outlook usw.).",
+    "school-email-checking": "Schul-E-Mail wird geprüft…",
+    "school-email-valid": "Schul-E-Mail erkannt.",
+    "school-email-invalid": "Bitte eine gültige Schul-E-Mail eingeben.",
+    "school-email-public": "Private E-Mail-Anbieter sind nicht erlaubt. Bitte Schul-Adresse nutzen.",
+    "school-email-unknown": "Diese Domain ist noch keiner Schule zugeordnet.",
+    "school-email-pick-school": "Schule auswählen",
+    "school-email-pick-school-required": "Bitte wählen Sie Ihre Schule aus.",
+    "teacher-invite-code": "Lehrer-Einladungscode",
+    "teacher-invite-code-hint": "Fragen Sie Ihre Schule nach dem jährlichen Lehrer-Code (ein Code pro Schule und Jahr)."
+  },
+  "teacher": {
+    "badge": "Lehrer",
+    "approval": {
+      "pending-title": "Freigabe ausstehend",
+      "pending-body": "Ihre Schule oder ein Administrator muss Ihr Lehrerkonto freigeben, bevor Sie Klassen anlegen oder den Fortschritt einsehen können. Sie können sich weiter anmelden und diesen Hinweis lesen."
+    },
+    "nav": {
+      "classes": "Klassen"
+    },
+    "home": {
+      "school-label": "Schule"
+    },
+    "classes": {
+      "create-title": "Klasse anlegen",
+      "create-cta": "Klasse anlegen",
+      "name-label": "Klassenname",
+      "grade-label": "Jahrgang (optional)",
+      "empty-title": "Noch keine Klassen",
+      "empty-body": "Legen Sie eine Klasse an und teilen Sie den Einladungscode mit Ihren Schülern.",
+      "list-subtitle": "{count} Schüler",
+      "list-subtitle-grade": "Jahrgang {grade} · {count} Schüler",
+      "detail-title": "Klasse",
+      "invite-code-label": "Einladungscode",
+      "invite-hint": "Schüler geben den Code unter Profil → Klasse beitreten ein.",
+      "code-copied": "Code kopiert",
+      "students-title": "Schüler ({count})",
+      "no-students": "Noch keine Schüler. Teilen Sie den Einladungscode.",
+      "regenerate-code": "Neuen Code erzeugen",
+      "archive-title": "Klasse archivieren?",
+      "archive-body": "Schüler können nicht mehr beitreten. Sie können jederzeit eine neue Klasse anlegen.",
+      "archive-confirm": "Klasse archivieren",
+      "actions": {
+        "cancel": "Abbrechen",
+        "save": "Anlegen"
+      },
+      "pending-join-title": "Beitrittsanfragen ({count})",
+      "leave-pending-title": "Austrittsanfragen ({count})",
+      "accept-join": "Annehmen",
+      "reject-join": "Ablehnen",
+      "accept-leave": "Austritt bestätigen",
+      "deny-leave": "Austritt ablehnen",
+      "join-accepted": "Schüler aufgenommen.",
+      "join-rejected": "Beitrittsanfrage abgelehnt.",
+      "leave-approved": "Schüler aus Klasse entfernt.",
+      "leave-denied": "Austrittsanfrage abgelehnt.",
+      "remove-member": "Entfernen",
+      "remove-member-title": "Mitglied entfernen?",
+      "remove-member-body": "Dieser Schüler wird aus der Klasse entfernt.",
+      "member-removed": "Mitglied entfernt.",
+      "tab-overview": "Übersicht",
+      "tab-roster": "Schüler",
+      "tab-analytics": "Fortschritt",
+      "tab-work": "Aufgaben",
+      "tab-reports": "Berichte",
+      "pending-badge": "{count} offen",
+      "search-label": "Nach Titel suchen",
+      "title-filter-label": "Nach Titel filtern",
+      "title-filter-all": "Alle Klassen",
+      "title-filter-clear": "Zurücksetzen",
+      "title-filter-selected": "{count} ausgewählt",
+      "title-filter-done": "Fertig",
+      "sort-label": "Sortieren nach",
+      "sort-name": "Name",
+      "sort-grade": "Jahrgang",
+      "sort-students": "Schüler",
+      "filter-empty": "Keine Klassen entsprechen den Filtern."
+    },
+    "analytics": {
+      "load-error": "Klassenanalyse konnte nicht geladen werden.",
+      "range-week": "7 Tage",
+      "range-month": "30 Tage",
+      "students": "Schüler in der Klasse",
+      "assignments": "Aktive Aufgaben",
+      "total-answers": "Aufgaben-Antworten (Zeitraum)",
+      "avg-per-day": "Ø Antworten pro Tag",
+      "activity-title": "Tägliche Aufgabenaktivität",
+      "no-assignments-hint": "Noch keine Aufgaben — Fortschritt erscheint, sobald Sie Arbeit zuweisen.",
+      "assignments-progress-title": "Aufgabenfortschritt",
+      "assignments-progress-empty": "In dieser Klasse gibt es noch keine Aufgaben.",
+      "assignment-progress-subtitle": "{studentsDone}/{studentsTotal} Schüler fertig · {exercisesDone}/{exercisesTotal} Übungen erledigt",
+      "weak-topics-title": "Themen mit Nachholbedarf",
+      "weak-topics-empty": "Keine schwachen Themen in diesem Zeitraum.",
+      "weak-subtitle": "{done} von {total} Schülern abgeschlossen"
+    },
+    "assignments": {
+      "section-title": "Aufgaben",
+      "create-title": "Neue Aufgabe",
+      "create-cta": "Thema zuweisen",
+      "title-label": "Titel",
+      "title-required": "Titel ist erforderlich.",
+      "topic-label": "Thema (Kategorie)",
+      "topics-label": "Themen (Kategorien)",
+      "topics-add": "Themen hinzufügen",
+      "topics-empty-hint": "Noch keine Themen ausgewählt.",
+      "topics-loading": "Themen werden geladen…",
+      "topics-picker-title": "Themen auswählen",
+      "topics-required": "Bitte wählen Sie mindestens ein Thema.",
+      "type-label": "Art",
+      "type-homework": "Hausaufgabe",
+      "type-classwork": "Klassenarbeit",
+      "enforcement-label": "Modus",
+      "enforcement-info": "Hinweis (ohne Sperre)",
+      "enforcement-lock": "Pflicht (Thema gesperrt bis erledigt)",
+      "due-label": "Fällig am",
+      "created": "Aufgabe erstellt.",
+      "empty": "Noch keine Aufgaben.",
+      "no-topics-in-class": "In diesem Klassenbereich gibt es noch keine Themen.",
+      "topics-section-other": "Weitere Themen",
+      "no-classes-hint": "Erstellen Sie zuerst eine Klasse, um Aufgaben zuzuweisen.",
+      "progress-subtitle": "{percent} % Übungen ({done}/{total})",
+      "student-progress-subtitle": "{percent} % Schüler fertig ({done}/{total})",
+      "exercise-progress-subtitle": "{percent} % Übungen ({done}/{total})",
+      "overdue": "Überfällig",
+      "scope-label": "Was zuweisen",
+      "scope-whole": "Ganzes Thema",
+      "scope-exercises": "Ausgewählte Übungen",
+      "exercises-label": "Übungen",
+      "exercises-loading": "Übungen werden geladen…",
+      "exercises-empty": "Keine Übungen in diesem Thema.",
+      "exercises-select-hint": "Mindestens eine Übung auswählen.",
+      "exercises-selected-count": "{count} ausgewählt",
+      "target-whole": "Ganzes Thema",
+      "target-exercises": "{count} Übungen",
+      "detail-title": "Aufgabendetails",
+      "targets-title": "Themen & Übungen",
+      "updated": "Aufgabe aktualisiert.",
+      "archived": "Aufgabe archiviert.",
+      "archive-title": "Aufgabe archivieren?",
+      "archive-body": "Schüler sehen diese Aufgabe nicht mehr. Der Fortschritt bleibt gespeichert.",
+      "archive-confirm": "Archivieren",
+      "load-error": "Aufgabe konnte nicht geladen werden.",
+      "save": "Speichern",
+      "topic-required": "Bitte wählen Sie ein Thema."
+    },
+    "reports": {
+      "section-title": "Berichte",
+      "weekly-toggle": "Wöchentlicher E-Mail-Bericht",
+      "weekly-hint": "Jeden Montagmorgen an Ihre Schul-E-Mail.",
+      "send-now": "Bericht jetzt senden",
+      "sent": "Bericht wurde per E-Mail gesendet."
+    },
+    "roster": {
+      "sort-label": "Sortieren nach",
+      "sort-last-active": "Zuletzt aktiv",
+      "sort-points": "Punkte",
+      "sort-username": "Name",
+      "row-subtitle": "{points} Pkt. · Zuletzt aktiv {lastActive}",
+      "last-active-days": "vor {days} T.",
+      "inactive-badge": "Inaktiv",
+      "empty-title": "Noch keine Schüler",
+      "empty-body": "Teile deinen Einladungscode, damit Schüler der Klasse beitreten können.",
+      "copy-code-cta": "Einladungscode kopieren",
+      "search-label": "Schüler suchen",
+      "assignment-filter-label": "Nach Aufgabe filtern",
+      "assignment-filter-all": "Alle Schüler",
+      "completion-all": "Alle",
+      "completion-incomplete": "Offen",
+      "completion-complete": "Erledigt",
+      "filter-empty": "Keine Schüler entsprechen den Filtern.",
+      "assignment-done": "Erledigt",
+      "assignment-open": "Offen",
+      "snapshot-error": "Schülerübersicht konnte nicht geladen werden.",
+      "snapshot-points": "Erfahrungspunkte",
+      "snapshot-topics": "Abgeschlossene Themen",
+      "snapshot-today": "Heutige Aktivität",
+      "snapshot-today-breakdown": "{correct} richtig · {wrong} falsch · {skipped} übersprungen",
+      "snapshot-goal": "Tagesziel",
+      "snapshot-goal-progress": "{done} / {goal} richtig heute",
+      "goal-met": "Ziel erreicht",
+      "goal-not-met": "Noch nicht",
+      "snapshot-week-title": "Letzte 7 Tage",
+      "assignments-section": "Zugewiesene Aufgaben",
+      "assignments-select": "Aufgabe auswählen",
+      "assignments-none": "In dieser Klasse gibt es noch keine Aufgaben.",
+      "assignments-progress": "{done} / {total} Übungen beantwortet",
+      "answer-correct": "Richtig",
+      "answer-wrong": "Falsch",
+      "answer-skipped": "Übersprungen",
+      "answer-unanswered": "Nicht beantwortet",
+      "student-answer": "Antwort des Schülers",
+      "solution-before-answer": "Lösung vor der Beantwortung angesehen",
+      "correct-answer": "Richtige Antwort",
+      "class-task-stats-title": "Fortschritt bei Klassenaufgaben",
+      "class-tasks-assignments": "Erledigte Aufgaben",
+      "class-tasks-assignments-hint": "Abgeschlossen vs. zugewiesen in dieser Klasse",
+      "class-tasks-exercises": "Klassenübungen",
+      "class-tasks-exercises-hint": "{correct} richtig · {wrong} falsch · {open} offen",
+      "class-tasks-correct": "Richtig",
+      "class-tasks-wrong": "Falsch",
+      "class-tasks-solution-peeks": "Lösungen vorab angesehen",
+      "class-tasks-solution-peeks-hint": "Wie oft der Schüler vor der Beantwortung eine Übungslösung geöffnet hat",
+      "assignments-dropdown-solution-peeks-count": "{count}× Lösung vorab",
+      "assignments-solution-peeks": "{count}× Lösung vorab bei dieser Aufgabe"
+    }
+  },
+  "student": {
+    "join-class": {
+      "section-title": "Meine Klassen",
+      "title": "Klasse beitreten",
+      "code-label": "Einladungscode",
+      "submit": "Beitreten",
+      "success": "Sie sind der Klasse beigetreten.",
+      "pending": "Anfrage gesendet — Lehrer muss bestätigen.",
+      "already-member": "Sie sind bereits in dieser Klasse.",
+      "leave-pending": "Austrittsanfrage gesendet — Lehrer muss bestätigen.",
+      "status-pending-join": "Wartet auf Bestätigung",
+      "status-active": "Aktives Mitglied",
+      "status-leave-pending": "Austritt ausstehend",
+      "none": "Sie sind in keiner Klasse.",
+      "teacher": "Lehrer: {name}",
+      "leave": "Austritt anfragen",
+      "leave-confirm-title": "Klasse verlassen?",
+      "leave-confirm-body": "Ihr Lehrer muss den Austritt bestätigen."
+    },
+    "assignments": {
+      "banner-title": "Vom Lehrer zugewiesen",
+      "overdue": "überfällig",
+      "locked-hint": "Einige Themen sind gesperrt, bis Sie die Pflicht-Hausaufgaben erledigt haben.",
+      "topic-locked": "Bitte erledigen Sie zuerst die zugewiesene Hausaufgabe zu diesem Thema.",
+      "progress-exercises": "{done}/{total} Übungen erledigt",
+      "modal-title": "Ihre Aufgaben",
+      "modal-empty": "Keine offenen Aufgaben.",
+      "icon-tooltip": "Lehreraufgaben",
+      "assigned-chip": "Zugewiesen",
+      "view-all": "Alle Aufgaben anzeigen",
+      "banner-summary": "{count} offen — Üben → Lehreraufgaben",
+      "practice-tab": "Lehreraufgaben",
+      "practice-empty-title": "Keine Lehreraufgaben",
+      "practice-empty-body": "Wenn Ihr Lehrer Aufgaben zuweist, erscheinen sie hier.",
+      "practice-intro": "Zeigen und bearbeiten Sie Aufgaben von Ihrem Lehrer.",
+      "class-tab-all": "Alle",
+      "class-filter-empty": "Für diese Klasse gibt es noch keine Aufgaben.",
+      "filter-label": "Anzeigen",
+      "filter-all": "Alle",
+      "filter-completed": "Erledigt",
+      "filter-not-completed": "Nicht erledigt",
+      "filter-in-progress": "In Bearbeitung",
+      "filter-has-wrong": "Mit falschen Antworten",
+      "sort-label": "Sortieren nach",
+      "sort-last-added": "Zuletzt hinzugefügt",
+      "sort-title-asc": "Titel (A–Z)",
+      "sort-not-completed-first": "Nicht erledigt zuerst",
+      "sort-scores": "Meiste richtig",
+      "sort-fails": "Meiste falsch",
+      "sort-due-soonest": "Fälligkeit (bald zuerst)",
+      "sort-overdue-first": "Überfällig zuerst",
+      "sort-progress": "Fortschritt (höchster zuerst)",
+      "filter-sort-empty": "Keine Aufgaben passen zu diesem Filter.",
+      "start-topic": "Thema starten",
+      "start": "Start",
+      "due-label": "Fällig",
+      "complete-back": "Zurück zu Lehreraufgaben",
+      "continue-task": "Aufgabe fortsetzen",
+      "flow-progress": "Aufgabe wird bearbeitet",
+      "flow-loading": "Nächste Übung wird geladen…",
+      "status-summary": "{correct} richtig · {wrong} falsch",
+      "status-correct": "Richtig",
+      "status-wrong": "Falsch",
+      "status-skipped": "Übersprungen",
+      "status-open": "Noch nicht beantwortet",
+      "complete-title": "Aufgabe abgeschlossen!",
+      "complete-total": "Übungen gesamt",
+      "complete-correct": "Richtig",
+      "complete-wrong": "Falsch",
+      "tab-unlocked": "Lehreraufgaben sind jetzt unter Üben verfügbar.",
+      "open-tab": "Öffnen"
+    }
+  },
+  "forgot-password": {
+    "forgot-password": "Passwort vergessen",
+    "send-email": "E-Mail senden",
+    "back-to-start": "Zurück zur Startseite"
+  },
+  "reset-password": {
+    "reset-password": "Passwort zurücksetzen",
+    "error-msg": "Passwort und Passwortbestätigung sollten übereinstimmen",
+    "back-to-login": "Zurück zum Login"
+  },
+  "activity": {
+    "Activity": "Aktivität",
+    "tabs": {
+      "My Status": "Mein Status",
+      "Top List": "Bestenliste",
+      "My Answers": "Meine Antworten",
+      "Progress": "Fortschritt"
+    },
+    "my-status": {
+      "set-everyday-goal": "Tägliches Ziel setzen",
+      "daily-goal-placeholder": "Tagesziel wählen",
+      "daily-goal-card-hint": "Such dir eine Zahl, die für dich passt — du kannst sie jederzeit ändern.",
+      "last-quiz": "Letztes Quiz",
+      "experience-points": "Punkte",
+      "last-update": "Letztes Update:",
+      "go-to-topics": "Beginne deine Reise, um Punkte zu sammeln - wähle ein Mathe-Themengebiet",
+      "past-categories": "Vergangene Kategorien",
+      "categories-were-answered": "Beantwortete Kategorien",
+      "you-are-in": "Du bist in FluentDeck",
+      "welcome-app": "Willkommen bei FluentDeck! 👋",
+      "no-goal": "Kein Ziel",
+      "today-activity": "Heutige Aktivität",
+      "wrong": "Falsch",
+      "skipped": "Übersprungen",
+      "correct": "Richtig",
+      "check-progress": "Fortschritt prüfen",
+      "goal-set": "Ihr tägliches Ziel wurde festgelegt",
+      "goal-cleared": "Dein Tagesziel wurde zurückgesetzt."
+    },
+    "top-list": {
+      "lists": [
+        {
+          "title": "In deiner Klasse",
+          "fieldName": "Klasse"
+        },
+        {
+          "title": "In deiner Schule",
+          "fieldName": "Schule"
+        },
+        {
+          "title": "In deiner Stadt",
+          "fieldName": "Stadt"
+        },
+        {
+          "title": "In deinem Land",
+          "fieldName": "Land"
+        },
+        {
+          "title": "In der Welt",
+          "fieldName": "Welt"
+        }
+      ],
+      "place": "Platz",
+      "please": "Bitte",
+      "update": "Update",
+      "your": "",
+      "from": "aus",
+      "people": "Spielern",
+      "back-to-the-top-list": "Zurück zur Top-List",
+      "there-is-no-any-user": "Es gibt keinen Benutzer mit diesem Benutzernamen"
+    },
+    "my-answers": {
+      "summary": "Zusammenfassung",
+      "questions-passed": "Beantwortete Fragen",
+      "of": "von",
+      "correct-answers": "Richtige Antworten",
+      "wrong-answers": "Falsche Antworten",
+      "skipped-answers": "übersprungene Antworten"
+    },
+    "progress": {
+      "you-have-registered": "Du hast dich registriert am"
+    }
+  },
+  "topics": {
+    "topics": "Themen",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "classes": "Klasse",
+    "grades": {
+      "1-2": "1.–2. Klasse",
+      "2-3": "2.–3. Klasse",
+      "3-4": "3.–4. Klasse",
+      "4-5": "4.–5. Klasse",
+      "5-6": "5.–6. Klasse",
+      "6-7": "6.–7. Klasse",
+      "7-8": "7.–8. Klasse",
+      "8-9": "8.–9. Klasse",
+      "9-10": "9.–10. Klasse",
+      "10-11": "10.–11. Klasse",
+      "11-12": "11.–12. Klasse"
+    }
+  },
+  "question": {
+    "question": "Fragen",
+    "continue": "Weitermachen",
+    "point": "Punkt",
+    "start-practice": "Üben beginnen",
+    "back-to-categories": "Zurück zu den Kategorien",
+    "train-topic-in-remix": "Dieses Thema im Themen-Mix üben",
+    "right-answered": "Richtige Antworten",
+    "check-skipped": "Übersprungene Fragen zeigen",
+    "single-skipped-text": "Du hast den Großteil des Themas bestanden, aber du hast 1 Frage übersprungen. Du kannst es noch einmal überprüfen oder es vorerst lassen",
+    "leave-for-now": "Vorerst verlassen",
+    "your-score-on-this-topic": "Deine Punkte zu diesem Thema",
+    "will-be-update": "Du hast dieses Thema abgeschlossen. Deine Erfolge werden aktualisiert.",
+    "skipped-first-text": "Du hast den Großteil des Themas bestanden, aber du hast ",
+    "skipped-second-text": " Fragen übersprungen. Du kannst sie noch einmal überprüfen oder sie vorerst lassen.",
+    "exercise-solution": "Übungslösung",
+    "step-of": "Schritt {current} von {total}",
+    "next-mc-step": "Nächster Schritt",
+    "tap-to-continue": "Zum Weiterzumachen irgendwo tippen",
+    "back-step": "Zurück",
+    "wrong-answer-title": "Leider falsch",
+    "wrong-answer-hint": "Weiter so — die nächste klappt besser.",
+    "second-answer-wrong-retry": "Das Ergebnis ist noch nicht richtig. Du hast einen weiteren Versuch.",
+    "lesson-material": "Lernstoff",
+    "wrong-solution-coach-1": "Schau kurz in die Übungslösung!",
+    "wrong-solution-coach-2": "Lösung ansehen — so geht’s.",
+    "wrong-solution-coach-3": "Ein Klick zur Lösung.",
+    "wrong-solution-coach-4": "So löst man’s — in der Übungslösung.",
+    "wrong-solution-coach-5": "Die Übungslösung hilft dir weiter.",
+    "wrong-solution-coach-6": "Schnell den Lösungsweg checken?",
+    "wrong-solution-coach-7": "Tipp: Übungslösung öffnen.",
+    "wrong-solution-coach-8": "Nachschlagen lohnt sich.",
+    "wrong-solution-coach-9": "Da steht jeder Schritt.",
+    "wrong-solution-coach-10": "Hol dir den Rechenweg hier.",
+    "no-solution": "Tut uns leid, wir haben im Moment keine Lösung.",
+    "multiselect-hint": "Mehrere Antworten sind richtig. Wähle alle zutreffenden aus.",
+    "whiteboard-button": "Whiteboard",
+    "report-flag-tooltip": "Problem melden",
+    "report-title": "Problem melden",
+    "report-option-unreadable": "Aufgabe oder Antwortoptionen sind nicht lesbar.",
+    "report-option-no-correct": "Es gibt keine richtige Antwort.",
+    "report-option-marked-wrong": "Die richtige Antwort wird als falsch gewertet.",
+    "report-option-topic-mismatch": "Die Aufgabe passt nicht zum Thema.",
+    "report-option-several-correct": "Mehrere Antworten sind richtig.",
+    "report-option-other": "Sonstiges.",
+    "report-details-hint": "z. B. Ein Tippfehler …",
+    "report-submit": "SENDEN",
+    "report-cancel": "ABBRECHEN",
+    "report-sent": "Danke — deine Meldung wurde gesendet.",
+    "report-send-error": "Die Meldung konnte nicht gesendet werden. Bitte später erneut versuchen.",
+    "report-validation": "Bitte eine Option auswählen oder eine kurze Beschreibung eingeben.",
+    "report-sending": "Wird gesendet…",
+    "lightbox-choose-answer": "Diese Antwort wählen",
+    "lightbox-selected": "Ausgewählt"
+  },
+  "practice": {
+    "practice": "Üben",
+    "player-vs-machine": "Spieler gegen Maschine",
+    "player-vs-friend": "Spieler gegen Freund",
+    "play-with-friends": "Spieler gegen Spieler",
+    "can-practice-with-friends": "Du kannst mit jemandem üben, der eine ähnliche Bewertung hat",
+    "practice-with-friends-questions": "Anzahl der Fragen: 10-30",
+    "try-again": "Erneut probieren",
+    "practice-with-friends-load": "Wir suchen nach einem Spieler, bitte warte",
+    "your-score": "Deine Punkte:",
+    "machine-score": "Punkte der Maschine:",
+    "nickname-score": "{nickname} Punkte:",
+    "friend-score": "Punkte der Freunde:",
+    "friend-think": "denkt gerade...",
+    "answered-all-text": "Du hast alle Fragen beantwortet",
+    "opponent-default": "Gegner",
+    "mode-scores": {
+      "10": "+10, +5, -2",
+      "20": "+20, +10, -4",
+      "30": "+30, +15, -6"
+    },
+    "questions-count": "{count} Fragen",
+    "your-answer": "Deine Antwort",
+    "popup-go-topic": {
+      "Oops": "Ups!",
+      "first-text": "Sie müssen mindestens",
+      "second-text": "Fragen beantworten, um gegen die Maschine spielen zu können. Gehe zu den \"Themen\", um weiter zu lernen.",
+      "go-to-topics": "Gehe zum Thema"
+    },
+    "no-players-popup": {
+      "title": "Kein Spieler ist verfügbar",
+      "text": "Sorry, aktuell ist kein Spieler verfügbar 🤷‍♀️. Probiere später noch einmal.",
+      "go-to-practice": "Gehe zum Üben",
+      "try-again": "Erneut versuchen"
+    },
+    "left-by-rival-popup": {
+      "title": "Ups!",
+      "text": "Dein Gegner hat das Spiel verlassen 🤪. Du hast das Spiel gewonnen."
+    },
+    "leave-page-popup": {
+      "first-text": "Du wirst verlieren und dein Fortschritt wird verloren gehen 🥺.",
+      "stay": "Bleibe"
+    },
+    "finish-game-popup": {
+      "save-btn-text": "Neues Spiel",
+      "leave-btn-text": "Mein Status",
+      "win": {
+        "title": "Prima! 🎉",
+        "text": "Du hast {points} Punkte gewonnen"
+      },
+      "draw": {
+        "title": "Unentschieden gespielt",
+        "text": "Du hast {points} Punkte gewonnen"
+      },
+      "lose": {
+        "title": "Oh schade 🙀",
+        "text": "Du hast {points} Punkte verloren"
+      }
+    },
+    "result-win": "Gewonnen",
+    "result-draw": "Unentschieden",
+    "result-lose": "Verloren",
+    "remix": {
+      "tab-label": "Themen-Mix",
+      "session-title": "Gemischte Themen",
+      "pick-intro-title": "Wähle die Themen aus, die du üben möchtest",
+      "pick-intro-subtitle": "Nur erledigte Themen aus „Themen“ erscheinen hier. Wähle eines oder mehrere aus und tippe dann auf Weiter.",
+      "search-hint": "Erledigte Themen suchen…",
+      "empty-class": "In dieser Klasse gibt es noch keine erledigten Themen.",
+      "none-completed": "Schließe mindestens ein Thema unter „Themen“ ab, um hier zu üben.",
+      "no-classes": "Klassen konnten nicht geladen werden.",
+      "load-error": "Beim Laden ist etwas schiefgegangen. Zum Aktualisieren nach unten ziehen oder erneut versuchen.",
+      "exercises-count": "Anzahl der Aufgaben: {count}",
+      "selected-count-singular": "{n} Thema",
+      "selected-count-plural": "{n} Themen",
+      "continue-step": "Weiter",
+      "step2-title": "Ausgewählte Themen",
+      "remove-topic": "Thema entfernen",
+      "search-empty": "Keine Themen gefunden.",
+      "class-unknown": "Klasse {id}",
+      "start": "Übung starten",
+      "load-questions-error": "Aufgaben konnten nicht geladen werden. Verbindung oder Auswahl prüfen.",
+      "summary-score-label": "Deine Punkte für diese Runde",
+      "summary-correct-wrong": "Richtig: {correct} · Falsch: {wrong}",
+      "summary-skipped": "Übersprungen: {count}",
+      "summary-session-size": "Aufgaben in dieser Runde: {total}",
+      "done": "Fertig"
+    }
+  },
+  "push-prompt": {
+    "invite-title-20": "20 Aufgaben – echt stark! 💪",
+    "invite-body-20": "Magst du kleine Erinnerungen, wenn’s was Neues gibt oder dein Tagesziel wartet? Wir zeigen dir gleich den System-Dialog – du entscheidest!",
+    "invite-title-200": "200 geschafft – du rockst! 🚀",
+    "invite-body-200": "Krass, was du schon trainiert hast! Wenn du Bock hast, schicken wir dir ab und zu Motivation & News per Push. Musst du nicht – aber wär cool. ✨",
+    "yes-activate": "Klar, weiter!",
+    "not-now": "Lieber später",
+    "opened-settings-hint": "Perfekt! Unter Benachrichtigungen einfach FluentDeck erlauben – dann passt's. ⚙️",
+    "native-denied-hint": "Alles gut! Du kannst Push jederzeit unter Profil → Benachrichtigungen anmachen. 😊",
+    "banner-title": "Noch kein Push?",
+    "banner-subtitle": "Hol dir lockere Tipps & Erinnerungen – ein Tap, dann der System-Dialog. 🔔",
+    "banner-cta": "Jetzt aktivieren",
+    "thank-you": "Yay, danke dir! 🎉 Du bist dabei – wir melden uns nur, wenn’s was Wertvolles ist."
+  },
+  "screen-tutorial": {
+    "sheet": {
+      "this-page-title": "Diese Seite",
+      "this-page-subtitle": "Nur Bereiche in der Ansicht. Navigation, Kopfzeile und die gesamte Liste mit Hinweisen: Profil → Über uns → Tipps zeigen.",
+      "all-tips-title": "Bildschirm‑Tipps",
+      "all-tips-subtitle": "Alle Erläuterungen, inklusive unterer Navigation und violetter Kopfzeile.",
+      "no-page-tips": "Für diesen Bereich gibt es keine passenden Schnelltipps."
+    },
+    "common": {
+      "skip": "Skippen",
+      "next": "Weiter",
+      "done": "Fertig",
+      "back": "Zurück",
+      "step_counter": "Schritt {current} von {total}",
+      "accessibility_coach": "Überlagerung der Kurzführung"
+    },
+    "shared_app_chrome": {
+      "bottom_nav": {
+        "title": "Hauptbereiche",
+        "body": "Unten wechselst du zwischen Aktivität, Themen, Üben und Profil. Die aktive Sektion bleibt markiert, bis du ein anderes Symbol antippst."
+      },
+      "sub_tabs": {
+        "title": "Obere Tab-Leiste",
+        "body": "Unter dem violetten Bereich wählst du Unterseiten – z. B. Status/Listen, Klassenstufen, Übungsmodi oder Profil-Unterbereiche – ohne die Hauptsektion zu verlassen."
+      },
+      "today_goal": {
+        "title": "Tagesziel in der Kopfzeile",
+        "body": "Die gelbe Zahl zeigt dein heutiges Aufgabenziel und passt zu dem, was im Account hinterlegt ist."
+      },
+      "notifications": {
+        "title": "Mitteilungen",
+        "body": "Tippe auf die Glocke, um das Seitenfenster mit aktuellen Hinweisen zu öffnen."
+      }
+    },
+    "shared_practice": {
+      "sub_tabs": {
+        "title": "Übungsmodi",
+        "body": "Wechsle zwischen Remix (gemischte Themen), gegen die Maschine oder gegen eine Freundin/einen Freund – die Kopfzeile bleibt, der Inhalt darunter ändert sich."
+      }
+    },
+    "shared_profile": {
+      "main_nav": {
+        "title": "Profil unten",
+        "body": "Über das Profil-Symbol erreichst du Account, Hinweise, Sicherheit und App-Infos."
+      },
+      "sub_tabs": {
+        "title": "Profil-Tabs",
+        "body": "Die Tabs teilen lange Einstellungen in Account, Benachrichtigungen, Sicherheit, Über uns, Teilen und Ton auf."
+      }
+    },
+    "activity_status": {
+      "s1_title": "Weitere Statistik-Tabs",
+      "s1_body": "Bestenliste, Meine Antworten und Fortschritt: Bestenlisten, Antwortverteilung und Verläufe zu Fortschritt und Leistung.",
+      "s2_title": "Tagesziel",
+      "s2_body": "Lege ein Minimum an täglichen Aufgaben fest – so bleibst du konsequent dran."
+    },
+    "activity_top_list": {
+      "complete_title": "Bestenlisten",
+      "complete_body": "Sieh deinen Platz im Land, in der Stadt, in der Schule oder in der Klasse — tippe auf die jeweilige Zeile.",
+      "incomplete_title": "Profil unvollständig",
+      "incomplete_body": "{field} fehlt noch. Unter Profil → Account Land, Stadt, Schule und Klasse ergänzen (alles, was noch offen ist), speichern — danach kannst du hier die Listen öffnen und deinen Rang sehen."
+    },
+    "activity_answers": {
+      "s4_title": "Antwortübersicht",
+      "s4_body": "Jeder Ring zeigt Summen, Anteile richtig/falsch/übersprungen aus deiner Historie."
+    },
+    "activity_progress": {
+      "s3_title": "Woche oder Monat",
+      "s3_body": "Oben wechselst du die Periode; mit den Pfeilen später blätterst du durch frühere Intervalle.",
+      "s4_title": "Aktivitätsdiagramm",
+      "s4_body": "Balken zeigen, wie viel du pro Tag trainiert hast. Ein Tag lässt sich antippen für Details."
+    },
+    "topics_browse": {
+      "s2_title": "Deine Klasse",
+      "s2_body": "Wähle oben unter der violetten Leiste deine Klasse, um die Themen dieser Stufe zu sehen.",
+      "s3_title": "Suche",
+      "s3_body": "Nutze die Suche, um ein Thema nach Namen zu finden.",
+      "s5_title": "Themenliste",
+      "s5_body": "Erkenne jedes Thema an der Beispielaufgabe. Wenn es angeboten wird, schau dir auch die „Lernstoff“ an."
+    },
+    "learning_exercise": {
+      "s1_title": "Aufgabenstellung",
+      "s1_body": "Lies hier den Fragetext — bei mehrteiligen Aufgaben wechselst du über Punkte oder Wischen zwischen den Schritten.",
+      "s2_title": "Antworten wählen",
+      "s2_body": "Wähle Option(en) aus (bei Checkboxen mehrere) und tippe Gelb zum Senden. Danach markieren Farben richtige, falsche oder ausgeschlossene Antworten.",
+      "s3_title": "Übungslösung",
+      "s3_body": "Wenn du nicht weiterkommst oder falsch lagst: „Übungslösung“ öffnet eine schrittweise Hilfe im Blatt."
+    },
+    "practice_remix_intro": {
+      "s1_title": "Themen‑Mix (Remix)",
+      "s1_body": "Hier kombinierst du Aufgaben aus Themen, die du unter „Themen“ schon mindestens einmal abgeschlossen hast.",
+      "s2_title": "Zuerst Themen erledigen",
+      "s2_body": "Schließe zuerst mindestens zwei Themen unter „Themen“ ab. Danach erscheinen Suche, die nach Klasse gruppierte Liste und „Weiter“, um deinen Mix zu bauen."
+    },
+    "practice_remix": {
+      "s3_title": "Themen filtern",
+      "s3_body": "Suche abgeschlossene Bereiche, um sie für eine Remix-Runde zu kombinieren.",
+      "s4_title": "Weiter",
+      "s4_body": "Wähle mindestens ein Thema aus und tippe auf „Weiter“, um deine Auswahl zu prüfen und die Anzahl der Aufgaben festzulegen.",
+      "s5_title": "Themen nach Klassenstufe",
+      "s5_body": "Die Liste ist nach Klassen sortiert—in den Abschnitten findest du weitere Stufen; scrolle, um Themengebiete zu mischen."
+    },
+    "practice_remix_configure": {
+      "s1_title": "Anzahl der Aufgaben",
+      "s1_body": "Mit dem Schieberegler legst du fest, wie viele Aufgaben diese Remix‑Runde haben soll. Wenn alles passt, starte mit „Übung starten“."
+    },
+    "practice_vs_machine": {
+      "s3_title": "Rundenlänge",
+      "s3_body": "Jede Zeile startet ein KI-Duell mit 10, 20 oder 30 Fragen."
+    },
+    "practice_vs_player": {
+      "s3_title": "Freund*in-Duell",
+      "s3_body": "Tippe Start, wähle die Fragenanzahl – die App verbindet euch für ein gemeinsames Duell."
+    },
+    "profile_account": {
+      "s3_title": "Account-Formular",
+      "s3_body": "Hier pflegst du Mail, Namen, Schule, Klasse und Sprache. Speichern übernimmt alles; gefährliche Aktionen stehen unten."
+    },
+    "profile_notifications": {
+      "s3_title": "Push-Schalter",
+      "s3_body": "Der Schalter steuert OneSignal-Push. Der Text darunter spiegelt den aktuellen Status."
+    },
+    "profile_security": {
+      "s3_title": "Passwort ändern",
+      "s3_body": "Neues Passwort eingeben, bestätigen, speichern. Die Augen-Symbole helfen bei der Eingabe."
+    },
+    "profile_about": {
+      "s3_title": "Über-Liste",
+      "s3_body": "Hier erreichst du Rechtliches, Lizenzen, Versionshinweise und Store-Bewertungen.",
+      "s4_title": "Bildschirm‑Tipps",
+      "s4_body": "Über „Tipps zeigen“ siehst du die komplette Liste. Nur Admins finden hier zusätzlich „Alle Bildschirm‑Tipps zurücksetzen“, um alle Führungen von vorn zu starten."
+    },
+    "profile_share": {
+      "s3_title": "Eltern-Mails",
+      "s3_body": "Bis zu vier Adressen für Berichte. Gespeicherte Einträge stehen oben, leere Felder nehmen neue Mails auf."
+    },
+    "profile_sound": {
+      "s3_title": "Ton & Lautstärke",
+      "s3_body": "Schalte Effekte ein/aus und stell die Lautstärke. Beim Wieder-Einschalten spielt ein kurzer Testton."
+    },
+    "segments": {
+      "activity_answers": "Antwort‑Statistik Kreise",
+      "activity_progress_chart": "Fortschrittsdiagramm",
+      "activity_progress_period": "Woche‑/Monats‑Umschalter",
+      "activity_top_list": "Bestenliste & Karten",
+      "chrome_bottom_nav": "Untere Hauptnavigation",
+      "chrome_notifications": "Glocke für Mitteilungen",
+      "chrome_search": "Themensuche",
+      "chrome_sub_tabs": "Tabs unter der violetten Kopfzeile",
+      "chrome_today_goal": "Tagesziel-Zeile in der Kopfzeile",
+      "practice_machine_list": "Runden gegen die Maschine",
+      "practice_player_start": "Mit Freund*in — Start",
+      "practice_remix_continue": "Remix — Weiter",
+      "practice_remix_exercise_count": "Remix — Anzahl der Aufgaben (Schieberegler)",
+      "practice_remix_search": "Remix-Themensuche",
+      "practice_remix_class_topics": "Remix — Themenliste nach Klasse",
+      "profile_about_list": "Über-uns & Infos",
+      "profile_about_replay_hint": "Tipps neu / zurücksetzen (Text)",
+      "profile_account_form": "Account-Formular",
+      "profile_notifications_toggle": "Push-Umschalter",
+      "profile_security_fields": "Passwortfelder & Speichern",
+      "profile_share_emails": "E-Mails zum Teilen",
+      "profile_sound_mixer": "Ton & Lautstärke",
+      "topics_class_tabs": "Klassen-/Stufen-Tabs",
+      "topics_list": "Themenkartenliste",
+      "topics_search": "Themen durchsuchen"
+    }
+  },
+  "profile": {
+    "profile": "Profil",
+    "tabs": [
+      "Account",
+      "Benachrichtigungen",
+      "Sicherheit",
+      "Über uns",
+      "Erfolg teilen",
+      "Ton"
+    ],
+    "classes-tab": "Meine Klassen",
+    "notifications": {
+      "title": "Push-Benachrichtigungen",
+      "description": "Erhalte Erinnerungen und Updates zu deinen täglichen Zielen und Fortschritten.",
+      "push-label": "Push-Benachrichtigungen",
+      "status-on": "Du erhältst Push-Benachrichtigungen",
+      "status-off": "Push-Benachrichtigungen sind deaktiviert"
+    },
+    "account": {
+      "logout-warning": "Abmeldenachricht",
+      "logout-text": "Bitte gib deine E-Mail und dein Passwort an, um dich später wieder anmelden zu können. Andernfalls werden dein Konto und alle damit verbundenen Daten sofort nach der Abmeldung gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "log-out": "Abmelden",
+      "delete": "Konto löschen",
+      "save-and-logout": "Speichern und abmelden",
+      "delete-account": "Account löschen",
+      "delete-error": "Fehler beim Löschen",
+      "language": "Sprache",
+      "language-de": "Deutsch",
+      "language-en": "Englisch"
+    },
+    "security": {
+      "popup-text": "Passwort wurde aktualisiert",
+      "password-min-length": "Passwort muss mindestens 6 Zeichen haben",
+      "change-error": "Fehler beim Ändern des Passworts"
+    },
+    "about-us": {
+      "replay-intro-this-tab": "Tipps für diesen Tab erneut anzeigen",
+      "reset-intro-tours": "Alle Bildschirm-Tipps zurücksetzen",
+      "reset-intro-title": "Alle Tipps zurücksetzen?",
+      "reset-intro-body": "Beim nächsten Öffnen der jeweiligen Bereiche zeigen wir die Einführung wieder.",
+      "reset-intro-confirm": "Zurücksetzen",
+      "terms-of-services": "AGB",
+      "privacy": "Datenschutz",
+      "privacy-settings": "Privatsphäre-Einstellungen",
+      "imprint": "Impresum",
+      "software-licenses": "Software-Lizenzen",
+      "release-notes": "Versionshinweise",
+      "write-review": "App bewerten",
+      "app-review-title": "Wie gefällt dir FluentDeck?",
+      "app-review-subtitle": "Tippe auf die Sterne, um eine Bewertung auszuwählen.",
+      "app-review-feedback-hint": "Was können wir verbessern? Beschreib es gern konkret hier …",
+      "app-review-open-store": "Im Store weiter",
+      "app-review-submit": "Feedback senden",
+      "app-review-cancel": "Abbrechen",
+      "app-review-thanks-feedback": "Danke für dein Feedback!",
+      "app-review-send-error": "Senden ist fehlgeschlagen. Bitte prüfe deine Verbindung und versuche es erneut.",
+      "app-review-open-store-failed": "Der Store konnte nicht geöffnet werden.",
+      "explain-one-part": "Einzelteil erklären …",
+      "show-tips": "Tipps zeigen …",
+      "explain-one-part-title": "Was soll erklärt werden?",
+      "explain-one-part-subtitle": "Wir heben das passende Bedienelement hervor. Die Liste gilt für den Tab, auf dem du gerade bist."
+    },
+    "send-reports": {
+      "introduction-text": "Teile deinen Erfolg mit Eltern, Lehrern und Freunden per E-Mail.",
+      "saved-email": "Gespeicherte E-Mails:",
+      "parent-email": "E-Mail Adresse angeben",
+      "not-saved-email": "Du hast keine E-Mail-Adresse gespeichert",
+      "add-four-email-text": "Du kannst bis zu vier E-Mail Adressen speichern. Die E-Mail Adressen können später bearbeitet oder gelöscht werden",
+      "enter-new-email": "Neue E-Mail Adresse angeben",
+      "leave-popup-title": "Bist du sicher, <br> dass du diese E-Mail löschen möchtest?",
+      "leave-popup-text": "Wenn du dieses Popup schließt, wird die E-Mail nicht entfernt",
+      "email-can-not-be-empty": "E-Mail kann nicht leer sein",
+      "saved-successfully": "Erfolgreich gespeichert",
+      "success-text": "Du hast die E-Mail erfolgreich aktualisiert",
+      "remove-success-text": "Die E-Mail-Adresse wurde gelöscht",
+      "successfully-updated": "Erfolgreich aktualisiert",
+      "no": "Nein",
+      "yes": "Ja"
+    },
+    "sound": {
+      "sound": "Ton",
+      "sound-volume": "Lautstärke"
+    }
+  },
+  "notification": {
+    "there-arnt-notification": "Es liegen noch keine Benachrichtigungen vor.",
+    "welcome-app": "Willkommen bei FluentDeck",
+    "play-more-games": "Spiele und trainiere, verbessere deine Fähigkeiten und sei der Erste in der Welt!",
+    "mark-all-read": "Alle als gelesen markieren",
+    "open-classes-hint": "Öffnen Sie Klassen, um Beitritts- oder Austrittsanfragen zu prüfen.",
+    "open-profile-hint": "Öffnen Sie Profil → Meine Klassen, um den Klassenstatus zu sehen."
+  },
+  "not-found": {
+    "title": "404 Seite nicht gefunden",
+    "text": "Leider konnten wir die von Ihnen gesuchte Seite nicht finden, aber wir haben einige Informationen über berühmte Mathematiker gefunden. Viel Spaß :).",
+    "title-offline": "Kein Internet",
+    "text-offline": "Sie haben kein Internet, aber wir haben einige Informationen über berühmte Mathematiker gefunden. Viel Spaß :).",
+    "mathematics": [
+      {
+        "name": "Pythagoras",
+        "bio": "Vegetarischer mystischer Führer und zahlenbesessener Denker. Sein Ruhm als bekanntester Name der Mathematik beruht auf einem Theorem über rechtwinklige Dreiecke, obwohl es wahrscheinlich bereits vor ihm existierte. Er lebte in einer Gemeinschaft, in der Zahlen sowohl wegen ihrer spirituellen als auch ihrer mathematischen Qualitäten verehrt wurden. Seine Erhöhung der Zahlen als Essenz der Welt machte ihn zum bedeutendsten Begründer der griechischen Mathematik, und zum Beginn der Mathematik, wie wir sie heute kennen. Berühmt ist auch sein Verzicht auf Bohnen in der Ernährung.",
+        "img": "Pythagoras"
+      },
+      {
+        "name": "Euclid",
+        "bio": "Bekannt als der „Vater der Geometrie“, war Euklid ein antiker griechischer Mathematiker, der „Die Elemente“ schrieb, eines der einflussreichsten Werke in der Geschichte der Mathematik, das bis ins späte 19. Jahrhundert als Hauptlehrbuch der Mathematik diente.",
+        "img": "Euclid"
+      },
+      {
+        "name": "Archimedes",
+        "bio": "Archimedes von Syrakus (ca. 287 – ca. 212 v. Chr.) war ein antiker griechischer Mathematiker, Physiker, Ingenieur, Astronom und Erfinder aus der antiken Stadt Syrakus in Sizilien. Er gilt allgemein als der größte Mathematiker der Antike und einer der Größten aller Zeiten. Er gab die erste zufriedenstellende Erklärung des Hebelprinzips und wird für die Erfindung innovativer Maschinen wie der archimedischen Schraube, zusammengesetzte Flaschenzüge und Verteidigungsmaschinen zur Verteidigung seines heimischen Syrakus gegen Invasionen gutgeschrieben.",
+        "img": "Archimedes"
+      },
+      {
+        "name": "Isaac Newton",
+        "bio": "Isaac Newton ist einer der berühmtesten Wissenschaftler aller Zeiten und er entdeckte einige erstaunliche Dinge. Er war der erste, der erkannte, dass weißes Licht aus allen Farben des Regenbogens besteht. Er erfand die Infinitesimalrechnung, die Mathematik der Bewegung, die heute verwendet wird, um Wolkenkratzer zu bauen und Raketen ins All zu schicken. Außerdem entdeckte er die Kraft, die Dinge zu Boden zieht – die Schwerkraft. Er war ein sonderbarer Charakter, litt unter Depressionen und sprach selten mit jemandem. Darüber hinaus war er ein heimlicher Alchemist, der versuchte, Blei in Gold zu verwandeln.",
+        "img": "Isaac"
+      },
+      {
+        "name": "Carl Friedrich Gauss",
+        "bio": "Bekannt als der Fürst der Mathematiker, leistete Gauss bedeutende Beiträge zu den meisten Gebieten der Mathematik des 19. Jahrhunderts. Als obsessiver Perfektionist veröffentlichte er wenig, da er Theoreme lieber überarbeitete und verbesserte, bevor er sie publizierte. Seine revolutionäre Entdeckung des nichteuklidischen Raums (dass es mathematisch konsistent ist, dass parallele Linien divergieren können) wurde erst nach seinem Tod in seinen Notizen gefunden. Während seiner Analyse astronomischer Daten stellte er fest, dass Messfehler eine Glockenkurve erzeugten – diese Form ist heute als Gaußsche Verteilung bekannt.",
+        "img": "Carl"
+      },
+      {
+        "name": "Leonhard Euler",
+        "bio": "Der produktivste Mathematiker aller Zeiten, der nahezu 900 Bücher veröffentlichte. Als er in seinen späten 50er Jahren erblindete, stieg seine Produktivität in vielen Bereichen sogar an. Seine berühmte Formel ‘eiπ + 1 = 0’, bei der ‘e’ die mathematische Konstante ist, die manchmal als Eulers Zahl bekannt ist, und ‘i’ die Quadratwurzel von minus eins ist, wird weithin als die schönste in der Mathematik angesehen. Später interessierte er sich für lateinische Quadrate – Gitter, in denen jede Zeile und Spalte jedes Mitglied einer Zahlen- oder Objektmenge einmal enthält. Ohne diese Arbeit hätten wir möglicherweise kein Sudoku.",
+        "img": "Leonhard"
+      },
+      {
+        "name": "René Descartes",
+        "bio": "Oftmals als der 'Vater der modernen Philosophie' bezeichnet, war Descartes auch eine Schlüsselperson in der Mathematik für die Grundlagen der Entwicklung der Infinitesimalrechnung und seiner Arbeit in der analytischen Geometrie.",
+        "img": "Descartes"
+      },
+      {
+        "name": "Blaise Pascal",
+        "bio": "Blaise Pascal war ein Mathematiker und Physiker, der bekannt ist für seine Arbeiten in den Bereichen Wahrscheinlichkeit und Fluidmechanik. Zu seinen Erfindungen gehört die Pascaline, ein früher Taschenrechner, und seine Beiträge zur Hydrodynamik und Druckmessungen.",
+        "img": "Blaise"
+      },
+      {
+        "name": "Pierre-Simon Laplace",
+        "bio": "Laplace war ein Mathematiker und Astronom, dessen Arbeit grundlegend für die Entwicklung der mathematischen Statistik, der himmlischen Mechanik und der Wahrscheinlichkeitstheorie war.",
+        "img": "Laplace"
+      },
+      {
+        "name": "Bernhard Riemann",
+        "bio": "Bekannt für die Riemannsche Hypothese, eines der ungelösten Probleme der Mathematik, war Riemann eine Schlüsselfigur in der Analyse und Differentialgeometrie und beeinflusste Bereiche wie die Zahlentheorie.",
+        "img": "Riemann"
+      },
+      {
+        "name": "Johannes Kepler",
+        "bio": "Kepler ist am bekanntesten für seine Gesetze der Planetenbewegung, die den Grundstein für Newtons Theorie der universellen Gravitation legten. Seine Beiträge zur Astronomie machten ihn zu einer Schlüsselfigur in der wissenschaftlichen Revolution des 17. Jahrhunderts.",
+        "img": "Kepler"
+      },
+      {
+        "name": "Évariste Galois",
+        "bio": "Galois war eine bahnbrechende Figur in der Entwicklung der abstrakten Algebra. Seine Arbeiten legten die Grundlagen für die Gruppentheorie und waren fundamental für das Verständnis quadratischer Gleichungen.",
+        "img": "Galois"
+      },
+      {
+        "name": "David Hilbert",
+        "bio": "Hilbert war eine führende Figur in der Formalisierung der Mathematik und der Entwicklung der mathematischen Logik. Seine 23 ungelösten Probleme, die er auf dem internationalen Mathematikerkongress im Jahr 1900 präsentierte, setzten die Agenda für die Forschung der Mathematik des 20. Jahrhunderts.",
+        "img": "Hilbert"
+      },
+      {
+        "name": "Georg Cantor",
+        "bio": "Von allen großen Mathematikern erfüllt Cantor das (Hollywood-)Klischee, dass ein Genie der Mathematik und psychische Erkrankung irgendwie untrennbar verbunden sind, am besten. Cantors brillanteste Einsicht war die Entwicklung einer Methode, um über mathematische Unendlichkeit zu sprechen. Seine Mengenlehre führte zu der kontraintuitiven Entdeckung, dass einige Unendlichkeiten größer waren als andere. Das Ergebnis war umwerfend. Leider erlitt er geistige Zusammenbrüche und wurde häufig hospitalisiert. Er fixierte sich auch darauf, zu beweisen, dass die Werke Shakespeares tatsächlich von Francis Bacon geschrieben wurden.",
+        "img": "Georg"
+      }
+    ]
+  },
+  "common": {
+    "more-options": "Weitere Optionen",
+    "me": "Ich",
+    "no-questions-available": "Keine Fragen verfügbar",
+    "fill-all-fields": "Bitte alle Felder ausfüllen",
+    "app-name-left": "Fluent",
+    "app-name-right": "Deck",
+    "version-prefix": "v"
+  },
+  "admin": {
+    "confirm-delete": "Bitte erneut tippen, um zu bestätigen",
+    "generate": "Generieren",
+    "review": "Prüfen",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "delete": "Delete",
+    "done": "Fertig",
+    "submit": "Absenden",
+    "remove": "Entfernen",
+    "add-exercise": "Aufgabe hinzufügen",
+    "number-of-questions-label": "Anzahl der Fragen:",
+    "topic-name-label": "Themenname",
+    "exercise-example-label": "Aufgabenbeispiel {index}",
+    "correct-answer-label": "Richtige Antwort",
+    "wrong-answers-label": "Falsche Antworten",
+    "second-answer-label": "Zweite Antwort",
+    "multistep-follow-correct": "Folgeschritt {step} (richtig)",
+    "multistep-follow-wrong": "Folgeschritt {step} (falsche Antworten)",
+    "multistep-prompt-header": "Modus: Mehrstufiges Multiple Choice. Die Anzahl der falschen Optionen pro Schritt entspricht der Vorlage unten. Jede neue Aufgabe muss die volle Schrittkette enthalten.",
+    "multistep-stem-logic-line": "Ablauf: Beim Folgeschritt n ist die sichtbare Zeile für die Schülerin/den Schüler die richtige Antwort des vorherigen Schritts (Hauptaufgabe → Schritt 1, Schritt 1 → Schritt 2, …). Die Optionen müssen jeweils plausible Folgeschritte nach dieser richtigen Antwort sein.",
+    "multistep-api-field-map": "API-Feldnamen, die das Modell pro neuer Aufgabe ausgeben muss: Hauptschritt: exercise, correctAnswer, wrongAnswers (Array der falschen). Folgeschritt 1: answer_1, wrong_answers_1. Folgeschritt 2: answer_2, wrong_answers_2. Schritt 3/4: answer_3/wrong_answers_3, answer_4/wrong_answers_4. Nicht correctAnswer1 oder wrongAnswers1 verwenden — stattdessen answer_1 und wrong_answers_1. Nach allen Schritten: secondAnswer = Endergebnis nur falls im Thema üblich (sonst leer).",
+    "multistep-wrong-counts-line": "Vorlage: Anzahl falscher Optionen pro Schritt (bei neuen Aufgaben gleich halten): {detail}",
+    "multistep-second-answer-final": "Zweite Antwort (nur wenn im Thema üblich: Endergebnis nach dem letzten Schritt; sonst leer lassen)",
+    "generate-lesson": "Lernstoff",
+    "lesson-generated-title": "Lernstoff gespeichert",
+    "lesson-generated-body": "Der Lernstoff wurde für dieses Thema erzeugt und gespeichert. Du kannst ihn in Strapi prüfen oder in der App ansehen.",
+    "lesson-generated-error-title": "Generierung fehlgeschlagen",
+    "lesson-generated-error-body": "Der Lernstoff konnte nicht erzeugt werden. Prüfe Verbindung, Admin-Rechte und die OpenAI-Konfiguration und versuche es erneut.",
+    "open-in-strapi": "In Strapi öffnen",
+    "statistics": {
+      "tab-label": "Statistik",
+      "title": "App-Statistik",
+      "period": "{range_summary} · {granularity} · {start} — {end}",
+      "registrations-chart": "Neuregistrierungen ({suffix})",
+      "answered-chart": "Beantwortete Aufgaben ({suffix}), richtig oder falsch — übersprungen zählen nicht",
+      "solved-chart": "Nur richtige Antworten ({suffix})",
+      "load-error": "Statistiken konnten nicht geladen werden. Bitte Administratorrechte prüfen oder erneut versuchen.",
+      "retry": "Erneut",
+      "no-data": "Keine Daten für diesen Zeitraum.",
+      "range-label": "Zeitraum",
+      "range": {
+        "last-30": "Letzte 30 Tage",
+        "current-month": "Aktueller Monat",
+        "last-month": "Vormonat",
+        "custom": "Benutzerdefiniert"
+      },
+      "custom-start": "Von",
+      "custom-end": "Bis",
+      "custom-hint": "Kalendertage werden in der Server-Standardzeitzone ausgewertet (Admin-Profil oder „Europe/Berlin“). Lange benutzerdefinierte Zeiträume werden je nach Schrittweite automatisch gekürzt.",
+      "granularity-label": "X-Achse",
+      "granularity": {
+        "day": "Täglich",
+        "week": "Wöchentlich",
+        "month": "Monatlich",
+        "chart-day": "täglich",
+        "chart-week": "wöchentlich",
+        "chart-month": "monatlich",
+        "period-day": "tägliche Schritte",
+        "period-week": "wöchentliche Schritte (Montagsbeginn)",
+        "period-month": "monatliche Schritte"
+      }
+    }
+  },
+  "search": {
+    "keywords": [
+      "Rationale Zahlen",
+      "Multiplizieren",
+      "Kommazahlen",
+      "Dezimalzahlen",
+      "Prozent",
+      "Rationale",
+      "Dividieren",
+      "Addieren",
+      "Subtrahieren",
+      "Schriftliche",
+      "Vergleichen",
+      "Gleichung",
+      "mit Übertrag",
+      "ohne Übertrag",
+      "Tauschaufgaben",
+      "Geld",
+      "Zeit",
+      "Runde",
+      "Maßumwandlungen",
+      "Einstellige",
+      "Klammern",
+      "Exponenten",
+      "mit x",
+      "binomische",
+      "lineare",
+      "Wurzel",
+      "quadratische",
+      "Bruch"
+    ]
+  },
+  "privacy-content": {
+    "summary": "Diese Datenschutzrichtlinie beschreibt, wie FluentDeck personenbezogene Daten sammelt, verwendet und weitergibt.",
+    "intro-title": "Einführung",
+    "intro-text": "Wir, das Team von FluentDeck, nehmen den Schutz Ihrer persönlichen Daten sehr ernst und halten uns strikt an die Regeln der Datenschutzgesetze. Diese Datenschutzerklärung dient dazu, Sie über die Art, den Umfang und den Zweck der Erhebung und Verwendung personenbezogener Daten durch unsere mobile Anwendung FluentDeck zu informieren.",
+    "collection-title": "Erhebung und Verarbeitung personenbezogener Daten",
+    "collection-text": "Die Nutzung unserer App ist grundsätzlich ohne die Angabe personenbezogener Daten möglich. Für bestimmte Funktionen, wie die Authentifizierung, ist jedoch die Angabe eines Benutzernamens erforderlich. Weitere persönliche Informationen können vom Nutzer auf freiwilliger Basis eingetragen werden. Wir speichern und verarbeiten diese Daten ausschließlich für den Zweck, für den sie uns übermittelt wurden.",
+    "cookies-title": "Cookies",
+    "cookies-text": "FluentDeck verwendet keine Cookies oder ähnliche Technologien zur Erfassung persönlicher Daten.",
+    "third-party-title": "Nutzung von Diensten Dritter",
+    "third-party-text": "Unsere App nutzt verschiedene Dienste Dritter, um die Funktionalität zu verbessern und das Benutzererlebnis zu optimieren:",
+    "third-party-bullet-1": "Microsoft Clarity für Analyse und Nutzerverhalten",
+    "third-party-bullet-2": "Google Analytics für Analyse und Nutzerverhalten",
+    "third-party-bullet-3": "Google Places API für Ortsinformationen",
+    "third-party-note": "Bitte beachten Sie, dass diese Dienste eigene Datenschutzrichtlinien haben, die unabhängig von unserer Datenschutzerklärung sind.",
+    "deletion-title": "Löschung von Daten",
+    "deletion-text": "Benutzer, die wünschen, dass ihre Daten aus unserer Anwendung gelöscht werden, können dies durch eine Nachricht über das Kontaktformular auf unserer Website beantragen.",
+    "security-title": "Sicherheit",
+    "security-text": "Wir treffen technische und organisatorische Sicherheitsmaßnahmen, um Ihre Daten gegen Manipulation, Verlust oder Zugriff unberechtigter Personen zu schützen.",
+    "changes-title": "Änderungen der Datenschutzerklärung",
+    "changes-text": "Wir behalten uns vor, diese Datenschutzerklärung anzupassen, um stets den aktuellen rechtlichen Anforderungen zu entsprechen.",
+    "contact-title": "Kontakt",
+    "contact-email": "support@fluentdeck.app",
+    "contact-website": "https://fluentdeck.app",
+    "date": "Datum der Datenschutzerklärung: 20.04.2026"
+  },
+  "errors": {
+    "network": "Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+    "unexpected": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "unauthorized": "Bitte melden Sie sich erneut an.",
+    "server": "Der Server ist derzeit nicht erreichbar. Versuchen Sie es später erneut.",
+    "request-failed": "Die Anfrage konnte nicht abgeschlossen werden. Bitte erneut versuchen."
+  },
+  "speaking-activity": {
+    "error-generic": "Sprechaktivität konnte nicht geladen werden.",
+    "session-history": {
+      "title": "Sitzungsverlauf",
+      "empty": "Beenden Sie eine Sprechsitzung mit „Ende & Bewerten“, um den Verlauf hier zu sehen.",
+      "view-all": "Alle anzeigen ({count})"
+    },
+    "saved-phrases": {
+      "title": "Gespeicherte Sätze",
+      "empty": "Speichern Sie Wörter aus einem Gespräch, um sie hier zu sehen.",
+      "view-all": "Alle anzeigen ({count})"
+    },
+    "review-log": {
+      "title": "Wiederholungsprotokoll",
+      "view-all": "Alle anzeigen ({count})"
+    },
+    "session-detail": {
+      "title": "Sitzungsdetails",
+      "score": "Sitzungspunktzahl",
+      "mode": "Modus",
+      "completed": "Abgeschlossen",
+      "duration": "Dauer",
+      "duration-minutes": "{minutes} Min.",
+      "turns": "Züge",
+      "summary": "Zusammenfassung",
+      "feedback": "Tutor-Feedback",
+      "transcript-hint": "Vollständige Transkripte finden Sie unter Sprechen → Verlauf auf diesem Gerät."
+    },
+    "streak": {
+      "day": "Tag Serie",
+      "days": "Tage Serie"
+    }
+  },
+  "speaking-premium": {
+    "locked-message": "Dieses Angebot ist mit Premium verfügbar. Upgrade für alle Rollenspiele, Themen und Spiele.",
+    "badge": "Premium"
+  },
+  "versions": [
+    {
+      "v": "2.0.9",
+      "date": "2026-05-14",
+      "changes": [
+        "FluentDeck unterstützt dich beim produktiveren Lernen.",
+        "Alternative Übungsform über mehrere Themen.",
+        "Einführungsbildschirme für jede Seite.",
+        "Fehlerbehebungen",
+        "Abmeldung für Eltern per E-Mail",
+        "Schaltflächen zum Wechsel zur nächsten und vorherigen Klasse",
+        "Meldungen zu fehlerhaften Übungsaufgaben"
+      ]
+    },
+    {
+      "v": "2.0.8",
+      "date": "2026-05-01",
+      "changes": [
+        "Mehrschrittige Übungen 🎉 (daran haben wir hart gearbeitet).",
+        "Übungen mit Mehrauswahl.",
+        "Verbesserungen bei den Lektionen.",
+        "Audio-Einstellungen.",
+        "Vibration bei Klicks.",
+        "Hinweise zu neuen Versionen.",
+        "Möglichkeit, die App zu bewerten."
+      ]
+    },
+    {
+      "v": "2.0.7",
+      "date": "2026-04-22",
+      "changes": [
+        "Kleinere Verbesserungen.",
+        "Aktualisierung der Authentifizierungslogik.",
+        "Fehlerbehebungen.",
+        "Verbesserte Benachrichtigungen."
+      ]
+    },
+    {
+      "v": "2.0.6",
+      "date": "2026-04-20",
+      "changes": [
+        "Überarbeitete Darstellung unter Themen (Klassen-Tabs und Kategorienliste).",
+        "Lernstoff pro Kategorie.",
+        "Verbesserungen bei der Übungslösung.",
+        "Schritte zur Einarbeitung.",
+        "Machen Sie die Angabe der E-Mail-Adresse optional."
+      ]
+    },
+    {
+      "v": "2.0.5",
+      "date": "2026-04-13",
+      "changes": [
+        "Erinnerungen schlagen wir erst vor, wenn du schon richtig drin bist — nicht gleich am ersten Tag.",
+        "Zustimmen geht schneller und ruhiger, mit einem kleinen Dankeschön am Ende.",
+        "Tagesziel: Wenn noch keins festgelegt ist, erscheint eine klare Auswahl („Tagesziel wählen“) statt einer voreingestellten Zahl; beim App-Start wird dein Ziel mit dem Konto abgeglichen, damit es dem Server entspricht.",
+        "Verbesserungen im Marketing",
+        "Login und Registrierung: übersichtlicheres Layout auf schmalen Bildschirmen (Angemeldet bleiben, Passwort vergessen und Links wie „Anmelden“ laufen nicht mehr ineinander).",
+        "Angemeldet bleiben: Tippen auf den Text oder das Steuerelement schaltet die Option.",
+        "Zeitzonen-Funktionalität"
+      ]
+    },
+    {
+      "v": "2.0.4",
+      "date": "2026-04-12",
+      "changes": [
+        "Visuelle Fehlerbehebungen",
+        "Verbesserungen beim Registrierungsprozess",
+        "Fehlerbehebung beim Scrollen bei neuer Frage",
+        "Feine Verbesserungen",
+        "Themen: Der Klassen-Tab entspricht der geöffneten oder verlassenen Kategorie (Themen, Suche, letztes Quiz)"
+      ]
+    },
+    {
+      "v": "2.0.3",
+      "date": "2026-04-11",
+      "changes": [
+        "Verbesserungen bei den Werbeanzeigen",
+        "Fehlerbehebung beim Spitznamen",
+        "Korrekturen bei der Darstellung der Antworten",
+        "Beispielaufgaben",
+        "Fehlerbehebung bei den Suchergebnissen"
+      ]
+    },
+    {
+      "v": "2.0.2",
+      "date": "2026-04-06",
+      "changes": [
+        "Verbesserung der Werbung",
+        "Einrichtung der Analysefunktionen"
+      ]
+    },
+    {
+      "v": "2.0.1",
+      "date": "2026-03-28",
+      "changes": [
+        "Push-Benachrichtigungen"
+      ]
+    },
+    {
+      "v": "2.0.0",
+      "date": "2026-03-18",
+      "changes": [
+        "Wesentlicher technologischer Wandel",
+        "Aktualisierung der Anzeigen"
+      ]
+    },
+    {
+      "v": "1.0.32",
+      "date": "2026-01-25",
+      "changes": [
+        "Zweite Antwortverbesserung",
+        "Paketaktualisierung",
+        "Anzeigen verbessern"
+      ]
+    },
+    {
+      "v": "1.0.31",
+      "date": "2025-12-04",
+      "changes": [
+        "Stilkorrekturen",
+        "Geschwindigkeitsverbesserungen"
+      ]
+    },
+    {
+      "v": "1.0.27",
+      "date": "2025-02-25",
+      "changes": [
+        "Übungsdesign-Update",
+        "Stilkorrekturen",
+        "Themenkopfzeilen-Update",
+        "Geschwindigkeitsverbesserungen",
+        "Whiteboard"
+      ]
+    },
+    {
+      "v": "1.0.26",
+      "date": "2025-01-21",
+      "changes": [
+        "Fehlerbehebung bei Push-Benachrichtigungen"
+      ]
+    },
+    {
+      "v": "1.0.25",
+      "date": "2025-01-11",
+      "changes": [
+        "Kleinere Stiländerungen am Such-Popup",
+        "Aktualisierung externer Links"
+      ]
+    },
+    {
+      "v": "1.0.24",
+      "date": "2024-12-15",
+      "changes": [
+        "Nicht gefundene Seite: beheben und aktualisieren.",
+        "Kopf- und Fußzeilenaktualisierung",
+        "Push-Benachrichtigungen beheben."
+      ]
+    },
+    {
+      "v": "1.0.23",
+      "date": "2024-11-12",
+      "changes": [
+        "Popup-Kopfzeilenaktualisierung.",
+        "Kopf- und Fußzeilenkorrekturen.",
+        "Korrekturen des sicheren Bereichs."
+      ]
+    },
+    {
+      "v": "1.0.22",
+      "date": "2024-10-12",
+      "changes": [
+        "Aktualisierung der Über-uns-Seiten.",
+        "Aktualisierung der Über-uns-, Abmelde-, Such-, Benachrichtigungs- und Lösungspopups.",
+        "Aktualisierung der Alarmfenster.",
+        "Natürliches Verhalten für einige Popups.",
+        "Korrektur des Navigationsstils.",
+        "Stilkorrekturen.",
+        "Korrektur der Push-Benachrichtigungen."
+      ]
+    },
+    {
+      "v": "1.0.21",
+      "date": "2024-09-18",
+      "changes": [
+        "Account-Löschfunktion.",
+        "Übersetzungsfehlerbehebungen.",
+        "Softwareaktualisierungen.",
+        "Sprachkorrekturen."
+      ]
+    },
+    {
+      "v": "1.0.20",
+      "date": "2024-08-01",
+      "changes": [
+        "Übersetzungsfehler behoben.",
+        "Pop-up- und Ladeanimationsfehler behoben.",
+        "Neue Themen für die Suche.",
+        "Android-Version aktualisiert."
+      ]
+    },
+    {
+      "v": "1.0.19",
+      "date": "2024-04-30",
+      "changes": [
+        "Machen Sie mehr Themen in der Klasse sichtbar.",
+        "Offene Fragen zur zuletzt verwendeten Klasse.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.18",
+      "date": "2024-04-13",
+      "changes": [
+        "Übersetzungskorrekturen.",
+        "Ladeanimationskorrekturen.",
+        "Lösungen bei beantworteten Fragen.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.17",
+      "date": "2024-03-30",
+      "changes": [
+        "Bugfixes und Leistungsverbesserungen."
+      ]
+    },
+    {
+      "v": "1.0.16",
+      "date": "2024-03-29",
+      "changes": [
+        "Leistungsverbesserungen",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.15",
+      "date": "2024-03-21",
+      "changes": [
+        "Haupt-E-Mail-Aktualisierung.",
+        "Korrekturen bei Übersetzungen",
+        "Aktualisierung der Passwort-Zurücksetzungsfunktion.",
+        "Verbesserung der Ladeanimation",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.14",
+      "date": "2024-03-19",
+      "changes": [
+        "Aktualisierung des Versions-Popups.",
+        "Meta-Aktualisierungen.",
+        "Kleiner Fehler bei Google Autocomplete behoben.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.13",
+      "date": "2024-03-15",
+      "changes": [
+        "Änderung der Wischlänge für eine bessere Erfahrung.",
+        "Klarheitsaktualisierung.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.12",
+      "date": "2024-03-12",
+      "changes": [
+        "Neue Vorlage von Übungen.",
+        "SMTP-Server-Fix.",
+        "Aktualisierung fehlender Übersetzungen.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.11",
+      "date": "2024-03-08",
+      "changes": [
+        "Neue Vorlage von Übungen.",
+        "Viele neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.10",
+      "date": "2024-02-29",
+      "changes": [
+        "Designaktualisierungen.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.9",
+      "date": "2024-02-19",
+      "changes": [
+        "Designaktualisierungen.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.8",
+      "date": "2024-02-09",
+      "changes": [
+        "Designaktualisierungen.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.7",
+      "date": "2024-02-02",
+      "changes": [
+        "Datenschutzerklärung-Aktualisierung.",
+        "Erstellung einer Liste genutzter Dienste.",
+        "Aktualisierung der Logik für die zweite Antwort.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.6",
+      "date": "2024-01-18",
+      "changes": [
+        "KI-Implementierung für Übungen.",
+        "Stiländerungen.",
+        "Bugfixes und Leistungsverbesserungen.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.5",
+      "date": "2024-01-18",
+      "changes": [
+        "Integration von Verwaltungstools.",
+        "Benachrichtigung-Update.",
+        "Verbesserung des Android-Builds.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.4",
+      "date": "2024-01-04",
+      "changes": [
+        "KI-Nachrichten-Update.",
+        "Implementierung der Grundlogik für Lösungen.",
+        "E-Mail-Update.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.3",
+      "date": "2023-12-18",
+      "changes": [
+        "Grundlegende KI-Integration.",
+        "Designkorrekturen.",
+        "Leistungsverbesserungen.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.2",
+      "date": "2023-11-10",
+      "changes": [
+        "Unveröffentlichte Übungen aus der Liste entfernen.",
+        "Statistik-API hinzufügen.",
+        "Korrekturen bei Benachrichtigungen zu täglichen Zielen.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.1",
+      "date": "2023-10-26",
+      "changes": [
+        "Benachrichtigung-Update.",
+        "Bugfixes und Leistungsverbesserungen.",
+        "Neue Übungen hinzugefügt."
+      ]
+    },
+    {
+      "v": "1.0.0",
+      "date": "2023-10-13",
+      "changes": [
+        "Erste Funktionalität."
+      ]
+    }
+  ]
+}
