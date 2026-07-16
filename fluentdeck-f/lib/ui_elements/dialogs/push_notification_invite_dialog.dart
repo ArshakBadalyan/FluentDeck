@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class PushNotificationInviteDialog extends StatelessWidget {
   final bool milestone200;
@@ -19,7 +20,7 @@ class PushNotificationInviteDialog extends StatelessWidget {
             : 'push-prompt.invite-body-20';
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
       child: Stack(
@@ -32,20 +33,20 @@ class PushNotificationInviteDialog extends StatelessWidget {
                 Text(
                   context.tr(titleKey),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   context.tr(bodyKey),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     height: 1.35,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.87),
                   ),
                 ),
                 const SizedBox(height: 28),
@@ -91,7 +92,7 @@ class PushNotificationInviteDialog extends StatelessWidget {
             right: 4,
             child: IconButton(
               icon: const Icon(Icons.close, size: 22),
-              color: Colors.black54,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
               tooltip: 'Close',
               onPressed: () => Navigator.of(context).pop(false),
             ),

@@ -9,6 +9,7 @@ import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
 import 'package:fluentdeck/services/card_tag_undo_store.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/api_exception.dart';
 import 'package:fluentdeck/utils/card_browser_utils.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
@@ -473,7 +474,7 @@ class CardRowActions {
     if (!context.mounted) return;
     final rating = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),

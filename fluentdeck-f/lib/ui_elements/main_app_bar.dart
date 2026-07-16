@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 
 import '../app_colors.dart';
+import 'modern_page_widgets.dart';
 import 'screen_tutorial_targets.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -48,7 +49,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         statusBarBrightness: Brightness.dark,
       ),
       elevation: 0,
-      backgroundColor: const Color(0xFF7A24E4),
+      backgroundColor: AppColors.headerPurple,
       titleSpacing: 24,
       centerTitle: false,
       toolbarHeight: _toolbarHeight,
@@ -148,28 +149,35 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   PreferredSizeWidget _buildTabBar() {
     return PreferredSize(
       preferredSize: const Size.fromHeight(kTextTabBarHeight + 1),
-      child: Material(
-        color: Colors.white,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TabBar(
-              key: ScreenTutorialKeys.mainAppBarTabs,
-              controller: controller,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              padding: const EdgeInsets.only(left: 12),
-              labelColor: AppColors.primaryPurple,
-              unselectedLabelColor: const Color(0xFF777481),
-              indicatorColor: Colors.transparent,
-              dividerColor: Colors.transparent,
-              labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              tabs: tabs!,
+      child: Builder(
+        builder: (context) {
+          final tabBg = AppPageColors.cardBgOf(context);
+          final divider = AppPageColors.subtleBorderOf(context);
+          final unselected = AppPageColors.subtitleOf(context);
+          return Material(
+            color: tabBg,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TabBar(
+                  key: ScreenTutorialKeys.mainAppBarTabs,
+                  controller: controller,
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  padding: const EdgeInsets.only(left: 12),
+                  labelColor: AppColors.primaryPurple,
+                  unselectedLabelColor: unselected,
+                  indicatorColor: Colors.transparent,
+                  dividerColor: Colors.transparent,
+                  labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  tabs: tabs!,
+                ),
+                Divider(height: 1, thickness: 1, color: divider),
+              ],
             ),
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE8E8EC)),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

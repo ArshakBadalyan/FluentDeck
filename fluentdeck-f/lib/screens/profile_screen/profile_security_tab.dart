@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 
-import '../../app_colors.dart';
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
 import '../../ui_elements/modern_page_widgets.dart';

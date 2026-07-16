@@ -199,10 +199,10 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: Text(widget.isEditing ? 'Edit note' : 'New note'),
       ),
@@ -320,14 +320,14 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           maxLines: maxLines,
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppPageColors.fieldBgOf(context),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+              borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+              borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

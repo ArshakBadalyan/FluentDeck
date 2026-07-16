@@ -174,7 +174,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         backgroundColor: AppPageColors.pageBgOf(context),
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: Text(
           widget.styleOnly

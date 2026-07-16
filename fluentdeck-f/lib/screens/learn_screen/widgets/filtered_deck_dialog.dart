@@ -162,19 +162,20 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
   }
 
   InputDecoration _fieldDecoration({String? hint, Widget? prefixIcon}) {
+    final border = AppPageColors.subtleBorderOf(context);
     return InputDecoration(
       hintText: hint,
       prefixIcon: prefixIcon,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppPageColors.fieldBgOf(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: border, width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: border, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -186,7 +187,7 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
   TextStyle get _labelStyle => TextStyle(
     fontSize: 13,
     fontWeight: FontWeight.w600,
-    color: Colors.grey.shade700,
+    color: AppPageColors.subtitleOf(context),
   );
 
   Widget _labeledField(String label, Widget field) {
@@ -416,21 +417,27 @@ class _StateChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryPurple : Colors.white,
+          color: selected ? AppColors.primaryPurple : AppPageColors.fieldBgOf(context),
           borderRadius: BorderRadius.circular(10),
-          border: !selected ? Border.all(color: Colors.grey.shade200, width: 1) : null,
+          border: !selected
+              ? Border.all(color: AppPageColors.subtleBorderOf(context), width: 1)
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: selected ? Colors.white : Colors.grey.shade700),
+            Icon(
+              icon,
+              size: 16,
+              color: selected ? Colors.white : AppPageColors.subtitleOf(context),
+            ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : Colors.grey.shade800,
+                color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],

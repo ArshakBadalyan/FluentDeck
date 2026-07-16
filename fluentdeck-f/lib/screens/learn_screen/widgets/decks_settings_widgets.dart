@@ -1,20 +1,23 @@
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:flutter/material.dart';
 
-Widget decksSettingsNavTile({
+Widget decksSettingsNavTile(
+  BuildContext context, {
   required IconData icon,
   required String title,
   required String subtitle,
   required VoidCallback onTap,
 }) {
+  final subtitleColor = AppPageColors.subtitleOf(context);
   return Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Material(
-      color: Colors.white,
+      color: AppPageColors.cardBgOf(context),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -48,14 +51,14 @@ Widget decksSettingsNavTile({
                       subtitle,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: subtitleColor,
                         height: 1.35,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: Colors.grey.shade500),
+              Icon(Icons.chevron_right_rounded, color: subtitleColor),
             ],
           ),
         ),
@@ -64,7 +67,8 @@ Widget decksSettingsNavTile({
   );
 }
 
-Widget decksSettingsActionTile({
+Widget decksSettingsActionTile(
+  BuildContext context, {
   required IconData icon,
   required String title,
   String? subtitle,
@@ -73,14 +77,15 @@ Widget decksSettingsActionTile({
   bool destructive = false,
 }) {
   final accent = destructive ? Colors.red.shade600 : (iconColor ?? AppColors.primaryPurple);
+  final subtitleColor = AppPageColors.subtitleOf(context);
   return Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Material(
-      color: Colors.white,
+      color: AppPageColors.cardBgOf(context),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -116,7 +121,7 @@ Widget decksSettingsActionTile({
                         subtitle,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: subtitleColor,
                           height: 1.35,
                         ),
                       ),
@@ -124,7 +129,7 @@ Widget decksSettingsActionTile({
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: Colors.grey.shade500),
+              Icon(Icons.chevron_right_rounded, color: subtitleColor),
             ],
           ),
         ),
@@ -157,10 +162,12 @@ Widget decksSettingsSectionHeader(String title) {
 }
 
 Widget decksSettingsLabelField(
+  BuildContext context,
   String label,
   String value,
   ValueChanged<String> onSave,
 ) {
+  final border = AppPageColors.subtleBorderOf(context);
   return Padding(
     padding: const EdgeInsets.only(bottom: 10),
     child: TextFormField(
@@ -170,15 +177,15 @@ Widget decksSettingsLabelField(
         labelText: label,
         isDense: true,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppPageColors.cardBgOf(context),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+          borderSide: BorderSide(color: border, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+          borderSide: BorderSide(color: border, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -190,18 +197,19 @@ Widget decksSettingsLabelField(
   );
 }
 
-Widget decksSettingsNote(String text) {
+Widget decksSettingsNote(BuildContext context, String text) {
+  final subtitleColor = AppPageColors.subtitleOf(context);
   return Padding(
     padding: const EdgeInsets.only(top: 8),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade500),
+        Icon(Icons.info_outline_rounded, size: 14, color: subtitleColor),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12, color: subtitleColor),
           ),
         ),
       ],
@@ -209,7 +217,8 @@ Widget decksSettingsNote(String text) {
   );
 }
 
-Widget decksSettingsPickerTile({
+Widget decksSettingsPickerTile(
+  BuildContext context, {
   required String title,
   Widget? subtitle,
   required String valueLabel,
@@ -223,9 +232,9 @@ Widget decksSettingsPickerTile({
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppPageColors.cardBgOf(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.grey.shade200, width: 1),
+          border: Border.all(color: AppPageColors.subtleBorderOf(context), width: 1),
         ),
         child: Row(
           children: [
@@ -240,7 +249,7 @@ Widget decksSettingsPickerTile({
                   if (subtitle != null) ...[
                     const SizedBox(height: 3),
                     DefaultTextStyle.merge(
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                      style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                       child: subtitle,
                     ),
                   ],

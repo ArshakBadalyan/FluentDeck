@@ -8,8 +8,9 @@ import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/services/subscription_service.dart';
-import 'package:fluentdeck/ui_elements/primary_button.dart';
+import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/primary_button.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 import 'package:fluentdeck/widgets/cefr_level_chips.dart';
@@ -47,32 +48,25 @@ class CardEditScreen extends StatefulWidget {
     BuildContext context, {
     int? deckId,
   }) {
-    return showModalBottomSheet<bool>(
+    return showFrostedBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       isDismissible: true,
       enableDrag: true,
       useSafeArea: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-          child: DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.88,
-            minChildSize: 0.45,
-            maxChildSize: 0.95,
-            builder: (context, scrollController) {
-              return CardEditScreen(
-                deckId: deckId,
-                sheetMode: true,
-                scrollController: scrollController,
-              );
-            },
-          ),
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.88,
+          minChildSize: 0.45,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return CardEditScreen(
+              deckId: deckId,
+              sheetMode: true,
+              scrollController: scrollController,
+            );
+          },
         );
       },
     );
@@ -551,7 +545,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         backgroundColor: AppPageColors.pageBgOf(context),
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: Text(widget.isEditing ? 'Edit note' : 'Add note'),
         actions: [
@@ -623,8 +617,8 @@ class _CardEditScreenState extends State<CardEditScreen> {
         Expanded(child: _buildBody()),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            color: AppPageColors.cardBgOf(context),
+            border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -940,14 +934,20 @@ class _CardEditScreenState extends State<CardEditScreen> {
                 decoration: InputDecoration(
                   labelText: 'Mask ${region.id}',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppPageColors.fieldBgOf(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                    borderSide: BorderSide(
+                      color: AppPageColors.subtleBorderOf(context),
+                      width: 1,
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                    borderSide: BorderSide(
+                      color: AppPageColors.subtleBorderOf(context),
+                      width: 1,
+                    ),
                   ),
                 ),
               ),
@@ -991,18 +991,19 @@ class _CardEditScreenState extends State<CardEditScreen> {
   }
 
   InputDecoration _filledDecoration({Widget? prefixIcon}) {
+    final border = AppPageColors.subtleBorderOf(context);
     return InputDecoration(
       prefixIcon: prefixIcon,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppPageColors.fieldBgOf(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: border, width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: border, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -1018,7 +1019,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
   TextStyle get _fieldLabelStyle => TextStyle(
     fontSize: 13,
     fontWeight: FontWeight.w600,
-    color: Colors.grey.shade700,
+    color: AppPageColors.subtitleOf(context),
   );
 
   Widget _labeledField(String label, Widget field) {

@@ -130,17 +130,18 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
   }
 
   InputDecoration _fieldDecoration() {
+    final border = AppPageColors.subtleBorderOf(context);
     return InputDecoration(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppPageColors.fieldBgOf(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: border, width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: border, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

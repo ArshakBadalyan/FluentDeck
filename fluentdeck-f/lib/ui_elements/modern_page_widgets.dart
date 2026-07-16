@@ -10,20 +10,21 @@ class AppPageColors {
   static const cardBg = Colors.white;
   static const fieldBg = Color(0xFFF2F2F5);
 
+  /// Dark scaffold / page background.
+  static const darkPageBg = Color(0xFF0B0813);
+  /// Dark cards & app bar surface.
+  static const darkCardBg = Color(0xFF151220);
+  /// Dark raised surface (dialogs, sheets, menus, inputs).
+  static const darkRaisedBg = Color(0xFF1D1830);
+
   static Color pageBgOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? Theme.of(context).colorScheme.surface
-          : pageBg;
+      Theme.of(context).brightness == Brightness.dark ? darkPageBg : pageBg;
 
   static Color cardBgOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? Theme.of(context).cardColor
-          : cardBg;
+      Theme.of(context).brightness == Brightness.dark ? darkCardBg : cardBg;
 
   static Color fieldBgOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? Theme.of(context).colorScheme.surfaceContainerHighest
-          : fieldBg;
+      Theme.of(context).brightness == Brightness.dark ? darkRaisedBg : fieldBg;
 
   static Color subtleBorderOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
@@ -207,7 +208,7 @@ class AppSettingsCategoryTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: Colors.grey.shade500),
+                Icon(Icons.chevron_right_rounded, color: AppPageColors.subtitleOf(context)),
               ],
             ),
           ),
@@ -317,10 +318,10 @@ class AppHeroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF9B3DFF), Color(0xFF7A24E4)],
+          colors: [Color(0xFF9B3DFF), AppColors.headerPurple],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
@@ -401,12 +402,14 @@ class AppMetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppPageColors.cardBg,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04,
+            ),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -428,7 +431,7 @@ class AppMetricTile extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: AppPageColors.subtitleOf(context),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -482,6 +485,7 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final border = AppPageColors.subtleBorderOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -491,7 +495,7 @@ class AppTextField extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: AppPageColors.subtitleOf(context),
             ),
           ),
           const SizedBox(height: 8),
@@ -510,17 +514,17 @@ class AppTextField extends StatelessWidget {
             hintText: hint,
             errorText: errorText,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppPageColors.fieldBgOf(context),
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             suffixIcon: suffixIcon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+              borderSide: BorderSide(color: border, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+              borderSide: BorderSide(color: border, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -537,8 +541,8 @@ class AppTextField extends StatelessWidget {
   }
 }
 
-InputDecoration appDropdownDecoration(String label) {
-  return appSheetFieldDecoration(label: label);
+InputDecoration appDropdownDecoration(BuildContext context, String label) {
+  return appSheetFieldDecoration(context, label: label);
 }
 
 /// One choice in [AppSelectField] / [showAppSelectSheet].
@@ -703,6 +707,8 @@ class AppSelectField<T> extends StatelessWidget {
     final active = enabled && onChanged != null;
     final display = _selectedLabel ?? hint ?? 'Choose…';
     final hasSelection = _selectedLabel != null;
+    final border = AppPageColors.subtleBorderOf(context);
+    final subtitle = AppPageColors.subtitleOf(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -713,21 +719,18 @@ class AppSelectField<T> extends StatelessWidget {
             style: TextStyle(
               fontSize: compact ? 12 : 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: subtitle,
             ),
           ),
           SizedBox(height: compact ? 6 : 8),
         ],
         Material(
-          color: Colors.white,
+          color: AppPageColors.fieldBgOf(context),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(compact ? 12 : 14),
             side: BorderSide(
-              color:
-                  active
-                      ? Colors.grey.shade200
-                      : Colors.grey.shade200.withValues(alpha: 0.7),
+              color: active ? border : border.withValues(alpha: 0.7),
             ),
           ),
           clipBehavior: Clip.antiAlias,
@@ -761,7 +764,7 @@ class AppSelectField<T> extends StatelessWidget {
                         style: TextStyle(
                           fontSize: compact ? 13 : 15,
                           fontWeight: hasSelection ? FontWeight.w600 : FontWeight.w500,
-                          color: hasSelection ? AppColors.primaryPurple : Colors.grey.shade600,
+                          color: hasSelection ? AppColors.primaryPurple : subtitle,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -769,7 +772,7 @@ class AppSelectField<T> extends StatelessWidget {
                     Icon(
                       Icons.expand_more_rounded,
                       size: compact ? 20 : 24,
-                      color: active ? AppColors.primaryPurple : Colors.grey.shade500,
+                      color: active ? AppColors.primaryPurple : subtitle,
                     ),
                   ],
                 ),
@@ -822,7 +825,7 @@ class AppToggleRow extends StatelessWidget {
                     subtitle!,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey.shade600,
+                      color: AppPageColors.subtitleOf(context),
                       height: 1.35,
                     ),
                   ),
@@ -886,7 +889,7 @@ class AppNavRow extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: Colors.grey.shade500),
+              Icon(Icons.chevron_right_rounded, color: AppPageColors.subtitleOf(context)),
             ],
           ),
         ),
@@ -907,7 +910,7 @@ class AppEmptyHint extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          color: Colors.grey.shade600,
+          color: AppPageColors.subtitleOf(context),
           fontSize: 14,
           height: 1.45,
         ),
@@ -993,7 +996,7 @@ class AppSheetHandle extends StatelessWidget {
           width: 40,
           height: 4,
           decoration: BoxDecoration(
-            color: Colors.grey.shade300,
+            color: AppPageColors.subtitleOf(context).withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -1051,7 +1054,7 @@ class AppSheetHeader extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                   ),
                 ],
               ],
@@ -1064,22 +1067,28 @@ class AppSheetHeader extends StatelessWidget {
   }
 }
 
-InputDecoration appSheetFieldDecoration({String? label, String? hint, Widget? prefixIcon}) {
+InputDecoration appSheetFieldDecoration(
+  BuildContext context, {
+  String? label,
+  String? hint,
+  Widget? prefixIcon,
+}) {
+  final border = AppPageColors.subtleBorderOf(context);
   return InputDecoration(
     labelText: label,
     hintText: hint,
     prefixIcon: prefixIcon,
     filled: true,
-    fillColor: Colors.white,
+    fillColor: AppPageColors.fieldBgOf(context),
     isDense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+      borderSide: BorderSide(color: border, width: 1),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+      borderSide: BorderSide(color: border, width: 1),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
@@ -1158,7 +1167,7 @@ class AppSheetActionTile extends StatelessWidget {
                             subtitle!,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade600,
+                              color: AppPageColors.subtitleOf(context),
                               height: 1.35,
                             ),
                           ),
@@ -1169,7 +1178,7 @@ class AppSheetActionTile extends StatelessWidget {
                   if (trailing != null)
                     trailing!
                   else if (showChevron)
-                    Icon(Icons.chevron_right_rounded, color: Colors.grey.shade500),
+                    Icon(Icons.chevron_right_rounded, color: AppPageColors.subtitleOf(context)),
                 ],
               ),
             ),
@@ -1199,7 +1208,7 @@ Future<String?> showAppPromptDialog(
       barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (ctx) {
         return Dialog(
-          backgroundColor: AppPageColors.cardBgOf(ctx),
+          backgroundColor: AppPageColors.fieldBgOf(ctx),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           insetPadding: const EdgeInsets.symmetric(horizontal: 28),
           child: Padding(
@@ -1233,10 +1242,10 @@ Future<String?> showAppPromptDialog(
                           if (subtitle != null) ...[
                             const SizedBox(height: 2),
                             Text(
-                              subtitle!,
+                              subtitle,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: AppPageColors.subtitleOf(ctx),
                               ),
                             ),
                           ],

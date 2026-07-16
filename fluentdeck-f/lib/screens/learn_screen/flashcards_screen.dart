@@ -98,7 +98,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       builder: (context, child) {
         final t = Curves.easeOut.transform(animation.value);
         return Material(
-          color: AppPageColors.cardBg,
+          color: AppPageColors.cardBgOf(context),
           elevation: 4 * t,
           shadowColor: Colors.black26,
           borderRadius: BorderRadius.circular(16),
@@ -543,7 +543,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   Future<void> _showDeckOptions(FlashcardDeckModel deck) async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -830,7 +830,7 @@ class _DeckListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tile = Material(
-      color: AppPageColors.cardBg,
+      color: AppPageColors.cardBgOf(context),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -933,8 +933,8 @@ class _TodayFooter extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppPageColors.cardBg,
-        border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.06))),
+        color: AppPageColors.cardBgOf(context),
+        border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -946,7 +946,7 @@ class _TodayFooter extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.today_outlined, size: 16, color: Colors.grey.shade600),
+          Icon(Icons.today_outlined, size: 16, color: AppPageColors.subtitleOf(context)),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
@@ -955,7 +955,7 @@ class _TodayFooter extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey.shade700,
+                color: AppPageColors.subtitleOf(context),
               ),
             ),
           ),

@@ -30,8 +30,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   int? _deckFilter;
   String _range = '12m';
 
-  static const _pageBg = Color(0xFFF7F5FB);
-
   @override
   void initState() {
     super.initState();
@@ -91,22 +89,22 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const ColoredBox(
-        color: _pageBg,
-        child: Center(child: CircularProgressIndicator()),
+      return ColoredBox(
+        color: AppPageColors.pageBgOf(context),
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error != null) {
       return ColoredBox(
-        color: _pageBg,
+        color: AppPageColors.pageBgOf(context),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.cloud_off_outlined, size: 48, color: Colors.grey.shade500),
+                Icon(Icons.cloud_off_outlined, size: 48, color: AppPageColors.subtitleOf(context)),
                 const SizedBox(height: 12),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
@@ -127,7 +125,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final matureRetention = stats.retention.mature;
 
     return ColoredBox(
-      color: _pageBg,
+      color: AppPageColors.pageBgOf(context),
       child: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.primaryPurple,

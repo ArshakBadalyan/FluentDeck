@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Shows a modal bottom sheet with a light frosted-glass surface.
 Future<T?> showFrostedBottomSheet<T>({
@@ -39,7 +40,7 @@ class FrostedSheetSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final fill = isDark
-        ? const Color(0xFF1E1E1E).withValues(alpha: 0.92)
+        ? AppPageColors.darkRaisedBg.withValues(alpha: 0.94)
         : Colors.white.withValues(alpha: 0.88);
 
     return ClipRRect(

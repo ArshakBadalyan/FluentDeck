@@ -3,6 +3,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/services/audio_service.dart';
 import 'package:fluentdeck/services/auth_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
 
 /// Shown on logout if the user has no password yet: set password (same rules as
@@ -123,7 +124,7 @@ class _NicknameLogoutDialogState extends State<NicknameLogoutDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -140,19 +141,19 @@ class _NicknameLogoutDialogState extends State<NicknameLogoutDialog> {
                 children: [
                   Text(
                     context.tr('profile.account.logout-warning'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     context.tr('profile.account.logout-text'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w300,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.87),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -217,7 +218,7 @@ class _NicknameLogoutDialogState extends State<NicknameLogoutDialog> {
             right: 4,
             child: IconButton(
               icon: const Icon(Icons.close, size: 22),
-              color: Colors.black54,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
               tooltip: 'Close',
               onPressed: _busy ? null : () => Navigator.of(context).pop(),
             ),

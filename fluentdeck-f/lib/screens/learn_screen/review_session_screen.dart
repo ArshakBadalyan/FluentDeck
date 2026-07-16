@@ -18,6 +18,7 @@ import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/review_queue_order.dart';
 import 'package:fluentdeck/utils/type_answer_utils.dart';
 import 'package:fluentdeck/widgets/image_occlusion_review.dart';
@@ -613,10 +614,10 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -628,7 +629,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.normal,
-                  color: Colors.grey.shade600,
+                  color: AppPageColors.subtitleOf(context),
                 ),
               ),
           ],
@@ -756,7 +757,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                     ? 'Add notes to this deck or study another deck.'
                     : 'You reviewed ${_queue.length} card${_queue.length == 1 ? '' : 's'}.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(color: AppPageColors.subtitleOf(context)),
               ),
               const SizedBox(height: 24),
               FilledButton(
@@ -789,7 +790,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
             children: [
               Text(
                 'Card ${_index + 1} of ${_queue.length}',
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(color: AppPageColors.subtitleOf(context)),
               ),
               const Spacer(),
               Text(
@@ -797,21 +798,21 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade700,
+                  color: AppPageColors.subtitleOf(context),
                 ),
               ),
               if (_isCloze(card) && card.clozeIndex != null) ...[
                 const SizedBox(width: 8),
                 Text(
                   '· Cloze c${card.clozeIndex}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                 ),
               ],
               if (imageOcclusion) ...[
                 const SizedBox(width: 8),
                 Text(
                   '· IO mask ${(card.clozeIndex ?? 0) + 1}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                 ),
               ],
             ],
@@ -928,7 +929,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                 ? (_revealed ? 'Tap to hide · swipe to rate' : 'Tap the hidden region to reveal')
                 : (_revealed ? 'Tap to hide answer' : 'Tap to reveal answer'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
           ),
           if (_settings.gesturesEnabled && !typeAnswer)
             Padding(
@@ -936,7 +937,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
               child: Text(
                 'Gestures: ← Again · → Good · ↑ Reveal',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
               ),
             ),
           if (!typeAnswer && _revealed && !imageOcclusion)

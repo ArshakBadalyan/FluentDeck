@@ -95,7 +95,7 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         backgroundColor: AppPageColors.pageBgOf(context),
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: const Text('Note types'),
       ),

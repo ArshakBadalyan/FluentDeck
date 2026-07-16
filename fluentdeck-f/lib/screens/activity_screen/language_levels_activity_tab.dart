@@ -6,6 +6,7 @@ import 'package:fluentdeck/services/language_levels_service.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/utils/agent_debug_log.dart';
 
 /// Activity tab: current learning language, AI tutor level, analytics estimate, history.
 class LanguageLevelsActivityTab extends StatefulWidget {
@@ -52,6 +53,21 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
 
   @override
   Widget build(BuildContext context) {
+    // #region agent log
+    agentDebugLog(
+      hypothesisId: 'ABCD',
+      location: 'language_levels_activity_tab.dart:build',
+      message: 'Language progress resolved theme',
+      data: {
+        'brightness': Theme.of(context).brightness.name,
+        'loading': _loading,
+        'themeCard': Theme.of(context).cardColor.toARGB32(),
+        'resolvedCard': AppPageColors.cardBgOf(context).toARGB32(),
+        'resolvedPage': AppPageColors.pageBgOf(context).toARGB32(),
+        'localMetricColor': Colors.white.toARGB32(),
+      },
+    );
+    // #endregion
     if (_loading) {
       return const ActivityScreenSkeleton();
     }
@@ -184,6 +200,18 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // #region agent log
+    agentDebugLog(
+      hypothesisId: 'ACE',
+      location: 'language_levels_activity_tab.dart:_MetricTile',
+      message: 'Language metric surface',
+      data: {
+        'brightness': Theme.of(context).brightness.name,
+        'hardcodedSurface': Colors.white.toARGB32(),
+        'resolvedSurface': AppPageColors.cardBgOf(context).toARGB32(),
+      },
+    );
+    // #endregion
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
@@ -270,6 +298,18 @@ class _MetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // #region agent log
+    agentDebugLog(
+      hypothesisId: 'ACE',
+      location: 'language_levels_activity_tab.dart:_MetricTile.actual',
+      message: 'Language metric actual surface',
+      data: {
+        'brightness': Theme.of(context).brightness.name,
+        'hardcodedSurface': Colors.white.toARGB32(),
+        'resolvedSurface': AppPageColors.cardBgOf(context).toARGB32(),
+      },
+    );
+    // #endregion
     return Container(
       width: fullWidth ? double.infinity : null,
       padding: const EdgeInsets.all(16),

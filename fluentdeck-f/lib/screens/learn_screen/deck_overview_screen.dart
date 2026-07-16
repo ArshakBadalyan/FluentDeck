@@ -46,13 +46,13 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          foregroundColor: Colors.black,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
           elevation: 0,
           scrolledUnderElevation: 0,
           title: Row(
             children: [
               if (deck.isFiltered) ...[
-                Icon(Icons.filter_list, size: 20, color: Colors.grey.shade700),
+                Icon(Icons.filter_list, size: 20, color: AppPageColors.subtitleOf(context)),
                 const SizedBox(width: 6),
               ],
               Expanded(
@@ -83,7 +83,7 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   _filterDescription(deck.filterQuery!),
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                 ),
               ),
             _DeckHeroCard(
@@ -194,12 +194,13 @@ class _DeckHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardBg = AppPageColors.cardBgOf(context);
     return Material(
-      color: Colors.white,
+      color: cardBg,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -209,7 +210,7 @@ class _DeckHeroCard extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               AppColors.primaryPurple.withValues(alpha: 0.08),
-              Colors.white,
+              cardBg,
             ],
           ),
         ),
@@ -230,7 +231,7 @@ class _DeckHeroCard extends StatelessWidget {
               'Track new, learning, and review progress',
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey.shade600,
+                color: AppPageColors.subtitleOf(context),
                 height: 1.35,
               ),
             ),
@@ -282,7 +283,7 @@ class _StatLabel extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
           ),
         ],
       ),

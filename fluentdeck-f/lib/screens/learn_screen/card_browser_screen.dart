@@ -117,7 +117,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
     return Material(
       elevation: 3,
-      color: Colors.white,
+      color: AppPageColors.cardBgOf(context),
       shadowColor: Colors.black.withValues(alpha: 0.12),
       child: content,
     );
@@ -328,17 +328,18 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       widget.deckId != null && !widget.embedInShell;
 
   InputDecoration _filledFieldDecoration() {
+    final border = AppPageColors.subtleBorderOf(context);
     return InputDecoration(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppPageColors.fieldBgOf(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+        borderSide: BorderSide(color: border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+        borderSide: BorderSide(color: border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -727,15 +728,15 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                       hintText: 'e.g. verbs',
                       prefixIcon: const Icon(Icons.tag_rounded, size: 20),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: AppPageColors.fieldBgOf(ctx),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                        borderSide: BorderSide(color: AppPageColors.subtleBorderOf(ctx), width: 1),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                        borderSide: BorderSide(color: AppPageColors.subtleBorderOf(ctx), width: 1),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -909,10 +910,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppPageColors.cardBgOf(context),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: const Text('Card browser'),
         actions: [
@@ -954,14 +955,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   onPressed: _load,
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppPageColors.fieldBgOf(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+                  borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+                  borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1019,7 +1020,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               children: [
                 Text(
                   '${_visibleCards.length} card${_visibleCards.length == 1 ? '' : 's'}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                 ),
                 const Spacer(),
                 const DecksContextualHelpButton(
@@ -1067,14 +1068,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 onPressed: _load,
               ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppPageColors.fieldBgOf(context),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+                borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+                borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -1373,7 +1374,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                             'Tag',
                             TextFormField(
                               initialValue: tag,
-                              decoration: appSheetFieldDecoration(hint: 'Filter by tag'),
+                              decoration: appSheetFieldDecoration(context, hint: 'Filter by tag'),
                               onChanged: (v) => tag = v,
                             ),
                           ),

@@ -57,7 +57,7 @@ class SharedDecksScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppPageColors.pageBgOf(context),
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: const Text('Shared decks'),
       ),

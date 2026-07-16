@@ -69,13 +69,19 @@ abstract final class AppTheme {
   }
 
   static ThemeData get dark {
-    const surface = Color(0xFF121212);
-    const card = Color(0xFF1E1E1E);
+    const scaffold = AppPageColors.darkPageBg;
+    const card = AppPageColors.darkCardBg;
+    const raised = AppPageColors.darkRaisedBg;
 
     final scheme = ColorScheme.fromSeed(
       seedColor: _seed,
       brightness: Brightness.dark,
-      surface: surface,
+      surface: scaffold,
+    ).copyWith(
+      surfaceContainerHighest: raised,
+      surfaceContainerHigh: raised,
+      surfaceContainer: card,
+      primary: AppColors.primaryPurple,
     );
 
     return ThemeData(
@@ -86,14 +92,27 @@ abstract final class AppTheme {
         bodyColor: Colors.white,
         displayColor: Colors.white,
       ),
-      scaffoldBackgroundColor: surface,
+      scaffoldBackgroundColor: scaffold,
       cardColor: card,
       dividerColor: Colors.white.withValues(alpha: 0.08),
       appBarTheme: const AppBarTheme(
-        backgroundColor: surface,
+        backgroundColor: card,
         foregroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: raised,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: raised,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: raised,
+      ),
+      popupMenuTheme: const PopupMenuThemeData(
+        color: raised,
+        surfaceTintColor: Colors.transparent,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -101,17 +120,21 @@ abstract final class AppTheme {
           foregroundColor: Colors.white,
         ),
       ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.primaryPurple,
+        foregroundColor: Colors.white,
+      ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primaryPurple,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF2A2A2A),
+        fillColor: raised,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
         menuStyle: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(card),
+          backgroundColor: WidgetStateProperty.all(raised),
           elevation: WidgetStateProperty.all(8),
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -122,7 +145,7 @@ abstract final class AppTheme {
       ),
       menuTheme: MenuThemeData(
         style: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(card),
+          backgroundColor: WidgetStateProperty.all(raised),
           elevation: WidgetStateProperty.all(8),
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

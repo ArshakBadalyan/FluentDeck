@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class DailyGoalChangedDialog extends StatelessWidget {
   final bool cleared;
@@ -14,7 +16,7 @@ class DailyGoalChangedDialog extends StatelessWidget {
     final ok = context.tr('buttons.ok');
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -29,19 +31,19 @@ class DailyGoalChangedDialog extends StatelessWidget {
                 Text(
                   ok,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 24),
                 Text(
                   body,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Colors.black,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -50,7 +52,7 @@ class DailyGoalChangedDialog extends StatelessWidget {
                   height: 36,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7A24E4),
+                      backgroundColor: AppColors.headerPurple,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -77,7 +79,7 @@ class DailyGoalChangedDialog extends StatelessWidget {
             right: 8,
             child: IconButton(
               icon: const Icon(Icons.close, size: 22),
-              color: Colors.black54,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
               tooltip: 'Close',
               onPressed: () {
                 Navigator.of(context).pop();

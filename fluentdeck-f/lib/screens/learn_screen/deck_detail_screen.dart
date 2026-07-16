@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 
 class DeckDetailScreen extends StatefulWidget {
@@ -124,10 +124,10 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppPageColors.cardBgOf(context),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         leading: BackButton(
           onPressed: () => Navigator.pop(context, _changed ? true : null),
@@ -174,7 +174,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
           child: Text(
             'No cards in this deck yet.\nTap + to add a note.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade700),
+            style: TextStyle(color: AppPageColors.subtitleOf(context)),
           ),
         ),
       );
@@ -200,12 +200,12 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
             return false;
           },
           child: Material(
-            color: Colors.white,
+            color: AppPageColors.cardBgOf(context),
             borderRadius: BorderRadius.circular(10),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+                border: Border.all(color: AppPageColors.subtleBorderOf(context)),
               ),
               child: ListTile(
                 title: Text(

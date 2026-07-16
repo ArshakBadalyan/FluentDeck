@@ -151,7 +151,7 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
   }
 
   Widget _sectionTile(DecksSettingsSection section) {
-    return decksSettingsNavTile(
+    return decksSettingsNavTile(context, 
       icon: section.icon,
       title: section.title,
       subtitle: section.subtitle,

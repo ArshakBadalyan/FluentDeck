@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/data/decks_help_content.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// In-app Decks help and FAQ (Phase 5G).
 class DecksHelpScreen extends StatefulWidget {
@@ -61,16 +62,16 @@ class _DecksHelpScreenState extends State<DecksHelpScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppPageColors.cardBgOf(context),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: const Text('Help & FAQ'),
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.primaryPurple,
-          unselectedLabelColor: Colors.grey.shade600,
+          unselectedLabelColor: AppPageColors.subtitleOf(context),
           indicatorColor: AppColors.primaryPurple,
           tabs: const [
             Tab(text: 'Guide'),
