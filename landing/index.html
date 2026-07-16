@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FluentDeck — Speak English Without the Social Anxiety</title>
+<meta name="description" content="Meet your judgment-free, AI-powered speaking tutor. Practice real conversations, master vocabulary with built-in spaced repetition, and build fluid speaking habits at your own pace." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { rubik: ['Rubik', 'sans-serif'] },
+      }
+    }
+  }
+</script>
+
+<style>
+  :root { color-scheme: dark; }
+  html, body { background:#0B0813; }
+  body { font-family: 'Rubik', sans-serif; }
+
+  ::selection { background: #8A2CFF; color: #fff; }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ---------- Ambient glows ---------- */
+  .glow-blob { position:absolute; border-radius:9999px; filter: blur(90px); pointer-events:none; z-index:0; }
+
+  /* ---------- Waveform ---------- */
+  .wave-bar { transform-origin: center; animation: wave 1.6s ease-in-out infinite; border-radius:9999px; }
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.25); opacity:.65; }
+    50% { transform: scaleY(1); opacity:1; }
+  }
+  .wave-fast .wave-bar { animation-duration: .9s; }
+
+  /* ---------- Floating chips ---------- */
+  .float-chip { animation: floaty 5s ease-in-out infinite; }
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+    50% { transform: translateY(-14px) rotate(var(--rot, 0deg)); }
+  }
+  .pulse-dot { animation: pulseDot 2.2s ease-in-out infinite; }
+  @keyframes pulseDot {
+    0%, 100% { opacity:.4; transform: scale(.85); }
+    50% { opacity:1; transform: scale(1.15); }
+  }
+
+  /* ---------- Card flip ---------- */
+  .flip-card { perspective: 1200px; }
+  .flip-inner { transition: transform .6s cubic-bezier(.16,1,.3,1); transform-style: preserve-3d; }
+  .flip-card:hover .flip-inner { transform: rotateY(180deg); }
+  .flip-face { backface-visibility: hidden; -webkit-backface-visibility:hidden; }
+  .flip-back { transform: rotateY(180deg); }
+
+  /* ---------- Magnetic buttons ---------- */
+  .magnetic { transition: transform .25s cubic-bezier(.16,1,.3,1); will-change: transform; }
+
+  /* ---------- FAQ ---------- */
+  .faq-panel { max-height: 0; overflow: hidden; transition: max-height .45s cubic-bezier(.16,1,.3,1), opacity .35s ease; opacity:0; }
+  .faq-item.open .faq-panel { opacity:1; }
+  .faq-chevron { transition: transform .35s cubic-bezier(.16,1,.3,1); }
+  .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+  /* ---------- Glow flash for role-play ---------- */
+  .flash-glow { transition: box-shadow .5s ease, border-color .5s ease; }
+
+  /* ---------- Marquee for testimonial rating dots / misc ---------- */
+  .scrollbar-none::-webkit-scrollbar { display:none; }
+  .scrollbar-none { -ms-overflow-style:none; scrollbar-width:none; }
+
+  /* Mobile drawer */
+  #mobileDrawer { transform: translateX(100%); transition: transform .4s cubic-bezier(.16,1,.3,1); }
+  #mobileDrawer.open { transform: translateX(0); }
+</style>
+</head>
+<body class="bg-[#0B0813] text-[#F3F4F6] antialiased overflow-x-hidden selection:bg-[#8A2CFF]">
+
+<!-- ================= NAV ================= -->
+<header class="fixed top-0 inset-x-0 z-50">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <nav class="mt-4 flex items-center justify-between rounded-2xl border border-white/[0.08] bg-[#0B0813]/70 backdrop-blur-xl px-5 py-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
+      <a href="#" class="flex items-center gap-2 group">
+        <span class="relative flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#8A2CFF] to-[#7A24E4] shadow-[0_0_20px_rgba(138,44,255,0.5)]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" stroke="#F3F4F6" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 12h8M8 16h5" stroke="#FFC400" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </span>
+        <span class="text-lg font-bold tracking-tight">FluentDeck</span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-[#9CA3AF]">
+        <a href="#how-it-works" class="hover:text-white transition-colors">How it works</a>
+        <a href="#features" class="hover:text-white transition-colors">Features</a>
+        <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
+        <a href="#faq" class="hover:text-white transition-colors">FAQ</a>
+      </div>
+
+      <div class="hidden md:flex items-center gap-3">
+        <a href="#pricing" class="text-sm font-semibold text-[#F3F4F6]/90 hover:text-white transition-colors px-4 py-2">Download App</a>
+        <a href="#try" class="magnetic text-sm font-semibold rounded-xl px-5 py-2.5 bg-[#8A2CFF] hover:bg-[#9A47FF] shadow-[0_0_25px_rgba(138,44,255,0.55)] transition-colors">Try Free</a>
+      </div>
+
+      <button id="menuBtn" aria-label="Open menu" class="md:hidden text-white p-2">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<!-- Mobile drawer -->
+<div id="mobileDrawer" class="fixed inset-y-0 right-0 z-50 w-72 bg-[#120C1E] border-l border-white/10 p-6 md:hidden flex flex-col gap-6">
+  <div class="flex justify-end">
+    <button id="closeMenuBtn" aria-label="Close menu" class="text-white p-2">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <nav class="flex flex-col gap-5 text-lg font-medium">
+    <a href="#how-it-works" class="mobile-link text-[#F3F4F6]">How it works</a>
+    <a href="#features" class="mobile-link text-[#F3F4F6]">Features</a>
+    <a href="#pricing" class="mobile-link text-[#F3F4F6]">Pricing</a>
+    <a href="#faq" class="mobile-link text-[#F3F4F6]">FAQ</a>
+  </nav>
+  <a href="#try" class="mobile-link mt-auto text-center rounded-xl px-5 py-3 bg-[#8A2CFF] font-semibold">Try FluentDeck Free</a>
+</div>
+<div id="drawerOverlay" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden"></div>
+
+<main>
+
+<!-- ================= HERO ================= -->
+<section id="try" class="relative pt-40 pb-24 lg:pt-48 lg:pb-32 overflow-hidden">
+  <div class="glow-blob w-[500px] h-[500px] bg-[#8A2CFF]/25 -top-40 -left-40"></div>
+  <div class="glow-blob w-[400px] h-[400px] bg-[#FFC400]/10 top-20 right-0"></div>
+
+  <div class="relative z-10 mx-auto max-w-7xl px-6 lg:px-8 grid lg:grid-cols-2 gap-16 items-center">
+    <!-- Left: copy -->
+    <div>
+      <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#FFC400]">
+        <span class="h-1.5 w-1.5 rounded-full bg-[#FFC400] pulse-dot"></span>
+        AI Speaking Tutor
+      </span>
+
+      <h1 class="mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05]">
+        Speak English<br class="hidden sm:block" /> without the <span class="relative inline-block">
+          <span class="relative z-10 bg-gradient-to-r from-[#7A24E4] to-[#8A2CFF] bg-clip-text text-transparent">social anxiety</span>
+        </span>.
+      </h1>
+
+      <p class="mt-6 text-lg text-[#9CA3AF] max-w-xl leading-relaxed">
+        Meet your judgment-free, AI-powered speaking tutor. Practice real conversations, master vocabulary with built-in spaced repetition, and build fluid speaking habits at your own pace.
+      </p>
+
+      <div class="mt-9 flex flex-col sm:flex-row gap-4">
+        <a href="#pricing" class="magnetic inline-flex items-center justify-center gap-2 rounded-xl px-7 py-4 font-semibold text-white bg-[#8A2CFF] hover:bg-[#9A47FF] shadow-[0_0_35px_rgba(138,44,255,0.55)] transition-colors">
+          Try FluentDeck Free (Web)
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="#pricing" class="magnetic inline-flex items-center justify-center gap-2 rounded-xl px-7 py-4 font-semibold text-white border border-white/15 bg-white/[0.03] hover:bg-white/[0.07] backdrop-blur transition-colors">
+          Download App
+        </a>
+      </div>
+
+      <div class="mt-12 flex items-center gap-6 text-sm text-[#9CA3AF]">
+        <div class="flex -space-x-3">
+          <span class="h-9 w-9 rounded-full ring-2 ring-[#0B0813] bg-gradient-to-br from-[#8A2CFF] to-[#7A24E4]"></span>
+          <span class="h-9 w-9 rounded-full ring-2 ring-[#0B0813] bg-gradient-to-br from-[#FFC400] to-[#a87b00]"></span>
+          <span class="h-9 w-9 rounded-full ring-2 ring-[#0B0813] bg-gradient-to-br from-[#F3F4F6] to-[#8f8f94]"></span>
+        </div>
+        <p>Joined by learners from 40+ countries building real speaking confidence.</p>
+      </div>
+    </div>
+
+    <!-- Right: living canvas mockup -->
+    <div class="relative mx-auto w-full max-w-sm lg:max-w-md">
+      <!-- floating chips -->
+      <div class="float-chip absolute -left-6 top-6 z-20 hidden sm:block" style="--rot:-4deg; animation-delay:.2s">
+        <div class="rounded-xl border border-white/10 bg-[#120C1E]/90 backdrop-blur px-4 py-2.5 shadow-2xl">
+          <p class="text-xs text-[#9CA3AF]">ubiquitous <span class="text-[#FFC400]">[adj]</span></p>
+          <p class="text-[11px] text-[#8A2CFF] font-medium mt-0.5">Next review: 3 days</p>
+        </div>
+      </div>
+      <div class="float-chip absolute -right-4 top-1/3 z-20 hidden sm:block" style="--rot:3deg; animation-delay:1.4s">
+        <div class="rounded-xl border border-white/10 bg-[#120C1E]/90 backdrop-blur px-4 py-2.5 shadow-2xl">
+          <p class="text-xs text-[#9CA3AF]">play devil's advocate <span class="text-[#FFC400]">[idiom]</span></p>
+          <p class="text-[11px] text-[#2EE66B] font-medium mt-0.5">Mastered ✓</p>
+        </div>
+      </div>
+      <div class="float-chip absolute -left-8 bottom-16 z-20 hidden sm:block" style="--rot:-2deg; animation-delay:.8s">
+        <div class="rounded-xl border border-white/10 bg-[#120C1E]/90 backdrop-blur px-4 py-2.5 shadow-2xl">
+          <p class="text-xs text-[#9CA3AF]">to defuse <span class="text-[#FFC400]">[verb]</span></p>
+          <p class="text-[11px] text-[#8A2CFF] font-medium mt-0.5">Next review: today</p>
+        </div>
+      </div>
+
+      <!-- phone frame -->
+      <div class="relative rounded-[2.5rem] border border-white/10 bg-gradient-to-b from-[#150E22] to-[#0B0813] shadow-[0_30px_80px_rgba(0,0,0,0.6)] p-3">
+        <div class="rounded-[1.9rem] border border-white/5 bg-[#0B0813] overflow-hidden">
+          <div class="flex items-center justify-between px-5 pt-4 pb-2 text-[11px] text-[#9CA3AF]">
+            <span>9:41</span>
+            <span class="flex gap-1"><span class="h-1.5 w-1.5 rounded-full bg-white/50"></span><span class="h-1.5 w-1.5 rounded-full bg-white/50"></span><span class="h-1.5 w-1.5 rounded-full bg-[#FFC400]"></span></span>
+          </div>
+
+          <div class="px-5 py-4 border-b border-white/5 flex items-center gap-3">
+            <span class="h-9 w-9 rounded-full bg-gradient-to-br from-[#8A2CFF] to-[#7A24E4] flex items-center justify-center text-sm font-bold">AI</span>
+            <div>
+              <p class="text-sm font-semibold">Tutor · Maya</p>
+              <p class="text-[11px] text-[#9CA3AF]">Listening…</p>
+            </div>
+          </div>
+
+          <div class="px-5 py-8 flex flex-col items-center justify-center gap-6">
+            <div class="flex items-end gap-1 h-20 wave-fast">
+              <div class="wave-bar w-1.5 h-8 bg-[#8A2CFF]" style="animation-delay:0s"></div>
+              <div class="wave-bar w-1.5 h-14 bg-[#FFC400]" style="animation-delay:.1s"></div>
+              <div class="wave-bar w-1.5 h-20 bg-[#8A2CFF]" style="animation-delay:.2s"></div>
+              <div class="wave-bar w-1.5 h-10 bg-[#FFC400]" style="animation-delay:.3s"></div>
+              <div class="wave-bar w-1.5 h-16 bg-[#8A2CFF]" style="animation-delay:.4s"></div>
+              <div class="wave-bar w-1.5 h-6 bg-[#FFC400]" style="animation-delay:.5s"></div>
+              <div class="wave-bar w-1.5 h-18 bg-[#8A2CFF]" style="animation-delay:.6s"></div>
+              <div class="wave-bar w-1.5 h-12 bg-[#FFC400]" style="animation-delay:.7s"></div>
+              <div class="wave-bar w-1.5 h-8 bg-[#8A2CFF]" style="animation-delay:.8s"></div>
+              <div class="wave-bar w-1.5 h-16 bg-[#FFC400]" style="animation-delay:.9s"></div>
+              <div class="wave-bar w-1.5 h-10 bg-[#8A2CFF]" style="animation-delay:1s"></div>
+            </div>
+            <p class="text-center text-sm text-[#F3F4F6]/90 max-w-[220px]">"Tell me about your weekend — take your time, there's no rush."</p>
+          </div>
+
+          <div class="px-5 pb-6">
+            <div class="flex items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] py-4">
+              <span class="h-11 w-11 rounded-full bg-[#8A2CFF] shadow-[0_0_20px_rgba(138,44,255,0.6)] flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" stroke="white" stroke-width="1.8"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </span>
+              <span class="text-xs text-[#9CA3AF]">Tap to speak</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROBLEM ================= -->
+<section class="relative py-24 lg:py-32 border-t border-white/[0.06]">
+  <div class="mx-auto max-w-4xl px-6 lg:px-8 text-center reveal">
+    <span class="text-xs font-bold uppercase tracking-[0.2em] text-[#FFC400]">The Barrier</span>
+    <h2 class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+      You know the grammar.<br/>Why can't you speak?
+    </h2>
+    <p class="mt-6 text-lg text-[#9CA3AF] leading-relaxed max-w-2xl mx-auto">
+      You've spent years doing grammar fill-in-the-blanks. You read English easily. But when it's time to order a coffee, speak in a meeting, or make small talk, your throat tightens. The fear of making mistakes keeps you silent.
+    </p>
+    <p class="mt-4 text-lg text-[#F3F4F6] font-medium leading-relaxed max-w-2xl mx-auto">
+      FluentDeck is designed to bridge the gap between <span class="text-[#8A2CFF]">knowing</span> English and <span class="text-[#FFC400]">speaking</span> it — without the pressure of a human tutor.
+    </p>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section id="how-it-works" class="relative py-24 lg:py-32 border-t border-white/[0.06]">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="text-center max-w-2xl mx-auto reveal">
+      <span class="text-xs font-bold uppercase tracking-[0.2em] text-[#8A2CFF]">The Loop</span>
+      <h2 class="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">Three steps. Every day.</h2>
+    </div>
+
+    <div class="mt-16 grid md:grid-cols-3 gap-6">
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 hover:bg-white/[0.05] transition-colors">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-[#8A2CFF]/15 text-[#8A2CFF] font-bold">1</span>
+        <h3 class="mt-6 text-xl font-bold">Discover Your Level</h3>
+        <p class="mt-3 text-[#9CA3AF] leading-relaxed">Take a lightning-fast CEFR placement test. No boring syntax questions; just talk, and our AI maps your active vocabulary.</p>
+      </div>
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 hover:bg-white/[0.05] transition-colors" style="transition-delay:.1s">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFC400]/15 text-[#FFC400] font-bold">2</span>
+        <h3 class="mt-6 text-xl font-bold">Converse &amp; Correct</h3>
+        <p class="mt-3 text-[#9CA3AF] leading-relaxed">Talk to your AI tutor on topics you actually care about. Speak naturally. The tutor listens, replies, and leaves gentle, non-intrusive corrections on your screen.</p>
+      </div>
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 hover:bg-white/[0.05] transition-colors" style="transition-delay:.2s">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-[#8A2CFF]/15 text-[#8A2CFF] font-bold">3</span>
+        <h3 class="mt-6 text-xl font-bold">Lock It in with SM-2</h3>
+        <p class="mt-3 text-[#9CA3AF] leading-relaxed">Every new word or correction can be turned into an Anki-style flashcard with a single tap. Review with our optimized spaced repetition algorithm so you never forget.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section id="features" class="relative py-24 lg:py-32 border-t border-white/[0.06]">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="text-center max-w-2xl mx-auto reveal">
+      <span class="text-xs font-bold uppercase tracking-[0.2em] text-[#FFC400]">The Powerhouse</span>
+      <h2 class="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">Everything a serious learner needs.</h2>
+    </div>
+
+    <div class="mt-16 grid sm:grid-cols-2 gap-6">
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" stroke="#8A2CFF" stroke-width="1.8"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="#8A2CFF" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <h3 class="mt-5 text-xl font-bold">AI Speaking Tutor with Memory</h3>
+        <p class="mt-3 text-[#9CA3AF] leading-relaxed">Your tutor remembers you. Mention your upcoming job interview or your love for sci-fi, and your tutor will weave it into future conversations. It's personalized learning with a long-term memory.</p>
+      </div>
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8" style="transition-delay:.05s">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="12" height="16" rx="2" stroke="#FFC400" stroke-width="1.8"/><rect x="8" y="8" width="12" height="16" rx="2" fill="#0B0813" stroke="#FFC400" stroke-width="1.8"/></svg>
+        <h3 class="mt-5 text-xl font-bold">Anki-Style Spaced Repetition (SM-2)</h3>
+        <p class="mt-3 text-[#9CA3AF] leading-relaxed">Power-user vocabulary building. Import your existing Anki decks or export your FluentDeck lists. Powered by the scientific SM-2 algorithm to guarantee permanent recall.</p>
+      </div>
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8" style="transition-delay:.1s">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 20V10l8-6 8 6v10" stroke="#8A2CFF" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 20v-6h6v6" stroke="#8A2CFF" stroke-width="1.8"/></svg>
+        <h3 class="mt-5 text-xl font-bold">Real-World Role-Play &amp; Speaking Games</h3>
+        <p class="mt-3 text-[#9CA3AF] leading-relaxed">Stop talking to a wall. Practice ordering at a café in London, negotiating a salary, or playing a text-adventure game in English. Practical scenarios that eliminate real-world stage fright.</p>
+      </div>
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8" style="transition-delay:.15s">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="#FFC400" stroke-width="1.8" stroke-linecap="round"/><circle cx="19" cy="18" r="2" stroke="#FFC400" stroke-width="1.8"/></svg>
+        <h3 class="mt-5 text-xl font-bold">CEFR-Aligned Curriculum (A1–C2)</h3>
+        <p class="mt-3 text-[#9CA3AF] leading-relaxed">Structured but flexible. Access thousands of hand-crafted lessons ranging from beginner basics to nuanced C2 executive English. Track your progress with instant CEFR rating feedback.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ROLE-PLAY SHOWCASE ================= -->
+<section class="relative py-24 lg:py-32 border-t border-white/[0.06]">
+  <div class="mx-auto max-w-4xl px-6 lg:px-8">
+    <div class="text-center reveal">
+      <span class="text-xs font-bold uppercase tracking-[0.2em] text-[#8A2CFF]">Try It Now</span>
+      <h2 class="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">Try a mini-lesson right now</h2>
+      <p class="mt-4 text-[#9CA3AF]">Scenario: Job Interview Preparation</p>
+    </div>
+
+    <div id="roleplayCard" class="flash-glow reveal mt-12 rounded-3xl border border-white/[0.08] bg-white/[0.03] p-6 sm:p-10">
+      <div class="flex items-start gap-3">
+        <span class="h-9 w-9 flex-none rounded-full bg-gradient-to-br from-[#8A2CFF] to-[#7A24E4] flex items-center justify-center text-xs font-bold">AI</span>
+        <p class="rounded-2xl rounded-tl-none bg-white/[0.05] px-5 py-3.5 text-[#F3F4F6]">So, tell me about a time you had to handle a difficult client?</p>
+      </div>
+
+      <div id="roleplayOptions" class="mt-8 space-y-3">
+        <button data-choice="weak" class="roleplay-btn w-full text-left rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 px-5 py-4 transition-colors">
+          <span class="text-sm text-[#9CA3AF]">Option A</span>
+          <p class="mt-1">"I have work with a angry client and I talk to him quiet."</p>
+        </button>
+        <button data-choice="strong" class="roleplay-btn w-full text-left rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 px-5 py-4 transition-colors">
+          <span class="text-sm text-[#9CA3AF]">Option B</span>
+          <p class="mt-1">"I once defused a tense situation with a frustrated stakeholder by actively listening to their concerns."</p>
+        </button>
+      </div>
+
+      <div id="roleplayFeedback" class="mt-6 hidden"></div>
+
+      <button id="roleplayReset" class="hidden mt-6 text-sm font-semibold text-[#9CA3AF] hover:text-white transition-colors">↺ Try again</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FLASHCARD DEEP-DIVE ================= -->
+<section class="relative py-24 lg:py-32 border-t border-white/[0.06]">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8 grid lg:grid-cols-2 gap-16 items-center">
+    <div class="reveal">
+      <span class="text-xs font-bold uppercase tracking-[0.2em] text-[#FFC400]">Vocabulary</span>
+      <h2 class="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">Flashcards on steroids.</h2>
+      <p class="mt-6 text-lg text-[#9CA3AF] leading-relaxed">
+        Don't just swipe mindlessly. Our flashcards feature voice input. Instead of clicking "I know this," speak the answer aloud. Our AI checks your pronunciation and updates your card review schedule instantly.
+      </p>
+      <p class="mt-4 text-[#9CA3AF] leading-relaxed">Supports CSV import/export and seamless multi-device cloud sync.</p>
+      <p class="mt-6 text-sm text-[#F3F4F6]/70 italic">Hover a card to flip it →</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-6">
+      <div class="flip-card h-56 col-span-2 sm:col-span-1">
+        <div class="flip-inner relative h-full w-full">
+          <div class="flip-face absolute inset-0 rounded-2xl border border-white/10 bg-white/[0.03] flex flex-col items-center justify-center p-6">
+            <p class="text-2xl font-bold">ubiquitous</p>
+            <p class="mt-2 text-sm text-[#9CA3AF]">adjective</p>
+          </div>
+          <div class="flip-face flip-back absolute inset-0 rounded-2xl border border-[#8A2CFF]/40 bg-[#8A2CFF]/10 flex flex-col items-center justify-center p-6 text-center">
+            <p class="text-sm text-[#9CA3AF]">/juːˈbɪkwɪtəs/</p>
+            <p class="mt-2 font-medium">Present, appearing, or found everywhere.</p>
+          </div>
+        </div>
+      </div>
+      <div class="flip-card h-56 col-span-2 sm:col-span-1">
+        <div class="flip-inner relative h-full w-full">
+          <div class="flip-face absolute inset-0 rounded-2xl border border-white/10 bg-white/[0.03] flex flex-col items-center justify-center p-6">
+            <p class="text-2xl font-bold">to defuse</p>
+            <p class="mt-2 text-sm text-[#9CA3AF]">verb</p>
+          </div>
+          <div class="flip-face flip-back absolute inset-0 rounded-2xl border border-[#FFC400]/40 bg-[#FFC400]/10 flex flex-col items-center justify-center p-6 text-center">
+            <p class="text-sm text-[#9CA3AF]">/diːˈfjuːz/</p>
+            <p class="mt-2 font-medium">To make a tense situation calmer.</p>
+          </div>
+        </div>
+      </div>
+      <div class="flip-card h-56 col-span-2">
+        <div class="flip-inner relative h-full w-full">
+          <div class="flip-face absolute inset-0 rounded-2xl border border-white/10 bg-white/[0.03] flex flex-col items-center justify-center p-6">
+            <p class="text-2xl font-bold">play devil's advocate</p>
+            <p class="mt-2 text-sm text-[#9CA3AF]">idiom</p>
+          </div>
+          <div class="flip-face flip-back absolute inset-0 rounded-2xl border border-[#8A2CFF]/40 bg-[#8A2CFF]/10 flex flex-col items-center justify-center p-6 text-center">
+            <p class="text-sm text-[#9CA3AF]">/pleɪ dɪˈvɪlz ˈædvəkət/</p>
+            <p class="mt-2 font-medium">To argue the opposite side, just to test an idea.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section id="pricing" class="relative py-24 lg:py-32 border-t border-white/[0.06]">
+  <div class="mx-auto max-w-5xl px-6 lg:px-8">
+    <div class="text-center reveal">
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">No subscriptions required to start.</h2>
+    </div>
+
+    <div class="mt-14 grid sm:grid-cols-2 gap-6">
+      <div class="reveal rounded-3xl border border-white/[0.08] bg-white/[0.03] p-8">
+        <h3 class="text-lg font-bold">Free</h3>
+        <p class="mt-2"><span class="text-4xl font-extrabold">€0</span> <span class="text-[#9CA3AF]">/ forever</span></p>
+        <ul class="mt-8 space-y-3 text-sm text-[#F3F4F6]/90">
+          <li class="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>10 AI voice turns/day</li>
+          <li class="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Standard SM-2 flashcards</li>
+          <li class="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>A1–B1 lessons</li>
+        </ul>
+        <a href="#try" class="magnetic mt-9 block text-center rounded-xl px-6 py-3.5 font-semibold border border-white/15 hover:bg-white/[0.06] transition-colors">Get Started Free</a>
+      </div>
+
+      <div class="reveal relative rounded-3xl border border-[#8A2CFF]/50 bg-gradient-to-b from-[#8A2CFF]/[0.12] to-white/[0.03] p-8 shadow-[0_0_50px_rgba(138,44,255,0.25)]" style="transition-delay:.1s">
+        <span class="absolute -top-3 right-8 rounded-full bg-[#FFC400] text-[#0B0813] text-xs font-bold px-3 py-1">Most Popular</span>
+        <h3 class="text-lg font-bold">Premium</h3>
+        <p class="mt-2"><span class="text-4xl font-extrabold">€9.99</span> <span class="text-[#9CA3AF]">/ month</span></p>
+        <p class="text-xs text-[#9CA3AF] mt-1">or €79.99 / year</p>
+        <ul class="mt-8 space-y-3 text-sm text-[#F3F4F6]/90">
+          <li class="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#2EE66B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Unlimited AI voice turns</li>
+          <li class="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#2EE66B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Custom role-plays</li>
+          <li class="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#2EE66B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Full A1–C2 catalog</li>
+          <li class="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#2EE66B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Long-term tutor memory</li>
+          <li class="flex items-center gap-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#2EE66B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Priority cloud sync</li>
+        </ul>
+        <a href="#try" class="magnetic mt-9 block text-center rounded-xl px-6 py-3.5 font-semibold bg-[#8A2CFF] hover:bg-[#9A47FF] shadow-[0_0_25px_rgba(138,44,255,0.55)] transition-colors">Go Premium</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TESTIMONIALS ================= -->
+<section class="relative py-24 lg:py-32 border-t border-white/[0.06]">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="text-center reveal">
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Real people. Real breakthroughs.</h2>
+    </div>
+
+    <div class="mt-14 grid md:grid-cols-3 gap-6">
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8">
+        <div class="flex gap-1 text-[#FFC400]">★★★★★</div>
+        <p class="mt-5 text-[#F3F4F6]/90 leading-relaxed">"I knew all the grammar rules but would freeze up during Zoom calls at work. Talking to the FluentDeck AI for just two weeks made speaking English feel like muscle memory instead of a math exam."</p>
+        <p class="mt-6 text-sm font-semibold">Mateo L.</p>
+        <p class="text-xs text-[#9CA3AF]">Senior Frontend Developer, Spain</p>
+      </div>
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8" style="transition-delay:.1s">
+        <div class="flex gap-1 text-[#FFC400]">★★★★★</div>
+        <p class="mt-5 text-[#F3F4F6]/90 leading-relaxed">"Being able to import my 3,000-word Anki deck and instantly turn them into interactive voice flashcards is a game-changer. Finally, a vocabulary app built for power users."</p>
+        <p class="mt-6 text-sm font-semibold">Yuki S.</p>
+        <p class="text-xs text-[#9CA3AF]">Graduate Student, Japan</p>
+      </div>
+      <div class="reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8" style="transition-delay:.2s">
+        <div class="flex gap-1 text-[#FFC400]">★★★★★</div>
+        <p class="mt-5 text-[#F3F4F6]/90 leading-relaxed">"I was terrified of sounding stupid. The AI tutor corrected my prepositions without making me feel embarrassed. Now, I actually look forward to my morning chats."</p>
+        <p class="mt-6 text-sm font-semibold">Elif K.</p>
+        <p class="text-xs text-[#9CA3AF]">Product Designer, Turkey</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq" class="relative py-24 lg:py-32 border-t border-white/[0.06]">
+  <div class="mx-auto max-w-3xl px-6 lg:px-8">
+    <div class="text-center reveal">
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Questions, answered.</h2>
+    </div>
+
+    <div class="mt-14 space-y-4" id="faqList">
+      <div class="faq-item reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+        <button class="faq-toggle w-full flex items-center justify-between gap-4 px-6 py-5 text-left font-semibold">
+          How is this different from Duolingo?
+          <svg class="faq-chevron flex-none" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-panel px-6"><p class="pb-5 text-[#9CA3AF] leading-relaxed">Duolingo focuses on translation and gamified syntax. FluentDeck is built for conversation. We help intermediate-to-advanced learners overcome the psychological barrier of speaking aloud.</p></div>
+      </div>
+
+      <div class="faq-item reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+        <button class="faq-toggle w-full flex items-center justify-between gap-4 px-6 py-5 text-left font-semibold">
+          Can I import my existing Anki decks?
+          <svg class="faq-chevron flex-none" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-panel px-6"><p class="pb-5 text-[#9CA3AF] leading-relaxed">Absolutely. We support standard .apkg and .csv files. You can upgrade your static text cards into voice-enabled review cards instantly.</p></div>
+      </div>
+
+      <div class="faq-item reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+        <button class="faq-toggle w-full flex items-center justify-between gap-4 px-6 py-5 text-left font-semibold">
+          What accent does the AI speak with?
+          <svg class="faq-chevron flex-none" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-panel px-6"><p class="pb-5 text-[#9CA3AF] leading-relaxed">You can choose from over 15 natural accents, including American, British, Australian, Canadian, and Indian English, with adjustable speeds.</p></div>
+      </div>
+
+      <div class="faq-item reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+        <button class="faq-toggle w-full flex items-center justify-between gap-4 px-6 py-5 text-left font-semibold">
+          Does the AI really remember what we talk about?
+          <svg class="faq-chevron flex-none" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-panel px-6"><p class="pb-5 text-[#9CA3AF] leading-relaxed">Yes. Premium accounts feature a secure, encrypted "vector memory" that allows the AI tutor to remember your hobbies, goals, and previous mistakes over time.</p></div>
+      </div>
+
+      <div class="faq-item reveal rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+        <button class="faq-toggle w-full flex items-center justify-between gap-4 px-6 py-5 text-left font-semibold">
+          Is there a web version?
+          <svg class="faq-chevron flex-none" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-panel px-6"><p class="pb-5 text-[#9CA3AF] leading-relaxed">Yes! You can use FluentDeck on your iPhone, Android, or right in your desktop browser with zero installation.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINAL CTA ================= -->
+<section class="relative py-24 lg:py-36 border-t border-white/[0.06] overflow-hidden">
+  <div class="glow-blob w-[500px] h-[500px] bg-[#8A2CFF]/20 bottom-0 left-1/2 -translate-x-1/2"></div>
+  <div class="relative z-10 mx-auto max-w-3xl px-6 lg:px-8 text-center reveal">
+    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">Your shyness is just a lack of practice.</h2>
+    <p class="mt-6 text-lg text-[#9CA3AF]">10 minutes a day of low-stakes practice is all it takes to unlock your speaking potential.</p>
+
+    <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
+      <a href="#try" class="magnetic inline-flex items-center gap-2 rounded-xl px-7 py-4 font-semibold bg-[#8A2CFF] hover:bg-[#9A47FF] shadow-[0_0_35px_rgba(138,44,255,0.55)] transition-colors">Try Free on Web</a>
+      <a href="#" class="magnetic inline-flex items-center gap-2 rounded-xl px-6 py-4 font-semibold border border-white/15 bg-white/[0.03] hover:bg-white/[0.07] transition-colors">
+        <svg width="18" height="18" viewBox="0 0 384 512" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141 8 184.8 8 273.5c0 26.2 4.8 53.3 14.4 81.2 12.8 37.5 59 129.3 107.2 127.6 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-84.1 102.6-121.7-65.2-30.7-65.7-90-65.7-91.9zM256.4 88.9c26.9-32 24.5-61.2 23.7-71.9-23.8 1.4-51.4 16.4-67.1 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 68.9-34.9z"/></svg>
+        iOS
+      </a>
+      <a href="#" class="magnetic inline-flex items-center gap-2 rounded-xl px-6 py-4 font-semibold border border-white/15 bg-white/[0.03] hover:bg-white/[0.07] transition-colors">
+        <svg width="18" height="18" viewBox="0 0 512 512" fill="currentColor"><path d="M99 15.4C91.1 22.9 87 33.8 87 47.5v417c0 13.7 4.1 24.6 12 32.1l3.3 2.9 233.5-233.5v-5.7L102.3 12.5 99 15.4z"/><path d="M416.9 233.6l-77.7-45.1-52.7 52.7 52.7 52.7 78.3-45.3c11.5-6.9 18.5-16.5 18.5-27.1s-7.4-20.2-19.1-27.9z" opacity=".7"/><path d="M339.2 188.5l-52.7-52.7L102.3 12.5c-6.9-4.6-14.3-6.1-20.9-3.4l257.8 179.4z"/><path d="M102.3 499.5l184.2-123.3 52.7-52.7-236.9-176z" opacity=".85"/></svg>
+        Android
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="border-t border-white/[0.06] py-12">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+    <a href="#" class="flex items-center gap-2">
+      <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#8A2CFF] to-[#7A24E4]">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 18V6a2 2 0 0 1 2-2h9l5 5v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" stroke="#F3F4F6" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="font-bold">FluentDeck</span>
+    </a>
+    <p class="text-sm text-[#9CA3AF]">© 2026 FluentDeck. All rights reserved.</p>
+    <div class="flex gap-6 text-sm text-[#9CA3AF]">
+      <a href="#" class="hover:text-white transition-colors">Privacy</a>
+      <a href="#" class="hover:text-white transition-colors">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ---------- Mobile drawer ----------
+  const menuBtn = document.getElementById('menuBtn');
+  const closeMenuBtn = document.getElementById('closeMenuBtn');
+  const drawer = document.getElementById('mobileDrawer');
+  const overlay = document.getElementById('drawerOverlay');
+  function openDrawer(){ drawer.classList.add('open'); overlay.classList.remove('hidden'); }
+  function closeDrawer(){ drawer.classList.remove('open'); overlay.classList.add('hidden'); }
+  menuBtn.addEventListener('click', openDrawer);
+  closeMenuBtn.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+  document.querySelectorAll('.mobile-link').forEach(a => a.addEventListener('click', closeDrawer));
+
+  // ---------- Scroll reveal ----------
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  // ---------- Magnetic buttons ----------
+  const magnets = document.querySelectorAll('.magnetic');
+  magnets.forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      btn.style.transform = `translate(${x * 0.25}px, ${y * 0.35}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = 'translate(0,0)';
+    });
+  });
+
+  // ---------- Role-play showcase ----------
+  const roleplayOptions = document.getElementById('roleplayOptions');
+  const roleplayFeedback = document.getElementById('roleplayFeedback');
+  const roleplayReset = document.getElementById('roleplayReset');
+  const roleplayCard = document.getElementById('roleplayCard');
+
+  document.querySelectorAll('.roleplay-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const choice = btn.dataset.choice;
+      roleplayOptions.classList.add('hidden');
+      roleplayReset.classList.remove('hidden');
+
+      if (choice === 'weak') {
+        roleplayCard.style.boxShadow = '0 0 0 1px rgba(255,196,0,0.4), 0 0 40px rgba(255,196,0,0.25)';
+        roleplayFeedback.innerHTML = `
+          <div class="rounded-xl border border-[#FFC400]/40 bg-[#FFC400]/10 p-5">
+            <p class="text-sm font-semibold text-[#FFC400]">💡 Correction</p>
+            <p class="mt-2 text-[#F3F4F6]">"I worked with an angry client and spoke to them calmly."</p>
+            <button id="addFlashcardBtn" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#FFC400] text-[#0B0813] text-sm font-semibold px-4 py-2 hover:bg-[#ffd23d] transition-colors">Add to Flashcards (+)</button>
+          </div>`;
+      } else {
+        roleplayCard.style.boxShadow = '0 0 0 1px rgba(46,230,107,0.45), 0 0 40px rgba(46,230,107,0.3)';
+        roleplayFeedback.innerHTML = `
+          <div class="rounded-xl border border-[#2EE66B]/40 bg-[#2EE66B]/10 p-5">
+            <p class="text-sm font-semibold text-[#2EE66B]">✨ Perfect response!</p>
+            <p class="mt-2 text-[#F3F4F6]">Excellent skill. How did the client react afterwards?</p>
+          </div>`;
+      }
+      roleplayFeedback.classList.remove('hidden');
+
+      const addBtn = document.getElementById('addFlashcardBtn');
+      if (addBtn) {
+        addBtn.addEventListener('click', () => {
+          addBtn.textContent = 'Added ✓';
+          addBtn.disabled = true;
+          addBtn.classList.add('opacity-70', 'cursor-default');
+        });
+      }
+    });
+  });
+
+  roleplayReset.addEventListener('click', () => {
+    roleplayOptions.classList.remove('hidden');
+    roleplayFeedback.classList.add('hidden');
+    roleplayReset.classList.add('hidden');
+    roleplayCard.style.boxShadow = 'none';
+  });
+
+  // ---------- FAQ accordion ----------
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const toggle = item.querySelector('.faq-toggle');
+    const panel = item.querySelector('.faq-panel');
+    toggle.addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(openItem => {
+        openItem.classList.remove('open');
+        openItem.querySelector('.faq-panel').style.maxHeight = null;
+      });
+      if (!isOpen) {
+        item.classList.add('open');
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
