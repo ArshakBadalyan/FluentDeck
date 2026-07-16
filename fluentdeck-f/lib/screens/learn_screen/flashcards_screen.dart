@@ -98,7 +98,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       builder: (context, child) {
         final t = Curves.easeOut.transform(animation.value);
         return Material(
-          color: AppPageColors.cardBg,
+          color: AppPageColors.cardBgOf(context),
           elevation: 4 * t,
           shadowColor: Colors.black26,
           borderRadius: BorderRadius.circular(16),
@@ -543,7 +543,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   Future<void> _showDeckOptions(FlashcardDeckModel deck) async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -830,11 +830,11 @@ class _DeckListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tile = Material(
-      color: AppPageColors.cardBg,
+      color: AppPageColors.cardBgOf(context),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -933,8 +933,8 @@ class _TodayFooter extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppPageColors.cardBg,
-        border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.06))),
+        color: AppPageColors.cardBgOf(context),
+        border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),

@@ -457,12 +457,14 @@ class _MetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04,
+            ),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -484,7 +486,7 @@ class _MetricTile extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: AppPageColors.subtitleOf(context),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -521,12 +523,14 @@ class _ActivitySection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -568,7 +572,7 @@ class _EmptyHint extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          color: Colors.grey.shade600,
+          color: AppPageColors.subtitleOf(context),
           fontSize: 14,
           height: 1.45,
         ),
@@ -592,8 +596,11 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
-      color: const Color(0xFFF4FBF6),
+      color: isDark
+          ? AppColors.greenCorrect.withValues(alpha: 0.12)
+          : const Color(0xFFF4FBF6),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -603,7 +610,7 @@ class _HistoryCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: AppColors.greenCorrect.withValues(alpha: 0.25),
+          color: AppColors.greenCorrect.withValues(alpha: isDark ? 0.28 : 0.25),
         ),
       ),
       child: Row(
@@ -640,7 +647,7 @@ class _HistoryCard extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade600,
+                    color: AppPageColors.subtitleOf(context),
                   ),
                 ),
               ],

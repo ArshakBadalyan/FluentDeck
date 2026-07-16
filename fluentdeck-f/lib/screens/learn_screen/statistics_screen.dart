@@ -30,8 +30,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   int? _deckFilter;
   String _range = '12m';
 
-  static const _pageBg = Color(0xFFF7F5FB);
-
   @override
   void initState() {
     super.initState();
@@ -91,15 +89,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const ColoredBox(
-        color: _pageBg,
-        child: Center(child: CircularProgressIndicator()),
+      return AppPageBackground(
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error != null) {
-      return ColoredBox(
-        color: _pageBg,
+      return AppPageBackground(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -126,8 +122,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
     final matureRetention = stats.retention.mature;
 
-    return ColoredBox(
-      color: _pageBg,
+    return AppPageBackground(
       child: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.primaryPurple,
@@ -519,12 +514,14 @@ class _QuickMetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04,
+            ),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -546,7 +543,7 @@ class _QuickMetricTile extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: AppPageColors.subtitleOf(context),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -584,12 +581,14 @@ class _FilterCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -612,7 +611,7 @@ class _FilterCard extends StatelessWidget {
                 tooltip: 'Export PDF',
                 visualDensity: VisualDensity.compact,
                 onPressed: onExport,
-                icon: Icon(Icons.picture_as_pdf_outlined, color: Colors.grey.shade700),
+                icon: Icon(Icons.picture_as_pdf_outlined, color: AppPageColors.subtitleOf(context)),
               ),
               const DecksContextualHelpButton(
                 helpSectionId: 'statistics',
@@ -623,7 +622,7 @@ class _FilterCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             scopeLabel,
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
           ),
           const SizedBox(height: 12),
           LayoutBuilder(
@@ -672,12 +671,14 @@ class _StatsSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -705,7 +706,7 @@ class _StatsSection extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle!,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
           ],
           const SizedBox(height: 14),

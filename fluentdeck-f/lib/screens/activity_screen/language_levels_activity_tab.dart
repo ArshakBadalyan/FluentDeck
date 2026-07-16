@@ -274,16 +274,16 @@ class _MetricTile extends StatelessWidget {
       width: fullWidth ? double.infinity : null,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(height: 10),
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          Text(label, style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context))),
           const SizedBox(height: 4),
           Text(
             value,
@@ -312,9 +312,9 @@ class _Section extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,13 +368,13 @@ class _LanguageHistoryCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isCurrent
-            ? AppColors.primaryPurple.withValues(alpha: 0.06)
-            : const Color(0xFFF7F7FA),
+            ? AppColors.primaryPurple.withValues(alpha: 0.12)
+            : AppPageColors.fieldBgOf(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isCurrent
               ? AppColors.primaryPurple.withValues(alpha: 0.25)
-              : Colors.black.withValues(alpha: 0.05),
+              : AppPageColors.subtleBorderOf(context),
         ),
       ),
       child: Column(
@@ -417,7 +417,7 @@ class _LanguageHistoryCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'AI tutor $tutorLevel · $speakingTurns turns · $deckWords deck words · $dateLabel',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
           ),
         ],
       ),
@@ -456,7 +456,7 @@ class _TimelineRow extends StatelessWidget {
           Expanded(
             child: Text(
               when,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
             ),
           ),
         ],
@@ -474,7 +474,7 @@ class _EmptyHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.45),
+      style: TextStyle(color: AppPageColors.subtitleOf(context), fontSize: 14, height: 1.45),
     );
   }
 }

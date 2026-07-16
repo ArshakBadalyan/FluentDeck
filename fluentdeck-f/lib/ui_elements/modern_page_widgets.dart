@@ -10,20 +10,21 @@ class AppPageColors {
   static const cardBg = Colors.white;
   static const fieldBg = Color(0xFFF2F2F5);
 
+  /// Dark scaffold / page background.
+  static const darkPageBg = Color(0xFF0B0813);
+  /// Dark cards & app bar surface.
+  static const darkCardBg = Color(0xFF151220);
+  /// Dark raised surface (dialogs, sheets, menus, inputs).
+  static const darkRaisedBg = Color(0xFF1D1830);
+
   static Color pageBgOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? Theme.of(context).colorScheme.surface
-          : pageBg;
+      Theme.of(context).brightness == Brightness.dark ? darkPageBg : pageBg;
 
   static Color cardBgOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? Theme.of(context).cardColor
-          : cardBg;
+      Theme.of(context).brightness == Brightness.dark ? darkCardBg : cardBg;
 
   static Color fieldBgOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? Theme.of(context).colorScheme.surfaceContainerHighest
-          : fieldBg;
+      Theme.of(context).brightness == Brightness.dark ? darkRaisedBg : fieldBg;
 
   static Color subtleBorderOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark

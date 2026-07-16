@@ -4,6 +4,8 @@ class AppColors {
   AppColors._();
 
   static const Color primaryPurple = Color(0xFF8A2CFF);
+  /// Header / app-bar accent only — not the light-theme seed.
+  static const Color headerPurple = Color(0xFF7A24E4);
   static const Color primaryYellow = Color(0xFFFFC400);
 
 
