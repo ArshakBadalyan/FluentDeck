@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
@@ -79,7 +80,7 @@ class _ProfileSettingsSpeakingSectionState
       );
       if (!mounted) return;
       setState(() => _speakingPrefs = restored);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(
           content: Text(
             result.errorMessage ?? 'Could not update speaking settings',
@@ -130,8 +131,18 @@ class _ProfileSettingsSpeakingSectionState
                     _saving
                         ? null
                         : (value) {
+                          // The tutor follows the new learning language; it can
+                          // still be changed separately under Tutor below.
+                          final tutorLanguage =
+                              SpeakingPreferences.responseLanguageOptions
+                                      .containsKey(value)
+                                  ? value
+                                  : _speakingPrefs.responseLanguage;
                           _saveSpeakingPreferences(
-                            _speakingPrefs.copyWith(practiceLanguage: value),
+                            _speakingPrefs.copyWith(
+                              practiceLanguage: value,
+                              responseLanguage: tutorLanguage,
+                            ),
                           );
                         },
               ),
@@ -304,21 +315,23 @@ class _ProfileSettingsSpeakingSectionState
                 enabled: !_saving,
                 onChanged: (value) {
                   _saveSpeakingPreferences(
-                    _speakingPrefs.copyWith(
-                      autoPlayVoice: value,
-                      autoConversation: value ? _speakingPrefs.autoConversation : false,
-                    ),
+                    _speakingPrefs.copyWith(autoPlayVoice: value),
                   );
                 },
               ),
               AppToggleRow(
                 title: 'Auto-start recording',
                 subtitle: 'Open the mic after the tutor finishes speaking.',
-                value: _speakingPrefs.autoStartRecording,
+                value: _speakingPrefs.autoStartRecording ||
+                    _speakingPrefs.autoConversation,
                 enabled: !_saving,
                 onChanged: (value) {
+                  // Hands-free was merged into this toggle; clear the legacy flag.
                   _saveSpeakingPreferences(
-                    _speakingPrefs.copyWith(autoStartRecording: value),
+                    _speakingPrefs.copyWith(
+                      autoStartRecording: value,
+                      autoConversation: false,
+                    ),
                   );
                 },
               ),
@@ -341,20 +354,6 @@ class _ProfileSettingsSpeakingSectionState
                     );
                   },
                 ),
-              AppToggleRow(
-                title: 'Hands-free conversation',
-                subtitle: 'Auto-play voice and reopen mic after every reply.',
-                value: _speakingPrefs.autoConversation,
-                enabled: !_saving,
-                onChanged: (value) {
-                  _saveSpeakingPreferences(
-                    _speakingPrefs.copyWith(
-                      autoConversation: value,
-                      autoPlayVoice: value ? true : _speakingPrefs.autoPlayVoice,
-                    ),
-                  );
-                },
-              ),
             ],
           ),
         ),
@@ -436,7 +435,7 @@ class _CorrectSentenceProgress extends StatelessWidget {
             value: progress,
             minHeight: 6,
             backgroundColor: Colors.grey.shade200,
-            color: reached ? AppColors.greenCorrect : AppColors.primaryPurple,
+            color: reached ? AppColors.greenCorrect : AppColors.brandPrimary,
           ),
         ),
       ],

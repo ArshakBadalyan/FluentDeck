@@ -1,4 +1,6 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 
 class UnsavedChangesService extends ChangeNotifier {
@@ -27,9 +29,10 @@ class UnsavedChangesService extends ChangeNotifier {
     BuildContext context, {
     Future<bool> Function()? onSave,
   }) async {
+    // Tap outside = stay on the page (same as the old ×).
     final result = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder:
           (context) => Dialog(
             shape: RoundedRectangleBorder(
@@ -128,7 +131,7 @@ class UnsavedChangesService extends ChangeNotifier {
                                     hasUnsavedChanges = false;
                                     Navigator.pop(context, true);
                                   } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
+                                    AppToast.showSnackBar(context, 
                                       SnackBar(
                                         content: Text(
                                           context.tr('popups.leave-page-popup.save-failed'),
@@ -139,7 +142,7 @@ class UnsavedChangesService extends ChangeNotifier {
                                 },
 
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF7C3AED),
+                                  backgroundColor: AppColors.brandPrimary,
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
@@ -170,17 +173,7 @@ class UnsavedChangesService extends ChangeNotifier {
                   ),
                 ),
 
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: IconButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    icon: const Icon(Icons.close, color: Colors.grey, size: 20),
-                    tooltip: 'Close',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ),
+
               ],
             ),
           ),

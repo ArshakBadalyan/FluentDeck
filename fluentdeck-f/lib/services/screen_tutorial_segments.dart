@@ -58,10 +58,6 @@ abstract final class ScreenTutorialSegmentCatalog {
         'screen-tutorial.segments.chrome_sub_tabs',
       );
       push(
-        ScreenTutorialSegmentIds.chromeTodayGoal,
-        'screen-tutorial.segments.chrome_today_goal',
-      );
-      push(
         ScreenTutorialSegmentIds.chromeNotifications,
         'screen-tutorial.segments.chrome_notifications',
       );

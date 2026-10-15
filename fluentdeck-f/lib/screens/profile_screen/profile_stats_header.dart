@@ -11,11 +11,15 @@ class ProfileStatsHeader extends StatelessWidget {
     required this.snapshot,
     required this.displayName,
     this.onViewAchievements,
+    this.savedWordsValue,
   });
 
   final AchievementSnapshot snapshot;
   final String displayName;
   final VoidCallback? onViewAchievements;
+
+  /// "12" or "12/50" (free tier limit); hides the tile when null.
+  final String? savedWordsValue;
 
   String get _nameLabel {
     final trimmed = displayName.trim();
@@ -31,10 +35,9 @@ class ProfileStatsHeader extends StatelessWidget {
     final unlocked = snapshot.unlockedCount;
     final total = snapshot.achievements.length;
 
-    return AppFadeIn(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
           AppHeroCard(
             value: '$streak',
             label: _nameLabel,
@@ -108,38 +111,57 @@ class ProfileStatsHeader extends StatelessWidget {
                     ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: AppMetricTile(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tiles = <Widget>[
+                AppMetricTile(
                   icon: Icons.mic_none_rounded,
                   label: 'Speaking',
                   value: '${minutes}m',
-                  color: AppColors.primaryPurple,
+                  color: AppColors.brandPrimary,
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppMetricTile(
+                AppMetricTile(
                   icon: Icons.menu_book_outlined,
                   label: 'Unique words',
                   value: '$words',
                   color: const Color(0xFF2196F3),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppMetricTile(
+                if (savedWordsValue != null)
+                  AppMetricTile(
+                    icon: Icons.bookmark_outline_rounded,
+                    label: 'Saved words',
+                    value: savedWordsValue!,
+                    color: const Color(0xFFFF9800),
+                  ),
+                AppMetricTile(
                   icon: Icons.emoji_events_outlined,
                   label: 'Badges',
                   value: '$unlocked/$total',
                   color: AppColors.primaryYellow,
                 ),
-              ),
-            ],
+              ];
+              // Four tiles get cramped on phones: use a 2×2 grid there.
+              final perRow =
+                  tiles.length == 4 && constraints.maxWidth < 520 ? 2 : tiles.length;
+              final rows = <Widget>[];
+              for (var i = 0; i < tiles.length; i += perRow) {
+                final rowTiles = tiles.sublist(i, (i + perRow).clamp(0, tiles.length));
+                if (rows.isNotEmpty) rows.add(const SizedBox(height: 10));
+                rows.add(
+                  Row(
+                    children: [
+                      for (var j = 0; j < rowTiles.length; j++) ...[
+                        if (j > 0) const SizedBox(width: 10),
+                        Expanded(child: rowTiles[j]),
+                      ],
+                    ],
+                  ),
+                );
+              }
+              return Column(children: rows);
+            },
           ),
-        ],
-      ),
+      ],
     );
   }
 }

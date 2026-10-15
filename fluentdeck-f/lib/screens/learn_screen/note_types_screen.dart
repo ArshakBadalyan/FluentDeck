@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:fluentdeck/app_colors.dart';
@@ -85,7 +86,7 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
       _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      AppToast.showSnackBar(context, SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -101,7 +102,7 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openEditor(),
-        backgroundColor: AppColors.primaryPurple,
+        backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Custom type'),
@@ -130,7 +131,7 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: _load,
-                style: FilledButton.styleFrom(backgroundColor: AppColors.primaryPurple),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.brandPrimary),
                 child: const Text('Retry'),
               ),
             ],
@@ -149,13 +150,13 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withValues(alpha: 0.08),
+                  color: AppColors.brandPrimary.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.dashboard_customize_outlined,
                   size: 32,
-                  color: AppColors.primaryPurple,
+                  color: AppColors.brandPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -225,13 +226,13 @@ class _NoteTypeCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(9),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                      color: AppColors.brandPrimary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(11),
                     ),
                     child: const Icon(
                       Icons.dashboard_customize_outlined,
                       size: 18,
-                      color: AppColors.primaryPurple,
+                      color: AppColors.brandPrimary,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -268,7 +269,7 @@ class _NoteTypeCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                        color: AppColors.brandPrimary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
@@ -276,7 +277,7 @@ class _NoteTypeCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.primaryPurple,
+                          color: AppColors.brandPrimary,
                         ),
                       ),
                     ),
@@ -317,20 +318,20 @@ class _MetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: muted ? AppPageColors.fieldBgOf(context) : AppColors.primaryPurple.withValues(alpha: 0.08),
+        color: muted ? AppPageColors.fieldBgOf(context) : AppColors.brandPrimary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: muted ? Colors.grey.shade600 : AppColors.primaryPurple),
+          Icon(icon, size: 12, color: muted ? Colors.grey.shade600 : AppColors.brandPrimary),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: muted ? Colors.grey.shade700 : AppColors.primaryPurple,
+              color: muted ? Colors.grey.shade700 : AppColors.brandPrimary,
             ),
           ),
         ],

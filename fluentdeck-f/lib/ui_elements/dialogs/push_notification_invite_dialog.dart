@@ -54,7 +54,7 @@ class PushNotificationInviteDialog extends StatelessWidget {
                   height: 44,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryPurple,
+                      backgroundColor: AppColors.brandPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -84,16 +84,6 @@ class PushNotificationInviteDialog extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-          Positioned(
-            top: 4,
-            right: 4,
-            child: IconButton(
-              icon: const Icon(Icons.close, size: 22),
-              color: Colors.black54,
-              tooltip: 'Close',
-              onPressed: () => Navigator.of(context).pop(false),
             ),
           ),
         ],

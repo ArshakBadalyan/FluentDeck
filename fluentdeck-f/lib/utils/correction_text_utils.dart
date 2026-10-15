@@ -129,7 +129,7 @@ List<InlineSpan> buildCorrectedMessageSpans({
                 child: const Icon(
                   Icons.bookmark_added_rounded,
                   size: 12,
-                  color: AppColors.primaryPurple,
+                  color: AppColors.brandPrimary,
                 ),
               ),
             ),

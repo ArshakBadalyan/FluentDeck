@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -56,7 +57,7 @@ class PushPromptCoordinator {
     }
   }
 
-  /// Legacy hook from math exercise saves — no-op in English app.
+  /// Legacy hook kept for existing callers — no-op.
   static Future<void> onExerciseSaved(BuildContext context) async {}
 
   static Future<void> _showMilestoneDialog(
@@ -85,7 +86,6 @@ class PushPromptCoordinator {
 
     if (!accepted || !context.mounted) return;
 
-    final messenger = ScaffoldMessenger.maybeOf(context);
     final loc = AppLocalizations.instance;
 
     final outcome =
@@ -101,14 +101,10 @@ class PushPromptCoordinator {
         );
         break;
       case PushSubscriptionRequestOutcome.openedSystemSettings:
-        messenger?.showSnackBar(
-          SnackBar(content: Text(loc.t('push-prompt.opened-settings-hint'))),
-        );
+        AppToast.info(loc.t('push-prompt.opened-settings-hint'));
         break;
       case PushSubscriptionRequestOutcome.denied:
-        messenger?.showSnackBar(
-          SnackBar(content: Text(loc.t('push-prompt.native-denied-hint'))),
-        );
+        AppToast.warning(loc.t('push-prompt.native-denied-hint'));
         break;
       default:
         break;

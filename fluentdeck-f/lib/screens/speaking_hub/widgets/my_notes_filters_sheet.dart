@@ -76,12 +76,12 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                    color: AppColors.brandPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
                     Icons.tune_rounded,
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                     size: 20,
                   ),
                 ),
@@ -95,10 +95,6 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
                       fontFamily: 'Rubik',
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
@@ -182,7 +178,7 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
             child: FilledButton(
               onPressed: _apply,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
+                backgroundColor: AppColors.brandPrimary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -203,16 +199,16 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
       label: Text(label),
       selected: selected,
       onSelected: (_) => setState(() => _topicFilter = value),
-      selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
-      checkmarkColor: AppColors.primaryPurple,
+      selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
+      checkmarkColor: AppColors.brandPrimary,
       labelStyle: TextStyle(
         fontSize: 12,
-        color: selected ? AppColors.primaryPurple : const Color(0xFF777481),
+        color: selected ? AppColors.brandPrimary : const Color(0xFF777481),
         fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
         fontFamily: 'Rubik',
       ),
       side: BorderSide(
-        color: selected ? AppColors.primaryPurple : Colors.grey.shade300,
+        color: selected ? AppColors.brandPrimary : Colors.grey.shade300,
       ),
       visualDensity: VisualDensity.compact,
     );

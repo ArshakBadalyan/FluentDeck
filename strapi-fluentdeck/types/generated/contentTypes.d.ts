@@ -803,6 +803,7 @@ export interface ApiFlashcardNoteFlashcardNote
     draftAndPublish: false;
   };
   attributes: {
+    cefrLevel: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -816,6 +817,8 @@ export interface ApiFlashcardNoteFlashcardNote
       'oneToMany',
       'api::flashcard.flashcard'
     >;
+    inMyNotes: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    languageCode: Schema.Attribute.String & Schema.Attribute.DefaultTo<'en'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -837,17 +840,18 @@ export interface ApiFlashcardNoteFlashcardNote
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'basic'>;
     publishedAt: Schema.Attribute.DateTime;
+    source: Schema.Attribute.Enumeration<
+      ['deck', 'speaking', 'manual', 'catalog']
+    > &
+      Schema.Attribute.DefaultTo<'deck'>;
     tags: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
+    topic: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     user: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
-    >;
-    userNote: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::user-note.user-note'
     >;
   };
 }
@@ -879,6 +883,7 @@ export interface ApiFlashcardFlashcard extends Struct.CollectionTypeSchema {
       'manyToOne',
       'api::flashcard-deck.flashcard-deck'
     >;
+    example: Schema.Attribute.Text;
     flag: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {
@@ -911,16 +916,13 @@ export interface ApiFlashcardFlashcard extends Struct.CollectionTypeSchema {
     templateName: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'Card 1'>;
     templateOrdinal: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    translation: Schema.Attribute.Text;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     user: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
-    >;
-    userNote: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::user-note.user-note'
     >;
   };
 }
@@ -1329,52 +1331,6 @@ export interface ApiSubscriptionSubscription
       'oneToOne',
       'plugin::users-permissions.user'
     >;
-  };
-}
-
-export interface ApiUserNoteUserNote extends Struct.CollectionTypeSchema {
-  collectionName: 'user_notes';
-  info: {
-    description: 'Personal vocabulary notes from speaking or manual entry.';
-    displayName: 'User Note';
-    pluralName: 'user-notes';
-    singularName: 'user-note';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    cefrLevel: Schema.Attribute.String;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    definition: Schema.Attribute.Text;
-    exampleSentence: Schema.Attribute.Text;
-    flashcards: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::flashcard.flashcard'
-    >;
-    languageCode: Schema.Attribute.String & Schema.Attribute.DefaultTo<'en'>;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::user-note.user-note'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    source: Schema.Attribute.Enumeration<['speaking', 'manual']> &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'manual'>;
-    tags: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
-    topic: Schema.Attribute.String;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    user: Schema.Attribute.Relation<
-      'manyToOne',
-      'plugin::users-permissions.user'
-    >;
-    word: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
@@ -2131,7 +2087,6 @@ declare module '@strapi/strapi' {
       'api::speaking-session.speaking-session': ApiSpeakingSessionSpeakingSession;
       'api::speaking-topic.speaking-topic': ApiSpeakingTopicSpeakingTopic;
       'api::subscription.subscription': ApiSubscriptionSubscription;
-      'api::user-note.user-note': ApiUserNoteUserNote;
       'api::user-progress.user-progress': ApiUserProgressUserProgress;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

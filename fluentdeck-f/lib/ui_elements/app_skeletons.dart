@@ -17,7 +17,7 @@ class DecksListSkeleton extends StatelessWidget {
             Container(
               height: 148,
               decoration: BoxDecoration(
-                color: AppColors.primaryPurple,
+                color: AppColors.brandPrimary,
                 borderRadius: BorderRadius.circular(24),
               ),
               padding: const EdgeInsets.all(24),
@@ -163,7 +163,7 @@ class ActivityScreenSkeleton extends StatelessWidget {
             Container(
               height: 132,
               decoration: BoxDecoration(
-                color: AppColors.primaryPurple,
+                color: AppColors.brandPrimary,
                 borderRadius: BorderRadius.circular(24),
               ),
             ),

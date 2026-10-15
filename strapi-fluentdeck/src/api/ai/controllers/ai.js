@@ -7,6 +7,7 @@ const {
   looksLikeWhisperHallucination,
   getTutorReply,
   translateMessage,
+  translateWithGlossary,
   synthesizeSpeech,
   evaluateSession: evaluateSpeakingSession,
   loadUserTutorContext,
@@ -394,7 +395,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     const usageBefore = await ensureConversationAllowed(ctx, strapi, userId);
     if (!usageBefore) return;
 
-    const { text, targetLanguage } = ctx.request.body ?? {};
+    const { text, targetLanguage, withGlossary, word } = ctx.request.body ?? {};
     const trimmed = String(text ?? '').trim();
     if (!trimmed) {
       return ctx.badRequest("text is required");
@@ -407,6 +408,18 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     }
 
     try {
+      if (withGlossary === true) {
+        const result = await translateWithGlossary({
+          text: trimmed,
+          targetLanguage: String(targetLanguage).trim(),
+          word: String(word ?? '').trim().slice(0, 500),
+        });
+        ctx.body = {
+          ...result,
+          usage: await recordConversationTurn(strapi, userId),
+        };
+        return;
+      }
       const translation = await translateMessage({
         text: trimmed,
         targetLanguage: String(targetLanguage).trim(),
@@ -443,7 +456,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       return;
     }
 
-    const { word, context } = ctx.request.body ?? {};
+    const { word, context, languageCode, translationLanguage } = ctx.request.body ?? {};
     if (!word || !String(word).trim()) {
       return ctx.badRequest("word is required");
     }
@@ -452,6 +465,10 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       const result = await generateWordMeaning({
         word: String(word).trim(),
         context: context ? String(context).trim() : undefined,
+        languageCode: languageCode ? String(languageCode).trim() : undefined,
+        translationLanguage: translationLanguage
+          ? String(translationLanguage).trim()
+          : undefined,
       });
       ctx.body = {
         ...result,

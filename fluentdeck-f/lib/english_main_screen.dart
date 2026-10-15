@@ -1,6 +1,9 @@
+import 'package:fluentdeck/services/logout_flow.dart';
+import 'package:fluentdeck/services/screen_tutorial_service.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/screens/activity_screen/activity_shell_screen.dart';
 import 'package:fluentdeck/screens/speaking_hub/speaking_hub_screen.dart';
@@ -8,9 +11,7 @@ import 'package:fluentdeck/screens/conversation_screen/conversation_history_scre
 import 'package:fluentdeck/screens/learn_screen/decks_shell_screen.dart';
 import 'package:fluentdeck/screens/profile_screen/about_us/profile_about_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_account_tab.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_notifications_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_security_tab.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_sound_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_settings_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_subscription_tab.dart';
 import 'package:fluentdeck/services/app_feature_config_service.dart';
@@ -96,8 +97,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     'Account',
     'Settings',
     'Subscription',
-    'Notifications',
-    'Sound',
     'Security',
     'About',
   ];
@@ -116,6 +115,9 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   void initState() {
     super.initState();
     MainNavigationCoordinator.navigateToMainTab = setMainIndex;
+    // Profile → About → Show tips reads where the user is.
+    ScreenTutorialReplayCoordinator.currentMainTabIndex = _tutorialMainIndex;
+    ScreenTutorialReplayCoordinator.currentSubTabIndex = _tutorialSubIndex;
     MainNavigationCoordinator.enterSpeakChatSession = () {
       _speakingHubKey.currentState?.enterLoadedSession();
     };
@@ -147,8 +149,27 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     oldController.dispose();
   }
 
+  int _tutorialMainIndex() => _currentIndex;
+
+  int _tutorialSubIndex() {
+    switch (_currentTab) {
+      case MainTabId.profile:
+        return _profileTabController.index;
+      case MainTabId.decks:
+        return _decksTabController.index;
+      case MainTabId.speak:
+        return _speakTabController.index;
+      case MainTabId.activity:
+        return _activityTabController.index;
+    }
+  }
+
   @override
   void dispose() {
+    if (ScreenTutorialReplayCoordinator.currentMainTabIndex == _tutorialMainIndex) {
+      ScreenTutorialReplayCoordinator.currentMainTabIndex = null;
+      ScreenTutorialReplayCoordinator.currentSubTabIndex = null;
+    }
     if (MainNavigationCoordinator.navigateToMainTab == setMainIndex) {
       MainNavigationCoordinator.navigateToMainTab = null;
     }
@@ -247,17 +268,28 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
             : null,
   );
 
+  /// Neighbouring tabs slide; farther tabs jump straight there. Animating
+  /// across several pages fired onPageChanged for every tab in between
+  /// (building them, hitting their APIs and replaying the tab sound).
+  Future<void> _showMainPage(int index) async {
+    if ((index - _currentIndex).abs() > 1) {
+      _pageController.jumpToPage(index);
+      return;
+    }
+    await _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   Future<void> _goToAdjacentMainTab(int direction) async {
     final next = _currentIndex + direction;
     if (next < 0 || next >= MainTabConfig.tabCount) return;
     if (!await _confirmLeaveIfUnsaved()) return;
     _leaveSpeakTabIfNeeded(next);
     _pendingSubIndex = null;
-    await _pageController.animateToPage(
-      next,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-    );
+    await _showMainPage(next);
   }
 
   Future<void> _refreshNotificationUnread() async {
@@ -299,8 +331,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
         ProfileAccountTab(),
         ProfileSettingsTab(),
         ProfileSubscriptionTab(),
-        ProfileNotificationsTab(),
-        ProfileSoundTab(),
         ProfileSecurityTab(),
         ProfileAboutTab(showResetAllScreenTips: false),
       ],
@@ -349,6 +379,43 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: MainAppBar(
         title: _currentTitle,
+        // Profile: log out sits to the right of the bell.
+        trailingAction:
+            isProfile
+                ? Builder(
+                  builder: (context) => IconButton(
+                    tooltip: 'Log out',
+                    icon: const Icon(Icons.logout_rounded, size: 24),
+                    color: Colors.white,
+                    onPressed: () => runLogoutFlow(context),
+                  ),
+                )
+                : null,
+        helpAction:
+            isDecks
+                ? AnimatedBuilder(
+                    animation: _decksTabController,
+                    builder: (context, _) => DecksContextualHelpButton(
+                      helpSectionId:
+                          _decksTabController.index == 1 ? 'card-browser' : null,
+                      iconSize: 26,
+                      color: Colors.white,
+                    ),
+                  )
+                : isActivity
+                ? AnimatedBuilder(
+                    animation: _activityTabController,
+                    // Deck statistics help on Activity → Decks.
+                    builder: (context, _) =>
+                        _activityTabController.index == 2
+                            ? const DecksContextualHelpButton(
+                              helpSectionId: 'statistics',
+                              iconSize: 26,
+                              color: Colors.white,
+                            )
+                            : const SizedBox.shrink(),
+                  )
+                : null,
         tabs:
             isProfile
                 ? _profileSubTabs.map((label) => Tab(text: label)).toList()
@@ -387,6 +454,10 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                 }
                 : null,
       ),
+      // Unread badge refreshes when the drawer closes (swipe / tap outside).
+      onEndDrawerChanged: (isOpen) {
+        if (!isOpen) unawaited(_refreshNotificationUnread());
+      },
       endDrawer: NotificationPanel(
         onChanged: () {
           unawaited(_refreshNotificationUnread());
@@ -412,11 +483,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
           _pendingSubIndex = null;
           if (!await _confirmLeaveIfUnsaved()) return;
           _leaveSpeakTabIfNeeded(index);
-          await _pageController.animateToPage(
-            index,
-            duration: const Duration(milliseconds: 280),
-            curve: Curves.easeOutCubic,
-          );
+          await _showMainPage(index);
         },
       ),
     );

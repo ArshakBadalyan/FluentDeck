@@ -122,7 +122,7 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
 
     return RefreshIndicator(
       onRefresh: _load,
-      color: AppColors.primaryPurple,
+      color: AppColors.brandPrimary,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),

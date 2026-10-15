@@ -12,6 +12,14 @@ function clampLevel(level) {
   return CEFR_LEVELS.includes(normalized) ? normalized : 'A1';
 }
 
+// Below this many scored (substantive) speaking turns — or this much deck
+// review volume — there simply isn't enough evidence to judge anything past
+// A1, no matter how the raw score below works out. `perfectSentences` /
+// `correctionCount` only reflect turns with >= MIN_SUBSTANTIVE_WORDS words
+// (see speaking-stats-utils.js), so "hi" / "do" / "hoo" contribute to neither.
+const MIN_UTTERANCES_FOR_LEVEL = 5;
+const MIN_DECK_WORDS_FOR_LEVEL = 20;
+
 /**
  * Estimate CEFR from speaking turns, accuracy, spoken vocabulary, and deck reviews.
  */
@@ -22,15 +30,16 @@ function estimateLevelFromStats(stats = {}) {
   const uniqueWordsSpoken = Number(stats.uniqueWordsSpoken ?? 0);
   const deckWordsReviewed = Number(stats.deckWordsReviewed ?? 0);
 
+  const utterances = perfectSentences + correctionCount;
+  if (utterances < MIN_UTTERANCES_FOR_LEVEL && deckWordsReviewed < MIN_DECK_WORDS_FOR_LEVEL) {
+    return 'A1';
+  }
+
   let score = 0;
   score += Math.min(speakingTurns * 2, 40);
   score += Math.min(uniqueWordsSpoken / 5, 30);
   score += Math.min(deckWordsReviewed / 3, 20);
-
-  const utterances = perfectSentences + correctionCount;
-  if (utterances > 3) {
-    score += (perfectSentences / utterances) * 20;
-  }
+  score += (perfectSentences / Math.max(utterances, 1)) * 20;
 
   if (score < 8) return 'A1';
   if (score < 22) return 'A2';
@@ -224,9 +233,19 @@ function formatLanguageLevelsResponse({
   practiceLanguage,
   tutorLevel,
   languageLevels,
+  noteCounts = {},
 }) {
   const current = languageLevels[practiceLanguage] ?? emptyLanguageEntry(tutorLevel);
   const history = Object.entries(languageLevels)
+    // Merely switching to a language doesn't make history: keep it once it has
+    // notes/cards, speaking turns or deck reviews (the current one always shows).
+    .filter(
+      ([code, entry]) =>
+        code === practiceLanguage ||
+        (noteCounts[code] ?? 0) > 0 ||
+        (entry.speakingTurns ?? 0) > 0 ||
+        (entry.deckWordsReviewed ?? 0) > 0,
+    )
     .map(([code, entry]) => ({
       languageCode: code,
       tutorLevel: entry.tutorLevel,
@@ -235,6 +254,7 @@ function formatLanguageLevelsResponse({
       firstSelectedAt: entry.firstSelectedAt,
       speakingTurns: entry.speakingTurns,
       deckWordsReviewed: entry.deckWordsReviewed,
+      noteCount: noteCounts[code] ?? 0,
       levelHistory: entry.levelHistory ?? [],
     }))
     .sort((a, b) => String(b.lastActiveAt).localeCompare(String(a.lastActiveAt)));
@@ -256,10 +276,20 @@ async function getLanguageLevelsSnapshot(strapi, userId) {
     await loadUserLanguageContext(strapi, userId);
   await ensureLanguageEntry(strapi, userId, practiceLanguage, tutorLevel);
   const refreshed = await loadUserLanguageContext(strapi, userId);
+  const notes = await strapi.db.query('api::flashcard-note.flashcard-note').findMany({
+    where: { user: userId },
+    select: ['languageCode'],
+  });
+  const noteCounts = {};
+  for (const note of notes) {
+    const code = note.languageCode || 'en';
+    noteCounts[code] = (noteCounts[code] ?? 0) + 1;
+  }
   return formatLanguageLevelsResponse({
     practiceLanguage: refreshed.practiceLanguage,
     tutorLevel: refreshed.tutorLevel,
     languageLevels: refreshed.languageLevels,
+    noteCounts,
   });
 }
 

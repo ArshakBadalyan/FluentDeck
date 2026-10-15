@@ -16,7 +16,7 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
   String? _error;
   List<UserNoteModel> _phrases = const [];
 
-  static const _pageBg = Color(0xFFF7F5FB);
+  static const _pageBg = AppColors.pageBg;
 
   @override
   void initState() {
@@ -53,7 +53,7 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
       backgroundColor: _pageBg,
       appBar: AppBar(
         title: const Text('Saved phrases'),
-        backgroundColor: AppColors.primaryPurple,
+        backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -87,7 +87,7 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
               )
               : RefreshIndicator(
                 onRefresh: _load,
-                color: AppColors.primaryPurple,
+                color: AppColors.brandPrimary,
                 child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   itemCount: _phrases.length,
@@ -115,7 +115,7 @@ class _SavedPhraseCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.primaryPurple.withValues(alpha: 0.12),
+          color: AppColors.brandPrimary.withValues(alpha: 0.12),
         ),
       ),
       child: Row(
@@ -124,7 +124,7 @@ class _SavedPhraseCard extends StatelessWidget {
           Icon(
             Icons.format_quote_rounded,
             size: 18,
-            color: AppColors.primaryPurple.withValues(alpha: 0.6),
+            color: AppColors.brandPrimary.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 8),
           Expanded(

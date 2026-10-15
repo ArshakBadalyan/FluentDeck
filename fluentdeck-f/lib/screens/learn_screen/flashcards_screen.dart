@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
@@ -125,30 +128,25 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     );
   }
 
+  /// SliverReorderableList drag callback. Mutates the list synchronously
+  /// (the standard pattern for this API) so the drop lands on the first
+  /// frame instead of flashing back to the old order for a frame first.
   void _onDeckReorder(int oldIndex, int newIndex) {
     if (oldIndex == newIndex) return;
     var target = newIndex;
     if (target > oldIndex) target -= 1;
-    _scheduleDeckOrderMutation(oldIndex, target);
-  }
-
-  void _scheduleDeckOrderMutation(int oldIndex, int targetIndex) {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      if (oldIndex < 0 ||
-          targetIndex < 0 ||
-          oldIndex >= _deckRows.length ||
-          targetIndex >= _deckRows.length ||
-          oldIndex == targetIndex) {
-        return;
-      }
-      setState(() {
-        final moved = _deckRows.removeAt(oldIndex);
-        _deckRows.insert(targetIndex, moved);
-      });
-      final ids = _deckRows.map((row) => row.deck.id).toList();
-      await DeckOrderStore.instance.save(ids);
+    if (oldIndex < 0 ||
+        target < 0 ||
+        oldIndex >= _deckRows.length ||
+        target >= _deckRows.length) {
+      return;
+    }
+    setState(() {
+      final moved = _deckRows.removeAt(oldIndex);
+      _deckRows.insert(target, moved);
     });
+    final ids = _deckRows.map((row) => row.deck.id).toList();
+    unawaited(DeckOrderStore.instance.save(ids));
   }
 
   Widget _deckDragHandle(int index) {
@@ -239,9 +237,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
               : result.incremental
               ? 'Incremental sync complete'
               : 'Up to date';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      AppToast.showSnackBar(context, SnackBar(content: Text(msg)));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Offline — changes will sync when connected')),
       );
     }
@@ -290,7 +288,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }
@@ -300,7 +298,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     final deck = await showFilteredDeckDialog(context, decks: _decks);
     if (deck != null && mounted) {
       await _load();
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text('Created filtered deck "${deck.name}"')),
       );
     }
@@ -384,12 +382,12 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     try {
       await DeckBackupService.instance.performBackup();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Backup created')),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }
@@ -407,7 +405,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }
@@ -471,7 +469,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(
           content: Text(
             format == 'share'
@@ -482,7 +480,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }
@@ -520,12 +518,12 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       await FlashcardService.instance.deleteDeck(deck.id);
       if (!mounted) return;
       await _load();
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text('Deleted "${deck.name}"')),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }
@@ -653,89 +651,103 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: _load,
-                  color: AppColors.primaryPurple,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
-                    children: [
-                      if (stats != null) ...[
-                        _StatsCard(stats: stats, onReview: () => _startReview()),
-                        const SizedBox(height: 16),
-                      ],
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Decks',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              if (dueSummary.isNotEmpty)
-                                Text(
-                                  dueSummary,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
+                  color: AppColors.brandPrimary,
+                  // A real sliver list (not a shrink-wrapped ReorderableListView
+                  // nested inside this outer scrollable) — that combination is a
+                  // known Flutter glitch: the drag placeholder doesn't collapse
+                  // cleanly (a gap is left under the dragged row) and the drop
+                  // can flash back to the old order for a frame. See
+                  // _onDeckReorder for the matching synchronous-mutate half of
+                  // this fix.
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            if (stats != null) ...[
+                              _StatsCard(stats: stats, onReview: () => _startReview()),
+                              const SizedBox(height: 16),
                             ],
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _SyncStatusButton(
-                                status: _sync.status,
-                                syncing: _sync.syncing,
-                                onPressed: _manualSync,
-                              ),
-                              IconButton(
-                                tooltip: 'Decks menu',
-                                onPressed: _showOverflowMenu,
-                                icon: Icon(
-                                  Icons.more_vert,
-                                  size: 22,
-                                  color: Colors.grey.shade700,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Decks',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    if (dueSummary.isNotEmpty)
+                                      Text(
+                                        dueSummary,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                  ],
                                 ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _SyncStatusButton(
+                                      status: _sync.status,
+                                      syncing: _sync.syncing,
+                                      onPressed: _manualSync,
+                                    ),
+                                    IconButton(
+                                      tooltip: 'Decks menu',
+                                      onPressed: _showOverflowMenu,
+                                      icon: Icon(
+                                        Icons.more_vert,
+                                        size: 22,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            if (_decks.isEmpty)
+                              const AppEmptyHint(
+                                text:
+                                    'No decks yet. Save words or take notes to auto-create cards.',
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (_decks.isEmpty)
-                        const AppEmptyHint(
-                          text:
-                              'No decks yet. Save words or take notes to auto-create cards.',
-                        )
-                      else
-                        ReorderableListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          buildDefaultDragHandles: false,
-                          itemCount: _deckRows.length,
-                          onReorder: _onDeckReorder,
-                          proxyDecorator: _deckReorderProxy,
-                          itemBuilder: (context, index) {
-                            final row = _deckRows[index];
-                            return _DeckListTile(
-                              key: ValueKey('deck-row-${row.deck.id}'),
-                              deck: row.deck,
-                              depth: row.depth,
-                              dragHandle: _deckDragHandle(index),
-                              enableSwipeActions: widget.enableDeckSwipeActions,
-                              onShowOptions: () => _showDeckOptions(row.deck),
-                              onStudy: () => _startReview(deckId: row.deck.id),
-                              onDelete:
-                                  row.deck.isDeletable
-                                      ? () => _deleteDeck(row.deck)
-                                      : null,
-                            );
-                          },
+                          ]),
                         ),
+                      ),
+                      if (_decks.isNotEmpty)
+                        SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          sliver: SliverReorderableList(
+                            itemCount: _deckRows.length,
+                            onReorder: _onDeckReorder,
+                            proxyDecorator: _deckReorderProxy,
+                            itemBuilder: (context, index) {
+                              final row = _deckRows[index];
+                              return _DeckListTile(
+                                key: ValueKey('deck-row-${row.deck.id}'),
+                                deck: row.deck,
+                                depth: row.depth,
+                                dragHandle: _deckDragHandle(index),
+                                enableSwipeActions: widget.enableDeckSwipeActions,
+                                onShowOptions: () => _showDeckOptions(row.deck),
+                                onStudy: () => _startReview(deckId: row.deck.id),
+                                onDelete:
+                                    row.deck.isDeletable
+                                        ? () => _deleteDeck(row.deck)
+                                        : null,
+                              );
+                            },
+                          ),
+                        ),
+                      const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
                     ],
                   ),
                 ),
@@ -746,13 +758,13 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           Positioned(
             right: 16,
             bottom: 56,
-            child: FloatingActionButton.extended(
+            child: FloatingActionButton(
               onPressed: _showFabMenu,
-              backgroundColor: AppColors.primaryPurple,
+              tooltip: 'Add',
+              backgroundColor: AppColors.brandPrimaryDeep,
               foregroundColor: Colors.white,
               elevation: 4,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Add'),
+              child: const Icon(Icons.add_rounded),
             ),
           ),
         ],
@@ -777,7 +789,7 @@ class _SyncStatusButton extends StatelessWidget {
     final (icon, color, tooltip) = switch (status) {
       FlashcardSyncStatus.synced => (
         Icons.cloud_done_outlined,
-        AppColors.primaryPurple,
+        AppColors.brandPrimary,
         'Synced — tap to refresh',
       ),
       FlashcardSyncStatus.pending => (
@@ -840,8 +852,8 @@ class _DeckListTile extends StatelessWidget {
       child: InkWell(
         onTap: onShowOptions,
         borderRadius: BorderRadius.circular(16),
-        splashColor: AppColors.primaryPurple.withValues(alpha: 0.06),
-        highlightColor: AppColors.primaryPurple.withValues(alpha: 0.04),
+        splashColor: AppColors.brandPrimary.withValues(alpha: 0.06),
+        highlightColor: AppColors.brandPrimary.withValues(alpha: 0.04),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
@@ -852,7 +864,7 @@ class _DeckListTile extends StatelessWidget {
                 Icon(
                   Icons.filter_list,
                   size: 18,
-                  color: AppColors.primaryPurple.withValues(alpha: 0.8),
+                  color: AppColors.brandPrimary.withValues(alpha: 0.8),
                 ),
                 const SizedBox(width: 6),
               ],
@@ -1005,7 +1017,7 @@ class _StatsCard extends StatelessWidget {
           onPressed: onReview,
           style: FilledButton.styleFrom(
             backgroundColor: Colors.white,
-            foregroundColor: AppColors.primaryPurple,
+            foregroundColor: AppColors.brandPrimary,
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),

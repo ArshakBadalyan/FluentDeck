@@ -1,6 +1,6 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
@@ -140,6 +140,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
       sourceSentence: sourceSentence,
       meaning: sheetResult.meaning,
       exampleSentence: sheetResult.example,
+      translation: sheetResult.translation,
       languageCode: sheetResult.languageCode,
       cefrLevel: sheetResult.cefrLevel,
       topic: sheetResult.topic,
@@ -151,9 +152,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
           result.flashcardCreated
               ? 'Saved to notes and From speaking deck'
               : 'Saved to notes';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      AppToast.showSnackBar(context, SnackBar(content: Text(msg)));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(result.message ?? 'Could not save')),
       );
     }
@@ -187,9 +188,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
         '(${_service.trainingSession.words.length} words)',
       );
     }
-    if (_service.autoConversationEnabled) {
-      parts.add('Hands-free on');
-    }
     if (parts.isEmpty) return null;
     return parts.join(' · ');
   }
@@ -198,7 +196,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     final result = await _service.evaluateCurrentSession();
     if (!mounted) return;
     if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Could not evaluate this session yet.')),
       );
       return;
@@ -220,7 +218,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text('Score saved locally. Sync failed: $e')),
       );
       if (ctx.referenceKey != null && ctx.referenceKey!.isNotEmpty) {
@@ -244,12 +242,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
           (dialogCtx) => AlertDialog(
             title: Text('Score: ${result.score} / 10'),
             content: Text('${result.feedback}$streakNote'),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.pop(dialogCtx),
-                child: const Text('Done'),
-              ),
-            ],
           ),
     );
   }
@@ -264,7 +256,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
               ? null
               : AppBar(
                 title: const Text('English Practice'),
-                backgroundColor: AppColors.primaryPurple,
+                backgroundColor: AppColors.brandPrimary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 actions: [
@@ -282,7 +274,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              color: AppColors.primaryPurple.withValues(alpha: 0.06),
+              color: AppColors.brandPrimary.withValues(alpha: 0.06),
               child: Row(
                 children: [
                   if (statusLine != null)
@@ -356,8 +348,14 @@ class _ConversationScreenState extends State<ConversationScreen> {
                       turn.isUser
                           ? const []
                           : _service.sessionContext.suggestedVocabulary,
+                  // No Play button when AI voice is off — playback is muted then.
+                  // The settings sheet shows one merged "AI voice" switch backed by
+                  // two prefs (soundOn + autoPlayVoice); check both so accounts with
+                  // mismatched legacy values don't show Play after turning it off.
                   onPlayAi:
-                      turn.isUser
+                      turn.isUser ||
+                              !(_service.soundOnEnabled &&
+                                  _service.autoPlayVoiceEnabled)
                           ? null
                           : () => _service.playAiText(turn.text, turnIndex: index),
                   isPlayingAi: isPlayingAi,
@@ -537,7 +535,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
               if (!isUser)
                 const CircleAvatar(
                   radius: 14,
-                  backgroundColor: AppColors.primaryPurple,
+                  backgroundColor: AppColors.brandPrimary,
                   child: Icon(Icons.school, size: 16, color: Colors.white),
                 ),
               if (!isUser) const SizedBox(width: 8),
@@ -548,7 +546,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: isUser ? AppColors.primaryPurple : Colors.white,
+                    color: isUser ? AppColors.brandPrimary : Colors.white,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -639,7 +637,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                                                     isUser
                                                         ? Colors.white
                                                             .withValues(alpha: 0.9)
-                                                        : AppColors.primaryPurple,
+                                                        : AppColors.brandPrimary,
                                               ),
                                             )
                                             : Icon(
@@ -652,7 +650,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                                                       ? Colors.white.withValues(
                                                         alpha: 0.9,
                                                       )
-                                                      : AppColors.primaryPurple,
+                                                      : AppColors.brandPrimary,
                                             ),
                                     onPressed:
                                         _loadingTranslation
@@ -677,7 +675,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                                       color:
                                           isUser
                                               ? Colors.white.withValues(alpha: 0.9)
-                                              : AppColors.primaryPurple,
+                                              : AppColors.brandPrimary,
                                     ),
                                     onPressed: () => _openSaveSheet(turn.text.trim()),
                                   ),
@@ -723,10 +721,10 @@ class _TurnBubbleState extends State<_TurnBubble> {
                   icon: const Icon(Icons.bookmark_add_outlined, size: 18),
                   label: Text('Save "$_selectedText"'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primaryPurple.withValues(
+                    backgroundColor: AppColors.brandPrimary.withValues(
                       alpha: 0.12,
                     ),
-                    foregroundColor: AppColors.primaryPurple,
+                    foregroundColor: AppColors.brandPrimary,
                     visualDensity: VisualDensity.compact,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -768,7 +766,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                 ),
                 label: Text(widget.isPlayingAi ? 'Speaking…' : 'Play'),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primaryPurple,
+                  foregroundColor: AppColors.brandPrimary,
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -816,11 +814,11 @@ class _CorrectionCardState extends State<_CorrectionCard> {
             result.flashcardCreated
                 ? 'Saved to notes and From speaking deck'
                 : 'Saved to notes';
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(content: Text(msg)),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(content: Text(result.message ?? 'Could not save')),
         );
       }
@@ -862,7 +860,7 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                               ? Icons.bookmark_added_rounded
                               : Icons.auto_fix_high,
                           size: 16,
-                          color: AppColors.primaryPurple,
+                          color: AppColors.brandPrimary,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -870,7 +868,7 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                             widget.correction.correctedText,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
-                              color: AppColors.primaryPurple,
+                              color: AppColors.brandPrimary,
                             ),
                           ),
                         ),
@@ -897,7 +895,7 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                                 Icon(
                                   Icons.bookmark_added_rounded,
                                   size: 13,
-                                  color: AppColors.primaryPurple,
+                                  color: AppColors.brandPrimary,
                                 ),
                                 SizedBox(width: 4),
                                 Text(
@@ -905,7 +903,7 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.primaryPurple,
+                                    color: AppColors.brandPrimary,
                                   ),
                                 ),
                               ],
@@ -1039,13 +1037,42 @@ class _InputBar extends StatelessWidget {
   final bool typeMessagesEnabled;
   final VoidCallback? onCancel;
 
+  Widget _micButton({required double size}) {
+    return GestureDetector(
+      onTap: isProcessing ? null : onMicTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isRecording ? AppColors.redWrong : AppColors.voiceDeep,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.voiceDeep.withValues(alpha: 0.35),
+              blurRadius: size / 6,
+              offset: Offset(0, size / 18),
+            ),
+          ],
+        ),
+        child: Icon(
+          isRecording ? Icons.stop : Icons.mic,
+          color: Colors.white,
+          size: size * 0.45,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final showTextInput = typeMessagesEnabled || (kIsWeb && kDebugMode);
+    final recordingLabel =
+        'Recording ${recordingDurationLabel ?? '00:00'} — tap to stop';
 
     return SafeArea(
       top: false,
       child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -1059,85 +1086,68 @@ class _InputBar extends StatelessWidget {
         ),
         child: Column(
           children: [
-            if (showTextInput)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: textController,
-                        enabled: !isProcessing && !isRecording,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => onSendText(),
-                        decoration: InputDecoration(
-                          hintText: 'Type your message…',
-                          filled: true,
-                          fillColor: const Color(0xFFF2F2F5),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
+            if (typeMessagesEnabled) ...[
+              // Input · mic · send — the field grows up to 5 lines.
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: textController,
+                      enabled: !isProcessing && !isRecording,
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.send,
+                      minLines: 1,
+                      maxLines: 5,
+                      onSubmitted: (_) => onSendText(),
+                      decoration: InputDecoration(
+                        hintText: 'Type your message…',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton.filled(
-                      onPressed:
-                          isProcessing || isRecording ? null : onSendText,
-                      icon: const Icon(Icons.send),
-                      style: IconButton.styleFrom(
-                        backgroundColor: AppColors.primaryPurple,
-                        foregroundColor: Colors.white,
-                      ),
+                  ),
+                  const SizedBox(width: 8),
+                  _micButton(size: 44),
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                    onPressed: isProcessing || isRecording ? null : onSendText,
+                    icon: const Icon(Icons.send),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.brandPrimary,
+                      foregroundColor: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            if (!showTextInput || kIsWeb)
+              if (isRecording) ...[
+                const SizedBox(height: 8),
+                Text(
+                  recordingLabel,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
+              ],
+            ] else
               Text(
-                isRecording
-                    ? 'Recording ${recordingDurationLabel ?? '00:00'} — tap to stop'
-                    : 'Tap the mic to speak',
+                isRecording ? recordingLabel : 'Tap the mic to speak',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               ),
             if (onCancel != null) ...[
               const SizedBox(height: 6),
               TextButton(onPressed: onCancel, child: const Text('Cancel')),
             ],
-            if (!showTextInput || kIsWeb) const SizedBox(height: 10),
-            if (!showTextInput || kIsWeb)
-              GestureDetector(
-                onTap: isProcessing ? null : onMicTap,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color:
-                        isRecording
-                            ? AppColors.redWrong
-                            : AppColors.primaryPurple,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryPurple.withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    isRecording ? Icons.stop : Icons.mic,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                ),
-              ),
+            if (!typeMessagesEnabled) ...[
+              const SizedBox(height: 10),
+              _micButton(size: 72),
+            ],
           ],
         ),
       ),

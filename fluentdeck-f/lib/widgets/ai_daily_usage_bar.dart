@@ -22,7 +22,7 @@ class AiDailyUsageBar extends StatelessWidget {
             ? AppColors.redWrong
             : warn
             ? AppColors.orangeHard
-            : AppColors.primaryPurple;
+            : AppColors.brandPrimary;
 
     final title =
         usage.isPremium ? 'Premium practice today' : 'Free practice today';
@@ -36,13 +36,13 @@ class AiDailyUsageBar extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.primaryPurple.withValues(alpha: 0.10),
+              AppColors.brandPrimary.withValues(alpha: 0.10),
               AppColors.primaryYellow.withValues(alpha: 0.08),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.primaryPurple.withValues(alpha: 0.12),
+            color: AppColors.brandPrimary.withValues(alpha: 0.12),
           ),
         ),
         child: Padding(

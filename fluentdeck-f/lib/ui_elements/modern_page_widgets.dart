@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/config/brand_config.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 
@@ -6,16 +8,16 @@ import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 class AppPageColors {
   AppPageColors._();
 
-  static const pageBg = Color(0xFFF7F5FB);
-  static const cardBg = Colors.white;
-  static const fieldBg = Color(0xFFF2F2F5);
+  static const pageBg = BrandConfig.pageBg;
+  static const cardBg = BrandConfig.cardBg;
+  static const fieldBg = BrandConfig.fieldBg;
 
   /// Dark scaffold / page background.
-  static const darkPageBg = Color(0xFF0B0813);
+  static const darkPageBg = BrandConfig.darkPageBg;
   /// Dark cards & app bar surface.
-  static const darkCardBg = Color(0xFF151220);
+  static const darkCardBg = BrandConfig.darkCardBg;
   /// Dark raised surface (dialogs, sheets, menus, inputs).
-  static const darkRaisedBg = Color(0xFF1D1830);
+  static const darkRaisedBg = BrandConfig.darkRaisedBg;
 
   static Color pageBgOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? darkPageBg : pageBg;
@@ -33,8 +35,8 @@ class AppPageColors {
 
   static Color subtitleOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? Colors.white.withValues(alpha: 0.65)
-          : Colors.grey.shade600;
+          ? BrandConfig.darkTextSecondary
+          : BrandConfig.textSecondary;
 }
 
 class AppPageBackground extends StatelessWidget {
@@ -77,12 +79,25 @@ class AppSectionCard extends StatelessWidget {
     final cardBg = AppPageColors.cardBgOf(context);
     final borderColor = AppPageColors.subtleBorderOf(context);
 
-    return Material(
+    // The shadow sits on an opaque box *behind* the card. Painting it inside
+    // an unfilled Container let it show through and tint the card grey.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
+            ),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
       color: cardBg,
       elevation: 0,
-      shadowColor: Colors.black.withValues(
-        alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
-      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: borderColor),
@@ -91,24 +106,13 @@ class AppSectionCard extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: padding,
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(
-                alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
-              ),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 20, color: AppColors.primaryPurple),
+                  Icon(icon, size: 20, color: AppColors.brandPrimary),
                   const SizedBox(width: 8),
                 ],
                 Expanded(
@@ -138,6 +142,7 @@ class AppSectionCard extends StatelessWidget {
             child,
           ],
         ),
+      ),
       ),
     );
   }
@@ -179,10 +184,10 @@ class AppSettingsCategoryTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                    color: AppColors.brandPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, size: 22, color: AppColors.primaryPurple),
+                  child: Icon(icon, size: 22, color: AppColors.brandPrimary),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -254,7 +259,7 @@ class AppSettingsGroup extends StatelessWidget {
                     width: 4,
                     height: 18,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryPurple,
+                      color: AppColors.brandPrimary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -321,12 +326,12 @@ class AppHeroCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF9B3DFF), Color(0xFF7A24E4)],
+          colors: AppColors.heroGradient,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryPurple.withValues(alpha: 0.28),
+            color: AppColors.brandPrimary.withValues(alpha: 0.28),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -511,7 +516,10 @@ class AppTextField extends StatelessWidget {
             hintText: hint,
             errorText: errorText,
             filled: true,
-            fillColor: Colors.white,
+            fillColor:
+                Theme.of(context).brightness == Brightness.dark
+                    ? AppPageColors.fieldBgOf(context)
+                    : Colors.white,
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             suffixIcon: suffixIcon,
@@ -525,7 +533,7 @@ class AppTextField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+              borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -558,7 +566,16 @@ class AppSelectOption<T> {
 }
 
 /// Frosted bottom sheet picker — consistent dropdown UX on mobile and web.
-Future<T?> showAppSelectSheet<T>({
+/// Wraps a picked option's value so `null` (e.g. an "All ..." option) can be
+/// told apart from the sheet being dismissed without a choice.
+class _PickedOption<T> {
+  const _PickedOption(this.value);
+  final T value;
+}
+
+// Returns the wrapped pick (not T? directly): T itself may be nullable (an
+// "All ..." option), so only the wrapper can tell that apart from a dismiss.
+Future<_PickedOption<T>?> showAppSelectSheet<T>({
   required BuildContext context,
   required String title,
   String? subtitle,
@@ -566,7 +583,7 @@ Future<T?> showAppSelectSheet<T>({
   T? selected,
   bool Function(AppSelectOption<T> option)? canSelect,
 }) {
-  return showFrostedBottomSheet<T>(
+  return showFrostedBottomSheet<_PickedOption<T>>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -601,7 +618,7 @@ Future<T?> showAppSelectSheet<T>({
                             side: BorderSide(
                               color:
                                   selected == option.value
-                                      ? AppColors.primaryPurple.withValues(alpha: 0.35)
+                                      ? AppColors.brandPrimary.withValues(alpha: 0.35)
                                       : AppPageColors.subtleBorderOf(ctx),
                             ),
                           ),
@@ -610,7 +627,7 @@ Future<T?> showAppSelectSheet<T>({
                             onTap: () {
                               if (!(canSelect?.call(option) ?? true)) return;
                               if (!option.enabled) return;
-                              Navigator.pop(ctx, option.value);
+                              Navigator.pop(ctx, _PickedOption<T>(option.value));
                             },
                             child: Opacity(
                               opacity: option.enabled ? 1 : 0.5,
@@ -632,7 +649,7 @@ Future<T?> showAppSelectSheet<T>({
                                                   : FontWeight.w500,
                                           color:
                                               selected == option.value
-                                                  ? AppColors.primaryPurple
+                                                  ? AppColors.brandPrimary
                                                   : null,
                                         ),
                                       ),
@@ -642,7 +659,7 @@ Future<T?> showAppSelectSheet<T>({
                                     else if (selected == option.value)
                                       const Icon(
                                         Icons.check_rounded,
-                                        color: AppColors.primaryPurple,
+                                        color: AppColors.brandPrimary,
                                         size: 22,
                                       ),
                                   ],
@@ -744,7 +761,7 @@ class AppSelectField<T> extends StatelessWidget {
                         selected: value,
                         canSelect: canSelect,
                       );
-                      if (picked != null) onChanged!(picked);
+                      if (picked != null) onChanged!(picked.value);
                     }
                     : null,
             child: Opacity(
@@ -762,7 +779,7 @@ class AppSelectField<T> extends StatelessWidget {
                         style: TextStyle(
                           fontSize: compact ? 13 : 15,
                           fontWeight: hasSelection ? FontWeight.w600 : FontWeight.w500,
-                          color: hasSelection ? AppColors.primaryPurple : Colors.grey.shade600,
+                          color: hasSelection ? AppColors.brandPrimary : Colors.grey.shade600,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -770,7 +787,7 @@ class AppSelectField<T> extends StatelessWidget {
                     Icon(
                       Icons.expand_more_rounded,
                       size: compact ? 20 : 24,
-                      color: active ? AppColors.primaryPurple : Colors.grey.shade500,
+                      color: active ? AppColors.brandPrimary : Colors.grey.shade500,
                     ),
                   ],
                 ),
@@ -779,6 +796,129 @@ class AppSelectField<T> extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Icon-only "Filters" button used on every list with filters.
+/// Inactive: transparent with a dark icon. Active: brand tint, border and
+/// icon (same look as [AppClearFiltersButton]) plus a count badge.
+class AppFilterButton extends StatelessWidget {
+  const AppFilterButton({
+    super.key,
+    required this.active,
+    required this.onPressed,
+    this.count = 0,
+    this.size = 38,
+    this.tooltip = 'Filters',
+  });
+
+  final bool active;
+  final int count;
+
+  /// Null disables the button (e.g. filters locked for this source).
+  final VoidCallback? onPressed;
+  final double size;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final iconColor =
+        !enabled
+            ? onSurface.withValues(alpha: 0.3)
+            : active
+            ? AppColors.brandPrimary
+            : onSurface.withValues(alpha: 0.87);
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: active ? AppColors.brandPrimary.withValues(alpha: 0.1) : Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: active
+                ? AppColors.brandPrimary.withValues(alpha: 0.35)
+                : Colors.transparent,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Center(
+              child: Badge(
+                isLabelVisible: active && count > 0,
+                label: Text('$count'),
+                backgroundColor: AppColors.brandPrimary,
+                child: Icon(Icons.tune_rounded, size: 20, color: iconColor),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Clears every active filter; shown next to [AppFilterButton] while any
+/// filter is on.
+class AppClearFiltersButton extends StatelessWidget {
+  const AppClearFiltersButton({super.key, required this.onPressed, this.size = 38});
+
+  final VoidCallback onPressed;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Clear all filters',
+      child: Material(
+        color: AppColors.brandPrimary.withValues(alpha: 0.1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: AppColors.brandPrimary.withValues(alpha: 0.35)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: const Icon(
+              Icons.filter_alt_off_outlined,
+              size: 18,
+              color: AppColors.brandPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// App-wide on/off switch: iOS-style white knob with a soft shadow, light
+/// grey track when off, brand track when on — the same on every platform.
+class AppSwitch extends StatelessWidget {
+  const AppSwitch({super.key, required this.value, required this.onChanged});
+
+  final bool value;
+
+  /// Null disables the switch.
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return CupertinoSwitch(
+      value: value,
+      onChanged: onChanged,
+      activeTrackColor: dark ? BrandConfig.primaryOnDark : BrandConfig.primary,
+      inactiveTrackColor: dark ? const Color(0xFF3A3A3C) : const Color(0xFFE5E5EA),
+      thumbColor: Colors.white,
     );
   }
 }
@@ -832,12 +972,7 @@ class AppToggleRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Switch.adaptive(
-            value: value,
-            onChanged: enabled ? onChanged : null,
-            activeTrackColor: AppColors.primaryPurple.withValues(alpha: 0.35),
-            activeThumbColor: AppColors.primaryPurple,
-          ),
+          AppSwitch(value: value, onChanged: enabled ? onChanged : null),
         ],
       ),
     );
@@ -871,10 +1006,10 @@ class AppNavRow extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                    color: AppColors.brandPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, size: 18, color: AppColors.primaryPurple),
+                  child: Icon(icon, size: 18, color: AppColors.brandPrimary),
                 ),
                 const SizedBox(width: 12),
               ],
@@ -961,7 +1096,7 @@ class AppSliderRow extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.primaryPurple,
+                color: AppColors.brandPrimary,
               ),
             ),
           ],
@@ -972,7 +1107,7 @@ class AppSliderRow extends StatelessWidget {
           max: max,
           divisions: divisions,
           label: label,
-          activeColor: AppColors.primaryPurple,
+          activeColor: AppColors.brandPrimary,
           onChanged: enabled ? onChanged : null,
           onChangeEnd: enabled ? onChangeEnd : null,
         ),
@@ -1012,6 +1147,7 @@ class AppSheetHeader extends StatelessWidget {
     this.icon = Icons.tune_rounded,
     this.onClose,
     this.actions,
+    this.showClose = false,
   });
 
   final String title;
@@ -1020,24 +1156,30 @@ class AppSheetHeader extends StatelessWidget {
   final VoidCallback? onClose;
   final List<Widget>? actions;
 
+  /// Sheets close by tapping outside or dragging down, so no × by default.
+  final bool showClose;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 0, 8, 12),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            tooltip: 'Close',
-            onPressed: onClose ?? () => Navigator.pop(context),
-          ),
+          if (showClose)
+            IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: 'Close',
+              onPressed: onClose ?? () => Navigator.pop(context),
+            )
+          else
+            const SizedBox(width: 12),
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primaryPurple.withValues(alpha: 0.1),
+              color: AppColors.brandPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: AppColors.primaryPurple, size: 20),
+            child: Icon(icon, color: AppColors.brandPrimary, size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -1084,7 +1226,7 @@ InputDecoration appSheetFieldDecoration({String? label, String? hint, Widget? pr
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+      borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
     ),
   );
 }
@@ -1114,7 +1256,7 @@ class AppSheetActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = iconColor ?? AppColors.primaryPurple;
+    final accent = iconColor ?? AppColors.brandPrimary;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
@@ -1127,6 +1269,12 @@ class AppSheetActionTile extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: enabled ? onTap : null,
+          // Light brand tint instead of the default grey, so a hovered tile
+          // (the sheet often opens under the cursor) doesn't look like a
+          // different, greyed-out card.
+          hoverColor: accent.withValues(alpha: 0.05),
+          highlightColor: accent.withValues(alpha: 0.08),
+          splashColor: accent.withValues(alpha: 0.10),
           child: Opacity(
             opacity: enabled ? 1 : 0.55,
             child: Padding(
@@ -1214,10 +1362,10 @@ Future<String?> showAppPromptDialog(
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                        color: AppColors.brandPrimary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(icon, color: AppColors.primaryPurple, size: 22),
+                      child: Icon(icon, color: AppColors.brandPrimary, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -1261,14 +1409,14 @@ Future<String?> showAppPromptDialog(
                       onPressed: () => Navigator.pop(ctx),
                       child: Text(
                         'Cancel',
-                        style: TextStyle(color: AppColors.primaryPurple),
+                        style: TextStyle(color: AppColors.brandPrimary),
                       ),
                     ),
                     const SizedBox(width: 8),
                     FilledButton(
                       onPressed: () => Navigator.pop(ctx, controller.text.trim()),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primaryPurple,
+                        backgroundColor: AppColors.brandPrimary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,

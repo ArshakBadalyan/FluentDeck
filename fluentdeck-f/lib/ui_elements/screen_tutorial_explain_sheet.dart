@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/services/screen_tutorial_segments.dart';
@@ -21,7 +22,7 @@ abstract final class ScreenTutorialExplainSheet {
       includeChromeSegments: includeChromeSegments,
     );
     if (options.isEmpty) {
-      ScaffoldMessenger.of(rootContext).showSnackBar(
+      AppToast.showSnackBar(rootContext, 
         SnackBar(
           content: Text(
             rootContext.tr('screen-tutorial.sheet.no-page-tips'),

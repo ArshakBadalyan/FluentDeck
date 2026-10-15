@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 
 /// Matches purple auth CTAs on forgot / reset password screens (`ElevatedButton` there).
-const Color _kAuthFlowPurple = Color(0xFF7E2BFF);
+const Color _kAuthFlowPurple = AppColors.brandPrimary;
 
 /// Purple text link below the primary CTA on auth sub-flows (forgot / reset password).
 class AuthSecondaryLink extends StatelessWidget {

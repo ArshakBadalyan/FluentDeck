@@ -1,16 +1,27 @@
 'use strict';
 
-const { createCoreController } = require('@strapi/strapi').factories;
+/**
+ * My Notes API (/notes). Notes live in the single flashcard-note table:
+ * a My Notes entry is a note flagged `inMyNotes`; for basic notes Front is the
+ * word, Back the definition, plus Example / Translation fields. Request and
+ * response shapes are unchanged from the old user-note table.
+ */
+
 const { isPremiumUser, getFeatureConfig } = require('../../../utils/app-feature-config');
 const {
-  createUserNote,
-  maybeCreateFlashcard,
-  deckSlugForSource,
-  formatNote,
-  buildCardBack,
+  createMyNote,
+  formatMyNote,
+  plainText,
 } = require('../../../utils/flashcard-auto-create');
 const { normalizePracticeLanguage } = require('../../../utils/practice-languages');
-const { resolveUserLanguageCode } = require('../../../utils/user-language');
+const {
+  BASIC_NOTE_TYPES,
+  findOwnedNote,
+  updateNoteAndCards,
+  deleteNoteAndCards,
+} = require('../../../utils/flashcard-note-sync');
+
+const NOTE_UID = 'api::flashcard-note.flashcard-note';
 
 async function getAuthenticatedUserId(ctx, strapi) {
   const token = await strapi.plugins['users-permissions'].services.jwt.getToken(
@@ -20,8 +31,8 @@ async function getAuthenticatedUserId(ctx, strapi) {
 }
 
 async function countUserNotes(strapi, userId) {
-  return strapi.db.query('api::user-note.user-note').count({
-    where: { user: userId },
+  return strapi.db.query(NOTE_UID).count({
+    where: { user: userId, inMyNotes: true },
   });
 }
 
@@ -40,13 +51,30 @@ async function canAddNote(strapi, userId) {
   return { ok: true };
 }
 
-module.exports = createCoreController('api::user-note.user-note', ({ strapi }) => ({
+async function findMyNote(strapi, userId, noteId) {
+  const note = await findOwnedNote(strapi, userId, noteId, { populate: ['deck'] });
+  return note?.inMyNotes ? note : null;
+}
+
+function respondWithCreated(ctx, result) {
+  ctx.body = {
+    ok: true,
+    note: formatMyNote(result.note),
+    created: result.created,
+    flashcardCreated: result.flashcardCreated,
+    flashcardId: result.flashcardId,
+    deckId: result.deckId,
+    autoCreateEnabled: result.autoCreateEnabled,
+  };
+}
+
+module.exports = ({ strapi }) => ({
   async listNotes(ctx) {
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized('Authentication required');
 
     const { q, source, languageCode, language, cefrLevel, topic } = ctx.query ?? {};
-    const where = { user: userId };
+    const where = { user: userId, inMyNotes: true };
 
     if (source && String(source).trim() && String(source) !== 'all') {
       where.source = String(source).trim();
@@ -62,40 +90,52 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       where.cefrLevel = levelFilter;
     }
 
-    const topicFilter = topic != null ? String(topic).trim() : '';
-    if (topicFilter && topicFilter !== 'all') {
-      where.topic = topicFilter;
-    }
-
-    let rows = await strapi.db.query('api::user-note.user-note').findMany({
+    const rows = await strapi.db.query(NOTE_UID).findMany({
       where,
+      populate: ['deck'],
       orderBy: { createdAt: 'desc' },
     });
 
+    let notes = rows.map(formatMyNote);
+
     if (levelFilter === 'none') {
-      rows = rows.filter((row) => !row.cefrLevel || !String(row.cefrLevel).trim());
+      notes = notes.filter((n) => !n.cefrLevel || !String(n.cefrLevel).trim());
+    }
+
+    const topicFilter = topic != null ? String(topic).trim() : '';
+    if (topicFilter && topicFilter !== 'all') {
+      notes = notes.filter((n) => n.topic === topicFilter);
     }
 
     if (q && String(q).trim()) {
       const needle = String(q).trim().toLowerCase();
-      rows = rows.filter(
-        (row) =>
-          (row.word ?? '').toLowerCase().includes(needle) ||
-          (row.definition ?? '').toLowerCase().includes(needle) ||
-          (Array.isArray(row.tags) &&
-            row.tags.some((t) => String(t).toLowerCase().includes(needle))),
+      notes = notes.filter(
+        (n) =>
+          n.word.toLowerCase().includes(needle) ||
+          n.definition.toLowerCase().includes(needle) ||
+          (Array.isArray(n.tags) &&
+            n.tags.some((t) => String(t).toLowerCase().includes(needle))),
       );
     }
 
-    ctx.body = { data: rows.map(formatNote) };
+    ctx.body = { data: notes };
   },
 
   async createNote(ctx) {
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized('Authentication required');
 
-    const { word, definition, exampleSentence, tags, source = 'manual', languageCode, cefrLevel, topic } =
-      ctx.request.body ?? {};
+    const {
+      word,
+      definition,
+      exampleSentence,
+      translation,
+      tags,
+      source = 'manual',
+      languageCode,
+      cefrLevel,
+      topic,
+    } = ctx.request.body ?? {};
 
     if (!word || !String(word).trim()) {
       return ctx.badRequest('word is required');
@@ -104,33 +144,18 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const allowed = await canAddNote(strapi, userId);
     if (!allowed.ok) return ctx.forbidden(allowed.reason);
 
-    const lang = await resolveUserLanguageCode(strapi, userId, languageCode);
-    const { note, created } = await createUserNote(strapi, userId, {
+    const result = await createMyNote(strapi, userId, {
       word: String(word).trim(),
       definition,
       exampleSentence,
-      tags,
-      source,
-      languageCode: lang,
+      translation,
+      tags: Array.isArray(tags) ? tags : [],
+      source: source === 'speaking' ? 'speaking' : 'manual',
+      languageCode,
       cefrLevel,
       topic,
     });
-
-    const flashcardResult = await maybeCreateFlashcard(strapi, userId, {
-      word: note.word,
-      definition: note.definition,
-      exampleSentence: note.exampleSentence,
-      deckSlug: deckSlugForSource(source),
-      noteId: note.id,
-      languageCode: lang,
-    });
-
-    ctx.body = {
-      ok: true,
-      note: formatNote(note),
-      created,
-      ...flashcardResult,
-    };
+    respondWithCreated(ctx, result);
   },
 
   async updateNote(ctx) {
@@ -140,38 +165,37 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const noteId = parseInt(String(ctx.params.id), 10);
     if (!noteId) return ctx.badRequest('Invalid note id');
 
-    const existing = await strapi.db.query('api::user-note.user-note').findOne({
-      where: { id: noteId, user: userId },
-    });
+    const existing = await findMyNote(strapi, userId, noteId);
     if (!existing) return ctx.notFound('Note not found');
 
-    const { word, definition, exampleSentence, tags, languageCode, cefrLevel, topic } =
+    const { word, definition, exampleSentence, translation, tags, languageCode, cefrLevel, topic } =
       ctx.request.body ?? {};
-    const data = {};
-    if (word != null) data.word = String(word).trim();
-    if (definition != null) data.definition = definition;
-    if (exampleSentence != null) data.exampleSentence = exampleSentence;
-    if (tags != null) data.tags = Array.isArray(tags) ? tags : [];
-    if (languageCode != null) {
-      data.languageCode = normalizePracticeLanguage(languageCode);
+
+    const payload = {};
+    const fields = { ...(existing.fields ?? {}) };
+    if (BASIC_NOTE_TYPES.has(existing.noteType)) {
+      if (word != null && String(word).trim()) fields.Front = String(word).trim();
+      if (definition != null) fields.Back = String(definition).trim() || '—';
+      if (exampleSentence != null) fields.Example = String(exampleSentence).trim();
     }
+    if (translation !== undefined) fields.Translation = String(translation ?? '').trim();
+    payload.fields = fields;
+    if (tags != null) payload.tags = Array.isArray(tags) ? tags : [];
+    if (languageCode != null) payload.languageCode = languageCode;
     if (cefrLevel !== undefined) {
-      data.cefrLevel =
-        cefrLevel == null || String(cefrLevel).trim() === ''
-          ? null
-          : String(cefrLevel).trim();
+      payload.cefrLevel =
+        cefrLevel == null || String(cefrLevel).trim() === '' ? null : String(cefrLevel).trim();
     }
     if (topic !== undefined) {
-      data.topic =
-        topic == null || String(topic).trim() === '' ? null : String(topic).trim();
+      payload.topic = topic == null || String(topic).trim() === '' ? null : String(topic).trim();
     }
 
-    const updated = await strapi.db.query('api::user-note.user-note').update({
+    await updateNoteAndCards(strapi, userId, noteId, payload);
+    const updated = await strapi.db.query(NOTE_UID).findOne({
       where: { id: noteId },
-      data,
+      populate: ['deck'],
     });
-
-    ctx.body = { ok: true, note: formatNote(updated) };
+    ctx.body = { ok: true, note: formatMyNote(updated) };
   },
 
   async deleteNote(ctx) {
@@ -181,22 +205,18 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     const noteId = parseInt(String(ctx.params.id), 10);
     if (!noteId) return ctx.badRequest('Invalid note id');
 
-    const existing = await strapi.db.query('api::user-note.user-note').findOne({
-      where: { id: noteId, user: userId },
-    });
+    const existing = await findMyNote(strapi, userId, noteId);
     if (!existing) return ctx.notFound('Note not found');
 
-    const linkedCards = await strapi.db.query('api::flashcard.flashcard').findMany({
-      where: { userNote: noteId },
-    });
-    for (const card of linkedCards) {
-      await strapi.db.query('api::flashcard.flashcard').delete({
-        where: { id: card.id },
+    if ((existing.source ?? 'deck') === 'deck') {
+      // Added from a deck: only take it out of My Notes, keep the deck card.
+      await strapi.db.query(NOTE_UID).update({
+        where: { id: noteId },
+        data: { inMyNotes: false },
       });
+    } else {
+      await deleteNoteAndCards(strapi, userId, noteId);
     }
-    await strapi.db.query('api::user-note.user-note').delete({
-      where: { id: noteId },
-    });
 
     ctx.body = { ok: true };
   },
@@ -211,6 +231,7 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       explanation,
       errorType = 'grammar',
       exampleSentence: exampleFromBody,
+      translation,
       languageCode,
       cefrLevel,
       topic,
@@ -238,37 +259,18 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
         ? `You said: ${originalText}`
         : '';
 
-    const tags = ['speaking', errorType].filter(Boolean);
-    const lang = await resolveUserLanguageCode(strapi, userId, languageCode);
-
-    const { note, created } = await createUserNote(strapi, userId, {
+    const result = await createMyNote(strapi, userId, {
       word,
       definition,
       exampleSentence,
-      tags,
+      translation: isHighlight ? translation : undefined,
+      tags: ['speaking', errorType].filter(Boolean),
       source: 'speaking',
-      languageCode: lang,
+      languageCode,
       cefrLevel,
       topic,
     });
-
-    const flashcardResult = await maybeCreateFlashcard(strapi, userId, {
-      word: note.word,
-      definition: note.definition,
-      exampleSentence: note.exampleSentence,
-      explanation:
-        isHighlight || !originalText ? '' : `You said: ${originalText}`,
-      deckSlug: 'from_speaking',
-      noteId: note.id,
-      languageCode: lang,
-    });
-
-    ctx.body = {
-      ok: true,
-      note: formatNote(note),
-      created,
-      ...flashcardResult,
-    };
+    respondWithCreated(ctx, result);
   },
 
   async studySettings(ctx) {
@@ -292,6 +294,42 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
     };
   },
 
+  /**
+   * Takes decks back out of My Notes: their deck-sourced notes stop showing
+   * there. The deck cards themselves are untouched, and notes the user saved
+   * (speaking / manual) are never removed this way.
+   */
+  async unlinkDecks(ctx) {
+    const userId = await getAuthenticatedUserId(ctx, strapi);
+    if (!userId) return ctx.unauthorized('Authentication required');
+
+    const { deckIds } = ctx.request.body ?? {};
+    const ids = Array.isArray(deckIds)
+      ? [
+          ...new Set(
+            deckIds
+              .map((id) => parseInt(String(id), 10))
+              .filter((id) => Number.isFinite(id) && id > 0),
+          ),
+        ]
+      : [];
+    if (ids.length === 0) return ctx.badRequest('deckIds must be a non-empty array');
+
+    const notes = await strapi.db.query(NOTE_UID).findMany({
+      where: { user: userId, deck: { id: { $in: ids } }, source: 'deck', inMyNotes: true },
+      select: ['id'],
+    });
+    for (const note of notes) {
+      await strapi.db.query(NOTE_UID).update({
+        where: { id: note.id },
+        data: { inMyNotes: false },
+      });
+    }
+
+    ctx.body = { ok: true, removed: notes.length };
+  },
+
+  /** Shows the notes of the chosen decks in My Notes (no copies are made). */
   async importFromDecks(ctx) {
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized('Authentication required');
@@ -312,19 +350,6 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       return ctx.badRequest('deckIds must contain valid deck ids');
     }
 
-    const existingRows = await strapi.db.query('api::user-note.user-note').findMany({
-      where: { user: userId },
-      select: ['word', 'languageCode'],
-    });
-    const existingKeys = new Set(
-      existingRows.map(
-        (row) =>
-          `${normalizePracticeLanguage(row.languageCode)}:${String(row.word ?? '')
-            .trim()
-            .toLowerCase()}`,
-      ),
-    );
-
     let created = 0;
     let skipped = 0;
     let limitReached = false;
@@ -337,29 +362,15 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       if (!deck) continue;
       deckNames.push(deck.name ?? `Deck ${deckId}`);
 
-      const cards = await strapi.db.query('api::flashcard.flashcard').findMany({
+      const notes = await strapi.db.query(NOTE_UID).findMany({
         where: { deck: deckId, user: userId },
         orderBy: { id: 'asc' },
       });
 
-      for (const card of cards) {
-        if (card.cardType === 'image_occlusion') {
-          skipped += 1;
-          continue;
-        }
-
-        const word =
-          card.cardType === 'cloze' && card.clozeText
-            ? String(card.clozeText).trim()
-            : String(card.front ?? '').trim();
-        if (!word) {
-          skipped += 1;
-          continue;
-        }
-
-        const lang = normalizePracticeLanguage(card.languageCode);
-        const dedupeKey = `${lang}:${word.toLowerCase()}`;
-        if (existingKeys.has(dedupeKey)) {
+      for (const note of notes) {
+        const type = note.noteType ?? note.note_type;
+        const word = plainText(note.fields?.Front ?? note.fields?.Text);
+        if (note.inMyNotes || type === 'image_occlusion' || !word) {
           skipped += 1;
           continue;
         }
@@ -370,17 +381,14 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
           break;
         }
 
-        await createUserNote(strapi, userId, {
-          word,
-          definition: String(card.back ?? '').trim(),
-          exampleSentence: '',
-          tags: ['deck', deck.name ?? 'Deck'].filter(Boolean),
-          source: 'deck',
-          languageCode: lang,
-          topic: deck.name ?? null,
+        const isOwnSaved = note.source === 'speaking' || note.source === 'manual';
+        await strapi.db.query(NOTE_UID).update({
+          where: { id: note.id },
+          data: {
+            inMyNotes: true,
+            ...(isOwnSaved ? {} : { source: 'deck', topic: deck.name ?? null }),
+          },
         });
-
-        existingKeys.add(dedupeKey);
         created += 1;
       }
 
@@ -395,4 +403,4 @@ module.exports = createCoreController('api::user-note.user-note', ({ strapi }) =
       limitReached,
     };
   },
-}));
+});

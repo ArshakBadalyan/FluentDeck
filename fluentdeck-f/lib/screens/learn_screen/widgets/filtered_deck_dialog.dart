@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
@@ -137,7 +138,7 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
   Future<void> _create() async {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Give this deck a name')),
       );
       return;
@@ -154,7 +155,7 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
       Navigator.pop(context, deck);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
       setState(() => _saving = false);
@@ -178,7 +179,7 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
       ),
     );
   }
@@ -226,20 +227,16 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
           padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: 'Close',
-                onPressed: _saving ? null : () => Navigator.pop(context),
-              ),
+              const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                  color: AppColors.brandPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.filter_list_rounded,
-                  color: AppColors.primaryPurple,
+                  color: AppColors.brandPrimary,
                   size: 20,
                 ),
               ),
@@ -332,13 +329,13 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withValues(alpha: 0.06),
+                  color: AppColors.brandPrimary.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primaryPurple),
+                    const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.brandPrimary),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -375,7 +372,7 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
             child: FilledButton(
               onPressed: _saving ? null : _create,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
+                backgroundColor: AppColors.brandPrimary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -416,7 +413,7 @@ class _StateChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryPurple : Colors.white,
+          color: selected ? AppColors.brandPrimary : Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: !selected ? Border.all(color: Colors.grey.shade200, width: 1) : null,
         ),

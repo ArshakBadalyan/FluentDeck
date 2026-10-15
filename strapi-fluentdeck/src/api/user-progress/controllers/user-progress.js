@@ -8,6 +8,7 @@ const {
   formatProgressResponse,
 } = require('../../../utils/user-progress-utils');
 const { getLanguageLevelsSnapshot } = require('../../../utils/language-level-analytics');
+const { resetLearningData } = require('../../../utils/reset-learning-data');
 
 module.exports = createCoreController('api::user-progress.user-progress', ({ strapi }) => ({
   async languageLevels(ctx) {
@@ -19,6 +20,19 @@ module.exports = createCoreController('api::user-progress.user-progress', ({ str
     } catch (error) {
       strapi.log.error('[user-progress.languageLevels]', error);
       return ctx.internalServerError('Could not load language levels');
+    }
+  },
+
+  async resetLearningData(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized('Authentication required');
+
+    try {
+      const deleted = await resetLearningData(strapi, userId);
+      ctx.body = { ok: true, deleted };
+    } catch (error) {
+      strapi.log.error('[user-progress.resetLearningData]', error);
+      return ctx.internalServerError('Could not delete learning data');
     }
   },
 

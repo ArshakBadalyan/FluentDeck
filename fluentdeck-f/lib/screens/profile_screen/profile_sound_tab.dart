@@ -60,7 +60,7 @@ class _ProfileSoundTabState extends State<ProfileSoundTab>
     );
 
     if (soundEnabled) {
-      AudioService().play('correct');
+      AudioService().play('settingsPreview');
     }
 
     await AuthService.updateUser({
@@ -81,7 +81,7 @@ class _ProfileSoundTabState extends State<ProfileSoundTab>
       }
     });
     if (value > 0) {
-      AudioService().play('correct');
+      AudioService().play('settingsPreview');
     }
     await AuthService.updateUser({
       'sound': soundEnabled,

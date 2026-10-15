@@ -1,5 +1,7 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/utils/api_exception.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
@@ -104,6 +106,9 @@ class _CardEditScreenState extends State<CardEditScreen> {
   String? _cefrLevel;
   bool _isPremium = false;
   bool _checkingPremium = true;
+  String _translationLanguage = 'none';
+  bool _generatingMeaning = false;
+  bool _translating = false;
   bool _detectingLevel = false;
 
   List<OcclusionRegion> _occlusionRegions = const [];
@@ -124,9 +129,8 @@ class _CardEditScreenState extends State<CardEditScreen> {
     super.initState();
     _selectedDeckId = widget.deckId;
     _load();
-    if (!widget.isEditing) {
-      _loadPremium();
-    }
+    // Needed when editing too: Generate with AI / Detect CEFR are Premium.
+    _loadPremium();
   }
 
   @override
@@ -198,7 +202,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
 
     final word = _wordForCefrDetect();
     if (word == null || word.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Enter the front field first')),
       );
       return;
@@ -219,11 +223,11 @@ class _CardEditScreenState extends State<CardEditScreen> {
       }
       if (result.ok && result.cefrLevel != null) {
         setState(() => _cefrLevel = result.cefrLevel);
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(content: Text('Suggested level: ${result.cefrLevel}')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(content: Text(result.message ?? 'Could not detect level')),
         );
       }
@@ -250,6 +254,9 @@ class _CardEditScreenState extends State<CardEditScreen> {
         if (widget.noteId != null) {
           existing = await FlashcardService.instance.fetchNote(widget.noteId!);
         }
+      } on ApiException {
+        // The server answered (e.g. 404) — show its message, not "offline".
+        rethrow;
       } catch (_) {
         offline = true;
         types = await FlashcardService.instance.fetchNoteTypesWithCache();
@@ -282,6 +289,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
         _decks = decks;
         _offlineMode = offline;
         _syncLearningLanguage = prefs.syncLearningLanguage;
+        _translationLanguage = prefs.translationLanguage;
         if (!widget.isEditing) {
           _languageCode = prefs.practiceLanguage;
         }
@@ -297,7 +305,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = e is ApiException ? e.message : e.toString();
         _loading = false;
       });
     }
@@ -316,6 +324,22 @@ class _CardEditScreenState extends State<CardEditScreen> {
       (t) => t.id == _noteType,
       orElse: () => types.isNotEmpty ? types.first : const NoteTypeModel(id: 'basic', name: 'Basic'),
     );
+
+    // Older speaking-note cards kept the example inside Back as
+    // "…\n\nExample: …"; move it into the Example field when one exists.
+    final hasExampleField = type.fields.any((f) => f.name == 'Example');
+    final legacyBack = values['Back'] ?? '';
+    final legacy = RegExp(
+      r'(?:^|\n\s*\n|<br\s*/?>\s*<br\s*/?>)Example:\s*(.+)$',
+      dotAll: true,
+    ).firstMatch(legacyBack);
+    if (hasExampleField && (values['Example'] ?? '').trim().isEmpty && legacy != null) {
+      values = {
+        ...values,
+        'Back': legacyBack.substring(0, legacy.start).trim(),
+        'Example': legacy.group(1)!.trim(),
+      };
+    }
 
     for (final field in type.fields) {
       final ctrl = TextEditingController(text: values[field.name] ?? '');
@@ -412,7 +436,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
     final bytes = file.bytes;
     if (bytes == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Could not read file')),
       );
       return;
@@ -422,7 +446,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
       final url = await FlashcardService.instance.uploadMedia(bytes, file.name);
       if (!mounted) return;
       if (url == null || url.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           const SnackBar(content: Text('Upload failed')),
         );
         return;
@@ -430,7 +454,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
       setState(() => _mediaCtrl.text = url);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }
@@ -440,7 +464,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
     final fields = _buildFields();
     final err = _validateFields(fields);
     if (err != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+      AppToast.showSnackBar(context, SnackBar(content: Text(err)));
       return;
     }
 
@@ -454,7 +478,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
 
   Future<void> _save() async {
     if (_selectedDeckId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Select a deck')),
       );
       return;
@@ -463,7 +487,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
     final fields = _buildFields();
     final validationError = _validateFields(fields);
     if (validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(validationError)),
       );
       return;
@@ -484,7 +508,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
           deckId: _selectedDeckId,
         );
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           const SnackBar(content: Text('Note updated')),
         );
         Navigator.pop(context, true);
@@ -501,7 +525,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
 
         if (!mounted) return;
         final count = result.cards.length;
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(
             content: Text(
               count > 1 ? 'Note saved — $count cards created' : 'Note saved',
@@ -521,7 +545,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     } finally {
@@ -561,7 +585,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
             onPressed: _loading || _saving ? null : _preview,
           ),
           IconButton(
-            icon: const Icon(Icons.check_rounded, color: AppColors.primaryPurple),
+            icon: const Icon(Icons.check_rounded, color: AppColors.brandPrimary),
             tooltip: 'Save',
             onPressed: _saving || _loading ? null : _save,
           ),
@@ -592,11 +616,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
           padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: 'Close',
-                onPressed: _saving ? null : () => Navigator.pop(context, false),
-              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -644,7 +664,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
             child: FilledButton(
               onPressed: _saving || _loading || _needsFullEditor ? null : _save,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
+                backgroundColor: AppColors.brandPrimary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -767,10 +787,10 @@ class _CardEditScreenState extends State<CardEditScreen> {
           if (_needsFullEditor) ...[
             const SizedBox(height: 16),
             Material(
-              color: AppColors.primaryPurple.withValues(alpha: 0.08),
+              color: AppColors.brandPrimary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
               child: ListTile(
-                leading: const Icon(Icons.image_outlined, color: AppColors.primaryPurple),
+                leading: const Icon(Icons.image_outlined, color: AppColors.brandPrimary),
                 title: const Text('Image occlusion editor'),
                 subtitle: const Text('Open the full editor to draw masks on an image'),
                 trailing: const Icon(Icons.open_in_new, size: 18),
@@ -863,7 +883,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
                       : (_isPremium ? 'Detect with AI' : 'Premium'),
                 ),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primaryPurple,
+                  foregroundColor: AppColors.brandPrimary,
                   visualDensity: VisualDensity.compact,
                 ),
               ),
@@ -978,12 +998,131 @@ class _CardEditScreenState extends State<CardEditScreen> {
           maxLines: isClozeText ? 5 : (field.name == 'Back' ? 5 : 3),
           required: field.required,
           hint: isClozeText ? 'Use {{c1::answer}} for cloze deletions' : null,
+          trailing: _fieldAiAction(field.name),
         ),
       );
       widgets.add(const SizedBox(height: 16));
     }
     if (widgets.isNotEmpty) widgets.removeLast();
     return widgets;
+  }
+
+  String _plainFront() =>
+      (_fieldCtrls['Front']?.text ?? '').replaceAll(RegExp(r'<[^>]+>'), '').trim();
+
+  void _snack(String message) {
+    AppToast.showSnackBar(context, SnackBar(content: Text(message)));
+  }
+
+  /// Fills Back (definition) and Example from the Front word with AI. Premium.
+  Future<void> _generateMeaningWithAi() async {
+    if (!_isPremium) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
+    final word = _plainFront();
+    if (word.isEmpty) {
+      _snack('Enter the Front (word or phrase) first');
+      return;
+    }
+    setState(() => _generatingMeaning = true);
+    final result = await NoteService.instance.generateWordMeaning(
+      word: word,
+      languageCode: _languageCode,
+      translationLanguage: 'none',
+    );
+    if (!mounted) return;
+    setState(() => _generatingMeaning = false);
+    if (result.premiumRequired) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
+    if (!result.ok) {
+      _snack(result.message ?? 'Could not generate a meaning');
+      return;
+    }
+    _fieldCtrl('Back').text = result.definition;
+    if (result.example.isNotEmpty && _fieldCtrls.containsKey('Example')) {
+      _fieldCtrl('Example').text = result.example;
+    }
+  }
+
+  /// Translates the Front word into the user's translation language.
+  Future<void> _translateWithAi() async {
+    final word = _plainFront();
+    if (word.isEmpty) {
+      _snack('Enter the Front (word or phrase) first');
+      return;
+    }
+    if (_translationLanguage == 'none' || _translationLanguage == _languageCode) {
+      _snack(
+        'Choose a translation language (different from the word\'s) '
+        'in Settings → AI Speaking to translate with AI',
+      );
+      return;
+    }
+    setState(() => _translating = true);
+    final translated = await NoteService.instance.translateText(
+      text: word,
+      targetLanguage: _translationLanguage,
+    );
+    if (!mounted) return;
+    setState(() => _translating = false);
+    if (translated == null) {
+      _snack('Could not translate. Try again.');
+      return;
+    }
+    _fieldCtrl('Translation').text = translated;
+  }
+
+  Widget? _fieldAiAction(String fieldName) {
+    final hasFront = _fieldCtrls.containsKey('Front');
+    if (!hasFront) return null;
+    if (fieldName == 'Back' && !_checkingPremium) {
+      return _aiButton(
+        label: _isPremium ? 'Generate with AI' : 'Generate · Premium',
+        busyLabel: 'Generating…',
+        icon: Icons.auto_awesome_rounded,
+        busy: _generatingMeaning,
+        onPressed: _generateMeaningWithAi,
+      );
+    }
+    if (fieldName == 'Translation') {
+      return _aiButton(
+        label: 'Translate with AI',
+        busyLabel: 'Translating…',
+        icon: Icons.translate_rounded,
+        busy: _translating,
+        onPressed: _translateWithAi,
+      );
+    }
+    return null;
+  }
+
+  Widget _aiButton({
+    required String label,
+    required String busyLabel,
+    required IconData icon,
+    required bool busy,
+    required VoidCallback onPressed,
+  }) {
+    return TextButton.icon(
+      onPressed: busy ? null : onPressed,
+      icon:
+          busy
+              ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+              : Icon(icon, size: 16),
+      label: Text(busy ? busyLabel : label),
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.brandPrimary,
+        visualDensity: VisualDensity.compact,
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      ),
+    );
   }
 
   TextEditingController _fieldCtrl(String name) {
@@ -1006,7 +1145,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
       ),
     );
   }

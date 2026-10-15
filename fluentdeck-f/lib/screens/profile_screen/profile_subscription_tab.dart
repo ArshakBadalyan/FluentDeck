@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -60,7 +61,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
   void _onPurchaseError(String message) {
     if (!mounted) return;
     setState(() => _purchasing = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    AppToast.showSnackBar(context, SnackBar(content: Text(message)));
   }
 
   void _onStatusChanged(SubscriptionStatus status) {
@@ -172,7 +173,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
 
     final opened = await _service.openSubscriptionManagement();
     if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Could not open subscription settings.')),
       );
       return;
@@ -275,7 +276,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
                   !(_status.isPremium && _status.productId == _selectedProductId),
               isLoading: _purchasing,
               onPressed: _subscribe,
-              color: AppColors.primaryPurple,
+              color: AppColors.brandPrimary,
             ),
             const SizedBox(height: 12),
             if (_status.isPremium)
@@ -319,7 +320,7 @@ class _StatusHeroCard extends StatelessWidget {
                 ? const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF9B3DFF), Color(0xFF7A24E4)],
+                  colors: AppColors.heroGradient,
                 )
                 : null,
         color: isPremium ? null : Colors.white,
@@ -327,7 +328,7 @@ class _StatusHeroCard extends StatelessWidget {
         border: isPremium ? null : Border.all(color: Colors.black.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(
-            color: (isPremium ? AppColors.primaryPurple : Colors.black).withValues(
+            color: (isPremium ? AppColors.brandPrimary : Colors.black).withValues(
               alpha: isPremium ? 0.25 : 0.04,
             ),
             blurRadius: isPremium ? 20 : 10,
@@ -346,7 +347,7 @@ class _StatusHeroCard extends StatelessWidget {
                   color:
                       isPremium
                           ? Colors.white.withValues(alpha: 0.18)
-                          : AppColors.primaryPurple.withValues(alpha: 0.08),
+                          : AppColors.brandPrimary.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -354,7 +355,7 @@ class _StatusHeroCard extends StatelessWidget {
                       ? Icons.workspace_premium_rounded
                       : Icons.lock_open_rounded,
                   size: 30,
-                  color: isPremium ? Colors.white : AppColors.primaryPurple,
+                  color: isPremium ? Colors.white : AppColors.brandPrimary,
                 ),
               ),
               const SizedBox(width: 16),
@@ -418,7 +419,7 @@ class _StatusHeroCard extends StatelessWidget {
                         ? Colors.white.withValues(alpha: 0.22)
                         : Colors.grey.shade200,
                 color:
-                    isPremium ? Colors.white : AppColors.primaryPurple,
+                    isPremium ? Colors.white : AppColors.brandPrimary,
               ),
             ),
           ],
@@ -440,7 +441,7 @@ class _FeatureList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent =
-        isPremium ? AppColors.primaryPurple : Colors.grey.shade400;
+        isPremium ? AppColors.brandPrimary : Colors.grey.shade400;
     final features = <(String, IconData)>[
       ('No ads, ever', Icons.block_flipped),
       ('AI-generated word meanings', Icons.auto_awesome_rounded),
@@ -518,7 +519,7 @@ class _DailyTurnsPicker extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.primaryPurple,
+                  color: AppColors.brandPrimary,
                 ),
               ),
               const Spacer(),
@@ -530,10 +531,10 @@ class _DailyTurnsPicker extends StatelessWidget {
           ),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.primaryPurple,
-              inactiveTrackColor: AppColors.primaryPurple.withValues(alpha: 0.18),
-              thumbColor: AppColors.primaryPurple,
-              overlayColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+              activeTrackColor: AppColors.brandPrimary,
+              inactiveTrackColor: AppColors.brandPrimary.withValues(alpha: 0.18),
+              thumbColor: AppColors.brandPrimary,
+              overlayColor: AppColors.brandPrimary.withValues(alpha: 0.12),
               trackHeight: 6,
             ),
             child: Slider(
@@ -609,10 +610,10 @@ class _PlanCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryPurple.withValues(alpha: 0.06) : Colors.white,
+          color: selected ? AppColors.brandPrimary.withValues(alpha: 0.06) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? AppColors.primaryPurple : Colors.grey.shade300,
+            color: selected ? AppColors.brandPrimary : Colors.grey.shade300,
             width: selected ? 2 : 1,
           ),
         ),
@@ -623,7 +624,7 @@ class _PlanCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 2),
               child: Icon(
                 selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected ? AppColors.primaryPurple : Colors.grey.shade400,
+                color: selected ? AppColors.brandPrimary : Colors.grey.shade400,
               ),
             ),
             const SizedBox(width: 12),
@@ -642,7 +643,7 @@ class _PlanCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryPurple.withValues(alpha: 0.12),
+                            color: AppColors.brandPrimary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(
@@ -650,7 +651,7 @@ class _PlanCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.primaryPurple,
+                              color: AppColors.brandPrimary,
                             ),
                           ),
                         ),
@@ -699,7 +700,7 @@ class _PlanCard extends StatelessWidget {
                       value: _capacity,
                       minHeight: 6,
                       backgroundColor: Colors.grey.shade200,
-                      color: AppColors.primaryPurple,
+                      color: AppColors.brandPrimary,
                     ),
                   ),
                 ],

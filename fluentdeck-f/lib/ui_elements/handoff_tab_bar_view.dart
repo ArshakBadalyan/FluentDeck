@@ -29,6 +29,9 @@ class _HandoffTabBarViewState extends State<HandoffTabBarView> {
 
   int? _dragStartTabIndex;
   double _dragTotal = 0;
+  // True only when the TabBarView itself started a drag, so gestures claimed
+  // by descendants (column resize, nested horizontal scrolls) never hand off.
+  bool _tabViewDragged = false;
   bool _handoffInProgress = false;
   Timer? _handoffResetTimer;
 
@@ -56,12 +59,20 @@ class _HandoffTabBarViewState extends State<HandoffTabBarView> {
   void _resetDrag() {
     _dragStartTabIndex = null;
     _dragTotal = 0;
+    _tabViewDragged = false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return NotificationListener<OverscrollNotification>(
+    return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
+        if (notification.depth != 0) return false;
+        if (notification is ScrollStartNotification &&
+            notification.dragDetails != null) {
+          _tabViewDragged = true;
+          return false;
+        }
+        if (notification is! OverscrollNotification) return false;
         if (_handoffInProgress) return false;
         if (notification.overscroll < 0 && _atFirstTab) {
           unawaited(_triggerHandoff(widget.onHandoffPrevious));
@@ -78,6 +89,7 @@ class _HandoffTabBarViewState extends State<HandoffTabBarView> {
         onPointerDown: (_) {
           _dragStartTabIndex = widget.controller.index;
           _dragTotal = 0;
+          _tabViewDragged = false;
         },
         onPointerMove: (event) {
           if (_dragStartTabIndex == null) return;
@@ -85,7 +97,8 @@ class _HandoffTabBarViewState extends State<HandoffTabBarView> {
         },
         onPointerUp: (_) async {
           if (_dragStartTabIndex == null) return;
-          if (widget.controller.index != _dragStartTabIndex) {
+          if (!_tabViewDragged ||
+              widget.controller.index != _dragStartTabIndex) {
             _resetDrag();
             return;
           }

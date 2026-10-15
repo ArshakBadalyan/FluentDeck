@@ -28,10 +28,8 @@ async function getCardInfo(strapi, userId, cardId) {
   let siblingCards = [];
 
   if (noteId) {
-    note = await strapi.db.query('api::flashcard-note.flashcard-note').findOne({
-      where: { id: noteId, user: userId },
-      populate: ['deck'],
-    });
+    const { findOwnedNote } = require('./flashcard-note-sync');
+    note = await findOwnedNote(strapi, userId, noteId, { populate: ['deck'] });
     const siblings = await strapi.db.query('api::flashcard.flashcard').findMany({
       where: { flashcardNote: noteId, user: userId },
       orderBy: { templateOrdinal: 'asc' },

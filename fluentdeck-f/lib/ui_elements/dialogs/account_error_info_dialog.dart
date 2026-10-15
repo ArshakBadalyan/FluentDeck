@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 
 class AccountErrorInfoDialog extends StatelessWidget {
   const AccountErrorInfoDialog({super.key});
@@ -52,7 +53,7 @@ class AccountErrorInfoDialog extends StatelessWidget {
                   height: 36,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7A24E4),
+                      backgroundColor: AppColors.brandPrimaryDeep,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -75,18 +76,6 @@ class AccountErrorInfoDialog extends StatelessWidget {
             ),
           ),
 
-          Positioned(
-            top: 8,
-            right: 8,
-            child: IconButton(
-              icon: const Icon(Icons.close, size: 22),
-              color: Colors.black54,
-              tooltip: 'Close',
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ),
         ],
       ),
     );

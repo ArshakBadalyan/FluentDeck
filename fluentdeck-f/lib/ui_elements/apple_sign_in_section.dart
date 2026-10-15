@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -67,7 +68,7 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
       widget.onComplete?.call(res);
 
       if (res['status'] == 'success') {
-        AudioService().play('formSubmit');
+        AudioService().play('signIn');
         Navigator.pushReplacement(
           context,
           appMaterialPageRoute(
@@ -84,7 +85,7 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
 
       final messageKey = res['messageKey']?.toString();
       final apiMessage = res['message']?.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(
           content: Text(
             (apiMessage != null && apiMessage.isNotEmpty)
@@ -98,14 +99,14 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(context.tr('errors.network'))),
       );
     }
   }
 
   void _showWebUnavailableMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
+    AppToast.showSnackBar(context, 
       SnackBar(content: Text(context.tr('login-register.apple-web-unavailable'))),
     );
   }

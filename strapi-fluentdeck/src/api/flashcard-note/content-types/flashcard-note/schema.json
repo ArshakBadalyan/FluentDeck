@@ -44,6 +44,25 @@
     "mediaUrl": {
       "type": "string"
     },
+    "source": {
+      "type": "enumeration",
+      "enum": ["deck", "speaking", "manual", "catalog"],
+      "default": "deck"
+    },
+    "inMyNotes": {
+      "type": "boolean",
+      "default": false
+    },
+    "languageCode": {
+      "type": "string",
+      "default": "en"
+    },
+    "cefrLevel": {
+      "type": "string"
+    },
+    "topic": {
+      "type": "string"
+    },
     "user": {
       "type": "relation",
       "relation": "manyToOne",
@@ -53,11 +72,6 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::flashcard-deck.flashcard-deck"
-    },
-    "userNote": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::user-note.user-note"
     },
     "flashcards": {
       "type": "relation",

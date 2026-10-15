@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
@@ -83,7 +84,7 @@ class MainTabConfig {
   }
 
   static Color _iconColor(bool active) =>
-      active ? const Color(0xFF8419FF) : const Color(0xFF777481);
+      active ? AppColors.brandPrimary : AppColors.navInactive;
 
   static MainTabDefinition definition(MainTabId id) {
     switch (id) {

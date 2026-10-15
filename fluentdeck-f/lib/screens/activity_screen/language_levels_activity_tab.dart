@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/language_levels_snapshot.dart';
 import 'package:fluentdeck/services/language_levels_service.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
@@ -81,11 +80,10 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
     final currentLabel = service.languageLabel(snapshot.practiceLanguage);
 
     return AppPageBackground(
-      child: AppFadeIn(
-        child: RefreshIndicator(
-          onRefresh: _load,
-          color: AppColors.primaryPurple,
-          child: ListView(
+      child: RefreshIndicator(
+        onRefresh: _load,
+        color: AppColors.brandPrimary,
+        child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
               _HeroCard(
@@ -120,35 +118,41 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
                 icon: Icons.abc_rounded,
                 label: 'Unique words spoken',
                 value: '${snapshot.uniqueWordsSpoken}',
-                color: AppColors.primaryPurple,
+                color: AppColors.brandPrimary,
                 fullWidth: true,
               ),
               const SizedBox(height: 24),
-              _Section(
-                title: 'Language history',
-                icon: Icons.history_rounded,
-                child: snapshot.languages.isEmpty
-                    ? const _EmptyHint(
-                        text:
-                            'Switch practice languages in Settings to build your learning history.',
-                      )
-                    : Column(
-                        children: [
-                          for (final record in snapshot.languages)
-                            _LanguageHistoryCard(
-                              languageLabel: service.languageLabel(
-                                record.languageCode,
-                              ),
-                              isCurrent:
-                                  record.languageCode == snapshot.practiceLanguage,
-                              tutorLevel: record.tutorLevel,
-                              estimatedLevel: record.estimatedLevel,
-                              speakingTurns: record.speakingTurns,
-                              deckWords: record.deckWordsReviewed,
-                              lastActive: record.lastActiveAt,
-                            ),
-                        ],
+              Builder(
+                builder: (context) {
+                  final current = snapshot.languages.where(
+                    (r) => r.languageCode == snapshot.practiceLanguage,
+                  );
+                  return _Section(
+                    title: 'Language history',
+                    icon: Icons.history_rounded,
+                    trailing:
+                        snapshot.languages.length > 1
+                            ? 'All ${snapshot.languages.length}'
+                            : null,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => LanguageHistoryScreen(snapshot: snapshot),
                       ),
+                    ),
+                    child: current.isEmpty
+                        ? const _EmptyHint(
+                            text:
+                                'Save notes or practise speaking to build your language history.',
+                          )
+                        : _LanguageHistoryCard.fromRecord(
+                            current.first,
+                            languageLabel: service.languageLabel(
+                              current.first.languageCode,
+                            ),
+                            isCurrent: true,
+                          ),
+                  );
+                },
               ),
               if (snapshot.levelHistory.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -166,8 +170,7 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -191,12 +194,12 @@ class _HeroCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF9B3DFF), Color(0xFF7A24E4)],
+          colors: AppColors.heroGradient,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryPurple.withValues(alpha: 0.28),
+            color: AppColors.brandPrimary.withValues(alpha: 0.28),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -295,19 +298,75 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
+/// Every language with real activity (notes, speaking turns, deck reviews).
+class LanguageHistoryScreen extends StatelessWidget {
+  const LanguageHistoryScreen({super.key, required this.snapshot});
+
+  final LanguageLevelsSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final service = LanguageLevelsService.instance;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Language history')),
+      body: AppPageBackground(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          children: [
+            for (final record in snapshot.languages)
+              _LanguageHistoryCard.fromRecord(
+                record,
+                languageLabel: service.languageLabel(record.languageCode),
+                isCurrent: record.languageCode == snapshot.practiceLanguage,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _Section extends StatelessWidget {
   const _Section({
     required this.title,
     required this.icon,
     required this.child,
+    this.onTap,
+    this.trailing,
   });
 
   final String title;
   final IconData icon;
   final Widget child;
+  /// Makes the title row open a detail page.
+  final VoidCallback? onTap;
+  final String? trailing;
 
   @override
   Widget build(BuildContext context) {
+    final titleRow = Row(
+      children: [
+        Icon(icon, size: 20, color: AppColors.brandPrimary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          ),
+        ),
+        if (trailing != null)
+          Text(
+            trailing!,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.brandPrimary,
+            ),
+          ),
+        if (onTap != null)
+          const Icon(Icons.chevron_right_rounded, color: AppColors.brandPrimary),
+      ],
+    );
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -319,16 +378,17 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 20, color: AppColors.primaryPurple),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          if (onTap == null)
+            titleRow
+          else
+            InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: titleRow,
               ),
-            ],
-          ),
+            ),
           const SizedBox(height: 14),
           child,
         ],
@@ -338,15 +398,16 @@ class _Section extends StatelessWidget {
 }
 
 class _LanguageHistoryCard extends StatelessWidget {
-  const _LanguageHistoryCard({
+  _LanguageHistoryCard.fromRecord(
+    LanguageLevelRecord record, {
     required this.languageLabel,
     required this.isCurrent,
-    required this.tutorLevel,
-    required this.estimatedLevel,
-    required this.speakingTurns,
-    required this.deckWords,
-    this.lastActive,
-  });
+  }) : tutorLevel = record.tutorLevel,
+       estimatedLevel = record.estimatedLevel,
+       speakingTurns = record.speakingTurns,
+       deckWords = record.deckWordsReviewed,
+       noteCount = record.noteCount,
+       lastActive = record.lastActiveAt;
 
   final String languageLabel;
   final bool isCurrent;
@@ -354,6 +415,7 @@ class _LanguageHistoryCard extends StatelessWidget {
   final String estimatedLevel;
   final int speakingTurns;
   final int deckWords;
+  final int noteCount;
   final DateTime? lastActive;
 
   @override
@@ -368,12 +430,12 @@ class _LanguageHistoryCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isCurrent
-            ? AppColors.primaryPurple.withValues(alpha: 0.12)
+            ? AppColors.brandPrimary.withValues(alpha: 0.12)
             : AppPageColors.fieldBgOf(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isCurrent
-              ? AppColors.primaryPurple.withValues(alpha: 0.25)
+              ? AppColors.brandPrimary.withValues(alpha: 0.25)
               : AppPageColors.subtleBorderOf(context),
         ),
       ),
@@ -391,7 +453,7 @@ class _LanguageHistoryCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryPurple.withValues(alpha: 0.12),
+                    color: AppColors.brandPrimary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
@@ -399,7 +461,7 @@ class _LanguageHistoryCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.primaryPurple,
+                      color: AppColors.brandPrimary,
                     ),
                   ),
                 ),
@@ -416,7 +478,8 @@ class _LanguageHistoryCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'AI tutor $tutorLevel · $speakingTurns turns · $deckWords deck words · $dateLabel',
+            'AI tutor $tutorLevel · $noteCount notes · $speakingTurns turns · '
+            '$deckWords deck reviews · $dateLabel',
             style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
           ),
         ],
@@ -443,7 +506,7 @@ class _TimelineRow extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: const BoxDecoration(
-              color: AppColors.primaryPurple,
+              color: AppColors.brandPrimary,
               shape: BoxShape.circle,
             ),
           ),

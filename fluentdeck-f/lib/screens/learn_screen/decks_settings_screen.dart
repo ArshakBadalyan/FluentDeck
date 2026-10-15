@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_settings_section.dart';
@@ -89,7 +90,7 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
     if (result.success) {
       await FlashcardSyncService.showConflictDialogIfNeeded(context, skipped: result.skipped);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(
           content: Text(
             result.applied > 0
@@ -99,7 +100,7 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Sync failed — check connection')),
       );
     }
@@ -113,7 +114,7 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
       setState(() {
         _lastBackupLabel = DeckBackupService.instance.formatLastBackup(lastMs);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(
           content: Text(
             kIsWeb
@@ -124,7 +125,7 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }

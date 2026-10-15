@@ -11,6 +11,7 @@ class HtmlFieldEditor extends StatelessWidget {
     this.maxLines = 4,
     this.hint,
     this.required = false,
+    this.trailing,
   });
 
   final String label;
@@ -18,17 +19,26 @@ class HtmlFieldEditor extends StatelessWidget {
   final int maxLines;
   final String? hint;
   final bool required;
+  /// Optional action shown at the end of the label row (e.g. an AI button).
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          required ? '$label *' : label,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                required ? '$label *' : label,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: trailing != null ? 2 : 8),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -92,7 +102,7 @@ class _Toolbar extends StatelessWidget {
   Widget _btn(IconData icon, VoidCallback onPressed, {String? tooltip}) {
     return IconButton(
       icon: Icon(icon, size: 20),
-      color: AppColors.primaryPurple,
+      color: AppColors.brandPrimary,
       tooltip: tooltip ?? 'Format selection',
       onPressed: onPressed,
       visualDensity: VisualDensity.compact,

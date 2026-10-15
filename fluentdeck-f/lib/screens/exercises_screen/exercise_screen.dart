@@ -78,7 +78,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.lessonTitle),
-        backgroundColor: AppColors.primaryPurple,
+        backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
       ),
       body: ListView(
@@ -105,7 +105,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 child: Material(
                   color:
                       _selectedIndex == i
-                          ? AppColors.primaryPurple.withValues(alpha: 0.12)
+                          ? AppColors.brandPrimary.withValues(alpha: 0.12)
                           : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
@@ -122,7 +122,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                         border: Border.all(
                           color:
                               _selectedIndex == i
-                                  ? AppColors.primaryPurple
+                                  ? AppColors.brandPrimary
                                   : Colors.black.withValues(alpha: 0.08),
                         ),
                       ),

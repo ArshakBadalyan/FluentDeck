@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -83,10 +84,9 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
           mode: LaunchMode.externalApplication,
         );
         if (!launched) {
-          final messenger =
-              ScaffoldMessenger.maybeOf(widget.parentContext);
-          if (messenger == null || !widget.parentContext.mounted) return;
-          messenger.showSnackBar(
+          if (!widget.parentContext.mounted) return;
+          AppToast.showSnackBar(
+            widget.parentContext,
             SnackBar(
               content: Text(
                 AppLocalizations.instance
@@ -115,7 +115,7 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
 
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+      AppToast.showSnackBar(widget.parentContext, 
         SnackBar(
           content: Text(
             context.tr('profile.about-us.app-review-thanks-feedback'),
@@ -125,7 +125,7 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
     } on AppReviewWebhookException catch (_) {
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+      AppToast.showSnackBar(widget.parentContext, 
         SnackBar(
           content: Text(context.tr('profile.about-us.app-review-send-error')),
         ),
@@ -134,7 +134,7 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
       debugPrint('App review webhook: $e\n$st');
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+      AppToast.showSnackBar(widget.parentContext, 
         SnackBar(
           content: Text(context.tr('profile.about-us.app-review-send-error')),
         ),

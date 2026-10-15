@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_text_theme.dart';
+import 'config/brand_config.dart';
 import 'ui_elements/app_motion.dart';
 import 'ui_elements/modern_page_widgets.dart';
 
-/// Central light/dark themes seeded from the FluentDeck purple brand.
+/// Central light/dark themes seeded from the brand color in [BrandConfig].
 abstract final class AppTheme {
-  static const _seed = AppColors.primaryPurple;
+  static const _seed = AppColors.brandPrimary;
 
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(
@@ -19,29 +20,42 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      fontFamily: 'Rubik',
+      fontFamily: BrandConfig.fontFamily,
       textTheme: AppTextTheme.textTheme,
       scaffoldBackgroundColor: Colors.white,
       cardColor: AppPageColors.cardBg,
       dividerColor: Colors.black.withValues(alpha: 0.06),
+      // Flutter's mouse tracker doesn't re-evaluate hover regions on scroll
+      // without pointer movement, so the default gray hover overlay sticks to
+      // a screen position and appears to "jump" onto whatever card/tile
+      // scrolls under the (unmoved) cursor. Mobile has no hover anyway.
+      hoverColor: Colors.transparent,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        foregroundColor: BrandConfig.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primaryPurple,
+          backgroundColor: AppColors.brandPrimary,
           foregroundColor: Colors.white,
         ),
       ),
+      // Material3's seed-generated default (colorScheme.primaryContainer) is a
+      // pale, washed-out tint of the brand teal — fine for chips, wrong for an
+      // FAB. Any FloatingActionButton that doesn't set its own colors falls
+      // back to this instead of that pastel.
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.brandPrimaryDeep,
+        foregroundColor: Colors.white,
+      ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: AppColors.primaryPurple,
+        color: AppColors.brandPrimary,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppPageColors.fieldBg,
+        fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
@@ -81,20 +95,22 @@ abstract final class AppTheme {
       surfaceContainerHighest: raised,
       surfaceContainerHigh: raised,
       surfaceContainer: card,
-      primary: AppColors.primaryPurple,
+      primary: AppColors.brandPrimaryOnDark,
+      onPrimary: BrandConfig.onPrimaryDark,
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      fontFamily: 'Rubik',
+      fontFamily: BrandConfig.fontFamily,
       textTheme: AppTextTheme.textTheme.apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
+        bodyColor: BrandConfig.darkTextPrimary,
+        displayColor: BrandConfig.darkTextPrimary,
       ),
       scaffoldBackgroundColor: scaffold,
       cardColor: card,
       dividerColor: Colors.white.withValues(alpha: 0.08),
+      hoverColor: Colors.transparent,
       appBarTheme: const AppBarTheme(
         backgroundColor: card,
         foregroundColor: Colors.white,
@@ -116,16 +132,16 @@ abstract final class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primaryPurple,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.brandPrimaryOnDark,
+          foregroundColor: BrandConfig.onPrimaryDark,
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primaryPurple,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.brandPrimaryOnDark,
+        foregroundColor: BrandConfig.onPrimaryDark,
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: AppColors.primaryPurple,
+        color: AppColors.brandPrimaryOnDark,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

@@ -280,6 +280,15 @@ class FlashcardOfflineStore {
     return _isar!.pendingFlashcardReviews.count();
   }
 
+  /// Drops every cached deck, card, review queue and pending review.
+  Future<void> clearAll() async {
+    await init();
+    final isar = _isar!;
+    await isar.writeTxn(() => isar.clear());
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_noteTypesKey);
+  }
+
   Future<void> clearPendingReviews() async {
     await init();
     await _isar!.writeTxn(() async {

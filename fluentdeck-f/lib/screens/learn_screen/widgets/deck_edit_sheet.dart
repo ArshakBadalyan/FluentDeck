@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
@@ -144,7 +145,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
       ),
     );
   }
@@ -179,7 +180,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
 
   Future<void> _save() async {
     if (_canRename && _nameCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Deck name cannot be empty')),
       );
       return;
@@ -217,7 +218,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
       setState(() => _saving = false);
@@ -263,7 +264,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
       setState(() => _deleting = false);
@@ -292,11 +293,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
           padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: 'Close',
-                onPressed: _saving || _deleting ? null : () => Navigator.pop(context, false),
-              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,7 +457,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
             child: FilledButton(
               onPressed: _saving || _deleting ? null : _save,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
+                backgroundColor: AppColors.brandPrimary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),

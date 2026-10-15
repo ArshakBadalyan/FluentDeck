@@ -1,6 +1,12 @@
 "use strict";
 
 const WORD_BANK_CAP = 5000;
+// A turn only counts toward "perfect sentence" / CEFR-level credit once it has
+// at least this many words. Below that, the tutor has nothing to correct (so
+// `corrections` comes back empty) not because the user got it right, but
+// because "hi" / "do" / "hoo" aren't attempts worth grading — crediting those
+// as perfect is what let a few one-word replies estimate as B1.
+const MIN_SUBSTANTIVE_WORDS = 3;
 const { getOrCreateUserProgress, mergeWeakAreas } = require('./user-progress-utils');
 const { todayKey } = require('./ai-rate-limit');
 
@@ -47,8 +53,10 @@ async function recordSpeakingTurnStats(strapi, userId, { userText, corrections }
   if (!userId || !userText) return null;
 
   const progress = await getOrCreateUserProgress(strapi, userId);
+  const words = extractWords(userText);
+  const isSubstantive = words.length >= MIN_SUBSTANTIVE_WORDS;
   const hasCorrections = Array.isArray(corrections) && corrections.length > 0;
-  const perfectDelta = hasCorrections ? 0 : 1;
+  const perfectDelta = isSubstantive && !hasCorrections ? 1 : 0;
   const weakAreas = mergeWeakAreas(progress.weakAreas ?? progress.weak_areas, corrections);
 
   const bank = Array.isArray(progress.spokenWordBank ?? progress.spoken_word_bank)
@@ -57,7 +65,7 @@ async function recordSpeakingTurnStats(strapi, userId, { userText, corrections }
   const bankSet = new Set(bank);
   let newWords = 0;
 
-  for (const word of extractWords(userText)) {
+  for (const word of words) {
     if (!bankSet.has(word)) {
       bankSet.add(word);
       bank.push(word);

@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -108,7 +109,7 @@ class CardBrowserBulkActions {
                 ),
                 if (hasBulkUndo)
                   ListTile(
-                    leading: const Icon(Icons.undo, color: AppColors.primaryPurple),
+                    leading: const Icon(Icons.undo, color: AppColors.brandPrimary),
                     title: const Text('Undo tag change'),
                     onTap: () => Navigator.pop(ctx, 'undo_tags'),
                   ),
@@ -152,7 +153,7 @@ class CardBrowserBulkActions {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(content: Text(e.toString())),
         );
       }
@@ -346,7 +347,7 @@ class CardBrowserBulkActions {
     final json = const JsonEncoder.withIndent('  ').convert(payload);
     await Share.share(json, subject: 'Flashcards export (${selectedCards.length})');
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text('Exported ${selectedCards.length} card(s)')),
       );
     }
@@ -393,7 +394,7 @@ class CardBrowserBulkActions {
 
     if (deleted == 0) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(
             content: Text(
               lastError?.toString().replaceFirst('Exception: ', '') ??
@@ -414,7 +415,7 @@ class CardBrowserBulkActions {
 
   Future<void> _done(String message) async {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(message)),
       );
     }

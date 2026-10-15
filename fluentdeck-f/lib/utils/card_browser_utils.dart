@@ -99,7 +99,7 @@ class CardDueLabel extends StatelessWidget {
     final label = formatDueLabel(card);
     final textStyle = TextStyle(
       fontSize: 11,
-      color: scheduled ? AppColors.primaryPurple : Colors.grey.shade700,
+      color: scheduled ? AppColors.brandPrimary : Colors.grey.shade700,
       fontWeight: scheduled ? FontWeight.w600 : FontWeight.w400,
     );
 
@@ -114,7 +114,7 @@ class CardDueLabel extends StatelessWidget {
                   child: Icon(
                     Icons.event_available_rounded,
                     size: 13,
-                    color: AppColors.primaryPurple.withValues(alpha: 0.9),
+                    color: AppColors.brandPrimary.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(width: 2),

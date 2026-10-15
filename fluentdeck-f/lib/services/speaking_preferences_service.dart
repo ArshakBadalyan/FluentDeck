@@ -36,6 +36,7 @@ class SpeakingPreferencesService {
     SpeakingPreferences preferences,
   ) async {
     final payload = preferences.toUpdatePayload();
+    AuthService.invalidateUserCache();
     final data = await ApiService.put('users/me/speaking-preferences', payload);
 
     if (data is Map && data['error'] == null) {

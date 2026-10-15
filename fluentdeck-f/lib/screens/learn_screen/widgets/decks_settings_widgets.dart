@@ -26,10 +26,10 @@ Widget decksSettingsNavTile({
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                  color: AppColors.brandPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 20, color: AppColors.primaryPurple),
+                child: Icon(icon, size: 20, color: AppColors.brandPrimary),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -72,7 +72,7 @@ Widget decksSettingsActionTile({
   Color? iconColor,
   bool destructive = false,
 }) {
-  final accent = destructive ? Colors.red.shade600 : (iconColor ?? AppColors.primaryPurple);
+  final accent = destructive ? Colors.red.shade600 : (iconColor ?? AppColors.brandPrimary);
   return Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Material(
@@ -142,7 +142,7 @@ Widget decksSettingsSectionHeader(String title) {
           width: 4,
           height: 16,
           decoration: BoxDecoration(
-            color: AppColors.primaryPurple,
+            color: AppColors.brandPrimary,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -182,7 +182,7 @@ Widget decksSettingsLabelField(
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
         ),
       ),
       onFieldSubmitted: onSave,
@@ -256,11 +256,11 @@ Widget decksSettingsPickerTile({
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                   ),
                 ),
                 const SizedBox(width: 2),
-                const Icon(Icons.chevron_right_rounded, color: AppColors.primaryPurple, size: 20),
+                const Icon(Icons.chevron_right_rounded, color: AppColors.brandPrimary, size: 20),
               ],
             ),
           ],
@@ -272,6 +272,6 @@ Widget decksSettingsPickerTile({
 
 Widget? decksSettingsCheckIcon(bool selected) {
   return selected
-      ? const Icon(Icons.check, color: AppColors.primaryPurple)
+      ? const Icon(Icons.check, color: AppColors.brandPrimary)
       : null;
 }

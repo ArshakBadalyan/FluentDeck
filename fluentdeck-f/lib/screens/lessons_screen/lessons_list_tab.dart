@@ -159,11 +159,11 @@ class _LessonCard extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+                backgroundColor: AppColors.brandPrimary.withValues(alpha: 0.12),
                 child: Text(
                   lesson.level,
                   style: const TextStyle(
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),

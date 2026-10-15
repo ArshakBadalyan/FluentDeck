@@ -37,11 +37,14 @@ module.exports = {
       "api::speaking-session.speaking-session.completeSession",
       "api::speaking-session.speaking-session.recentHistory",
       "api::speaking-session.speaking-session.scoreMap",
+      "api::notification.notification.listMine",
+      "api::notification.notification.markRead",
       "api::user-progress.user-progress.find",
       "api::user-progress.user-progress.findOne",
       "api::user-progress.user-progress.create",
       "api::user-progress.user-progress.update",
       "api::user-progress.user-progress.languageLevels",
+      "api::user-progress.user-progress.resetLearningData",
       "api::user-note.user-note.listNotes",
       "api::user-note.user-note.createNote",
       "api::user-note.user-note.updateNote",
@@ -49,6 +52,7 @@ module.exports = {
       "api::user-note.user-note.saveFromCorrection",
       "api::user-note.user-note.studySettings",
       "api::user-note.user-note.importFromDecks",
+      "api::user-note.user-note.unlinkDecks",
       "api::flashcard-deck.flashcard-deck.find",
       "api::flashcard-deck.flashcard-deck.findOne",
       "api::flashcard.flashcard.find",
@@ -92,6 +96,7 @@ module.exports = {
       "api::flashcard-deck.flashcard-deck.deleteEmptyCards",
       "api::flashcard-deck.flashcard-deck.cardInfo",
       "api::flashcard-deck.flashcard-deck.setCardDue",
+      "api::flashcard-deck.flashcard-deck.setCardTranslation",
       "api::flashcard-deck.flashcard-deck.resetCardProgress",
       "api::flashcard-deck.flashcard-deck.gradeCardNow",
       "api::flashcard-deck.flashcard-deck.repositionCard",
@@ -137,6 +142,10 @@ module.exports = {
       await linkPermissionToRole(
         "plugin::users-permissions.user.getSpeakingPreferences",
       );
+      // The app reads the signed-in profile via GET /users/:id; the extended
+      // controller only allows a user to read their own record.
+      await linkPermissionToRole("plugin::users-permissions.user.findOne");
+      await linkPermissionToRole("plugin::users-permissions.user.me");
       await linkPermissionToRole(
         "plugin::users-permissions.auth.appleMobile",
         "public",

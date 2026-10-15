@@ -67,7 +67,7 @@ class ActivityPreviewList extends StatelessWidget {
               child: Text(
                 viewAllLabel ?? 'View all ($itemCount)',
                 style: const TextStyle(
-                  color: AppColors.primaryPurple,
+                  color: AppColors.brandPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),

@@ -107,10 +107,7 @@ async function processSpeakingNoteAction(strapi, userId, noteAction, options = {
     word;
   const example = String(noteAction.example ?? noteAction.exampleSentence ?? '').trim();
 
-  const fields = {
-    Front: word,
-    Back: example ? `${definition}\n\nExample: ${example}` : definition,
-  };
+  const fields = { Front: word, Back: definition, Example: example, Translation: '' };
 
   const languageCode = await resolveUserLanguageCode(strapi, userId);
   const result = await createNoteAndCards(strapi, userId, {
@@ -120,6 +117,8 @@ async function processSpeakingNoteAction(strapi, userId, noteAction, options = {
     tags: ['from-speaking', 'auto-created'],
     createReverse: false,
     languageCode,
+    source: 'speaking',
+    inMyNotes: true,
   });
 
   if (!isPremium) {

@@ -208,7 +208,7 @@ class _DeckHeroCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.primaryPurple.withValues(alpha: 0.08),
+              AppColors.brandPrimary.withValues(alpha: 0.08),
               Colors.white,
             ],
           ),
@@ -306,7 +306,7 @@ class _PrimaryDeckAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.primaryPurple,
+      color: AppColors.brandPrimary,
       borderRadius: BorderRadius.circular(14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

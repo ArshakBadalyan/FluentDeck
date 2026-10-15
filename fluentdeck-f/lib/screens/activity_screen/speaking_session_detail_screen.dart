@@ -11,7 +11,7 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
 
   final SpeakingSessionRecord session;
 
-  static const _pageBg = Color(0xFFF7F5FB);
+  static const _pageBg = AppColors.pageBg;
 
   String _formatSessionTime(BuildContext context, DateTime dt) {
     final locale = Localizations.localeOf(context).toString();
@@ -27,7 +27,7 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
       backgroundColor: _pageBg,
       appBar: AppBar(
         title: Text(l10n.t('speaking-activity.session-detail.title')),
-        backgroundColor: AppColors.primaryPurple,
+        backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),

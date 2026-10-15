@@ -1,3 +1,5 @@
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -231,20 +233,6 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   bool get _hasAnyFilters =>
       _sourceIndex != _speakingSourceIndex || _hasActiveAdvancedFilters;
 
-  String get _filtersSummary {
-    final parts = <String>[];
-    if (_levelIndex != 0) {
-      parts.add(_levelFilters[_levelIndex].$2);
-    }
-    if (_languageIndex != 0 && _languageIndex < _languageFilters.length) {
-      parts.add(_languageFilters[_languageIndex].value);
-    }
-    if (_topicFilter != 'all') {
-      parts.add(_topicFilter);
-    }
-    return parts.isEmpty ? 'Level, language, topic' : parts.join(' · ');
-  }
-
   Future<void> _showAdvancedFiltersSheet() async {
     if (!_advancedFiltersEnabled) return;
     final result = await showMyNotesFiltersSheet(
@@ -291,19 +279,29 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   }
 
   Future<void> _openImportDecks() async {
+    final previousIds = _linkedDecks.map((d) => d.id).toSet();
     final result = await showImportDecksToNotesSheet(context);
     if (!mounted || result == null || !result.ok) return;
-    _linkedDecks = await MyNotesLinkedDecksStore.instance.merge(result.linkedDecks);
+    // The sheet returns the full set of linked decks (added and removed).
+    await MyNotesLinkedDecksStore.instance.save(result.linkedDecks);
+    _linkedDecks =
+        (await MyNotesLinkedDecksStore.instance.load())
+            .where((d) => !d.duplicatesSpeakingSource)
+            .toList();
     final addedDecks =
-        result.linkedDecks.where((d) => !d.duplicatesSpeakingSource).toList();
-    var nextIndex = _sourceIndex;
+        _linkedDecks.where((d) => !previousIds.contains(d.id)).toList();
+    final currentKey = _sourceKey;
+    var nextIndex = _sourceFilters.indexWhere((f) => f.$1 == currentKey);
     if (addedDecks.isNotEmpty) {
       final target = addedDecks.last;
       final deckIndex = _sourceFilters.indexWhere((f) => f.$1 == 'deck:${target.id}');
       if (deckIndex >= 0) nextIndex = deckIndex;
     }
     setState(() {
-      if (nextIndex >= _sourceFilters.length) nextIndex = _speakingSourceIndex;
+      // The chip being viewed may have been removed — fall back to speaking.
+      if (nextIndex < 0 || nextIndex >= _sourceFilters.length) {
+        nextIndex = _speakingSourceIndex;
+      }
       _sourceIndex = nextIndex;
       if (_sourceKey.startsWith('deck:')) {
         _topicFilter = 'all';
@@ -311,16 +309,20 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
     });
     await _loadLanguageOptions();
     await _load();
-    final msg = StringBuffer('Added ${result.created} note${result.created == 1 ? '' : 's'}');
-    if (result.skipped > 0) {
-      msg.write(' (${result.skipped} skipped)');
-    }
+    if (!mounted) return;
+    final parts = <String>[
+      if (result.created > 0 || result.removed == 0)
+        'Added ${result.created} note${result.created == 1 ? '' : 's'}'
+            '${result.skipped > 0 ? ' (${result.skipped} skipped)' : ''}',
+      if (result.removed > 0)
+        'removed ${result.removed} note${result.removed == 1 ? '' : 's'} from My notes',
+    ];
+    var msg = parts.join(', ');
+    msg = msg[0].toUpperCase() + msg.substring(1);
     if (result.limitReached) {
-      msg.write('. Note limit reached — upgrade for unlimited saves.');
+      msg += '. Note limit reached — upgrade for unlimited saves.';
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg.toString())),
-    );
+    AppToast.success(msg);
   }
 
   Widget _compactSourceChip({
@@ -330,7 +332,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   }) {
     return Material(
       color: selected
-          ? AppColors.primaryPurple.withValues(alpha: 0.1)
+          ? AppColors.brandPrimary.withValues(alpha: 0.1)
           : Colors.white,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
@@ -341,7 +343,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? AppColors.primaryPurple : Colors.grey.shade300,
+              color: selected ? AppColors.brandPrimary : Colors.grey.shade300,
             ),
           ),
           child: Text(
@@ -349,7 +351,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-              color: selected ? AppColors.primaryPurple : const Color(0xFF777481),
+              color: selected ? AppColors.brandPrimary : const Color(0xFF777481),
               fontFamily: 'Rubik',
             ),
           ),
@@ -360,10 +362,43 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   Widget _buildSourceFilterRow() {
     final filters = _sourceFilters;
+    final activeCount =
+        (_levelIndex != 0 ? 1 : 0) +
+        (_languageIndex != 0 ? 1 : 0) +
+        (_topicFilter != 'all' ? 1 : 0);
 
+    // Chips scroll; the filter + clear buttons stay pinned at the end.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 6, 16, 6),
+      child: Row(
+        children: [
+          Expanded(child: _buildSourceChips(filters)),
+          // Filters only make sense with notes — but keep them while a filter
+          // is on, so an empty filtered list can still be changed/cleared.
+          if (_notes.isNotEmpty || _hasActiveAdvancedFilters) ...[
+            const SizedBox(width: 6),
+            AppFilterButton(
+              active: _hasActiveAdvancedFilters,
+              count: activeCount,
+              tooltip: _advancedFiltersEnabled
+                  ? 'Level, language, topic'
+                  : 'Filters locked for deck source',
+              onPressed: _advancedFiltersEnabled ? _showAdvancedFiltersSheet : null,
+            ),
+          ],
+          if (_hasAnyFilters) ...[
+            const SizedBox(width: 6),
+            AppClearFiltersButton(onPressed: _clearAllFilters),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSourceChips(List<(String, String)> filters) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+      padding: const EdgeInsets.only(left: 16),
       child: Row(
         children: [
           for (int index = 0; index < filters.length; index++)
@@ -375,157 +410,53 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
                 onTap: () => _onSourceSelected(index),
               ),
             ),
-          Material(
-            color: AppColors.primaryPurple.withValues(alpha: 0.1),
-            shape: CircleBorder(
-              side: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.35)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: _openAddNote,
-              customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(7),
-                child: Icon(
-                  Icons.note_add_outlined,
-                  size: 16,
-                  color: AppColors.primaryPurple,
+          Tooltip(
+            message: 'Add decks to My notes',
+            child: Material(
+              color: AppColors.brandPrimary.withValues(alpha: 0.1),
+              shape: CircleBorder(
+                side: BorderSide(color: AppColors.brandPrimary.withValues(alpha: 0.35)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: _openImportDecks,
+                customBorder: const CircleBorder(),
+                child: const Padding(
+                  padding: EdgeInsets.all(7),
+                  child: Icon(
+                    Icons.note_add_outlined,
+                    semanticLabel: 'Add decks to My notes',
+                    size: 16,
+                    color: AppColors.brandPrimary,
+                  ),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 6),
-          Material(
-            color: AppColors.primaryPurple.withValues(alpha: 0.1),
-            shape: CircleBorder(
-              side: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.35)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: _openImportDecks,
-              customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(7),
-                child: Icon(
-                  Icons.add_rounded,
-                  size: 16,
-                  color: AppColors.primaryPurple,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMoreFiltersBar() {
-    final enabled = _advancedFiltersEnabled;
-    final active = _hasActiveAdvancedFilters;
-    final hasAnyFilters = _hasAnyFilters;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-      child: Row(
-        children: [
-          Expanded(
+          Tooltip(
+            message: 'New note',
             child: Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              elevation: 0,
+              color: AppColors.brandPrimary.withValues(alpha: 0.1),
+              shape: CircleBorder(
+                side: BorderSide(color: AppColors.brandPrimary.withValues(alpha: 0.35)),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: InkWell(
-                onTap: enabled ? _showAdvancedFiltersSheet : null,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: active ? AppColors.primaryPurple : Colors.grey.shade200,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.tune_rounded,
-                        size: 16,
-                        color: enabled ? AppColors.primaryPurple : Colors.grey.shade400,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          enabled ? _filtersSummary : 'Filters locked for deck source',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                            color: enabled
-                                ? (active ? AppColors.primaryPurple : const Color(0xFF777481))
-                                : Colors.grey.shade500,
-                            fontFamily: 'Rubik',
-                          ),
-                        ),
-                      ),
-                      if (active)
-                        Container(
-                          margin: const EdgeInsets.only(right: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Text(
-                            'Active',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primaryPurple,
-                              fontFamily: 'Rubik',
-                            ),
-                          ),
-                        ),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: enabled ? Colors.grey.shade500 : Colors.grey.shade300,
-                      ),
-                    ],
+                onTap: _openAddNote,
+                customBorder: const CircleBorder(),
+                child: const Padding(
+                  padding: EdgeInsets.all(7),
+                  child: Icon(
+                    Icons.add_rounded,
+                    semanticLabel: 'New note',
+                    size: 16,
+                    color: AppColors.brandPrimary,
                   ),
                 ),
               ),
             ),
           ),
-          if (hasAnyFilters) ...[
-            const SizedBox(width: 6),
-            Material(
-              color: AppColors.primaryPurple.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              child: InkWell(
-                onTap: _clearAllFilters,
-                borderRadius: BorderRadius.circular(12),
-                child: Tooltip(
-                  message: 'Clear all filters',
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.primaryPurple.withValues(alpha: 0.35),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.filter_alt_off_outlined,
-                      size: 18,
-                      color: AppColors.primaryPurple,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -557,7 +488,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
             child: FilledButton.icon(
               onPressed: enabled ? _startTraining : null,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
+                backgroundColor: AppColors.brandPrimary,
                 disabledBackgroundColor: AppColors.greySkipped.withValues(alpha: 0.35),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 shape: RoundedRectangleBorder(
@@ -622,7 +553,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       await _loadLanguageOptions();
       await _load();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Could not delete note')),
       );
     }
@@ -680,7 +611,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
     final selected =
         _notes.where((n) => _selectedIds.contains(n.id)).toList();
     if (selected.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Select at least one note to practice.')),
       );
       return;
@@ -709,7 +640,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
       if (words.isEmpty) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           const SnackBar(content: Text('No usable words in your selection.')),
         );
         return;
@@ -736,7 +667,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text('Could not start training: $e')),
       );
     } finally {
@@ -781,7 +712,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
     return RefreshIndicator(
       onRefresh: _load,
-      color: AppColors.primaryPurple,
+      color: AppColors.brandPrimary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -790,34 +721,11 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
             padding: const EdgeInsets.only(bottom: 4),
             child: Row(
               children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Checkbox(
-                    value: allSelected,
-                    tristate: true,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    onChanged: (value) => _selectAll(value ?? false),
-                    activeColor: AppColors.primaryPurple,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    '${_selectedIds.length} of ${_notes.length} selected',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                      fontFamily: 'Rubik',
-                    ),
-                  ),
-                ),
                 TextButton(
                   onPressed: () => _selectAll(!allSelected),
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -828,6 +736,15 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Rubik',
                     ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${_selectedIds.length} of ${_notes.length} selected',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade700,
+                    fontFamily: 'Rubik',
                   ),
                 ),
               ],
@@ -874,9 +791,9 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildSourceFilterRow(),
-        _buildMoreFiltersBar(),
         Expanded(child: _buildList()),
-        _buildTrainBar(),
+        // Nothing to train on an empty list.
+        if (_notes.isNotEmpty) _buildTrainBar(),
       ],
     );
   }

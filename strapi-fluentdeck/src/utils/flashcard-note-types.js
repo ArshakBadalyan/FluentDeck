@@ -21,6 +21,8 @@ const NOTE_TYPES = {
     fields: [
       { name: 'Front', required: true },
       { name: 'Back', required: true },
+      { name: 'Example', required: false },
+      { name: 'Translation', required: false },
     ],
     cardTemplates: [{ name: 'Card 1', ordinal: 0 }],
   },
@@ -30,6 +32,8 @@ const NOTE_TYPES = {
     fields: [
       { name: 'Front', required: true },
       { name: 'Back', required: true },
+      { name: 'Example', required: false },
+      { name: 'Translation', required: false },
     ],
     cardTemplates: [
       { name: 'Card 1', ordinal: 0 },
@@ -42,6 +46,8 @@ const NOTE_TYPES = {
     fields: [
       { name: 'Front', required: true },
       { name: 'Back', required: true },
+      { name: 'Example', required: false },
+      { name: 'Translation', required: false },
     ],
     cardTemplates: [
       { name: 'Card 1', ordinal: 0 },
@@ -54,6 +60,8 @@ const NOTE_TYPES = {
     fields: [
       { name: 'Front', required: true },
       { name: 'Back', required: true },
+      { name: 'Example', required: false },
+      { name: 'Translation', required: false },
     ],
     cardTemplates: [{ name: 'Card 1', ordinal: 0, typeAnswer: true }],
   },
@@ -168,6 +176,7 @@ function generateCardsFromNote({ noteType, fields, createReverse = false }) {
   const f = fields ?? {};
   const front = stripHtml(f.Front ?? f.front ?? '');
   const back = stripHtml(f.Back ?? f.back ?? '');
+  const example = stripHtml(f.Example ?? f.example ?? '') || null;
   const text = String(f.Text ?? f.text ?? f.Front ?? f.front ?? '').trim();
 
   if (noteType === 'image_occlusion') {
@@ -228,6 +237,7 @@ function generateCardsFromNote({ noteType, fields, createReverse = false }) {
         templateOrdinal: tmpl.ordinal,
         front: back,
         back: front,
+        example,
         cardType: 'reversed',
         clozeText: null,
         clozeIndex: null,
@@ -239,6 +249,7 @@ function generateCardsFromNote({ noteType, fields, createReverse = false }) {
         templateOrdinal: tmpl.ordinal,
         front: `${front}\n\nType your answer:`,
         back,
+        example,
         cardType: 'type_answer',
         clozeText: null,
         clozeIndex: null,
@@ -250,6 +261,7 @@ function generateCardsFromNote({ noteType, fields, createReverse = false }) {
         templateOrdinal: tmpl.ordinal,
         front,
         back,
+        example,
         cardType: 'basic',
         clozeText: null,
         clozeIndex: null,

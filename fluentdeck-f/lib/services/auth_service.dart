@@ -19,7 +19,7 @@ import 'package:fluentdeck/utils/strapi_response.dart';
 import 'api_service.dart';
 
 class AuthService {
-  /// Syncs [app_opened_datetime] and [user_timezone] on the Strapi user (same as f7-math `sendAppInfo`).
+  /// Syncs [app_opened_datetime] and [user_timezone] on the Strapi user.
   /// On logout, pass [clear] so both fields are set to null before the session is cleared.
   static Future<void> sendAppInfo({bool clear = false}) async {
     final userId = await TokenStorage.getUserId();
@@ -46,6 +46,7 @@ class AuthService {
     }
 
     try {
+      invalidateUserCache();
       await ApiService.put('users/$userId', body);
     } catch (e, st) {
       debugPrint('sendAppInfo: PUT failed: $e\n$st');
@@ -203,11 +204,66 @@ class AuthService {
     return result['status'] == 'success';
   }
 
-  static Future<Map<String, dynamic>> getUser() async {
+  // ── Signed-in profile cache ────────────────────────────────────────────
+  // Several screens/services read the profile at once (account, sound,
+  // speaking prefs, limits, level); share one request and reuse it briefly.
+  static const Duration _userCacheTtl = Duration(seconds: 30);
+  static Map<String, dynamic>? _userCache;
+  static int? _userCacheId;
+  static DateTime? _userCachedAt;
+  static Future<Map<String, dynamic>>? _userInFlight;
+
+  /// Drops the cached profile; call after anything that changes the user.
+  static void invalidateUserCache() {
+    _userCache = null;
+    _userCacheId = null;
+    _userCachedAt = null;
+    _userInFlight = null;
+  }
+
+  /// The signed-in user's profile. Cached for [_userCacheTtl]; concurrent
+  /// callers share one request. Pass [forceRefresh] for server-side counters.
+  static Future<Map<String, dynamic>> getUser({bool forceRefresh = false}) async {
     final userId = await TokenStorage.getUserId();
     if (userId == null) {
       return {'status': 'error', 'message': 'User not authenticated'};
     }
+
+    final cachedAt = _userCachedAt;
+    if (!forceRefresh &&
+        _userCache != null &&
+        _userCacheId == userId &&
+        cachedAt != null &&
+        DateTime.now().difference(cachedAt) < _userCacheTtl) {
+      return {'status': 'success', 'user': Map<String, dynamic>.from(_userCache!)};
+    }
+
+    final inFlight = _userInFlight;
+    if (!forceRefresh && inFlight != null) {
+      final res = await inFlight;
+      return res['user'] is Map
+          ? {...res, 'user': Map<String, dynamic>.from(res['user'] as Map)}
+          : res;
+    }
+
+    final request = _fetchUser(userId);
+    _userInFlight = request;
+    try {
+      final res = await request;
+      if (res['status'] == 'success' && res['user'] is Map) {
+        _userCache = Map<String, dynamic>.from(res['user'] as Map);
+        _userCacheId = userId;
+        _userCachedAt = DateTime.now();
+      }
+      return res['user'] is Map
+          ? {...res, 'user': Map<String, dynamic>.from(res['user'] as Map)}
+          : res;
+    } finally {
+      if (identical(_userInFlight, request)) _userInFlight = null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> _fetchUser(int userId) async {
 
     try {
       final data = await ApiService.get('users/$userId');
@@ -246,6 +302,7 @@ class AuthService {
     }
 
     try {
+      invalidateUserCache();
       final data = await ApiService.put('users/$userId', body);
 
       if (data is! Map || data['error'] == null) {
@@ -274,6 +331,7 @@ class AuthService {
 
 
   static Future<Map<String, dynamic>> deleteNicknamedUser() async {
+    invalidateUserCache();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     return updateUser({
       'username': 'Del$timestamp',
@@ -281,8 +339,9 @@ class AuthService {
     });
   }
 
-  /// Same as f7-math `deleteNicknamedUser` on the auth store — hard-deletes the user via Strapi.
+  /// Hard-deletes the user via Strapi.
   static Future<Map<String, dynamic>> deleteNicknamedUserRecord() async {
+    invalidateUserCache();
     final userId = await TokenStorage.getUserId();
     if (userId == null) {
       return {'status': 'error', 'message': 'User not authenticated'};
@@ -338,6 +397,7 @@ class AuthService {
   }
 
   static Future<void> logout() async {
+    invalidateUserCache();
     await sendAppInfo(clear: true);
     await PushNotificationService.logout();
     await TokenStorage.clearAll();
@@ -362,6 +422,7 @@ class AuthService {
   }
 
   static Future<void> _storeJwtAndUser(Map<String, dynamic> data) async {
+    invalidateUserCache();
     final jwt = data['jwt'];
     final userRaw = data['user'];
     if (jwt is! String || jwt.isEmpty || userRaw is! Map) {

@@ -65,11 +65,6 @@ class _NotePreviewSheetState extends State<NotePreviewSheet> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: 'Close',
-                  onPressed: () => Navigator.pop(context),
-                ),
               ],
             ),
             if (widget.mediaUrl != null && widget.mediaUrl!.trim().isNotEmpty) ...[
@@ -84,7 +79,7 @@ class _NotePreviewSheetState extends State<NotePreviewSheet> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF2F2F5),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.2)),
+                  border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.2)),
                 ),
                 child: BasicHtmlText(
                   html: _revealed ? back : front,

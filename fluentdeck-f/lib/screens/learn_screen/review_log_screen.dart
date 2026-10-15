@@ -19,7 +19,7 @@ class _ReviewLogScreenState extends State<ReviewLogScreen> {
   String? _error;
   List<FlashcardReviewLogEntry> _log = const [];
 
-  static const _pageBg = Color(0xFFF7F5FB);
+  static const _pageBg = AppColors.pageBg;
 
   @override
   void initState() {
@@ -57,7 +57,7 @@ class _ReviewLogScreenState extends State<ReviewLogScreen> {
       backgroundColor: _pageBg,
       appBar: AppBar(
         title: const Text('Review log'),
-        backgroundColor: AppColors.primaryPurple,
+        backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -91,7 +91,7 @@ class _ReviewLogScreenState extends State<ReviewLogScreen> {
               )
               : RefreshIndicator(
                 onRefresh: _load,
-                color: AppColors.primaryPurple,
+                color: AppColors.brandPrimary,
                 child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   itemCount: _log.length,

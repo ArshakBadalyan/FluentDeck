@@ -17,7 +17,7 @@ class SyncedLearningLanguageHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final linkColor = AppColors.primaryPurple;
+    final linkColor = AppColors.brandPrimary;
     final label =
         includeSettingsSuffix
             ? 'Synced to your learning language in Settings.'

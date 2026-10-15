@@ -37,3 +37,4 @@ Project skills live in `.claude/skills/`. Invoke with `/skill-name` in Claude Co
 | `ai-tutor` | Tutor prompts, speaking AI, TTS |
 | `flutter-ui-design` | App UI in fluentdeck-f |
 | `pr-commit` | Commits, PRs, git workflow |
+| `feature-ideation` | Feature ideas, specs, redesign & color direction |

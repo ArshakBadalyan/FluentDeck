@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 
@@ -89,7 +90,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
       }
       if (cards.isEmpty) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(
             content: Text('Add cards to "${deck.name}" before practicing.'),
           ),
@@ -111,7 +112,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
 
       if (words.isEmpty) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           const SnackBar(content: Text('No usable words found in this deck.')),
         );
         return;
@@ -138,7 +139,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text('Could not start practice: $e')),
       );
     } finally {
@@ -179,7 +180,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
 
     return RefreshIndicator(
       onRefresh: _load,
-      color: AppColors.primaryPurple,
+      color: AppColors.brandPrimary,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),

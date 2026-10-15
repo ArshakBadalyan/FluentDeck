@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -65,6 +66,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   bool _selectMode = false;
   final Set<int> _selected = {};
+  final ScrollController _tableHScroll = ScrollController();
 
   double _colQuestion = 200;
   double _colType = 80;
@@ -95,6 +97,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   }) {
     if (narrow) return MediaQuery.sizeOf(context).width;
     return _dragColumnWidth +
+        (_selectMode ? 40 : 0) +
         68 +
         qWidth +
         typeWidth +
@@ -197,7 +200,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   void _showListEdgeSnack(String message) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      AppToast.showSnackBar(context, SnackBar(content: Text(message)));
     });
   }
 
@@ -278,6 +281,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   @override
   void dispose() {
+    _tableHScroll.dispose();
     _searchDebounce?.cancel();
     _searchCtrl.removeListener(_onSearchTextChanged);
     _searchCtrl.dispose();
@@ -326,26 +330,6 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   bool get _fixedDeckScope =>
       widget.deckId != null && !widget.embedInShell;
-
-  InputDecoration _filledFieldDecoration() {
-    return InputDecoration(
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
-      ),
-    );
-  }
 
   Future<void> _init() async {
     await _loadLanguagePrefs();
@@ -447,7 +431,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   Future<void> _editCardNote(FlashcardModel card) async {
     if (card.noteId == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('This card has no linked note to edit')),
       );
       return;
@@ -683,103 +667,6 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     _load();
   }
 
-  Future<void> _filterByTagDialog() async {
-    final ctrl = TextEditingController(text: _tagCtrl.text);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder:
-          (ctx) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.sell_outlined,
-                          color: AppColors.primaryPurple,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Filter by tag',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: ctrl,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: 'e.g. verbs',
-                      prefixIcon: const Icon(Icons.tag_rounded, size: 20),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
-                      ),
-                    ),
-                    onSubmitted: (_) => Navigator.pop(ctx, true),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primaryPurple,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Apply'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-    );
-    if (ok != true) {
-      ctrl.dispose();
-      return;
-    }
-    _tagCtrl.text = ctrl.text.trim();
-    ctrl.dispose();
-    await _load();
-  }
-
   Future<void> _applyFlagFilter(int? flag) async {
     setState(() => _flagFilter = flag);
     await _load();
@@ -787,7 +674,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   Future<void> _previewFirstCard() async {
     if (_visibleCards.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('No cards to preview')),
       );
       return;
@@ -806,6 +693,11 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   void _clearAllFilters() {
     setState(() {
+      // Fixed-deck scope (opened for one specific deck) isn't a filter to
+      // clear — clearing it would silently widen the list to every deck
+      // while the screen still looks and is titled like a single deck's
+      // browser.
+      if (!_fixedDeckScope) _deckFilter = null;
       _stateFilter = 'all';
       _markedFilter = null;
       _flagFilter = null;
@@ -831,7 +723,6 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       onChangeDisplayOrder: _showSortSheet,
       onFilterMarked: _toggleMarkedFilter,
       onFilterSuspended: _toggleSuspendedFilter,
-      onFilterByTag: _filterByTagDialog,
       onApplyFlagFilter: _applyFlagFilter,
       onPreview: _previewFirstCard,
       onSelectAll: _selectAllAndEnterMode,
@@ -868,7 +759,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     );
     if (deck != null && mounted) {
       await _loadDecks();
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text('Created filtered deck "${deck.name}"')),
       );
     }
@@ -965,33 +856,22 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
+                  borderSide: BorderSide(color: AppColors.brandPrimary.withValues(alpha: 0.45)),
                 ),
               ),
               onSubmitted: (_) => _triggerSearchNow(),
             ),
           ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            tooltip: 'Filters',
+          AppFilterButton(
+            active: _activeFilterCount > 0,
+            count: _activeFilterCount,
             onPressed: _showFiltersSheet,
-            icon: Badge(
-              isLabelVisible: _activeFilterCount > 0,
-              label: Text('$_activeFilterCount'),
-              child: const Icon(Icons.tune, size: 22),
-            ),
+            size: 36,
           ),
-          if (_hasAnyFilters)
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              tooltip: 'Clear all filters',
-              onPressed: _clearAllFilters,
-              icon: const Icon(
-                Icons.filter_alt_off_outlined,
-                size: 20,
-                color: AppColors.primaryPurple,
-              ),
-            ),
+          if (_hasAnyFilters) ...[
+            const SizedBox(width: 4),
+            AppClearFiltersButton(onPressed: _clearAllFilters, size: 36),
+          ],
           IconButton(
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.more_vert, size: 22),
@@ -1000,7 +880,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
           ),
           IconButton(
             visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.add, size: 22, color: AppColors.primaryPurple),
+            icon: const Icon(Icons.add, size: 22, color: AppColors.brandPrimary),
             tooltip: 'Add note',
             onPressed: _addNote,
           ),
@@ -1009,90 +889,122 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     );
   }
 
+  /// Dense 40dp field style for the wide (tablet/web) toolbar row.
+  InputDecoration _denseFieldDecoration({
+    required String hint,
+    required IconData icon,
+    Widget? suffix,
+  }) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+    );
+    return InputDecoration(
+      hintText: hint,
+      isDense: true,
+      filled: true,
+      fillColor: AppPageColors.cardBgOf(context),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
+      prefixIcon: Icon(icon, size: 20),
+      prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+      suffixIcon: suffix,
+      border: border,
+      enabledBorder: border,
+      focusedBorder: border.copyWith(
+        borderSide: BorderSide(color: AppColors.brandPrimary.withValues(alpha: 0.45)),
+      ),
+    );
+  }
+
+  /// Tablet/web toolbar: search, filters and actions share one row so the
+  /// card table keeps most of the screen. Tag filtering lives in the Filters
+  /// sheet (behind the funnel button here) rather than its own field.
   Widget _toolbar() {
+    final showDeck = !_fixedDeckScope && _decks.isNotEmpty;
+
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, widget.embedInShell ? 8 : 0, 16, 0),
-      child: Column(
-        children: [
-          if (widget.embedInShell)
-            Row(
-              children: [
-                Text(
-                  '${_visibleCards.length} card${_visibleCards.length == 1 ? '' : 's'}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+      padding: EdgeInsets.fromLTRB(16, widget.embedInShell ? 10 : 4, 12, 0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final showAddLabel = constraints.maxWidth >= 900;
+
+          return Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: TextField(
+                  controller: _searchCtrl,
+                  style: const TextStyle(fontSize: 14),
+                  decoration: _denseFieldDecoration(
+                    hint: 'Search cards…',
+                    icon: Icons.search,
+                    suffix: IconButton(
+                      icon: const Icon(Icons.refresh, size: 18),
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Refresh',
+                      onPressed: _load,
+                    ),
+                  ),
+                  onSubmitted: (_) => _triggerSearchNow(),
                 ),
-                const Spacer(),
-                const DecksContextualHelpButton(
-                  helpSectionId: 'card-browser',
-                  iconSize: 22,
+              ),
+              const SizedBox(width: 8),
+              AppFilterButton(
+                active: _extraFilterCount > 0,
+                count: _extraFilterCount,
+                onPressed: _showFiltersSheet,
+                size: 38,
+              ),
+              if (_hasAnyFilters) ...[
+                const SizedBox(width: 6),
+                _clearFiltersIconButton(),
+              ],
+              if (showDeck) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 200,
+                  child: AppSelectField<int?>(
+                    label: 'Deck',
+                    showLabel: false,
+                    compact: true,
+                    value: _safeDeckDropdownValue(_deckFilter),
+                    options: [
+                      const AppSelectOption<int?>(value: null, label: 'All decks'),
+                      ..._decks.map(
+                        (d) => AppSelectOption<int?>(value: d.id, label: d.name),
+                      ),
+                    ],
+                    onChanged: (v) {
+                      setState(() => _deckFilter = v);
+                      _load();
+                    },
+                  ),
                 ),
+              ],
+              if (widget.embedInShell) ...[
+                const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.more_vert, size: 22),
                   tooltip: 'Options',
                   onPressed: _showOptionsMenu,
                 ),
-                TextButton.icon(
-                  onPressed: _addNote,
-                  icon: const Icon(Icons.add, size: 20),
-                  label: const Text('Add'),
-                  style: TextButton.styleFrom(foregroundColor: AppColors.primaryPurple),
-                ),
+                if (showAddLabel)
+                  TextButton.icon(
+                    onPressed: _addNote,
+                    icon: const Icon(Icons.add, size: 20),
+                    label: const Text('Add'),
+                    style: TextButton.styleFrom(foregroundColor: AppColors.brandPrimary),
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.add, size: 22, color: AppColors.brandPrimary),
+                    tooltip: 'Add note',
+                    onPressed: _addNote,
+                  ),
               ],
-            ),
-          if (!_fixedDeckScope && _decks.isNotEmpty) ...[
-            AppSelectField<int?>(
-              label: 'Deck',
-              value: _safeDeckDropdownValue(_deckFilter),
-              options: [
-                const AppSelectOption<int?>(value: null, label: 'All decks'),
-                ..._decks.map(
-                  (d) => AppSelectOption<int?>(value: d.id, label: d.name),
-                ),
-              ],
-              onChanged: (v) {
-                setState(() => _deckFilter = v);
-                _load();
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-          TextField(
-            controller: _searchCtrl,
-            decoration: InputDecoration(
-              hintText: 'Search cards…',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
-                onPressed: _load,
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.45)),
-              ),
-            ),
-            onSubmitted: (_) => _triggerSearchNow(),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _tagCtrl,
-            decoration: _filledFieldDecoration().copyWith(
-              hintText: 'Filter by tag…',
-              prefixIcon: const Icon(Icons.label_outline),
-            ),
-            onSubmitted: (_) => _load(),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -1102,9 +1014,16 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     final activeExtras = _extraFilterCount;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 12, 4),
       child: Row(
         children: [
+          if (widget.embedInShell) ...[
+            Text(
+              '${_visibleCards.length} card${_visibleCards.length == 1 ? '' : 's'}',
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+            ),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: SizedBox(
               height: 38,
@@ -1123,11 +1042,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                     labelStyle: TextStyle(
                       fontSize: 13,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                      color: selected ? AppColors.primaryPurple : Colors.grey.shade800,
+                      color: selected ? AppColors.brandPrimary : Colors.grey.shade800,
                     ),
-                    selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+                    selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
+                    backgroundColor: AppPageColors.cardBgOf(context),
                     side: BorderSide(
-                      color: selected ? AppColors.primaryPurple : Colors.grey.shade300,
+                      color: selected
+                          ? AppColors.brandPrimary
+                          : AppPageColors.subtleBorderOf(context),
                     ),
                     onSelected: (_) {
                       setState(() {
@@ -1142,43 +1064,6 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          Material(
-            color: activeExtras > 0
-                ? AppColors.primaryPurple.withValues(alpha: 0.1)
-                : Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(20),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(20),
-              onTap: _showFiltersSheet,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.tune,
-                      size: 18,
-                      color: activeExtras > 0 ? AppColors.primaryPurple : Colors.grey.shade700,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      activeExtras > 0 ? 'Filters ($activeExtras)' : 'Filters',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: activeExtras > 0 ? AppColors.primaryPurple : Colors.grey.shade800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          if (_hasAnyFilters) ...[
-            const SizedBox(width: 6),
-            _clearFiltersIconButton(),
-          ],
         ],
       ),
     );
@@ -1186,7 +1071,12 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   int get _activeFilterCount {
     var n = 0;
-    if (_deckFilter != null) n++;
+    // In fixed-deck scope there's no deck picker to clear this from — it's
+    // where you navigated (a specific deck's card browser), not a filter the
+    // user set — so don't count it. Otherwise every fixed-scope browser opens
+    // permanently showing "1 filter active" with a Clear button that doesn't
+    // do anything the user would recognize as "clearing a filter."
+    if (!_fixedDeckScope && _deckFilter != null) n++;
     if (_stateFilter != 'all') n++;
     if (_markedFilter == true) n++;
     if (_flagFilter != null) n++;
@@ -1209,35 +1099,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   bool get _hasAnyFilters =>
       _activeFilterCount > 0 || _searchCtrl.text.trim().isNotEmpty;
 
-  Widget _clearFiltersIconButton({double size = 38}) {
-    return Material(
-      color: AppColors.primaryPurple.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: _clearAllFilters,
-        borderRadius: BorderRadius.circular(12),
-        child: Tooltip(
-          message: 'Clear all filters',
-          child: Container(
-            width: size,
-            height: size,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primaryPurple.withValues(alpha: 0.35),
-              ),
-            ),
-            child: Icon(
-              Icons.filter_alt_off_outlined,
-              size: size >= 38 ? 18 : 20,
-              color: AppColors.primaryPurple,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _clearFiltersIconButton({double size = 38}) =>
+      AppClearFiltersButton(onPressed: _clearAllFilters, size: size);
 
   String _stateFilterLabel(String s) {
     if (s == 'all') return 'All';
@@ -1290,8 +1153,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 avatar: color == null ? null : Icon(Icons.flag_rounded, size: 16, color: color),
                 selected: selected,
                 showCheckmark: true,
-                selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
-                checkmarkColor: AppColors.primaryPurple,
+                selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
+                checkmarkColor: AppColors.brandPrimary,
                 onSelected: (_) => setSheetState(() => flag = value),
               );
             }
@@ -1362,8 +1225,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                                     label: Text(option.$2),
                                     selected: selected,
                                     showCheckmark: true,
-                                    selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
-                                    checkmarkColor: AppColors.primaryPurple,
+                                    selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
+                                    checkmarkColor: AppColors.brandPrimary,
                                     onSelected: (_) => setSheetState(() => cefr = option.$1),
                                   );
                                 }).toList(),
@@ -1397,8 +1260,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                                     label: Text(_stateFilterLabel(s)),
                                     selected: state == s,
                                     showCheckmark: true,
-                                    selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
-                                    checkmarkColor: AppColors.primaryPurple,
+                                    selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
+                                    checkmarkColor: AppColors.brandPrimary,
                                     onSelected: (_) => setSheetState(() => state = s),
                                   ),
                                 ).toList(),
@@ -1459,7 +1322,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                         width: double.infinity,
                         child: FilledButton(
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primaryPurple,
+                            backgroundColor: AppColors.brandPrimary,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
@@ -1677,10 +1540,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       dueWidth: dueWidth,
       deckWidth: deckWidth,
     );
-    final availableWidth = maxWidth - (tableInset * 2);
-    final needsHorizontalScroll = contentWidth > availableWidth;
-
-    Widget buildTableList({double? itemWidth}) {
+    Widget buildTableList({required double availableWidth, double? itemWidth}) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1737,30 +1597,46 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       );
     }
 
-    if (!needsHorizontalScroll) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: tableInset),
-        child: buildTableList(),
-      );
-    }
+    // Measure the real slot (the shell may be narrower than the screen).
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth - (tableInset * 2);
+        if (contentWidth <= availableWidth) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: tableInset),
+            child: buildTableList(availableWidth: availableWidth),
+          );
+        }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: tableInset),
-        child: SizedBox(
-          width: contentWidth,
-          child: buildTableList(itemWidth: contentWidth),
-        ),
-      ),
+        // Always-visible bar: on web/desktop there is no other hint that
+        // wide columns continue off-screen (mouse wheels scroll vertically).
+        return Scrollbar(
+          controller: _tableHScroll,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: _tableHScroll,
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(tableInset, 0, tableInset, 10),
+              child: SizedBox(
+                width: contentWidth,
+                child: buildTableList(
+                  availableWidth: availableWidth,
+                  itemWidth: contentWidth,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
   BoxDecoration _browserHeaderDecoration() {
     return BoxDecoration(
-      color: AppColors.primaryPurple.withValues(alpha: 0.06),
+      color: AppPageColors.cardBgOf(context),
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.14)),
+      border: Border.all(color: AppPageColors.subtleBorderOf(context)),
     );
   }
 
@@ -1768,13 +1644,13 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     return BoxDecoration(
       color:
           selected
-              ? AppColors.primaryPurple.withValues(alpha: 0.08)
+              ? AppColors.brandPrimary.withValues(alpha: 0.08)
               : AppPageColors.cardBgOf(context),
       borderRadius: BorderRadius.circular(12),
       border: Border.all(
         color:
             selected
-                ? AppColors.primaryPurple.withValues(alpha: 0.22)
+                ? AppColors.brandPrimary.withValues(alpha: 0.22)
                 : AppPageColors.subtleBorderOf(context),
       ),
     );
@@ -1784,7 +1660,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     TextStyle headerStyle({bool active = false}) => TextStyle(
       fontSize: 11,
       fontWeight: FontWeight.w700,
-      color: active ? AppColors.primaryPurple : Colors.grey.shade700,
+      color: active ? AppColors.brandPrimary : Colors.grey.shade700,
     );
 
     Widget headerCell(String label, CardBrowserSortField field, {double? width}) {
@@ -1823,7 +1699,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               child: Checkbox(
                 value: _selectAllCheckboxValue,
                 tristate: true,
-                activeColor: AppColors.primaryPurple,
+                activeColor: AppColors.brandPrimary,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
                 onChanged: (_) => _toggleSelectAllVisible(),
@@ -1879,7 +1755,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   width: 28,
                   child: Checkbox(
                     value: selected,
-                    activeColor: AppColors.primaryPurple,
+                    activeColor: AppColors.brandPrimary,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: VisualDensity.compact,
                     onChanged: (_) => _toggleSelected(card.id),
@@ -1951,7 +1827,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     final style = TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w700,
-      color: active ? AppColors.primaryPurple : Colors.grey.shade700,
+      color: active ? AppColors.brandPrimary : Colors.grey.shade700,
     );
 
     return SizedBox(
@@ -1982,7 +1858,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               child: Checkbox(
                 value: _selectAllCheckboxValue,
                 tristate: true,
-                activeColor: AppColors.primaryPurple,
+                activeColor: AppColors.brandPrimary,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
                 onChanged: (_) => _toggleSelectAllVisible(),
@@ -2058,7 +1934,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   width: narrow ? 32 : 40,
                   child: Checkbox(
                     value: selected,
-                    activeColor: AppColors.primaryPurple,
+                    activeColor: AppColors.brandPrimary,
                     onChanged: (_) => _toggleSelected(card.id),
                   ),
                 ),
@@ -2173,7 +2049,29 @@ class _CardRowMenuState extends State<_CardRowMenu> {
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
       onSelected: (value) async {
-        await actions.handle(value);
+        var action = value;
+        if (value.startsWith('menu_')) {
+          // Open the submenu where the main menu was.
+          final box = context.findRenderObject() as RenderBox?;
+          final overlay =
+              Overlay.of(context).context.findRenderObject() as RenderBox?;
+          if (box == null || overlay == null) return;
+          final position = RelativeRect.fromRect(
+            Rect.fromPoints(
+              box.localToGlobal(Offset.zero, ancestor: overlay),
+              box.localToGlobal(box.size.bottomRight(Offset.zero), ancestor: overlay),
+            ),
+            Offset.zero & overlay.size,
+          );
+          final picked = await showMenu<String>(
+            context: context,
+            position: position,
+            items: actions.buildSubmenu(value),
+          );
+          if (picked == null || !mounted) return;
+          action = picked;
+        }
+        await actions.handle(action);
         await _checkUndo();
       },
       itemBuilder: (_) => actions.buildMenuItems(canUndoTag: _canUndoTag),

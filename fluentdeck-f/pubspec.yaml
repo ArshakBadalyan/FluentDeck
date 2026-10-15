@@ -116,9 +116,8 @@ flutter:
     - assets/locales/de.json
     - assets/locales/en.json
     - assets/buttons/activity.svg
-    - assets/buttons/buttons_pic.svg
+    - assets/buttons/button_wave.svg
     - assets/buttons/profile.svg
-    - assets/gifs/loading.gif
     - assets/audios/
   fonts:
     - family: Rubik

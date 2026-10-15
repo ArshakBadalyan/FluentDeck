@@ -23,7 +23,7 @@ class SpeakingChatTab extends StatelessWidget {
                 Icon(
                   Icons.chat_bubble_outline,
                   size: 72,
-                  color: AppColors.primaryPurple.withValues(alpha: 0.65),
+                  color: AppColors.brandPrimary.withValues(alpha: 0.65),
                 ),
                 const SizedBox(height: 20),
                 const Text(

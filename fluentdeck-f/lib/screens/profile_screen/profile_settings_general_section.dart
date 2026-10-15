@@ -177,7 +177,7 @@ class _ProfileSettingsGeneralSectionState
                     onChanged: (m) {
                       if (m != null) ThemeSettingsStore.instance.setThemeMode(m);
                     },
-                    activeColor: AppColors.primaryPurple,
+                    activeColor: AppColors.brandPrimary,
                     title: Text(ThemeSettingsStore.instance.label(mode)),
                   ),
                 const SizedBox(height: 4),

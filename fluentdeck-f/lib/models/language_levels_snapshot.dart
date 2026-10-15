@@ -28,6 +28,8 @@ class LanguageLevelRecord {
   final DateTime? firstSelectedAt;
   final int speakingTurns;
   final int deckWordsReviewed;
+  /// Notes (and their cards) saved in this language.
+  final int noteCount;
   final List<LanguageLevelHistoryEntry> levelHistory;
 
   const LanguageLevelRecord({
@@ -38,6 +40,7 @@ class LanguageLevelRecord {
     this.firstSelectedAt,
     this.speakingTurns = 0,
     this.deckWordsReviewed = 0,
+    this.noteCount = 0,
     this.levelHistory = const [],
   });
 
@@ -55,6 +58,7 @@ class LanguageLevelRecord {
           : null,
       speakingTurns: json['speakingTurns'] as int? ?? 0,
       deckWordsReviewed: json['deckWordsReviewed'] as int? ?? 0,
+      noteCount: json['noteCount'] as int? ?? 0,
       levelHistory: rawHistory is List
           ? rawHistory
               .map(

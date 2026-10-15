@@ -1,8 +1,8 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
@@ -81,7 +81,7 @@ Future<void> showImportResultSnackBar(
               '${result.skipped > 0 ? ' (${result.skipped} skipped)' : ''}'
           : 'No cards imported${result.skipped > 0 ? ' (${result.skipped} skipped)' : ''}';
 
-  ScaffoldMessenger.of(context).showSnackBar(
+  AppToast.showSnackBar(context, 
     SnackBar(
       content: Text(msg),
       duration: const Duration(seconds: 4),
@@ -111,17 +111,6 @@ Future<void> showImportResultSnackBar(
                     constraints: const BoxConstraints(maxHeight: 240),
                     child: SingleChildScrollView(
                       child: Text(result.errors.join('\n')),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FilledButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primaryPurple,
-                      ),
-                      child: const Text('OK'),
                     ),
                   ),
                 ],
@@ -154,7 +143,7 @@ Future<void> _runImport(
     }
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }

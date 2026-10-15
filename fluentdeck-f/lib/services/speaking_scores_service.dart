@@ -48,6 +48,11 @@ class SpeakingScoresService {
 
   static const _prefsKey = 'speaking_scores_v1';
 
+  Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_prefsKey);
+  }
+
   Future<Map<String, SpeakingScoreEntry>> _loadAll() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_prefsKey);

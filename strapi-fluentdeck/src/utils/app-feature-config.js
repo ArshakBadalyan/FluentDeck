@@ -134,8 +134,8 @@ async function isPremiumUser(strapi, userId) {
 }
 
 async function countSavedWords(strapi, userId) {
-  return strapi.db.query('api::user-note.user-note').count({
-    where: { user: userId },
+  return strapi.db.query('api::flashcard-note.flashcard-note').count({
+    where: { user: userId, inMyNotes: true },
   });
 }
 

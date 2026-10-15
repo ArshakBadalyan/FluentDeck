@@ -43,11 +43,6 @@ class _ReleaseNotesPopupState extends State<ReleaseNotesPopup> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_title),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          tooltip: 'Close',
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: _buildBody(),
     );

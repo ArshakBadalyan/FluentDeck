@@ -22,6 +22,15 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onDecksSettingsTap;
   final int notificationUnreadCount;
 
+  /// Optional widget pinned to the right end of the sub-tab row (e.g. help).
+  final Widget? tabBarTrailing;
+
+  /// Optional action shown just left of the notifications bell (e.g. help).
+  final Widget? helpAction;
+
+  /// Optional action shown to the right of the bell (e.g. log out on Profile).
+  final Widget? trailingAction;
+
   const MainAppBar({
     super.key,
     required this.title,
@@ -35,6 +44,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onNewConversationTap,
     this.onDecksSettingsTap,
     this.notificationUnreadCount = 0,
+    this.tabBarTrailing,
+    this.helpAction,
+    this.trailingAction,
   });
 
   static const double _toolbarHeight = 56.0;
@@ -48,7 +60,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         statusBarBrightness: Brightness.dark,
       ),
       elevation: 0,
-      backgroundColor: const Color(0xFF7A24E4),
+      backgroundColor: AppColors.brandPrimaryDeep,
       titleSpacing: 24,
       centerTitle: false,
       toolbarHeight: _toolbarHeight,
@@ -107,29 +119,36 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
             color: Colors.white,
             onPressed: onDecksSettingsTap,
           ),
+        if (helpAction != null) helpAction!,
         Builder(
-          builder:
-              (context) => Padding(
-                padding: EdgeInsets.only(right: onAssignmentsTap != null ? 12 : 24),
-                child: IconButton(
-                  key: ScreenTutorialKeys.mainAppBarNotifications,
-                  tooltip: 'Notifications',
-                  icon: Badge(
-                    isLabelVisible: notificationUnreadCount > 0,
-                    label: Text(
-                      notificationUnreadCount > 99
-                          ? '99+'
-                          : '$notificationUnreadCount',
-                    ),
-                    child: const Icon(Icons.notifications_none_outlined, size: 26),
-                  ),
-                  color: Colors.white,
-                  onPressed: () {
-                    Scaffold.of(context).openEndDrawer();
-                  },
+          builder: (context) => Padding(
+            padding: EdgeInsets.only(
+              right: trailingAction != null ? 0 : (onAssignmentsTap != null ? 12 : 24),
+            ),
+            child: IconButton(
+              key: ScreenTutorialKeys.mainAppBarNotifications,
+              tooltip: 'Notifications',
+              icon: Badge(
+                isLabelVisible: notificationUnreadCount > 0,
+                label: Text(
+                  notificationUnreadCount > 99
+                      ? '99+'
+                      : '$notificationUnreadCount',
                 ),
+                child: const Icon(Icons.notifications_none_outlined, size: 26),
               ),
+              color: Colors.white,
+              onPressed: () {
+                Scaffold.of(context).openEndDrawer();
+              },
+            ),
+          ),
         ),
+        if (trailingAction != null)
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: trailingAction!,
+          ),
       ],
 
       title: Text(
@@ -153,19 +172,36 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TabBar(
-              key: ScreenTutorialKeys.mainAppBarTabs,
-              controller: controller,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              padding: const EdgeInsets.only(left: 12),
-              labelColor: AppColors.primaryPurple,
-              unselectedLabelColor: const Color(0xFF777481),
-              indicatorColor: Colors.transparent,
-              dividerColor: Colors.transparent,
-              labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              tabs: tabs!,
+            Row(
+              children: [
+                Expanded(
+                  child: TabBar(
+                    key: ScreenTutorialKeys.mainAppBarTabs,
+                    controller: controller,
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    padding: const EdgeInsets.only(left: 12),
+                    labelColor: AppColors.brandPrimary,
+                    unselectedLabelColor: AppColors.navInactive,
+                    indicatorColor: Colors.transparent,
+                    dividerColor: Colors.transparent,
+                    labelStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    tabs: tabs!,
+                  ),
+                ),
+                if (tabBarTrailing != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: tabBarTrailing,
+                  ),
+              ],
             ),
             const Divider(height: 1, thickness: 1, color: Color(0xFFE8E8EC)),
           ],

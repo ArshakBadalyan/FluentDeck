@@ -71,7 +71,7 @@ class ScreenTutorialStep {
   final Map<String, dynamic>? bodyVars;
 }
 
-/// FluentDeck screen tours. Legacy MatheApp practice/topics tours were removed.
+/// FluentDeck screen tours.
 abstract final class ScreenTutorialCatalog {
   static const List<String> allTutorialIds = <String>[];
 

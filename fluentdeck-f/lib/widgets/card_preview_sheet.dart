@@ -53,11 +53,6 @@ class _CardPreviewSheetState extends State<CardPreviewSheet> {
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: 'Close',
-                  onPressed: () => Navigator.pop(context),
-                ),
               ],
             ),
             Text(
@@ -77,7 +72,7 @@ class _CardPreviewSheetState extends State<CardPreviewSheet> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF2F2F5),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.2)),
+                  border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.2)),
                 ),
                 child: BasicHtmlText(
                   html: _revealed ? widget.card.back : _frontHtml,

@@ -196,11 +196,11 @@ Strapi · Firebase Analytics · OneSignal (mobile) · AdMob + UMP · Microsoft C
 | `ai` | Single | OpenAI proxy (heavy) |
 | `app-feature-config` | Single | Freemium limits |
 | `flashcard-deck` | Collection | Full flashcard API (heavy) |
-| `flashcard-note`, `flashcard` | Collection | Notes + cards |
+| `flashcard-note`, `flashcard` | Collection | Notes + cards. `flashcard-note` is the only notes table: deck notes **and** My Notes (`inMyNotes`, `source`, `languageCode`, `cefrLevel`, `topic`; basic fields Front/Back/Example/Translation). The `/notes` API (`api/user-note`, controller only) maps it to the My Notes shape |
 | `card-review-state`, `card-review-log` | Collection | SM-2 |
 | `custom-flashcard-note-type` | Collection | Custom templates |
 | `vocabulary-entry` | Collection | Catalog + placement |
-| `user-vocabulary-progress`, `user-note` | Collection | Saved words, notes |
+| `user-vocabulary-progress` | Collection | Saved words |
 | `placement-test-result` | Collection | Placement results |
 | `lesson`, `exercise` | Collection | Structured lessons |
 | `conversation-prompt`, `speaking-topic`, `speaking-game` | Collection | Speaking content |

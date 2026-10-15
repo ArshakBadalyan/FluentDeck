@@ -1,12 +1,32 @@
+import '../data/flashcard_offline_store.dart';
 import '../models/grammar_correction.dart';
 import '../models/user_progress_model.dart';
 import '../utils/strapi_response.dart';
 import 'api_service.dart';
+import 'conversation_service.dart';
+import 'my_notes_linked_decks_store.dart';
+import 'speaking_scores_service.dart';
 import 'token_storage.dart';
 
 class UserProgressService {
   UserProgressService._();
   static final UserProgressService instance = UserProgressService._();
+
+  /// Deletes the user's cards, notes, decks, sessions and activity history on
+  /// the server, then the copies cached on this device. Returns false on error.
+  Future<bool> resetLearningData() async {
+    try {
+      final data = await ApiService.delete('user-progress/learning-data');
+      if (data is! Map || data['ok'] != true) return false;
+    } catch (_) {
+      return false;
+    }
+    await FlashcardOfflineStore.instance.clearAll();
+    await SpeakingScoresService.instance.clearAll();
+    await MyNotesLinkedDecksStore.instance.save(const []);
+    await ConversationService.instance.clearAllHistoryAndReset();
+    return true;
+  }
 
   Future<UserProgressModel?> fetchForCurrentUser() async {
     final userId = await TokenStorage.getUserId();

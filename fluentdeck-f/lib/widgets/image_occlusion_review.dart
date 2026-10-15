@@ -103,7 +103,7 @@ class ImageOcclusionReview extends StatelessWidget {
                           width: region.w * size.width,
                           height: region.h * size.height,
                           child: ColoredBox(
-                            color: AppColors.primaryPurple.withValues(alpha: 0.88),
+                            color: AppColors.brandPrimary.withValues(alpha: 0.88),
                             child: const Center(
                               child: Icon(Icons.visibility_off, color: Colors.white),
                             ),

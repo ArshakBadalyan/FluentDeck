@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/screens/profile_screen/about_us/help_faq_page.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/services/screen_tutorial_service.dart';
 import 'package:fluentdeck/screens/profile_screen/about_us/release_notes_page.dart';
@@ -7,6 +8,7 @@ import 'package:fluentdeck/services/consent_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/screen_tutorial_explain_sheet.dart';
 import 'package:fluentdeck/services/user_session.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'app_review_sheet.dart';
 import 'privacy_policy_page.dart';
 import 'software_page.dart';
@@ -51,13 +53,18 @@ class _ProfileAboutTabState extends State<ProfileAboutTab> {
   void _openPage(BuildContext context, Widget page) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => page, fullscreenDialog: true),
+      MaterialPageRoute(builder: (_) => page),
     );
   }
 
   Future<void> _openPrivacyOptions() async {
     await AdConsentService.showPrivacyOptionsForm();
     await _refreshPrivacyOptionsVisibility();
+  }
+
+  Future<void> _contactSupport() async {
+    final email = context.tr('privacy-content.contact-email');
+    await launchUrl(Uri.parse('mailto:$email?subject=FluentDeck%20help'));
   }
 
   Future<void> _openExplainOnePartSheet() =>
@@ -97,13 +104,27 @@ class _ProfileAboutTabState extends State<ProfileAboutTab> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         children: [
+          // Split into "ways to get help" vs. "legal/app info" — a single
+          // flat 8-row list made it hard to scan for what you wanted.
           AppSectionCard(
-            title: context.tr('profile.about-us.privacy'),
-            icon: Icons.info_outline_rounded,
-            subtitle: 'Help, legal, and app information',
+            title: 'Help & support',
+            icon: Icons.help_outline_rounded,
+            subtitle: 'Guides, FAQs, and ways to reach us',
             padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
             child: Column(
               children: [
+                AppNavRow(
+                  title: 'Help & FAQ',
+                  icon: Icons.help_outline_rounded,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const HelpFaqPage()),
+                  ),
+                ),
+                AppNavRow(
+                  title: 'Contact support',
+                  icon: Icons.mail_outline_rounded,
+                  onTap: _contactSupport,
+                ),
                 if (!_hideScreenExplanation)
                   AppNavRow(
                     title: context.tr('profile.about-us.show-tips'),
@@ -122,6 +143,17 @@ class _ProfileAboutTabState extends State<ProfileAboutTab> {
                     icon: Icons.star_outline_rounded,
                     onTap: () => showAppReviewSheet(context),
                   ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          AppSectionCard(
+            title: 'Legal & about',
+            icon: Icons.info_outline_rounded,
+            subtitle: 'Privacy, licenses, and release notes',
+            padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
+            child: Column(
+              children: [
                 AppNavRow(
                   title: context.tr('profile.about-us.privacy'),
                   icon: Icons.privacy_tip_outlined,

@@ -188,7 +188,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
 
     return RefreshIndicator(
       onRefresh: _load,
-      color: AppColors.primaryPurple,
+      color: AppColors.brandPrimary,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -247,8 +247,8 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
             icon: const Icon(Icons.add),
             label: const Text('Create custom role-play'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primaryPurple,
-              side: const BorderSide(color: AppColors.primaryPurple),
+              foregroundColor: AppColors.brandPrimary,
+              side: const BorderSide(color: AppColors.brandPrimary),
             ),
           ),
         ),
@@ -377,12 +377,12 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                    color: AppColors.brandPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.auto_awesome_rounded,
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                     size: 20,
                   ),
                 ),
@@ -396,11 +396,6 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
                       fontFamily: 'Rubik',
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: 'Close',
-                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
@@ -470,7 +465,7 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
               child: FilledButton(
                 onPressed: _save,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primaryPurple,
+                  backgroundColor: AppColors.brandPrimary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(

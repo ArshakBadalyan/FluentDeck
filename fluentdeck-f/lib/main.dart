@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -138,9 +139,12 @@ class MyApp extends StatelessWidget {
           _clarityRouteObserver,
         ],
         builder: (context, child) {
-          return ResponsiveShell(
-            child: InteractionSwipeHapticsScope(
-              child: ClickTracker(child: child ?? const SizedBox.shrink()),
+          // Toasts sit above every route, bottom sheet and dialog.
+          return AppToastHost(
+            child: ResponsiveShell(
+              child: InteractionSwipeHapticsScope(
+                child: ClickTracker(child: child ?? const SizedBox.shrink()),
+              ),
             ),
           );
         },

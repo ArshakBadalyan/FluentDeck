@@ -77,11 +77,10 @@ class CampaignAnalytics {
   static String profileSubTabKey(int subIndex) {
     const keys = <String>[
       'account',
-      'notifications',
+      'settings',
+      'subscription',
       'security',
       'about',
-      'share',
-      'sound',
     ];
     return subIndex >= 0 && subIndex < keys.length
         ? keys[subIndex]

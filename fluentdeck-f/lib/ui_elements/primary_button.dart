@@ -40,7 +40,7 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color baseColor = color ?? AppColors.primaryPurple;
+    final Color baseColor = color ?? AppColors.brandPrimary;
 
     final tallLabel = (maxLines ?? 1) > 1;
 
@@ -99,7 +99,7 @@ class PrimaryButton extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: SvgPicture.asset(
-                  'assets/buttons/buttons_pic.svg',
+                  'assets/buttons/button_wave.svg',
                   fit: BoxFit.fitHeight,
                   colorFilter: const ColorFilter.mode(
                     Colors.white,

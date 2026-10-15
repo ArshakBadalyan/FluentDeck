@@ -31,9 +31,9 @@ class SwipeActionBackgrounds {
   }) {
     return _base(
       alignment: alignment,
-      backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+      backgroundColor: AppColors.brandPrimary.withValues(alpha: 0.12),
       borderRadius: borderRadius,
-      child: const Icon(Icons.edit_outlined, color: AppColors.primaryPurple),
+      child: const Icon(Icons.edit_outlined, color: AppColors.brandPrimary),
     );
   }
 
@@ -43,9 +43,9 @@ class SwipeActionBackgrounds {
   }) {
     return _base(
       alignment: alignment,
-      backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.12),
+      backgroundColor: AppColors.brandPrimary.withValues(alpha: 0.12),
       borderRadius: borderRadius,
-      child: const Icon(Icons.play_arrow_rounded, color: AppColors.primaryPurple),
+      child: const Icon(Icons.play_arrow_rounded, color: AppColors.brandPrimary),
     );
   }
 

@@ -14,11 +14,6 @@ class PrivacyPopup extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.instance.t('profile.about-us.privacy')),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          tooltip: 'Close',
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: const SingleChildScrollView(
         padding: EdgeInsets.all(16),

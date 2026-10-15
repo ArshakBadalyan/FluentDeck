@@ -3,7 +3,9 @@ import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
+import 'profile_notifications_tab.dart';
 import 'profile_settings_category_screen.dart';
+import 'profile_sound_tab.dart';
 
 /// Scroll Profile → Settings to a section (`ai-speaking`, `decks`, `general`).
 class ProfileSettingsNavigation {
@@ -87,6 +89,25 @@ class ProfileSettingsTabState extends State<ProfileSettingsTab> {
     );
   }
 
+  /// Notifications / Sound open as their own settings pages.
+  void _openPage(String title, Widget page) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder:
+            (context) => Scaffold(
+              backgroundColor: AppPageColors.pageBgOf(context),
+              appBar: AppBar(
+                backgroundColor: AppPageColors.pageBgOf(context),
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                elevation: 0,
+                title: Text(title),
+              ),
+              body: page,
+            ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppPageBackground(
@@ -119,6 +140,18 @@ class ProfileSettingsTabState extends State<ProfileSettingsTab> {
             title: 'General',
             subtitle: 'App language, theme, and accessibility',
             onTap: () => _open(ProfileSettingsCategory.general),
+          ),
+          AppSettingsCategoryTile(
+            icon: Icons.notifications_none_rounded,
+            title: 'Notifications',
+            subtitle: 'Push notifications and daily study reminders',
+            onTap: () => _openPage('Notifications', const ProfileNotificationsTab()),
+          ),
+          AppSettingsCategoryTile(
+            icon: Icons.volume_up_outlined,
+            title: 'Sound',
+            subtitle: 'Sound effects, music, and volume',
+            onTap: () => _openPage('Sound', const ProfileSoundTab()),
           ),
         ],
       ),

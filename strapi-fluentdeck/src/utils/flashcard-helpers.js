@@ -31,7 +31,6 @@ function resolveCefrLevelFromTags(tags = []) {
 function formatCard(row, reviewRow, extras = {}) {
   const deck = row.deck ?? row.deck_id;
   const note = row.flashcardNote ?? row.flashcard_note;
-  const userNote = row.userNote ?? row.user_note;
   const noteId =
     typeof note === 'object'
       ? note?.id
@@ -40,13 +39,18 @@ function formatCard(row, reviewRow, extras = {}) {
   const cefrFromTags = resolveCefrLevelFromTags([...(row.tags ?? []), ...noteTags]);
   const cefrLevel =
     cefrFromTags ??
-    (typeof userNote === 'object' && userNote?.cefrLevel
-      ? String(userNote.cefrLevel).trim().toUpperCase()
+    (typeof note === 'object' && note?.cefrLevel
+      ? String(note.cefrLevel).trim().toUpperCase()
       : null);
   return {
     id: row.id,
     front: row.front,
     back: row.back,
+    example: row.example ?? '',
+    translation:
+      row.translation ||
+      (typeof note === 'object' ? note?.fields?.Translation : null) ||
+      '',
     cardType: row.cardType ?? row.card_type ?? 'basic',
     clozeText: row.clozeText ?? row.cloze_text ?? null,
     clozeIndex: row.clozeIndex ?? row.cloze_index ?? null,

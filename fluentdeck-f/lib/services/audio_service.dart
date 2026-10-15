@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class AudioService {
@@ -24,10 +25,12 @@ class AudioService {
     'draw': 'audios/draw.wav',
     'win': 'audios/win.wav',
     'wrong': 'audios/wrong.wav',
-    'tabChange': 'audios/tabChange.wav',
+    'tabChange': 'audios/nav_tap.wav',
     'formSubmit': 'audios/formSubmit.wav',
+    'signIn': 'audios/sign_in.wav',
+    'settingsPreview': 'audios/settings_preview.wav',
     'goalUpdate': 'audios/goalUpdate.mp3',
-    'notificationOpen': 'audios/notificationOpen.mp3',
+    'notificationOpen': 'audios/notification_chime.wav',
     'redirect': 'audios/redirect.mp3',
   };
 
@@ -71,7 +74,7 @@ class AudioService {
 
     final path = _audioMap[name];
     if (path == null) {
-      print("Ошибка: Звук с именем '$name' не зарегистрирован.");
+      debugPrint("AudioService: sound '$name' is not registered");
       return;
     }
 
@@ -80,7 +83,10 @@ class AudioService {
       await _player.stop();
       await _player.play(AssetSource(path));
     } catch (e) {
-      print("Ошибка воспроизведения $name: $e");
+      // A newer sound stopping this one (web AbortError) is expected; skip it.
+      if (!e.toString().contains('AbortError')) {
+        debugPrint('AudioService: could not play $name: $e');
+      }
     }
   }
 }

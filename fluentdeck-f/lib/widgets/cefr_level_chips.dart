@@ -74,9 +74,9 @@ class _LevelChip extends StatelessWidget {
     late final Color labelColor;
 
     if (isSelected) {
-      background = AppColors.primaryPurple.withValues(alpha: 0.12);
-      border = AppColors.primaryPurple.withValues(alpha: 0.35);
-      labelColor = AppColors.primaryPurple;
+      background = AppColors.brandPrimary.withValues(alpha: 0.12);
+      border = AppColors.brandPrimary.withValues(alpha: 0.35);
+      labelColor = AppColors.brandPrimary;
     } else if (locked) {
       background = const Color(0xFFF2F2F5);
       border = const Color(0xFFE0E0E5);

@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 
@@ -69,7 +70,7 @@ class _RegisterFormState extends State<RegisterForm> {
       if (!mounted) return;
 
       if (res['status'] == 'success') {
-        AudioService().play('formSubmit');
+        AudioService().play('signIn');
         Navigator.pushReplacement(
           context,
           appMaterialPageRoute(
@@ -88,7 +89,7 @@ class _RegisterFormState extends State<RegisterForm> {
       final apiMessage = res['error'] is Map
           ? res['error']['message']?.toString()
           : null;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(
           content: Text(
             messageKey != null
@@ -105,7 +106,7 @@ class _RegisterFormState extends State<RegisterForm> {
           _loading = false;
           _submitLocked = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(content: Text(context.tr(userFacingErrorLocalizationKey(e)))),
         );
       }

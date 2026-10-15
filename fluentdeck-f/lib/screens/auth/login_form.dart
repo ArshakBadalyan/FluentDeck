@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/english_main_screen.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
@@ -61,7 +62,7 @@ class _LoginFormState extends State<LoginForm> {
       setState(() => _loading = false);
 
       if (res['status'] == 'success') {
-        AudioService().play('formSubmit');
+        AudioService().play('signIn');
         Navigator.pushReplacement(
           context,
           appMaterialPageRoute(
@@ -71,7 +72,7 @@ class _LoginFormState extends State<LoginForm> {
         );
       } else {
         final messageKey = res['messageKey'] as String?;
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(
             content: Text(
               messageKey != null
@@ -84,7 +85,7 @@ class _LoginFormState extends State<LoginForm> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(context.tr(userFacingErrorLocalizationKey(e)))),
       );
     }

@@ -510,6 +510,18 @@ class FlashcardService {
     return FlashcardCardInfo.fromJson(Map<String, dynamic>.from(data));
   }
 
+  /// Stores a translation so later reviews show it without translating again.
+  Future<bool> saveCardTranslation(int cardId, String translation) async {
+    try {
+      final data = await ApiService.put('flashcards/cards/$cardId/translation', {
+        'translation': translation,
+      });
+      return data is Map && data['ok'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<FlashcardModel?> setCardDue(int cardId, DateTime dueAt) async {
     final data = await ApiService.post('flashcards/cards/$cardId/set-due', {
       'dueAt': dueAt.toIso8601String(),

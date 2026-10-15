@@ -78,7 +78,7 @@ class _ProfileAchievementsPreviewState extends State<ProfileAchievementsPreview>
               child: const Text(
                 'View all',
                 style: TextStyle(
-                  color: AppColors.primaryPurple,
+                  color: AppColors.brandPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -91,8 +91,8 @@ class _ProfileAchievementsPreviewState extends State<ProfileAchievementsPreview>
           child: LinearProgressIndicator(
             value: total == 0 ? 0 : unlocked / total,
             minHeight: 6,
-            backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.12),
-            color: AppColors.primaryPurple,
+            backgroundColor: AppColors.brandPrimary.withValues(alpha: 0.12),
+            color: AppColors.brandPrimary,
           ),
         ),
         const SizedBox(height: 14),
@@ -100,11 +100,7 @@ class _ProfileAchievementsPreviewState extends State<ProfileAchievementsPreview>
           spacing: 10,
           runSpacing: 10,
           children: [
-            for (var i = 0; i < preview.length; i++)
-              AppStaggeredFadeIn(
-                index: i,
-                child: _BadgeChip(status: preview[i]),
-              ),
+            for (var i = 0; i < preview.length; i++) _BadgeChip(status: preview[i]),
           ],
         ),
       ],
@@ -133,7 +129,7 @@ class _BadgeChip extends StatelessWidget {
           border: Border.all(
             color:
                 unlocked
-                    ? AppColors.primaryPurple.withValues(alpha: 0.35)
+                    ? AppColors.brandPrimary.withValues(alpha: 0.35)
                     : AppPageColors.subtleBorderOf(context),
           ),
         ),
@@ -142,7 +138,7 @@ class _BadgeChip extends StatelessWidget {
             Icon(
               def.icon,
               size: 20,
-              color: unlocked ? AppColors.primaryPurple : Colors.grey.shade400,
+              color: unlocked ? AppColors.brandPrimary : Colors.grey.shade400,
             ),
             const SizedBox(width: 8),
             Expanded(

@@ -35,5 +35,10 @@ module.exports = {
       path: '/notes/import-from-decks',
       handler: 'user-note.importFromDecks',
     },
+    {
+      method: 'POST',
+      path: '/notes/unlink-decks',
+      handler: 'user-note.unlinkDecks',
+    },
   ],
 };

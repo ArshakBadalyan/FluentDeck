@@ -48,7 +48,7 @@ class _ProfileAchievementsScreenState extends State<ProfileAchievementsScreen> {
               ? const Center(child: LoadingOverlay())
               : RefreshIndicator(
                 onRefresh: _load,
-                color: AppColors.primaryPurple,
+                color: AppColors.brandPrimary,
                 child: CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics(),
@@ -135,8 +135,8 @@ class _SummaryBanner extends StatelessWidget {
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 8,
-              backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.12),
-              color: AppColors.primaryPurple,
+              backgroundColor: AppColors.brandPrimary.withValues(alpha: 0.12),
+              color: AppColors.brandPrimary,
             ),
           ),
         ],
@@ -166,13 +166,13 @@ class _AchievementTile extends StatelessWidget {
         border: Border.all(
           color:
               unlocked
-                  ? AppColors.primaryPurple.withValues(alpha: 0.35)
+                  ? AppColors.brandPrimary.withValues(alpha: 0.35)
                   : Colors.black.withValues(alpha: 0.05),
         ),
         boxShadow: [
           if (unlocked)
             BoxShadow(
-              color: AppColors.primaryPurple.withValues(alpha: 0.08),
+              color: AppColors.brandPrimary.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -190,12 +190,12 @@ class _AchievementTile extends StatelessWidget {
                   shape: BoxShape.circle,
                   color:
                       unlocked
-                          ? AppColors.primaryPurple.withValues(alpha: 0.12)
+                          ? AppColors.brandPrimary.withValues(alpha: 0.12)
                           : Colors.grey.shade100,
                 ),
                 child: Icon(
                   def.icon,
-                  color: unlocked ? AppColors.primaryPurple : Colors.grey.shade400,
+                  color: unlocked ? AppColors.brandPrimary : Colors.grey.shade400,
                   size: 22,
                 ),
               ),
@@ -235,7 +235,7 @@ class _AchievementTile extends StatelessWidget {
               value: status.progress,
               minHeight: 5,
               backgroundColor: Colors.grey.shade200,
-              color: unlocked ? AppColors.primaryYellow : AppColors.primaryPurple,
+              color: unlocked ? AppColors.primaryYellow : AppColors.brandPrimary,
             ),
           ),
           const SizedBox(height: 4),

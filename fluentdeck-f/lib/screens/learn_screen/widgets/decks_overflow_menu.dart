@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/services/flashcard_maintenance_service.dart';
@@ -71,17 +72,6 @@ Future<void> showFlashcardCheckResultDialog(
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primaryPurple,
-                    ),
-                    child: const Text('OK'),
-                  ),
-                ),
               ],
             ),
           ),
@@ -122,14 +112,14 @@ Future<bool?> _showConfirmDialog(
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, false),
-                      child: Text('Cancel', style: TextStyle(color: AppColors.primaryPurple)),
+                      child: Text('Cancel', style: TextStyle(color: AppColors.brandPrimary)),
                     ),
                     const SizedBox(width: 8),
                     FilledButton(
                       onPressed: () => Navigator.pop(ctx, true),
                       style: FilledButton.styleFrom(
                         backgroundColor:
-                            destructive ? AppColors.redWrong : AppColors.primaryPurple,
+                            destructive ? AppColors.redWrong : AppColors.brandPrimary,
                       ),
                       child: Text(confirmLabel),
                     ),
@@ -167,17 +157,6 @@ Future<void> _showInfoDialog(
                 ),
                 const SizedBox(height: 12),
                 Text(message, style: TextStyle(color: Colors.grey.shade700, height: 1.4)),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primaryPurple,
-                    ),
-                    child: const Text('OK'),
-                  ),
-                ),
               ],
             ),
           ),
@@ -375,7 +354,7 @@ class DecksOverflowMenu {
       }
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }
@@ -403,7 +382,7 @@ class DecksOverflowMenu {
                   height: 28,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                   ),
                 ),
               ),
@@ -440,7 +419,7 @@ class DecksOverflowMenu {
                   height: 28,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                   ),
                 ),
               ),
@@ -454,7 +433,7 @@ class DecksOverflowMenu {
     } catch (e) {
       if (context.mounted) Navigator.pop(context);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        AppToast.showSnackBar(context, SnackBar(content: Text(e.toString())));
       }
       return;
     }
@@ -485,13 +464,13 @@ class DecksOverflowMenu {
     try {
       final deleted = await FlashcardMaintenanceService.instance.deleteEmptyCards();
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text('Deleted ${deleted.deleted} empty card(s)')),
       );
       await onReload();
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      AppToast.showSnackBar(context, SnackBar(content: Text(e.toString())));
     }
   }
 }

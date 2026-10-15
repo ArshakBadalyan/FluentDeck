@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -63,7 +64,7 @@ class CardRowActions {
 
   void _showMessage(String message) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    AppToast.showSnackBar(context, SnackBar(content: Text(message)));
   }
 
   Future<int?> _resolveNoteId() async {
@@ -82,6 +83,35 @@ class CardRowActions {
     return completer.future;
   }
 
+  static const double _itemHeight = 40;
+
+  PopupMenuItem<String> _item(
+    String value,
+    IconData icon,
+    String label, {
+    Color? color,
+    bool trailingArrow = false,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      height: _itemHeight,
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color ?? Colors.grey.shade700),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label, style: TextStyle(fontSize: 14, color: color)),
+          ),
+          if (trailingArrow)
+            Icon(Icons.chevron_right, size: 18, color: Colors.grey.shade500),
+        ],
+      ),
+    );
+  }
+
+  /// Main ⋮ menu, ordered by how often each action is used. Rare scheduling
+  /// and organizing actions open a second menu (see [buildSubmenu]); flags are
+  /// a single row of color buttons.
   List<PopupMenuEntry<String>> buildMenuItems({required bool canUndoTag}) {
     final suspended = card.reviewState?.suspended == true;
     final buried =
@@ -89,42 +119,76 @@ class CardRowActions {
         card.reviewState!.buriedUntil!.isAfter(DateTime.now());
 
     return [
-      const PopupMenuItem(value: 'edit', child: Text('Edit note')),
-      const PopupMenuItem(value: 'info', child: Text('Card info')),
-      PopupMenuItem(
-        value: 'suspend',
-        child: Text(suspended ? 'Unsuspend' : 'Suspend'),
+      _item('edit', Icons.edit_outlined, 'Edit note'),
+      _item('preview', Icons.visibility_outlined, 'Preview'),
+      _item('info', Icons.info_outline, 'Card info'),
+      const PopupMenuDivider(height: 8),
+      _item(
+        'suspend',
+        suspended ? Icons.play_circle_outline : Icons.pause_circle_outline,
+        suspended ? 'Unsuspend' : 'Suspend',
       ),
-      PopupMenuItem(
-        value: 'bury',
-        child: Text(buried ? 'Unbury' : 'Bury'),
+      _item(
+        'bury',
+        buried ? Icons.unarchive_outlined : Icons.archive_outlined,
+        buried ? 'Unbury' : 'Bury until tomorrow',
       ),
-      const PopupMenuItem(value: 'change_type', child: Text('Change note type')),
-      const PopupMenuItem(value: 'change_deck', child: Text('Change deck')),
-      const PopupMenuItem(value: 'reposition_up', child: Text('Reposition — move up')),
-      const PopupMenuItem(value: 'reposition_down', child: Text('Reposition — move down')),
-      const PopupMenuItem(value: 'set_due', child: Text('Set due date')),
-      const PopupMenuItem(value: 'edit_tags', child: Text('Edit tags')),
-      const PopupMenuItem(value: 'grade', child: Text('Grade now')),
-      const PopupMenuItem(value: 'reset', child: Text('Reset progress')),
-      const PopupMenuItem(value: 'preview', child: Text('Preview')),
-      const PopupMenuItem(value: 'export', child: Text('Export card')),
-      const PopupMenuItem(value: 'delete', child: Text('Delete note')),
-      if (canUndoTag)
-        const PopupMenuItem(value: 'undo_tag', child: Text('Undo remove tag')),
-      const PopupMenuDivider(),
-      const PopupMenuItem(value: 'flag_0', child: Text('Clear flag')),
-      for (final e in flagColors.entries)
-        PopupMenuItem(
-          value: 'flag_${e.key}',
-          child: Row(
+      _item('menu_schedule', Icons.event_outlined, 'Schedule', trailingArrow: true),
+      _item('menu_organize', Icons.folder_outlined, 'Organize', trailingArrow: true),
+      if (canUndoTag) _item('undo_tag', Icons.undo, 'Undo remove tag'),
+      const PopupMenuDivider(height: 8),
+      PopupMenuItem<String>(
+        enabled: false,
+        height: _itemHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Builder(
+          builder: (menuContext) => Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.flag, color: e.value, size: 18),
-              const SizedBox(width: 8),
-              Text('Flag ${e.key}'),
+              _flagButton(menuContext, 0, Icons.outlined_flag, Colors.grey.shade600, 'Clear flag'),
+              for (final e in flagColors.entries)
+                _flagButton(menuContext, e.key, Icons.flag, e.value, 'Flag ${e.key}'),
             ],
           ),
         ),
+      ),
+      const PopupMenuDivider(height: 8),
+      _item('delete', Icons.delete_outline, 'Delete note', color: AppColors.redWrong),
+    ];
+  }
+
+  Widget _flagButton(BuildContext menuContext, int flag, IconData icon, Color color, String tooltip) {
+    final current = card.flag == flag;
+    return IconButton(
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+      padding: EdgeInsets.zero,
+      style: current
+          ? IconButton.styleFrom(backgroundColor: color.withValues(alpha: 0.15))
+          : null,
+      icon: Icon(icon, size: 18, color: color),
+      onPressed: () => Navigator.of(menuContext).pop('flag_$flag'),
+    );
+  }
+
+  /// Second-level menu for `menu_schedule` / `menu_organize`.
+  List<PopupMenuEntry<String>> buildSubmenu(String menu) {
+    if (menu == 'menu_schedule') {
+      return [
+        _item('set_due', Icons.event_outlined, 'Set due date'),
+        _item('grade', Icons.grading_outlined, 'Grade now'),
+        _item('reposition_up', Icons.arrow_upward, 'Move up'),
+        _item('reposition_down', Icons.arrow_downward, 'Move down'),
+        const PopupMenuDivider(height: 8),
+        _item('reset', Icons.restart_alt, 'Reset progress', color: AppColors.redWrong),
+      ];
+    }
+    return [
+      _item('change_deck', Icons.drive_file_move_outline, 'Change deck'),
+      _item('edit_tags', Icons.sell_outlined, 'Edit tags'),
+      _item('change_type', Icons.swap_horiz, 'Change note type'),
+      _item('export', Icons.ios_share, 'Export card'),
     ];
   }
 
@@ -239,9 +303,6 @@ class CardRowActions {
                 ],
               ),
             ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
-            ],
           ),
     );
   }
@@ -278,7 +339,7 @@ class CardRowActions {
       await FlashcardService.instance.buryCard(card.id);
     }
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(buried ? 'Card unburied' : 'Card buried until end of day')),
       );
     }
@@ -308,7 +369,7 @@ class CardRowActions {
                       children: [
                         Expanded(child: Text(t.name)),
                         if (t.id == current)
-                          const Icon(Icons.check, color: AppColors.primaryPurple, size: 18),
+                          const Icon(Icons.check, color: AppColors.brandPrimary, size: 18),
                       ],
                     ),
                   ),
@@ -499,7 +560,7 @@ class CardRowActions {
 
     await FlashcardService.instance.gradeCardNow(card.id, rating);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text('Graded as $rating')),
       );
     }

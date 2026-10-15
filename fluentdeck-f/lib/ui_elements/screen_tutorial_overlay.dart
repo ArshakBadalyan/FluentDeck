@@ -193,7 +193,7 @@ class _SpotlightHoleFrame extends StatelessWidget {
               Rect.fromLTWH(0, 0, hole.width, hole.height),
               Radius.circular(corner),
             ),
-            color: AppColors.primaryPurple.withValues(alpha: 0.9),
+            color: AppColors.brandPrimary.withValues(alpha: 0.9),
             strokeWidth: _CoachMarkDims.ringStrokePx,
           ),
         ),
@@ -508,7 +508,7 @@ class _CoachMarkHostState extends State<_CoachMarkHost> {
     Widget tourLink({required String label, required VoidCallback? onPressed}) {
       if (onPressed == null) return const SizedBox.shrink();
       final textStyle = const TextStyle(
-        color: AppColors.primaryPurple,
+        color: AppColors.brandPrimary,
         fontWeight: FontWeight.w600,
         fontSize: 15,
         decoration: TextDecoration.none,
@@ -581,7 +581,7 @@ class _CoachMarkHostState extends State<_CoachMarkHost> {
                 decoration: BoxDecoration(
                   color:
                       _stepIndex == i
-                          ? AppColors.primaryPurple
+                          ? AppColors.brandPrimary
                           : Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(3),
                 ),

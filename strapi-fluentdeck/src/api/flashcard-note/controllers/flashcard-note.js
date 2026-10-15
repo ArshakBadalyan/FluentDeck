@@ -7,6 +7,7 @@ const {
   createNoteAndCards,
   updateNoteAndCards,
   deleteNoteAndCards,
+  findOwnedNote,
 } = require('../../../utils/flashcard-note-sync');
 const { getAuthenticatedUserId } = require('../../../utils/flashcard-helpers');
 const { resolveUserLanguageCode } = require('../../../utils/user-language');
@@ -41,7 +42,6 @@ module.exports = createCoreController('api::flashcard-note.flashcard-note', ({ s
         tags: body.tags,
         createReverse: body.createReverse,
         mediaUrl: body.mediaUrl,
-        userNoteId: body.userNoteId,
         languageCode,
       });
       ctx.body = { ok: true, ...result };
@@ -56,10 +56,7 @@ module.exports = createCoreController('api::flashcard-note.flashcard-note', ({ s
     if (!userId) return ctx.unauthorized('Authentication required');
 
     const noteId = parseInt(String(ctx.params.id), 10);
-    const note = await strapi.db.query('api::flashcard-note.flashcard-note').findOne({
-      where: { id: noteId, user: userId },
-      populate: ['deck'],
-    });
+    const note = await findOwnedNote(strapi, userId, noteId, { populate: ['deck'] });
     if (!note) return ctx.notFound('Note not found');
 
     const cards = await strapi.db.query('api::flashcard.flashcard').findMany({

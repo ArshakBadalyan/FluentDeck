@@ -63,6 +63,7 @@ class NoteService {
     required String word,
     String? definition,
     String? exampleSentence,
+    String? translation,
     List<String>? tags,
     String? languageCode,
     String? cefrLevel,
@@ -72,6 +73,8 @@ class NoteService {
       'word': word,
       'definition': definition,
       'exampleSentence': exampleSentence,
+      if (translation != null && translation.trim().isNotEmpty)
+        'translation': translation.trim(),
       'tags': tags ?? [],
       'source': 'manual',
       if (languageCode != null && languageCode.isNotEmpty)
@@ -89,6 +92,7 @@ class NoteService {
     String? explanation,
     String? errorType,
     String? exampleSentence,
+    String? translation,
     String? languageCode,
     String? cefrLevel,
     String? topic,
@@ -100,6 +104,8 @@ class NoteService {
       'errorType': errorType,
       if (exampleSentence != null && exampleSentence.trim().isNotEmpty)
         'exampleSentence': exampleSentence.trim(),
+      if (translation != null && translation.trim().isNotEmpty)
+        'translation': translation.trim(),
       if (languageCode != null && languageCode.isNotEmpty)
         'languageCode': languageCode,
       if (cefrLevel != null && cefrLevel.isNotEmpty) 'cefrLevel': cefrLevel,
@@ -117,6 +123,7 @@ class NoteService {
     String? sourceSentence,
     String? meaning,
     String? exampleSentence,
+    String? translation,
     String? languageCode,
     String? cefrLevel,
     String? topic,
@@ -129,6 +136,7 @@ class NoteService {
               ? meaning.trim()
               : 'Saved from speaking chat',
       exampleSentence: exampleSentence,
+      translation: translation,
       errorType: 'highlight',
       languageCode: languageCode,
       cefrLevel: cefrLevel,
@@ -136,23 +144,29 @@ class NoteService {
     );
   }
 
-  /// Generates a short definition + example for a word/expression via AI.
+  /// Generates a short definition + example (in [languageCode], the word's own
+  /// language) and a translation into [translationLanguage] via AI.
   /// Premium-only server-side — only call this when the button is shown
   /// (i.e. the caller already knows the user is premium).
   Future<WordMeaningResult> generateWordMeaning({
     required String word,
     String? context,
+    String? languageCode,
+    String? translationLanguage,
   }) async {
     try {
       final data = await ApiService.post('ai/word-meaning', {
         'word': word,
         if (context != null && context.isNotEmpty) 'context': context,
+        if (languageCode != null) 'languageCode': languageCode,
+        if (translationLanguage != null) 'translationLanguage': translationLanguage,
       });
       if (data is Map && data['definition'] != null) {
         return WordMeaningResult(
           ok: true,
           definition: data['definition'].toString(),
           example: data['example']?.toString() ?? '',
+          translation: data['translation']?.toString() ?? '',
         );
       }
       return const WordMeaningResult(
@@ -173,11 +187,71 @@ class NoteService {
     }
   }
 
+  /// Translates arbitrary text (e.g. a flashcard back) into [targetLanguage].
+  /// Returns null when translation is off or the request fails.
+  Future<String?> translateText({
+    required String text,
+    required String targetLanguage,
+  }) async {
+    if (targetLanguage == 'none' || text.trim().isEmpty) return null;
+    try {
+      final data = await ApiService.post('ai/translate-message', {
+        'text': text.trim(),
+        'targetLanguage': targetLanguage,
+      });
+      final translation = data is Map ? data['translation']?.toString().trim() : null;
+      return (translation == null || translation.isEmpty) ? null : translation;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Translates a flashcard answer plus a short glossary of the words the
+  /// learner is likely asking about. Returns one storable text: a
+  /// "» word — translation" line for [word] (the card front), the answer
+  /// translation, then a "• term — meaning" line per glossary entry.
+  Future<String?> translateWithGlossary({
+    required String text,
+    required String targetLanguage,
+    String? word,
+  }) async {
+    if (targetLanguage == 'none' || text.trim().isEmpty) return null;
+    try {
+      final data = await ApiService.post('ai/translate-message', {
+        'text': text.trim(),
+        'targetLanguage': targetLanguage,
+        'withGlossary': true,
+        if (word != null && word.trim().isNotEmpty) 'word': word.trim(),
+      });
+      if (data is! Map) return null;
+      final translation = data['translation']?.toString().trim() ?? '';
+      if (translation.isEmpty) return null;
+      final wordTranslation = data['wordTranslation']?.toString().trim() ?? '';
+      final header =
+          word != null && word.trim().isNotEmpty && wordTranslation.isNotEmpty
+              ? '» ${word.trim()} — $wordTranslation\n\n'
+              : '';
+      final glossary = <String>[
+        for (final entry in (data['glossary'] as List? ?? const []))
+          if (entry is Map &&
+              '${entry['term'] ?? ''}'.trim().isNotEmpty &&
+              '${entry['meaning'] ?? ''}'.trim().isNotEmpty)
+            '• ${'${entry['term']}'.trim()} — ${'${entry['meaning']}'.trim()}',
+      ];
+      return glossary.isEmpty
+          ? '$header$translation'
+          : '$header$translation\n\n${glossary.join('\n')}';
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<bool> updateNote({
     required int id,
     String? word,
     String? definition,
     String? exampleSentence,
+    String? translation,
     List<String>? tags,
     String? languageCode,
     String? cefrLevel,
@@ -189,6 +263,7 @@ class NoteService {
     if (word != null) body['word'] = word;
     if (definition != null) body['definition'] = definition;
     if (exampleSentence != null) body['exampleSentence'] = exampleSentence;
+    if (translation != null) body['translation'] = translation;
     if (tags != null) body['tags'] = tags;
     if (languageCode != null) body['languageCode'] = languageCode;
     if (clearCefrLevel) {
@@ -209,6 +284,19 @@ class NoteService {
   Future<bool> deleteNote(int id) async {
     final data = await ApiService.delete('notes/$id');
     return data is Map && data['ok'] == true;
+  }
+
+  /// Takes decks back out of My notes (their cards stay in the decks).
+  /// Returns how many notes were removed, or null on failure.
+  Future<int?> unlinkDecks({required List<int> deckIds}) async {
+    if (deckIds.isEmpty) return 0;
+    try {
+      final data = await ApiService.post('notes/unlink-decks', {'deckIds': deckIds});
+      if (data is Map && data['ok'] == true) {
+        return (data['removed'] as num?)?.round() ?? 0;
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<ImportDecksResult> importFromDecks({required List<int> deckIds}) async {

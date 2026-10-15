@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
@@ -74,7 +75,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
 
   Future<void> _editCard(FlashcardModel card) async {
     if (card.noteId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('This card has no linked note to edit')),
       );
       return;
@@ -155,6 +156,8 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _addNote,
         tooltip: 'Add note',
+        backgroundColor: AppColors.brandPrimaryDeep,
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
       body: _buildBody(),

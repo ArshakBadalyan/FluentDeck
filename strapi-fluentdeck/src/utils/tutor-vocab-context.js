@@ -113,14 +113,15 @@ async function loadDeckWords(strapi, userId, deckSlug) {
 }
 
 async function loadMyNoteWords(strapi, userId) {
-  const notes = await strapi.db.query('api::user-note.user-note').findMany({
-    where: { user: userId },
+  const { formatMyNote } = require('./flashcard-auto-create');
+  const rows = await strapi.db.query('api::flashcard-note.flashcard-note').findMany({
+    where: { user: userId, inMyNotes: true },
     orderBy: { updatedAt: 'desc' },
     limit: 40,
   });
 
   const words = [];
-  for (const note of notes) {
+  for (const note of rows.map(formatMyNote)) {
     const word = String(note.word ?? '').trim();
     const hintParts = [note.definition, note.exampleSentence]
       .map((part) => String(part ?? '').trim())

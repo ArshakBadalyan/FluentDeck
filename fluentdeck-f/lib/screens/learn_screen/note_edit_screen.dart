@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
@@ -26,6 +27,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   late final TextEditingController _wordCtrl;
   late final TextEditingController _definitionCtrl;
   late final TextEditingController _exampleCtrl;
+  late final TextEditingController _translationCtrl;
   late final TextEditingController _tagsCtrl;
   late final TextEditingController _topicCtrl;
   bool _saving = false;
@@ -36,6 +38,9 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   bool _isPremium = false;
   bool _checkingPremium = true;
   bool _detectingLevel = false;
+  String _translationLanguage = 'none';
+  bool _generatingMeaning = false;
+  bool _translating = false;
 
   @override
   void initState() {
@@ -44,6 +49,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     _wordCtrl = TextEditingController(text: note?.word ?? '');
     _definitionCtrl = TextEditingController(text: note?.definition ?? '');
     _exampleCtrl = TextEditingController(text: note?.exampleSentence ?? '');
+    _translationCtrl = TextEditingController(text: note?.translation ?? '');
     _tagsCtrl = TextEditingController(text: note?.tags.join(', ') ?? '');
     _topicCtrl = TextEditingController(text: note?.topic ?? '');
     _languageCode = note?.languageCode ?? 'en';
@@ -66,6 +72,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     if (!mounted) return;
     setState(() {
       _syncLearningLanguage = prefs.syncLearningLanguage;
+      _translationLanguage = prefs.translationLanguage;
       if (!widget.isEditing) {
         _languageCode = prefs.practiceLanguage;
       }
@@ -78,6 +85,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     _wordCtrl.dispose();
     _definitionCtrl.dispose();
     _exampleCtrl.dispose();
+    _translationCtrl.dispose();
     _tagsCtrl.dispose();
     _topicCtrl.dispose();
     super.dispose();
@@ -99,7 +107,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
 
     final word = _wordCtrl.text.trim();
     if (word.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Enter a word or phrase first')),
       );
       return;
@@ -120,11 +128,11 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
       }
       if (result.ok && result.cefrLevel != null) {
         setState(() => _cefrLevel = result.cefrLevel);
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(content: Text('Suggested level: ${result.cefrLevel}')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(content: Text(result.message ?? 'Could not detect level')),
         );
       }
@@ -133,10 +141,99 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     }
   }
 
+  void _snack(String message) {
+    AppToast.showSnackBar(context, SnackBar(content: Text(message)));
+  }
+
+  /// Fills Definition + Example (in the word's language) with AI. Premium.
+  Future<void> _generateMeaningWithAi() async {
+    if (!_isPremium) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
+    final word = _wordCtrl.text.trim();
+    if (word.isEmpty) {
+      _snack('Enter a word or phrase first');
+      return;
+    }
+    setState(() => _generatingMeaning = true);
+    final result = await NoteService.instance.generateWordMeaning(
+      word: word,
+      languageCode: _languageCode,
+      translationLanguage: 'none',
+    );
+    if (!mounted) return;
+    setState(() => _generatingMeaning = false);
+    if (result.premiumRequired) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
+    if (!result.ok) {
+      _snack(result.message ?? 'Could not generate a meaning');
+      return;
+    }
+    _definitionCtrl.text = result.definition;
+    if (result.example.isNotEmpty) _exampleCtrl.text = result.example;
+  }
+
+  /// Translates the word into the user's translation language.
+  Future<void> _translateWithAi() async {
+    final word = _wordCtrl.text.trim();
+    if (word.isEmpty) {
+      _snack('Enter a word or phrase first');
+      return;
+    }
+    if (_translationLanguage == 'none' || _translationLanguage == _languageCode) {
+      _snack(
+        'Choose a translation language (different from the word\'s) '
+        'in Settings → AI Speaking to translate with AI',
+      );
+      return;
+    }
+    setState(() => _translating = true);
+    final translated = await NoteService.instance.translateText(
+      text: word,
+      targetLanguage: _translationLanguage,
+    );
+    if (!mounted) return;
+    setState(() => _translating = false);
+    if (translated == null) {
+      _snack('Could not translate. Try again.');
+      return;
+    }
+    _translationCtrl.text = translated;
+  }
+
+  Widget _aiAction({
+    required String label,
+    required String busyLabel,
+    required IconData icon,
+    required bool busy,
+    required VoidCallback onPressed,
+  }) {
+    return TextButton.icon(
+      onPressed: busy ? null : onPressed,
+      icon:
+          busy
+              ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+              : Icon(icon, size: 16),
+      label: Text(busy ? busyLabel : label),
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.brandPrimary,
+        visualDensity: VisualDensity.compact,
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     final word = _wordCtrl.text.trim();
     if (word.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Word or phrase is required')),
       );
       return;
@@ -150,6 +247,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           word: word,
           definition: _definitionCtrl.text.trim(),
           exampleSentence: _exampleCtrl.text.trim(),
+          translation: _translationCtrl.text.trim(),
           tags: _parseTags(),
           languageCode: _languageCode,
           cefrLevel: _cefrLevel,
@@ -161,7 +259,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         if (ok) {
           Navigator.pop(context, true);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppToast.showSnackBar(context, 
             const SnackBar(content: Text('Could not update note')),
           );
         }
@@ -170,6 +268,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           word: word,
           definition: _definitionCtrl.text.trim(),
           exampleSentence: _exampleCtrl.text.trim(),
+          translation: _translationCtrl.text.trim(),
           tags: _parseTags(),
           languageCode: _languageCode,
           cefrLevel: _cefrLevel,
@@ -181,12 +280,12 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
               result.flashcardCreated
                   ? 'Note saved and flashcard added'
                   : 'Note saved';
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppToast.showSnackBar(context, 
             SnackBar(content: Text(msg)),
           );
           Navigator.pop(context, true);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppToast.showSnackBar(context, 
             SnackBar(content: Text(result.message ?? 'Could not save note')),
           );
         }
@@ -213,9 +312,36 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           children: [
             _field('Word or phrase', _wordCtrl),
             const SizedBox(height: 16),
-            _field('Definition', _definitionCtrl, maxLines: 3),
+            _field(
+              'Definition',
+              _definitionCtrl,
+              maxLines: 3,
+              action:
+                  _checkingPremium
+                      ? null
+                      : _aiAction(
+                        label: _isPremium ? 'Generate with AI' : 'Generate · Premium',
+                        busyLabel: 'Generating…',
+                        icon: Icons.auto_awesome_rounded,
+                        busy: _generatingMeaning,
+                        onPressed: _generateMeaningWithAi,
+                      ),
+            ),
             const SizedBox(height: 16),
             _field('Example sentence', _exampleCtrl, maxLines: 2),
+            const SizedBox(height: 16),
+            _field(
+              _translationLabel,
+              _translationCtrl,
+              maxLines: 2,
+              action: _aiAction(
+                label: 'Translate with AI',
+                busyLabel: 'Translating…',
+                icon: Icons.translate_rounded,
+                busy: _translating,
+                onPressed: _translateWithAi,
+              ),
+            ),
             const SizedBox(height: 16),
             if (!_loadingPrefs) ...[
               Text(
@@ -281,7 +407,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                           : (_isPremium ? 'Detect with AI' : 'Premium'),
                     ),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primaryPurple,
+                      foregroundColor: AppColors.brandPrimary,
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
@@ -309,12 +435,32 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     );
   }
 
-  Widget _field(String label, TextEditingController controller, {int maxLines = 1}) {
+  String get _translationLabel {
+    final name =
+        SpeakingPreferences.translationLanguageOptions[_translationLanguage];
+    return _translationLanguage == 'none' || name == null
+        ? 'Translation (optional)'
+        : 'Translation to $name (optional)';
+  }
+
+  Widget _field(
+    String label,
+    TextEditingController controller, {
+    int maxLines = 1,
+    Widget? action,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+            ),
+            if (action != null) action,
+          ],
+        ),
+        SizedBox(height: action != null ? 2 : 8),
         TextField(
           controller: controller,
           maxLines: maxLines,
@@ -331,7 +477,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+              borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
             ),
           ),
         ),

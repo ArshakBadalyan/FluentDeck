@@ -167,6 +167,20 @@ class FlashcardOfflineStore {
     return pending.length;
   }
 
+  /// Drops every cached deck, card, review queue and pending review.
+  Future<void> clearAll() async {
+    await init();
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in prefs.getKeys().toList()) {
+      if (key == _webCacheKey ||
+          key == _webPendingKey ||
+          key == _webNoteTypesKey ||
+          key.startsWith(_webQueuePrefix)) {
+        await prefs.remove(key);
+      }
+    }
+  }
+
   Future<void> clearPendingReviews() async {
     await init();
     final prefs = await SharedPreferences.getInstance();

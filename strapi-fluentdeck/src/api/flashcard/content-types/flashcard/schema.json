@@ -20,6 +20,12 @@
       "type": "text",
       "required": true
     },
+    "translation": {
+      "type": "text"
+    },
+    "example": {
+      "type": "text"
+    },
     "cardType": {
       "type": "enumeration",
       "enum": ["basic", "cloze", "reversed", "type_answer", "image_occlusion"],
@@ -75,12 +81,6 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::flashcard-note.flashcard-note",
-      "inversedBy": "flashcards"
-    },
-    "userNote": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::user-note.user-note",
       "inversedBy": "flashcards"
     },
     "reviewState": {

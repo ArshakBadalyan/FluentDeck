@@ -27,7 +27,7 @@ class CardBrowserOptionsState {
 class CardBrowserOptionsMenu {
   static Widget _checkTrailing(bool active) {
     if (!active) return const SizedBox.shrink();
-    return const Icon(Icons.check_rounded, color: AppColors.primaryPurple, size: 22);
+    return const Icon(Icons.check_rounded, color: AppColors.brandPrimary, size: 22);
   }
 
   static Future<T?> _showSheet<T>(
@@ -83,7 +83,6 @@ class CardBrowserOptionsMenu {
     required VoidCallback onChangeDisplayOrder,
     required VoidCallback onFilterMarked,
     required VoidCallback onFilterSuspended,
-    required VoidCallback onFilterByTag,
     required Future<void> Function(int? flag) onApplyFlagFilter,
     required VoidCallback onPreview,
     required VoidCallback onSelectAll,
@@ -122,14 +121,9 @@ class CardBrowserOptionsMenu {
           onTap: () => Navigator.pop(context, 'filter_suspended'),
         ),
         AppSheetActionTile(
-          icon: Icons.label_outline_rounded,
-          title: 'Filter by tag',
-          onTap: () => Navigator.pop(context, 'filter_tag'),
-        ),
-        AppSheetActionTile(
           icon: Icons.flag_outlined,
           title: 'Filter by flag',
-          iconColor: state.flagFilter != null ? AppColors.primaryPurple : null,
+          iconColor: state.flagFilter != null ? AppColors.brandPrimary : null,
           subtitle:
               state.flagFilter == null
                   ? null
@@ -179,8 +173,6 @@ class CardBrowserOptionsMenu {
         onFilterMarked();
       case 'filter_suspended':
         onFilterSuspended();
-      case 'filter_tag':
-        onFilterByTag();
       case 'filter_flag':
         await _showFlagFilterSheet(
           context,

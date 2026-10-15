@@ -34,7 +34,7 @@ async function deleteCardsForNote(strapi, userId, noteId) {
   }
 }
 
-async function syncCardsForNote(strapi, userId, noteRow, { preserveReviewState = true, deckId = null, languageCode = 'en' } = {}) {
+async function syncCardsForNote(strapi, userId, noteRow, { preserveReviewState = true, deckId = null, languageCode } = {}) {
   const noteId = noteRow.id;
   const resolvedDeckId =
     deckId ?? noteRow.deck?.id ?? noteRow.deck ?? null;
@@ -75,7 +75,12 @@ async function syncCardsForNote(strapi, userId, noteRow, { preserveReviewState =
         languageCode ?? noteRow.languageCode ?? noteRow.language_code ?? 'en',
       ),
       occlusionData: spec.occlusionData ?? null,
+      example: spec.example ?? null,
     };
+    const noteFields = noteRow.fields ?? {};
+    if (Object.prototype.hasOwnProperty.call(noteFields, 'Translation')) {
+      cardData.translation = String(noteFields.Translation ?? '').trim() || null;
+    }
 
     let card;
     if (existing && preserveReviewState) {
@@ -120,8 +125,11 @@ async function createNoteAndCards(strapi, userId, payload) {
     tags,
     createReverse = false,
     mediaUrl,
-    userNoteId,
     languageCode = 'en',
+    source = 'deck',
+    inMyNotes = false,
+    cefrLevel = null,
+    topic = null,
   } = payload;
 
   const deck = await strapi.db.query('api::flashcard-deck.flashcard-deck').findOne({
@@ -141,7 +149,11 @@ async function createNoteAndCards(strapi, userId, payload) {
       mediaUrl: mediaUrl ?? null,
       deck: deckId,
       user: userId,
-      ...(userNoteId ? { userNote: userNoteId } : {}),
+      source,
+      inMyNotes: !!inMyNotes,
+      languageCode: normalizePracticeLanguage(languageCode),
+      cefrLevel: cefrLevel || null,
+      topic: topic || null,
     },
   });
 
@@ -153,10 +165,51 @@ async function createNoteAndCards(strapi, userId, payload) {
   return { note: formatNote({ ...note, deck: deckId }, cards), cards };
 }
 
-async function updateNoteAndCards(strapi, userId, noteId, payload) {
-  const existing = await strapi.db.query('api::flashcard-note.flashcard-note').findOne({
+/**
+ * Loads a note owned by [userId]. Also claims an ownerless note that one of
+ * the user's own cards points to — an old startup migration created such
+ * notes, which made mark/edit fail with "Note not found".
+ */
+async function findOwnedNote(strapi, userId, noteId, { populate } = {}) {
+  if (!noteId) return null;
+  const query = strapi.db.query('api::flashcard-note.flashcard-note');
+  const note = await query.findOne({
     where: { id: noteId, user: userId },
+    ...(populate ? { populate } : {}),
   });
+  if (note) return note;
+
+  const orphan = await query.findOne({ where: { id: noteId }, populate: ['user'] });
+  if (!orphan || orphan.user) return null;
+  const ownCard = await strapi.db.query('api::flashcard.flashcard').findOne({
+    where: { flashcardNote: noteId, user: userId },
+    populate: ['deck'],
+  });
+  if (!ownCard) return null;
+
+  await query.update({
+    where: { id: noteId },
+    data: {
+      user: userId,
+      ...(ownCard.deck?.id ? { deck: ownCard.deck.id } : {}),
+    },
+  });
+  return query.findOne({
+    where: { id: noteId, user: userId },
+    ...(populate ? { populate } : {}),
+  });
+}
+
+const BASIC_NOTE_TYPES = new Set([
+  'basic',
+  'basic_reversed',
+  'basic_optional_reversed',
+  'basic_type_answer',
+]);
+
+async function updateNoteAndCards(strapi, userId, noteId, payload) {
+  // Deck must be loaded: card sync needs it, and a mark-only update sends none.
+  const existing = await findOwnedNote(strapi, userId, noteId, { populate: ['deck'] });
   if (!existing) throw Object.assign(new Error('Note not found'), { status: 404 });
 
   const data = {};
@@ -167,6 +220,13 @@ async function updateNoteAndCards(strapi, userId, noteId, payload) {
   if (payload.mediaUrl !== undefined) data.mediaUrl = payload.mediaUrl;
   if (payload.deckId != null) data.deck = payload.deckId;
   if (payload.marked !== undefined) data.marked = !!payload.marked;
+  if (payload.source != null) data.source = payload.source;
+  if (payload.inMyNotes !== undefined) data.inMyNotes = !!payload.inMyNotes;
+  if (payload.languageCode != null) {
+    data.languageCode = normalizePracticeLanguage(payload.languageCode);
+  }
+  if (payload.cefrLevel !== undefined) data.cefrLevel = payload.cefrLevel || null;
+  if (payload.topic !== undefined) data.topic = payload.topic || null;
 
   const note = await strapi.db.query('api::flashcard-note.flashcard-note').update({
     where: { id: noteId },
@@ -188,9 +248,7 @@ async function updateNoteAndCards(strapi, userId, noteId, payload) {
 }
 
 async function deleteNoteAndCards(strapi, userId, noteId) {
-  const existing = await strapi.db.query('api::flashcard-note.flashcard-note').findOne({
-    where: { id: noteId, user: userId },
-  });
+  const existing = await findOwnedNote(strapi, userId, noteId);
   if (!existing) throw Object.assign(new Error('Note not found'), { status: 404 });
 
   await deleteCardsForNote(strapi, userId, noteId);
@@ -201,9 +259,7 @@ async function deleteNoteAndCards(strapi, userId, noteId) {
 async function ensureCardHasNote(strapi, userId, card) {
   const existingId = card.flashcardNote?.id ?? card.flashcard_note ?? card.flashcardNote;
   if (existingId) {
-    const note = await strapi.db.query('api::flashcard-note.flashcard-note').findOne({
-      where: { id: existingId, user: userId },
-    });
+    const note = await findOwnedNote(strapi, userId, existingId);
     if (note) return existingId;
 
     // Stale link: card points at a deleted/missing note — clear and recreate.
@@ -253,13 +309,19 @@ async function ensureCardHasNote(strapi, userId, card) {
 async function migrateLegacyCardsToNotes(strapi) {
   let cards;
   try {
-    cards = await strapi.db.query('api::flashcard.flashcard').findMany({ limit: 500 });
+    // Relations must be populated: without them every card looks unmigrated,
+    // and each boot re-linked all cards to new ownerless notes.
+    cards = await strapi.db.query('api::flashcard.flashcard').findMany({
+      where: { flashcardNote: { id: { $null: true } } },
+      populate: ['flashcardNote', 'user', 'deck'],
+      limit: 500,
+    });
   } catch (_) {
     return { migrated: 0 };
   }
 
   const unmigrated = cards.filter(
-    (c) => !(c.flashcardNote ?? c.flashcard_note),
+    (c) => !(c.flashcardNote ?? c.flashcard_note) && (c.user?.id ?? c.user),
   );
   if (!unmigrated.length) return { migrated: 0 };
 
@@ -281,7 +343,6 @@ async function migrateLegacyCardsToNotes(strapi) {
         mediaUrl: card.mediaUrl ?? null,
         deck: card.deck?.id ?? card.deck,
         user: card.user?.id ?? card.user,
-        ...(card.userNote ? { userNote: card.userNote?.id ?? card.userNote } : {}),
       },
     });
 
@@ -327,7 +388,9 @@ async function repairCardsDeckFromNotes(strapi, userId, deckId) {
 }
 
 module.exports = {
+  BASIC_NOTE_TYPES,
   createNoteAndCards,
+  findOwnedNote,
   updateNoteAndCards,
   deleteNoteAndCards,
   syncCardsForNote,

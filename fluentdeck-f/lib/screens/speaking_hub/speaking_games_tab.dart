@@ -86,9 +86,9 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.primaryPurple.withValues(alpha: 0.08),
+        color: AppColors.brandPrimary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +118,7 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
                 Text(
                   '${_scoreCache[game.referenceKey]} / 10',
                   style: const TextStyle(
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -173,15 +173,16 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
 
     return RefreshIndicator(
       onRefresh: _load,
-      color: AppColors.primaryPurple,
+      color: AppColors.brandPrimary,
       child: GridView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        // Cap card width so web/tablet show more columns instead of huge cards.
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 180,
+          mainAxisExtent: 148,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 0.92,
         ),
         itemCount: _games.length,
         itemBuilder: (context, index) {

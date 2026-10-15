@@ -191,6 +191,11 @@ module.exports = {
       handler: 'flashcard-deck.cardInfo',
     },
     {
+      method: 'PUT',
+      path: '/flashcards/cards/:cardId/translation',
+      handler: 'flashcard-deck.setCardTranslation',
+    },
+    {
       method: 'POST',
       path: '/flashcards/cards/:cardId/set-due',
       handler: 'flashcard-deck.setCardDue',

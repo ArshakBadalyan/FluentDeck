@@ -15,7 +15,7 @@ const {
   endOfLocalDay,
 } = require('../../../utils/flashcard-helpers');
 const { getFeatureConfig, isPremiumUser } = require('../../../utils/app-feature-config');
-const { createNoteAndCards, deleteNoteAndCards, updateNoteAndCards, repairCardsDeckFromNotes, ensureCardHasNote } = require('../../../utils/flashcard-note-sync');
+const { createNoteAndCards, deleteNoteAndCards, updateNoteAndCards, repairCardsDeckFromNotes, ensureCardHasNote, findOwnedNote } = require('../../../utils/flashcard-note-sync');
 const { formatNote } = require('../../../utils/flashcard-note-types');
 const { recordFlashcardReviewStreak,
   getFlashcardReviewStreak,
@@ -348,9 +348,7 @@ module.exports = createCoreController(
       const noteId = existing.flashcardNote?.id ?? existing.flashcardNote ?? existing.flashcard_note;
 
       if (noteId) {
-        const note = await strapi.db.query('api::flashcard-note.flashcard-note').findOne({
-          where: { id: noteId, user: userId },
-        });
+        const note = await findOwnedNote(strapi, userId, noteId);
         if (note) {
           const fields = { ...(note.fields ?? {}) };
           if (front != null) {
@@ -703,7 +701,7 @@ module.exports = createCoreController(
 
       let cards = await strapi.db.query('api::flashcard.flashcard').findMany({
         where,
-        populate: ['deck', 'flashcardNote', 'userNote'],
+        populate: ['deck', 'flashcardNote'],
         orderBy: { id: 'desc' },
       });
 
@@ -769,6 +767,41 @@ module.exports = createCoreController(
 
       const review = await ensureReviewState(strapi, userId, cardId);
       ctx.body = { ok: true, card: formatCard({ ...card, ...updated, flag }, review) };
+    },
+
+    /** Saves a translation shown on the card's answer side during review. */
+    async setCardTranslation(ctx) {
+      const userId = await getAuthenticatedUserId(ctx, strapi);
+      if (!userId) return ctx.unauthorized('Authentication required');
+
+      const cardId = parseInt(String(ctx.params.cardId), 10);
+      const translation = String(ctx.request.body?.translation ?? '').trim();
+      if (translation.length > 4000) {
+        return ctx.badRequest('translation is too long');
+      }
+
+      const card = await strapi.db.query('api::flashcard.flashcard').findOne({
+        where: { id: cardId, user: userId },
+        populate: ['flashcardNote'],
+      });
+      if (!card) return ctx.notFound('Card not found');
+
+      const noteId = card.flashcardNote?.id;
+      const note = noteId ? await findOwnedNote(strapi, userId, noteId) : null;
+      if (note) {
+        // Store on the note so its edit form, sibling cards and linked
+        // speaking note all show the same translation.
+        await updateNoteAndCards(strapi, userId, noteId, {
+          fields: { ...(note.fields ?? {}), Translation: translation },
+        });
+      } else {
+        await strapi.db.query('api::flashcard.flashcard').update({
+          where: { id: cardId },
+          data: { translation: translation || null },
+        });
+      }
+
+      ctx.body = { ok: true, translation };
     },
 
     async suspendCard(ctx) {
@@ -1264,10 +1297,7 @@ module.exports = createCoreController(
 
       try {
         const noteId = await ensureCardHasNote(strapi, userId, card);
-        const note = await strapi.db.query('api::flashcard-note.flashcard-note').findOne({
-          where: { id: noteId, user: userId },
-          populate: ['deck'],
-        });
+        const note = await findOwnedNote(strapi, userId, noteId, { populate: ['deck'] });
         const siblings = await strapi.db.query('api::flashcard.flashcard').findMany({
           where: { flashcardNote: noteId, user: userId },
           orderBy: { templateOrdinal: 'asc' },

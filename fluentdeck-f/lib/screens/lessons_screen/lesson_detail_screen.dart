@@ -76,7 +76,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_lesson?.title ?? 'Lesson'),
-        backgroundColor: AppColors.primaryPurple,
+        backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
       ),
       body:
@@ -110,7 +110,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                                 ? FilledButton(
                                   onPressed: () => _startSpeaking(exercise),
                                   style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.primaryPurple,
+                                    backgroundColor: AppColors.brandPrimary,
                                   ),
                                   child: const Text('Speak'),
                                 )

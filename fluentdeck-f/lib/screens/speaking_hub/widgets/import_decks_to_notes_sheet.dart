@@ -1,8 +1,10 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/user_note_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/services/my_notes_linked_decks_store.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 
@@ -16,6 +18,11 @@ class ImportDecksToNotesSheet extends StatefulWidget {
 class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
   List<FlashcardDeckModel> _decks = const [];
   final Set<int> _selectedDeckIds = {};
+
+  /// Decks already in My notes when the sheet opened (pre-checked).
+  final Set<int> _linkedDeckIds = {};
+
+  static final Color _checkedRowColor = Colors.black.withValues(alpha: 0.06);
   bool _loading = true;
   bool _submitting = false;
   String? _error;
@@ -33,9 +40,19 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
     });
     try {
       final decks = await FlashcardService.instance.fetchDecksWithCache();
+      final linked = await MyNotesLinkedDecksStore.instance.load();
       if (!mounted) return;
       setState(() {
         _decks = decks.where((d) => !d.isFiltered).toList();
+        final ids = _decks.map((d) => d.id).toSet();
+        _linkedDeckIds
+          ..clear()
+          ..addAll(linked.map((d) => d.id).where(ids.contains));
+        _selectedDeckIds
+          ..clear()
+          ..addAll(_linkedDeckIds)
+          // "From speaking" notes are always in My notes.
+          ..addAll(_decks.where(_isAlwaysIncluded).map((d) => d.id));
         _loading = false;
       });
     } catch (e) {
@@ -46,6 +63,19 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
       });
     }
   }
+
+  bool _isAlwaysIncluded(FlashcardDeckModel deck) =>
+      LinkedMyNotesDeck(id: deck.id, name: deck.name, deckSlug: deck.deckSlug)
+          .duplicatesSpeakingSource;
+
+  Set<int> get _toAdd => _selectedDeckIds
+      .difference(_linkedDeckIds)
+      .where((id) => !_decks.any((d) => d.id == id && _isAlwaysIncluded(d)))
+      .toSet();
+
+  Set<int> get _toRemove => _linkedDeckIds.difference(_selectedDeckIds);
+
+  bool get _hasChanges => _toAdd.isNotEmpty || _toRemove.isNotEmpty;
 
   void _toggleDeck(int deckId, bool value) {
     setState(() {
@@ -62,23 +92,36 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
       if (value) {
         _selectedDeckIds.addAll(_decks.map((d) => d.id));
       } else {
-        _selectedDeckIds.clear();
+        _selectedDeckIds
+          ..clear()
+          ..addAll(_decks.where(_isAlwaysIncluded).map((d) => d.id));
       }
     });
   }
 
   Future<void> _submit() async {
-    if (_selectedDeckIds.isEmpty || _submitting) return;
+    if (!_hasChanges || _submitting) return;
     setState(() => _submitting = true);
     try {
-      final result = await NoteService.instance.importFromDecks(
-        deckIds: _selectedDeckIds.toList(),
-      );
+      var removed = 0;
+      if (_toRemove.isNotEmpty) {
+        final n = await NoteService.instance.unlinkDecks(deckIds: _toRemove.toList());
+        if (!mounted) return;
+        if (n == null) {
+          AppToast.error('Could not remove decks from My notes');
+          return;
+        }
+        removed = n;
+      }
+      final result =
+          _toAdd.isEmpty
+              ? const ImportDecksResult(ok: true)
+              : await NoteService.instance.importFromDecks(deckIds: _toAdd.toList());
       if (!mounted) return;
       if (result.ok) {
         final linked =
             _decks
-                .where((d) => _selectedDeckIds.contains(d.id))
+                .where((d) => _selectedDeckIds.contains(d.id) && !_isAlwaysIncluded(d))
                 .map(
                   (d) => LinkedMyNotesDeck(
                     id: d.id,
@@ -95,17 +138,27 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
             skipped: result.skipped,
             deckNames: result.deckNames,
             linkedDecks: linked,
+            removed: removed,
             limitReached: result.limitReached,
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           SnackBar(content: Text(result.message ?? 'Could not import decks')),
         );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  String get _buttonLabel {
+    String decks(int n) => '$n deck${n == 1 ? '' : 's'}';
+    final add = _toAdd.length, remove = _toRemove.length;
+    if (add > 0 && remove > 0) return 'Add ${decks(add)} · Remove ${decks(remove)}';
+    if (remove > 0) return 'Remove ${decks(remove)}';
+    if (add > 0) return 'Add ${decks(add)}';
+    return 'No changes';
   }
 
   @override
@@ -139,19 +192,19 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                    color: AppColors.brandPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.library_add_rounded,
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                     size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
-                    'Add decks to My notes',
+                    'Decks in My notes',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -159,17 +212,13 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
               ],
             ),
           ),
           const Padding(
             padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
             child: Text(
-              'Select one or more decks. All cards from those decks will be added to My notes for AI practice.',
+              'Checked decks show their cards in My notes for AI practice. Uncheck a deck to take it out — its cards stay in the deck.',
               style: TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF777481)),
             ),
           ),
@@ -207,7 +256,8 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
                     value: allSelected,
                     tristate: true,
                     onChanged: (value) => _toggleAll(value ?? false),
-                    activeColor: AppColors.primaryPurple,
+                    activeColor: AppColors.brandPrimary,
+                    tileColor: allSelected == true ? _checkedRowColor : null,
                     title: const Text(
                       'Select all decks',
                       style: TextStyle(fontWeight: FontWeight.w600),
@@ -216,11 +266,21 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
                   for (final deck in _decks)
                     CheckboxListTile(
                       value: _selectedDeckIds.contains(deck.id),
-                      onChanged: (value) => _toggleDeck(deck.id, value ?? false),
-                      activeColor: AppColors.primaryPurple,
+                      onChanged:
+                          _isAlwaysIncluded(deck)
+                              ? null
+                              : (value) => _toggleDeck(deck.id, value ?? false),
+                      activeColor: AppColors.brandPrimary,
+                      // Same grey as the hover highlight, so checked rows stay marked.
+                      tileColor:
+                          _selectedDeckIds.contains(deck.id)
+                              ? _checkedRowColor
+                              : null,
                       title: Text(deck.name),
                       subtitle: Text(
-                        deck.total > 0
+                        _isAlwaysIncluded(deck)
+                            ? 'Always in My notes'
+                            : deck.total > 0
                             ? '${deck.total} cards'
                             : 'No cards yet',
                       ),
@@ -236,21 +296,16 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
             child: SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed:
-                    _selectedDeckIds.isEmpty || _submitting ? null : _submit,
+                onPressed: !_hasChanges || _submitting ? null : _submit,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primaryPurple,
+                  backgroundColor: AppColors.brandPrimary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: Text(
-                  _submitting
-                      ? 'Importing…'
-                      : 'Add ${_selectedDeckIds.length} deck${_selectedDeckIds.length == 1 ? '' : 's'}',
-                ),
+                child: Text(_submitting ? 'Saving…' : _buttonLabel),
               ),
             ),
           ),

@@ -592,6 +592,100 @@ async function translateMessage({ text, targetLanguage }) {
   return translated;
 }
 
+// Quote/bracket pairs whose contents count as "specific words" on a card.
+const QUOTED_TERM_PATTERNS = [
+  /<<([^<>\n]{1,60})>>/g,
+  /«([^«»\n]{1,60})»/g,
+  /‹([^‹›\n]{1,60})›/g,
+  /„([^„“”\n]{1,60})[“”]/g,
+  /“([^“”\n]{1,60})”/g,
+  /‘([^‘’\n]{1,60})’/g,
+  /「([^「」\n]{1,60})」/g,
+  /『([^『』\n]{1,60})』/g,
+  /"([^"\n]{1,60})"/g,
+  // Straight single quotes only at word edges, so "I'm"/"don't" don't match.
+  /(?<![\p{L}\p{N}])'([^'\n]{1,60})'(?![\p{L}\p{N}])/gu,
+  /<([^<>\n]{1,60})>/g,
+];
+
+/** Distinct quoted/bracketed terms in [texts], in order of appearance. */
+function extractQuotedTerms(...texts) {
+  const found = [];
+  for (const text of texts) {
+    const source = String(text ?? "");
+    const hits = [];
+    for (const pattern of QUOTED_TERM_PATTERNS) {
+      for (const m of source.matchAll(pattern)) {
+        hits.push({ index: m.index ?? 0, term: m[1].trim() });
+      }
+    }
+    hits.sort((x, y) => x.index - y.index);
+    for (const { term } of hits) {
+      if (term && !found.some((t) => t.toLowerCase() === term.toLowerCase())) {
+        found.push(term);
+      }
+    }
+  }
+  return found.slice(0, 8);
+}
+
+/**
+ * Translates a flashcard: the front [word], the answer [text], and — only when
+ * the front or back quotes/brackets specific words — a meaning for each of
+ * those words as { term, meaning } pairs.
+ */
+async function translateWithGlossary({ text, targetLanguage, word }) {
+  const trimmed = String(text ?? "").trim();
+  const lang = String(targetLanguage ?? "none").trim();
+  const front = String(word ?? "").trim();
+  if (!trimmed || lang === "none") {
+    return { translation: "", wordTranslation: "", glossary: [] };
+  }
+
+  const terms = extractQuotedTerms(front, trimmed);
+  const openai = getOpenAIClient();
+  const label = languageLabel(lang);
+  const completion = await openai.chat.completions.create({
+    model: TUTOR_MODEL,
+    response_format: { type: "json_object" },
+    messages: [
+      {
+        role: "system",
+        content:
+          `You translate a language learner's flashcard into natural ${label}. Return JSON: ` +
+          `{"wordTranslation": string, "translation": string, "meanings": [string]}. ` +
+          `"wordTranslation": the FRONT in ${label} ("" if there is no FRONT). ` +
+          `"translation": the BACK in ${label}. ` +
+          `"meanings": one short ${label} meaning (1–6 words) for each item in TERMS, same order and count; [] if TERMS is empty.`,
+      },
+      {
+        role: "user",
+        content:
+          (front ? `FRONT:\n${front}\n\n` : "") +
+          `BACK:\n${trimmed}\n\nTERMS:\n${JSON.stringify(terms)}`,
+      },
+    ],
+    temperature: 0.2,
+    max_tokens: 700,
+  });
+
+  let parsed = {};
+  try {
+    parsed = JSON.parse(completion.choices?.[0]?.message?.content ?? "{}");
+  } catch {
+    parsed = {};
+  }
+  const meanings = Array.isArray(parsed.meanings) ? parsed.meanings : [];
+  const glossary = terms
+    .map((term, i) => ({ term, meaning: String(meanings[i] ?? "").trim() }))
+    .filter((g) => g.meaning);
+  return {
+    translation: String(parsed.translation ?? "").trim(),
+    wordTranslation: front ? String(parsed.wordTranslation ?? "").trim() : "",
+    glossary,
+  };
+}
+
 async function synthesizeSpeech(text, voicePreference) {
   const voice = resolveTutorVoice(voicePreference);
   const { readCachedAudio, writeCachedAudio } = require('./tts-cache');
@@ -754,6 +848,8 @@ module.exports = {
   looksLikeWhisperHallucination,
   getTutorReply,
   translateMessage,
+  translateWithGlossary,
+  extractQuotedTerms,
   synthesizeSpeech,
   evaluateSession,
   parseTutorResponse,

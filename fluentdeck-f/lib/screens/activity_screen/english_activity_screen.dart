@@ -14,7 +14,6 @@ import 'package:fluentdeck/services/language_levels_service.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/services/user_progress_service.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/activity_preview_list.dart';
@@ -117,11 +116,10 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
     final topWeakMaxY = (topWeakMaxCount + 1).toDouble();
 
     return AppPageBackground(
-      child: AppFadeIn(
-        child: RefreshIndicator(
-          onRefresh: _load,
-          color: AppColors.primaryPurple,
-          child: ListView(
+      child: RefreshIndicator(
+        onRefresh: _load,
+        color: AppColors.brandPrimary,
+        child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
             _StreakHero(streakDays: progress.streakDays, l10n: l10n),
@@ -133,7 +131,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                     icon: Icons.school_outlined,
                     label: 'AI tutor level',
                     value: tutorLevel,
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -332,9 +330,9 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                                         begin: Alignment.bottomCenter,
                                         end: Alignment.topCenter,
                                         colors: [
-                                          AppColors.primaryPurple
+                                          AppColors.brandPrimary
                                               .withValues(alpha: 0.75),
-                                          AppColors.primaryPurple,
+                                          AppColors.brandPrimary,
                                         ],
                                       ),
                                       width: 22,
@@ -352,7 +350,6 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
             ),
           ],
         ),
-      ),
       ),
     );
   }
@@ -373,12 +370,12 @@ class _StreakHero extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF9B3DFF), Color(0xFF7A24E4)],
+          colors: AppColors.heroGradient,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryPurple.withValues(alpha: 0.28),
+            color: AppColors.brandPrimary.withValues(alpha: 0.28),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -541,7 +538,7 @@ class _ActivitySection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: AppColors.primaryPurple),
+              Icon(icon, size: 20, color: AppColors.brandPrimary),
               const SizedBox(width: 8),
               Text(
                 title,
@@ -688,10 +685,10 @@ class _PhraseCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.primaryPurple.withValues(alpha: 0.05),
+        color: AppColors.brandPrimary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.primaryPurple.withValues(alpha: 0.12),
+          color: AppColors.brandPrimary.withValues(alpha: 0.12),
         ),
       ),
       child: Row(
@@ -700,7 +697,7 @@ class _PhraseCard extends StatelessWidget {
           Icon(
             Icons.format_quote_rounded,
             size: 18,
-            color: AppColors.primaryPurple.withValues(alpha: 0.6),
+            color: AppColors.brandPrimary.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 8),
           Expanded(

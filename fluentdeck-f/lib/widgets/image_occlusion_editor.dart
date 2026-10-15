@@ -161,7 +161,7 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
                           height: region.h * size.height,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: AppColors.primaryPurple.withValues(
+                              color: AppColors.brandPrimary.withValues(
                                 alpha: selected ? 0.55 : 0.35,
                               ),
                               border: Border.all(
@@ -190,7 +190,7 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
                           child: DecoratedBox(
                             decoration: BoxDecoration(
                               border: Border.all(color: AppColors.primaryYellow, width: 2),
-                              color: AppColors.primaryPurple.withValues(alpha: 0.25),
+                              color: AppColors.brandPrimary.withValues(alpha: 0.25),
                             ),
                           ),
                         ),

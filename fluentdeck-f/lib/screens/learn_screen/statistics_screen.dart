@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
@@ -82,7 +83,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      AppToast.showSnackBar(context, SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -125,7 +126,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return AppPageBackground(
       child: RefreshIndicator(
         onRefresh: _load,
-        color: AppColors.primaryPurple,
+        color: AppColors.brandPrimary,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
@@ -135,48 +136,52 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               todayDuration: stats.today.durationLabel,
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickMetricTile(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final tiles = [
+                  _QuickMetricTile(
                     icon: Icons.style_outlined,
                     label: 'Total cards',
                     value: '${stats.totalCards}',
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _QuickMetricTile(
+                  _QuickMetricTile(
                     icon: Icons.replay_rounded,
                     label: 'Reviews',
                     value: '${stats.totalReviewsInRange}',
                     color: const Color(0xFF2196F3),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickMetricTile(
+                  _QuickMetricTile(
                     icon: Icons.check_circle_outline_rounded,
                     label: 'Mature retention',
                     value: matureRetention == null ? '—' : '$matureRetention%',
                     color: AppColors.greenCorrect,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _QuickMetricTile(
+                  _QuickMetricTile(
                     icon: Icons.fiber_new_rounded,
                     label: 'New cards',
                     value: '${stats.cardCounts.newCount}',
                     color: const Color(0xFFFF9800),
                   ),
-                ),
-              ],
+                ];
+                // One row on tablet/web; 2×2 on phones.
+                final perRow = constraints.maxWidth >= 600 ? 4 : 2;
+                return Column(
+                  children: [
+                    for (var i = 0; i < tiles.length; i += perRow) ...[
+                      if (i > 0) const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          for (var j = i; j < i + perRow; j++) ...[
+                            if (j > i) const SizedBox(width: 12),
+                            Expanded(child: tiles[j]),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 16),
             _FilterCard(
@@ -261,7 +266,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 height: 160,
                 child: _BarChartSeries(
                   series: stats.futureDueByDay,
-                  barColor: AppColors.primaryPurple,
+                  barColor: AppColors.brandPrimary,
                   useGradient: true,
                 ),
               ),
@@ -401,12 +406,12 @@ class _DeckStatsHero extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF9B3DFF), Color(0xFF7A24E4)],
+          colors: AppColors.heroGradient,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryPurple.withValues(alpha: 0.28),
+            color: AppColors.brandPrimary.withValues(alpha: 0.28),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -599,7 +604,7 @@ class _FilterCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.tune_rounded, size: 18, color: AppColors.primaryPurple),
+              const Icon(Icons.tune_rounded, size: 18, color: AppColors.brandPrimary),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
@@ -612,10 +617,6 @@ class _FilterCard extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
                 onPressed: onExport,
                 icon: Icon(Icons.picture_as_pdf_outlined, color: AppPageColors.subtitleOf(context)),
-              ),
-              const DecksContextualHelpButton(
-                helpSectionId: 'statistics',
-                iconSize: 20,
               ),
             ],
           ),
@@ -689,7 +690,7 @@ class _StatsSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: AppColors.primaryPurple),
+              Icon(icon, size: 20, color: AppColors.brandPrimary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -1006,7 +1007,7 @@ class _CalendarHeatmap extends StatelessWidget {
                 width: 14,
                 height: 14,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withValues(alpha: 0.12 + intensity * 0.88),
+                  color: AppColors.brandPrimary.withValues(alpha: 0.12 + intensity * 0.88),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -1223,8 +1224,8 @@ class _HourlyChart extends StatelessWidget {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        AppColors.primaryPurple.withValues(alpha: 0.55),
-                        AppColors.primaryPurple,
+                        AppColors.brandPrimary.withValues(alpha: 0.55),
+                        AppColors.brandPrimary,
                       ],
                     ),
                     width: 5,

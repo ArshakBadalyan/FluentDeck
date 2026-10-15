@@ -280,9 +280,10 @@ class ConversationService {
   /// Saves the current chat to history (when long enough), then starts fresh.
   Future<void> archiveAndStartNew() async {
     if (turns.length >= 2) {
+      final snapshot = List<ConversationTurnModel>.from(turns);
       activeHistorySessionId ??= DateTime.now().millisecondsSinceEpoch;
       await ConversationHistoryService.instance.saveCurrentSession(
-        turns,
+        snapshot,
         sessionId: activeHistorySessionId,
       );
     }
@@ -348,11 +349,20 @@ class ConversationService {
     _notify();
   }
 
-  Future<void> _persistActiveSession() async {
-    if (turns.length < 2) return;
+  /// Saves [snapshot] (or, failing that, a fresh copy of the live [turns]).
+  /// Callers that still have awaits ahead of them (a network call, TTS kickoff)
+  /// should pass a snapshot taken *before* those awaits: [startSession] /
+  /// [resetConversation] can clear `turns` from elsewhere in that window (the
+  /// user switching away from Speak right after their last message), which
+  /// otherwise silently dropped the save because it read the now-empty list.
+  Future<void> _persistActiveSession([
+    List<ConversationTurnModel>? snapshot,
+  ]) async {
+    final turnsToSave = snapshot ?? List<ConversationTurnModel>.from(turns);
+    if (turnsToSave.length < 2) return;
     activeHistorySessionId ??= DateTime.now().millisecondsSinceEpoch;
     await ConversationHistoryService.instance.saveCurrentSession(
-      turns,
+      turnsToSave,
       sessionId: activeHistorySessionId,
     );
   }
@@ -924,6 +934,9 @@ class ConversationService {
     trainingSession = tutor.trainingSession;
     _notify();
 
+    // Snapshot now, before the awaits below — see _persistActiveSession.
+    final historySnapshot = List<ConversationTurnModel>.from(turns);
+
     await UserProgressService.instance.recordConversationTurn(
       corrections: corrections,
       startedAt: turnStarted,
@@ -939,7 +952,7 @@ class ConversationService {
       ),
     );
     await ConversationLimitService.instance.recordTurn();
-    await _persistActiveSession();
+    await _persistActiveSession(historySnapshot);
   }
 
   /// Whisper often invents YouTube-style lines from silence/noise.

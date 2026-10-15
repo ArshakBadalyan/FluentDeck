@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -57,7 +58,7 @@ class _ProfileNotificationsTabState extends State<ProfileNotificationsTab> {
     setState(() => _savingReminder = false);
     if (!result.ok) {
       await _loadReminderPrefs();
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(
           content: Text(result.errorMessage ?? 'Could not update reminder'),
         ),

@@ -3,6 +3,7 @@ class UserNoteModel {
   final String word;
   final String definition;
   final String exampleSentence;
+  final String translation;
   final List<String> tags;
   final String source;
   final String languageCode;
@@ -18,6 +19,7 @@ class UserNoteModel {
     required this.word,
     this.definition = '',
     this.exampleSentence = '',
+    this.translation = '',
     this.tags = const [],
     this.source = 'manual',
     this.languageCode = 'en',
@@ -49,6 +51,7 @@ class UserNoteModel {
       word: json['word'] as String? ?? '',
       definition: json['definition'] as String? ?? '',
       exampleSentence: json['exampleSentence'] as String? ?? '',
+      translation: json['translation'] as String? ?? '',
       tags:
           rawTags is List
               ? rawTags.map((e) => e.toString()).toList()
@@ -112,6 +115,8 @@ class WordMeaningResult {
   final bool ok;
   final String definition;
   final String example;
+  /// Word/phrase translated into the user's translation language ('' if off).
+  final String translation;
   final bool premiumRequired;
   final String? message;
 
@@ -119,6 +124,7 @@ class WordMeaningResult {
     required this.ok,
     this.definition = '',
     this.example = '',
+    this.translation = '',
     this.premiumRequired = false,
     this.message,
   });
@@ -175,14 +181,19 @@ class ImportDecksResult {
   final int created;
   final int skipped;
   final List<String> deckNames;
+  /// Every deck linked to My notes after the change (replaces the old list).
   final List<LinkedMyNotesDeck> linkedDecks;
   final bool limitReached;
   final String? message;
+
+  /// Notes taken out of My notes by unchecking decks.
+  final int removed;
 
   const ImportDecksResult({
     required this.ok,
     this.created = 0,
     this.skipped = 0,
+    this.removed = 0,
     this.deckNames = const [],
     this.linkedDecks = const [],
     this.limitReached = false,

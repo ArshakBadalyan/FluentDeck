@@ -11,12 +11,14 @@ class DecksContextualHelpButton extends StatelessWidget {
     this.hintMessage,
     this.helpSectionId,
     this.iconSize = 22,
+    this.color,
   });
 
   final String? hintKey;
   final String? hintMessage;
   final String? helpSectionId;
   final double iconSize;
+  final Color? color;
 
   static Future<void> maybeShowFirstVisitHint(
     BuildContext context, {
@@ -34,7 +36,7 @@ class DecksContextualHelpButton extends StatelessWidget {
           (ctx) => AlertDialog(
             title: const Row(
               children: [
-                Icon(Icons.help_outline, color: AppColors.primaryPurple),
+                Icon(Icons.help_outline, color: AppColors.brandPrimary),
                 SizedBox(width: 8),
                 Expanded(child: Text('Quick tip')),
               ],
@@ -60,7 +62,7 @@ class DecksContextualHelpButton extends StatelessWidget {
                     ),
                   );
                 },
-                style: FilledButton.styleFrom(backgroundColor: AppColors.primaryPurple),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.brandPrimary),
                 child: const Text('Open help'),
               ),
             ],
@@ -81,6 +83,7 @@ class DecksContextualHelpButton extends StatelessWidget {
     return IconButton(
       tooltip: 'Help',
       icon: Icon(Icons.help_outline, size: iconSize),
+      color: color,
       onPressed: () => _openHelp(context),
     );
   }

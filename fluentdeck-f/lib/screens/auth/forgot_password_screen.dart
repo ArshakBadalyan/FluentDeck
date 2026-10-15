@@ -1,4 +1,6 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/routing/app_route_names.dart';
 import 'package:fluentdeck/routing/app_page_routes.dart';
@@ -90,7 +92,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 ),
                               );
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              AppToast.showSnackBar(context, 
                                 SnackBar(
                                   content: Text(
                                     res['message'] ??
@@ -104,7 +106,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           },
 
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7E2BFF),
+                    backgroundColor: AppColors.brandPrimary,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

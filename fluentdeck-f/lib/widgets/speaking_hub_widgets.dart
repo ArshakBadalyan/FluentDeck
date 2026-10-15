@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/speaking_item_icons.dart';
 
 /// Matches [MainAppBar] sub-tab styling (Decks, Library, Speak).
@@ -12,7 +13,7 @@ TabBar buildAppStyleTabBar({
     isScrollable: true,
     tabAlignment: TabAlignment.start,
     padding: const EdgeInsets.only(left: 12),
-    labelColor: AppColors.primaryPurple,
+    labelColor: AppColors.brandPrimary,
     unselectedLabelColor: const Color(0xFF777481),
     indicatorColor: Colors.transparent,
     dividerColor: Colors.transparent,
@@ -94,13 +95,19 @@ class SpeakingSelectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardBg = AppPageColors.cardBgOf(context);
     return Opacity(
       opacity: isPremiumLocked ? 0.55 : 1,
       child: Material(
-      color: Colors.white,
+      color: selected
+          ? Color.alphaBlend(
+              AppColors.brandPrimary.withValues(alpha: 0.06),
+              cardBg,
+            )
+          : cardBg,
       borderRadius: BorderRadius.circular(16),
       elevation: selected ? 2 : 0,
-      shadowColor: AppColors.primaryPurple.withValues(alpha: 0.2),
+      shadowColor: AppColors.brandPrimary.withValues(alpha: 0.2),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -109,7 +116,9 @@ class SpeakingSelectionCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selected ? AppColors.primaryPurple : Colors.grey.shade200,
+              color: selected
+                  ? AppColors.brandPrimary
+                  : AppPageColors.subtleBorderOf(context),
               width: selected ? 2 : 1,
             ),
           ),
@@ -156,7 +165,7 @@ class SpeakingSelectionCard extends StatelessWidget {
                 Text(
                   '$score / 10',
                   style: const TextStyle(
-                    color: AppColors.primaryPurple,
+                    color: AppColors.brandPrimary,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Rubik',
                   ),
@@ -192,13 +201,19 @@ class SpeakingGameGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardBg = AppPageColors.cardBgOf(context);
     return Opacity(
       opacity: isPremiumLocked ? 0.55 : 1,
       child: Material(
-      color: Colors.white,
+      color: selected
+          ? Color.alphaBlend(
+              AppColors.brandPrimary.withValues(alpha: 0.06),
+              cardBg,
+            )
+          : cardBg,
       borderRadius: BorderRadius.circular(16),
       elevation: selected ? 2 : 0,
-      shadowColor: AppColors.primaryPurple.withValues(alpha: 0.15),
+      shadowColor: AppColors.brandPrimary.withValues(alpha: 0.15),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -206,21 +221,23 @@ class SpeakingGameGridCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selected ? AppColors.primaryPurple : Colors.grey.shade200,
+              color: selected
+                  ? AppColors.brandPrimary
+                  : AppPageColors.subtleBorderOf(context),
               width: selected ? 2 : 1,
             ),
           ),
           padding: const EdgeInsets.all(12),
           child: Stack(
             children: [
-              if (featured)
+              if (featured && !isPremiumLocked)
                 Positioned(
                   top: 0,
                   right: 0,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryPurple.withValues(alpha: 0.12),
+                      color: AppColors.brandPrimary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -228,7 +245,7 @@ class SpeakingGameGridCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primaryPurple,
+                        color: AppColors.brandPrimary,
                         fontFamily: 'Rubik',
                       ),
                     ),
@@ -243,7 +260,7 @@ class SpeakingGameGridCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.primaryPurple,
+                      color: AppColors.brandPrimary,
                       fontFamily: 'Rubik',
                     ),
                   ),
@@ -254,15 +271,17 @@ class SpeakingGameGridCard extends StatelessWidget {
                   right: 0,
                   child: Icon(Icons.lock_outline, color: Colors.black45, size: 18),
                 ),
-              Center(
+              Padding(
+                padding: const EdgeInsets.only(top: 14),
+                child: Center(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     SpeakingListIconBadge(
                       icon: icon,
                       title: title,
-                      size: 56,
-                      iconSize: 28,
+                      size: 52,
+                      iconSize: 26,
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -278,6 +297,7 @@ class SpeakingGameGridCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
               ),
             ],
           ),
@@ -312,7 +332,7 @@ class SpeakingStartButton extends StatelessWidget {
           child: FilledButton(
             onPressed: enabled ? onPressed : null,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primaryPurple,
+              backgroundColor: AppColors.brandPrimary,
               disabledBackgroundColor: AppColors.greySkipped.withValues(alpha: 0.4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
@@ -334,7 +354,7 @@ class SpeakingStartButton extends StatelessWidget {
   }
 }
 
-class SpeakingFilterChips extends StatelessWidget {
+class SpeakingFilterChips extends StatefulWidget {
   const SpeakingFilterChips({
     super.key,
     required this.labels,
@@ -347,28 +367,89 @@ class SpeakingFilterChips extends StatelessWidget {
   final ValueChanged<int> onSelected;
 
   @override
+  State<SpeakingFilterChips> createState() => _SpeakingFilterChipsState();
+}
+
+class _SpeakingFilterChipsState extends State<SpeakingFilterChips> {
+  static const double _edgeInset = 16;
+
+  final Map<int, GlobalKey> _chipKeys = {};
+
+  GlobalKey _keyFor(int index) => _chipKeys.putIfAbsent(index, GlobalKey.new);
+
+  @override
+  void initState() {
+    super.initState();
+    _revealSelected(animate: false);
+  }
+
+  @override
+  void didUpdateWidget(SpeakingFilterChips oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedIndex != widget.selectedIndex) _revealSelected();
+  }
+
+  /// Scrolls the selected chip fully into view. Centering clamps at the ends,
+  /// so the first/last chip settles against the side inset, clear of the fade.
+  void _revealSelected({bool animate = true}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _chipKeys[widget.selectedIndex]?.currentContext;
+      if (!mounted || ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.5,
+        duration: animate ? const Duration(milliseconds: 250) : Duration.zero,
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Fade chips out over the side insets so they never butt against the
+    // container edge while scrolling. At rest the first/last chip sits past
+    // the fade, so it stays fully opaque.
+    return ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (bounds) {
+        final fade = bounds.width > 0 ? _edgeInset / bounds.width : 0.0;
+        return LinearGradient(
+          colors: const [
+            Colors.transparent,
+            Colors.black,
+            Colors.black,
+            Colors.transparent,
+          ],
+          stops: [0, fade, 1 - fade, 1],
+        ).createShader(bounds);
+      },
+      child: _buildStrip(),
+    );
+  }
+
+  Widget _buildStrip() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: _edgeInset, vertical: 8),
       child: Row(
-        children: List.generate(labels.length, (index) {
-          final selected = index == selectedIndex;
+        children: List.generate(widget.labels.length, (index) {
+          final selected = index == widget.selectedIndex;
           return Padding(
+            key: _keyFor(index),
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
-              label: Text(labels[index]),
+              label: Text(widget.labels[index]),
               selected: selected,
-              onSelected: (_) => onSelected(index),
-              selectedColor: AppColors.primaryPurple.withValues(alpha: 0.12),
-              checkmarkColor: AppColors.primaryPurple,
+              onSelected: (_) => widget.onSelected(index),
+              selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
+              checkmarkColor: AppColors.brandPrimary,
               labelStyle: TextStyle(
-                color: selected ? AppColors.primaryPurple : const Color(0xFF777481),
+                color: selected ? AppColors.brandPrimary : const Color(0xFF777481),
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                 fontFamily: 'Rubik',
               ),
               side: BorderSide(
-                color: selected ? AppColors.primaryPurple : Colors.grey.shade300,
+                color: selected ? AppColors.brandPrimary : Colors.grey.shade300,
               ),
             ),
           );

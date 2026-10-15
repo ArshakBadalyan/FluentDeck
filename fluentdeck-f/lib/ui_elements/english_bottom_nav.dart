@@ -1,4 +1,6 @@
+import 'package:fluentdeck/ui_elements/screen_tutorial_targets.dart';
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/services/analytics_service.dart';
 import 'package:fluentdeck/services/click_tracking.dart';
 import 'package:fluentdeck/services/interaction_haptics.dart';
@@ -29,6 +31,7 @@ class EnglishBottomNav extends StatelessWidget {
         ),
       ),
       child: BottomNavigationBar(
+        key: ScreenTutorialKeys.mainBottomNav,
         backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed,
         currentIndex: currentIndex.clamp(0, tabs.length - 1),
@@ -45,8 +48,8 @@ class EnglishBottomNav extends StatelessWidget {
           onTap(index);
         },
         showUnselectedLabels: true,
-        selectedItemColor: const Color(0xFF8419FF),
-        unselectedItemColor: const Color(0xFF777481),
+        selectedItemColor: AppColors.brandPrimary,
+        unselectedItemColor: AppColors.navInactive,
         elevation: 0,
         items: [
           for (var i = 0; i < tabs.length; i++)

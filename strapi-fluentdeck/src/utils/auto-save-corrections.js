@@ -92,17 +92,20 @@ async function autoSaveCorrectionsFromTurn(strapi, userId, corrections) {
     });
     if (duplicate) continue;
 
-    const back = candidate.example
-      ? `${candidate.definition}\n\nExample: ${candidate.example}`
-      : candidate.definition;
-
     await createNoteAndCards(strapi, userId, {
       deckId: deck.id,
       noteType: 'basic',
-      fields: { Front: candidate.word, Back: back },
+      fields: {
+        Front: candidate.word,
+        Back: candidate.definition,
+        Example: candidate.example ?? '',
+        Translation: '',
+      },
       tags: ['from-speaking', 'auto-correction'],
       createReverse: false,
       languageCode,
+      source: 'speaking',
+      inMyNotes: true,
     });
 
     saved.push({

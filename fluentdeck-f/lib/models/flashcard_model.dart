@@ -85,6 +85,10 @@ class FlashcardModel {
   final String? noteTypeId;
   final String front;
   final String back;
+  /// Saved translation of the answer ('' when none yet).
+  final String translation;
+  /// Optional example sentence shown under the answer ('' when none).
+  final String example;
   final String cardType;
   final String? clozeText;
   final int? clozeIndex;
@@ -107,6 +111,8 @@ class FlashcardModel {
     this.noteTypeId,
     required this.front,
     required this.back,
+    this.translation = '',
+    this.example = '',
     this.cardType = 'basic',
     this.clozeText,
     this.clozeIndex,
@@ -139,6 +145,8 @@ class FlashcardModel {
       noteTypeId: json['noteTypeId'] as String?,
       front: json['front'] as String? ?? '',
       back: json['back'] as String? ?? '',
+      translation: json['translation'] as String? ?? '',
+      example: json['example'] as String? ?? '',
       cardType: json['cardType'] as String? ?? 'basic',
       clozeText: json['clozeText'] as String?,
       clozeIndex: json['clozeIndex'] as int?,
@@ -175,6 +183,8 @@ class FlashcardModel {
     if (noteTypeId != null) 'noteTypeId': noteTypeId,
     'front': front,
     'back': back,
+    if (translation.isNotEmpty) 'translation': translation,
+    if (example.isNotEmpty) 'example': example,
     'cardType': cardType,
     'clozeText': clozeText,
     if (clozeIndex != null) 'clozeIndex': clozeIndex,

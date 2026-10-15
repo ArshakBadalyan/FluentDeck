@@ -1,6 +1,6 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 
-import '../../app_colors.dart';
 import '../../models/speaking_preferences.dart';
 import '../../services/conversation_service.dart';
 import '../../services/speaking_preferences_service.dart';
@@ -65,7 +65,7 @@ class _ConversationChatSettingsSheetState
       );
       if (!mounted) return;
       setState(() => _prefs = restored);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(
           content: Text(result.errorMessage ?? 'Could not update settings'),
         ),
@@ -144,8 +144,6 @@ class _ConversationChatSettingsSheetState
                             _prefs.copyWith(
                               soundOn: value,
                               autoPlayVoice: value,
-                              autoConversation:
-                                  value ? _prefs.autoConversation : false,
                             ),
                           );
                         },
@@ -154,27 +152,15 @@ class _ConversationChatSettingsSheetState
                         title: 'Auto-start recording',
                         subtitle:
                             'Open the mic after the tutor finishes speaking.',
-                        value: _prefs.autoStartRecording,
+                        value: _prefs.autoStartRecording ||
+                            _prefs.autoConversation,
                         enabled: !_saving,
                         onChanged: (value) {
-                          _save(
-                            _prefs.copyWith(autoStartRecording: value),
-                          );
-                        },
-                      ),
-                      AppToggleRow(
-                        title: 'Hands-free auto record',
-                        subtitle:
-                            'Keep voice on and reopen the mic after every reply.',
-                        value: _prefs.autoConversation,
-                        enabled: !_saving,
-                        onChanged: (value) {
+                          // Hands-free was merged into this toggle; clear the legacy flag.
                           _save(
                             _prefs.copyWith(
-                              autoConversation: value,
-                              autoPlayVoice:
-                                  value ? true : _prefs.autoPlayVoice,
-                              soundOn: value ? true : _prefs.soundOn,
+                              autoStartRecording: value,
+                              autoConversation: false,
                             ),
                           );
                         },
@@ -190,17 +176,6 @@ class _ConversationChatSettingsSheetState
                             _prefs.copyWith(typeMessagesEnabled: value),
                           );
                         },
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(
-                          'Done',
-                          style: TextStyle(
-                            color: AppColors.primaryPurple,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
                       ),
                     ],
                   ),

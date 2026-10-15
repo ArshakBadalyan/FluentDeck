@@ -1,12 +1,13 @@
 import 'package:fluentdeck/services/main_tab_config.dart';
 
 /// Index of the "Settings" tab within Profile's sub-tabs
-/// (Account, Settings, Subscription, Notifications, Sound, Security, About).
+/// (Account, Settings, Subscription, Security, About).
+/// Notifications and Sound are pages opened from Settings.
 /// Keep in sync with `_profileSubTabs` in `EnglishMainScreenState`.
 const int kProfileSettingsTabIndex = 1;
 
 /// Index of the "Subscription" tab within Profile's sub-tabs
-/// (Account, Settings, Subscription, Notifications, Sound, Security, About).
+/// (Account, Settings, Subscription, Security, About).
 /// Keep in sync with `_profileSubTabs` in `EnglishMainScreenState`.
 const int kProfileSubscriptionTabIndex = 2;
 

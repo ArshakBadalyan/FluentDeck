@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -24,7 +25,7 @@ class SharedDecksScreen extends StatelessWidget {
   Future<void> _openWebPage(BuildContext context) async {
     final url = _webUrl;
     if (url == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(
           content: Text('Shared decks page is coming soon.'),
         ),
@@ -34,7 +35,7 @@ class SharedDecksScreen extends StatelessWidget {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Could not open the shared decks page.')),
       );
     }
@@ -78,7 +79,7 @@ class SharedDecksScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryPurple.withValues(alpha: 0.06),
+                      color: AppColors.brandPrimary.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
@@ -86,12 +87,12 @@ class SharedDecksScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryPurple.withValues(alpha: 0.12),
+                            color: AppColors.brandPrimary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
                             Icons.travel_explore_rounded,
-                            color: AppColors.primaryPurple,
+                            color: AppColors.brandPrimary,
                             size: 22,
                           ),
                         ),
@@ -120,7 +121,7 @@ class SharedDecksScreen extends StatelessWidget {
                       ),
                       label: Text(hasWebUrl ? 'Open shared decks' : 'Coming soon'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primaryPurple,
+                        backgroundColor: AppColors.brandPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -143,8 +144,8 @@ class SharedDecksScreen extends StatelessWidget {
                   icon: const Icon(Icons.file_upload_outlined),
                   label: const Text('Import a file'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primaryPurple,
-                    side: const BorderSide(color: AppColors.primaryPurple),
+                    foregroundColor: AppColors.brandPrimary,
+                    side: const BorderSide(color: AppColors.brandPrimary),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),

@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
@@ -156,7 +157,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primaryPurple,
+                        color: AppColors.brandPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -168,10 +169,10 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                             height: 44,
                             margin: const EdgeInsets.symmetric(horizontal: 24),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryPurple.withValues(alpha: 0.08),
+                              color: AppColors.brandPrimary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.primaryPurple.withValues(alpha: 0.25),
+                                color: AppColors.brandPrimary.withValues(alpha: 0.25),
                               ),
                             ),
                           ),
@@ -210,7 +211,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                       child: FilledButton(
                         onPressed: () => Navigator.pop(ctx, selected),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primaryPurple,
+                          backgroundColor: AppColors.brandPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -319,7 +320,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      AppToast.showSnackBar(context, SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -328,7 +329,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
       await FlashcardExportService.instance.exportJsonFile();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      AppToast.showSnackBar(context, SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -372,7 +373,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
       final map = Map<String, dynamic>.from(decoded);
       if (map.containsKey('cards') || map.containsKey('decks')) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppToast.showSnackBar(context, 
           const SnackBar(
             content: Text('That file is a flashcard backup. Use Restore from backup instead.'),
           ),
@@ -383,12 +384,12 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
       await DeckNotificationService.instance.syncFromSettings();
       await widget.onReload();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Review settings imported')),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      AppToast.showSnackBar(context, SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -483,7 +484,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
             MaterialPageRoute<bool>(builder: (_) => const SharedDecksScreen()),
           );
           if (imported == true && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            AppToast.showSnackBar(context, 
               const SnackBar(content: Text('Shared deck imported')),
             );
           }
@@ -618,9 +619,9 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.primaryPurple,
-                thumbColor: AppColors.primaryPurple,
-                overlayColor: AppColors.primaryPurple.withValues(alpha: 0.15),
+                activeTrackColor: AppColors.brandPrimary,
+                thumbColor: AppColors.brandPrimary,
+                overlayColor: AppColors.brandPrimary.withValues(alpha: 0.15),
               ),
               child: Slider(
                 value: _settings.leechThreshold.toDouble(),
@@ -635,12 +636,12 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primaryPurple.withValues(alpha: 0.1),
+              color: AppColors.brandPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               '${_settings.leechThreshold}',
-              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryPurple),
+              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.brandPrimary),
             ),
           ),
         ],
@@ -719,20 +720,16 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
     return [
       if (kIsWeb)
         decksSettingsNote('Daily reminders are available on Android and iOS only.'),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Daily review reminder'),
-        subtitle: Text(
-          _settings.reviewReminderEnabled
-              ? 'At ${_timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute)}'
-              : 'Off',
-        ),
+      AppToggleRow(
+        title: 'Daily review reminder',
+        subtitle:
+            _settings.reviewReminderEnabled
+                ? 'At ${_timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute)}'
+                : 'Off',
         value: _settings.reviewReminderEnabled,
-        activeThumbColor: AppColors.primaryPurple,
+        enabled: !kIsWeb,
         onChanged:
-            kIsWeb
-                ? null
-                : (v) => _save(_settings.copyWith(reviewReminderEnabled: v)),
+            kIsWeb ? null : (v) => _save(_settings.copyWith(reviewReminderEnabled: v)),
       ),
       if (_settings.reviewReminderEnabled && !kIsWeb)
         ListTile(
@@ -750,20 +747,16 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
 
   List<Widget> _appearance() {
     return [
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Dark mode (Decks)'),
-        subtitle: const Text('Dark theme for the Decks section only'),
+      AppToggleRow(
+        title: 'Dark mode (Decks)',
+        subtitle: 'Dark theme for the Decks section only',
         value: _settings.darkMode,
-        activeThumbColor: AppColors.primaryPurple,
         onChanged: (v) => _save(_settings.copyWith(darkMode: v)),
       ),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Keep screen on'),
-        subtitle: const Text('Prevent sleep during review sessions'),
+      AppToggleRow(
+        title: 'Keep screen on',
+        subtitle: 'Prevent sleep during review sessions',
         value: _settings.keepScreenOn,
-        activeThumbColor: AppColors.primaryPurple,
         onChanged: (v) => _save(_settings.copyWith(keepScreenOn: v)),
       ),
     ];
@@ -771,12 +764,10 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
 
   List<Widget> _controls() {
     return [
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Enable review gestures'),
-        subtitle: const Text('Swipe and double-tap on the card area'),
+      AppToggleRow(
+        title: 'Enable review gestures',
+        subtitle: 'Swipe and double-tap on the card area',
         value: _settings.gesturesEnabled,
-        activeThumbColor: AppColors.primaryPurple,
         onChanged: (v) => _save(_settings.copyWith(gesturesEnabled: v)),
       ),
       if (_settings.gesturesEnabled) ...[
@@ -923,13 +914,13 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.primaryPurple.withValues(alpha: 0.06),
+            color: AppColors.brandPrimary.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primaryPurple.withValues(alpha: 0.14)),
+            border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.14)),
           ),
           child: Row(
             children: [
-              Icon(Icons.schedule_rounded, color: AppColors.primaryPurple, size: 20),
+              Icon(Icons.schedule_rounded, color: AppColors.brandPrimary, size: 20),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

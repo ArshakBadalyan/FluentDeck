@@ -69,9 +69,9 @@ class _DecksHelpScreenState extends State<DecksHelpScreen>
         title: const Text('Help & FAQ'),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppColors.primaryPurple,
+          labelColor: AppColors.brandPrimary,
           unselectedLabelColor: Colors.grey.shade600,
-          indicatorColor: AppColors.primaryPurple,
+          indicatorColor: AppColors.brandPrimary,
           tabs: const [
             Tab(text: 'Guide'),
             Tab(text: 'FAQ'),
@@ -184,7 +184,7 @@ class _HelpSectionTileState extends State<_HelpSectionTile> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('• ', style: TextStyle(color: AppColors.primaryPurple)),
+                            const Text('• ', style: TextStyle(color: AppColors.brandPrimary)),
                             Expanded(
                               child: Text(
                                 b,

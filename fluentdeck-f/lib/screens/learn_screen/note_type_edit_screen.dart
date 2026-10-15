@@ -188,7 +188,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
               onPressed: _saving ? null : _save,
-              style: TextButton.styleFrom(foregroundColor: AppColors.primaryPurple),
+              style: TextButton.styleFrom(foregroundColor: AppColors.brandPrimary),
               child:
                   _saving
                       ? const SizedBox(
@@ -310,9 +310,8 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
                   'Required',
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
-                Switch(
+                AppSwitch(
                   value: row.required,
-                  activeThumbColor: AppColors.primaryPurple,
                   onChanged: (v) => setState(() => row.required = v),
                 ),
               ],
@@ -340,14 +339,14 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
           color: preset.backgroundColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? AppColors.primaryPurple : Colors.black.withValues(alpha: 0.08),
+            color: selected ? AppColors.brandPrimary : Colors.black.withValues(alpha: 0.08),
             width: selected ? 2.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color:
                   selected
-                      ? AppColors.primaryPurple.withValues(alpha: 0.25)
+                      ? AppColors.brandPrimary.withValues(alpha: 0.25)
                       : Colors.black.withValues(alpha: 0.04),
               blurRadius: selected ? 10 : 6,
               offset: const Offset(0, 2),
@@ -374,12 +373,12 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? AppColors.primaryPurple : preset.textColor,
+                color: selected ? AppColors.brandPrimary : preset.textColor,
               ),
             ),
             if (selected) ...[
               const SizedBox(height: 4),
-              const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.primaryPurple),
+              const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.brandPrimary),
             ],
           ],
         ),
@@ -399,7 +398,7 @@ class _AddButton extends StatelessWidget {
       onPressed: onPressed,
       icon: const Icon(Icons.add_rounded, size: 18),
       label: const Text('Add'),
-      style: TextButton.styleFrom(foregroundColor: AppColors.primaryPurple),
+      style: TextButton.styleFrom(foregroundColor: AppColors.brandPrimary),
     );
   }
 }

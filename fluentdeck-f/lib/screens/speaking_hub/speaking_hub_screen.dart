@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fluentdeck/app_colors.dart';
 
 import 'package:flutter/material.dart';
 
@@ -15,7 +16,7 @@ import 'speaking_role_play_tab.dart';
 import 'speaking_topics_tab.dart';
 
 /// Same purple as [MainAppBar] background.
-const Color _speakSessionBarColor = Color(0xFF7A24E4);
+const Color _speakSessionBarColor = AppColors.brandPrimaryDeep;
 
 class SpeakingHubScreen extends StatefulWidget {
   const SpeakingHubScreen({

@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
 import 'package:fluentdeck/services/note_service.dart';
@@ -88,7 +89,7 @@ class _ProfileSettingsCategoryScreenState extends State<ProfileSettingsCategoryS
 
     if (!ok) {
       setState(() => _autoCreateFlashcards = !value);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         const SnackBar(content: Text('Could not update setting')),
       );
     }

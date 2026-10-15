@@ -118,9 +118,6 @@ class FlashcardSyncService extends ChangeNotifier {
                   ? '1 local review was skipped because the server already had a newer review. Server data wins for conflicting cards.'
                   : '$skipped local reviews were skipped because the server already had newer data. Server data wins for conflicting cards.',
             ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
-            ],
           ),
     );
   }

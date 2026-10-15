@@ -11,11 +11,6 @@ class SoftwarePage extends StatelessWidget {
         title: Text(
           AppLocalizations.instance.t('profile.about-us.software-licenses'),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          tooltip: 'Close',
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),

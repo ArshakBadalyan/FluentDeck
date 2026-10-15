@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -41,7 +42,7 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
   bool _loading = false;
 
   void _showWebUnavailableMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
+    AppToast.showSnackBar(context, 
       SnackBar(
         content: Text(context.tr('login-register.google-web-unavailable')),
       ),
@@ -62,7 +63,7 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
       widget.onComplete?.call(res);
 
       if (res['status'] == 'success') {
-        AudioService().play('formSubmit');
+        AudioService().play('signIn');
         Navigator.pushReplacement(
           context,
           appMaterialPageRoute(
@@ -79,7 +80,7 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
 
       final messageKey = res['messageKey']?.toString();
       final apiMessage = res['message']?.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(
           content: Text(
             (apiMessage != null && apiMessage.isNotEmpty)
@@ -93,7 +94,7 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppToast.showSnackBar(context, 
         SnackBar(content: Text(context.tr('errors.network'))),
       );
     }
