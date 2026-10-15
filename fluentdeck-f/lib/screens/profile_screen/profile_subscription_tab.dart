@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../app_colors.dart';
 import '../../services/conversation_limit_service.dart';
 import '../../services/subscription_service.dart';
+import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../ui_elements/primary_button.dart';
 
@@ -187,7 +188,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const AppPageBackground(child: Center(child: CircularProgressIndicator()));
+      return const AppListSkeleton(count: 3, itemHeight: 96);
     }
 
     return AppPageBackground(

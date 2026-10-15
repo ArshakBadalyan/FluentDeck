@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../localization/app_localizations.dart';
-import '../../../ui_elements/loading_overlay.dart';
+import '../../../ui_elements/app_skeletons.dart';
 
 class ReleaseNotesPopup extends StatefulWidget {
   const ReleaseNotesPopup({super.key});
@@ -56,7 +56,7 @@ class _ReleaseNotesPopupState extends State<ReleaseNotesPopup> {
     }
 
     if (versions == null) {
-      return const Center(child: LoadingOverlay());
+      return const ReleaseNotesSkeleton();
     }
 
     return SingleChildScrollView(

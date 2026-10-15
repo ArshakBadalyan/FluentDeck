@@ -6,6 +6,7 @@ import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/english_level_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/services/subscription_service.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 import 'package:fluentdeck/widgets/cefr_level_chips.dart';
@@ -99,10 +100,11 @@ class _ProfileSettingsSpeakingSectionState
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      // This section is always embedded inside the parent category
+      // screen's ListView — use the shrink-wrapped skeleton, not
+      // ProfileSettingsCardSkeleton (which owns its own ListView and
+      // would be given unbounded height here).
+      return const AppSectionCardSkeleton(rows: 4);
     }
 
     return Column(

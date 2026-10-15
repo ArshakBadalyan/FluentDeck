@@ -53,6 +53,28 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    // On the very first frame (web especially, but seen elsewhere too), the
+    // engine can hand this AppBar a degenerate ~0x0 size before the real
+    // viewport syncs in. AppBar's own internals lay out title/actions/bottom
+    // as separate Row/Column children (NavigationToolbar for the toolbar,
+    // a spaceBetween Column when `bottom` is set) — any of them can throw a
+    // RenderFlex overflow when squeezed to ~0 logical pixels, not just one.
+    // Rather than patch each internal Flex individually, render nothing but
+    // an empty bar for that one frame: with no title/actions/leading/bottom,
+    // AppBar has no multi-child Flex to lay out, so nothing can overflow.
+    // MediaQuery.sizeOf makes this rebuild automatically once a real size
+    // arrives, a frame or two later, with no visible flicker.
+    final viewSize = MediaQuery.sizeOf(context);
+    final hasValidSize = viewSize.width > 1 && viewSize.height > 1;
+
+    if (!hasValidSize) {
+      return AppBar(
+        elevation: 0,
+        backgroundColor: AppColors.brandPrimaryDeep,
+        toolbarHeight: _toolbarHeight,
+      );
+    }
+
     return AppBar(
       systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarColor: Colors.black,

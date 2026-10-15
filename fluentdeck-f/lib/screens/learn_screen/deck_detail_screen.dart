@@ -6,6 +6,7 @@ import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 
 class DeckDetailScreen extends StatefulWidget {
@@ -165,7 +166,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const AppListSkeleton(itemHeight: 56);
     if (_error != null) {
       return Center(child: Text(_error!));
     }

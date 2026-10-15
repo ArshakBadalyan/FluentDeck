@@ -111,6 +111,17 @@ async function recordSpeakingTurnStats(strapi, userId, { userText, corrections }
     strapi.log.warn('[recordSpeakingTurnStats] language analytics failed', err);
   }
 
+  try {
+    // Despite the name, this is the one "practice streak" the Profile/Activity
+    // hero cards read (progress.flashcardReviewStreakDays) — it used to only
+    // advance from deck reviews, so a speaking-only day never counted even
+    // though the UI promises "Start speaking or reviewing to build a streak".
+    const { recordFlashcardReviewStreak } = require('./flashcard-streak');
+    await recordFlashcardReviewStreak(strapi, userId);
+  } catch (err) {
+    strapi.log.warn('[recordSpeakingTurnStats] streak update failed', err);
+  }
+
   return {
     perfectSentencesCount,
     uniqueWordsUsed,

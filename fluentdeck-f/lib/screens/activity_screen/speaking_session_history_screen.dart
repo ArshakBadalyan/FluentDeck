@@ -5,6 +5,7 @@ import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/models/speaking_session_record_model.dart';
 import 'package:fluentdeck/screens/activity_screen/speaking_session_detail_screen.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 
 class SpeakingSessionHistoryScreen extends StatefulWidget {
   const SpeakingSessionHistoryScreen({super.key});
@@ -74,7 +75,7 @@ class _SpeakingSessionHistoryScreenState
       ),
       body:
           _loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppListSkeleton()
               : _error != null
               ? Center(
                 child: Padding(

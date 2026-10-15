@@ -8,6 +8,7 @@ import '../../services/speaking_content_service.dart';
 import '../../services/speaking_scores_service.dart';
 import '../../services/speaking_session_service.dart';
 import '../../services/subscription_service.dart';
+import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../utils/speaking_item_icons.dart';
@@ -155,7 +156,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
 
   Widget _buildList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppListSkeleton();
     }
     if (_error != null) {
       return Center(

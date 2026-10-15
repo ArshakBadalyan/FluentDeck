@@ -8,6 +8,7 @@ import '../../services/speaking_scores_service.dart';
 import '../../services/speaking_session_service.dart';
 import '../../utils/speaking_item_icons.dart';
 import '../../utils/speaking_premium_gate.dart';
+import '../../ui_elements/app_skeletons.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingTopicsTab extends StatefulWidget {
@@ -90,7 +91,7 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
 
   Widget _buildList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppListSkeleton();
     }
     if (_error != null) {
       return Center(

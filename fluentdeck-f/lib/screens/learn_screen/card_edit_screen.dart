@@ -16,6 +16,7 @@ import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 import 'package:fluentdeck/widgets/cefr_level_chips.dart';
 import 'package:fluentdeck/widgets/html_field_editor.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
 import 'package:fluentdeck/widgets/image_occlusion_editor.dart';
@@ -684,7 +685,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const ProfileSettingsCardSkeleton(rows: 4);
     }
     if (_error != null) {
       return Center(

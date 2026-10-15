@@ -3,7 +3,7 @@ import 'package:fluentdeck/localization/app_localizations.dart';
 
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
-import '../../ui_elements/loading_overlay.dart';
+import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 
 class ProfileSoundTab extends StatefulWidget {
@@ -94,7 +94,7 @@ class _ProfileSoundTabState extends State<ProfileSoundTab>
     super.build(context);
 
     if (isLoading) {
-      return const AppPageBackground(child: Center(child: LoadingOverlay()));
+      return const ProfileSettingsCardSkeleton(rows: 2);
     }
 
     return AppPageBackground(

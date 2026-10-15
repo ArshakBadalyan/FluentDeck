@@ -9,6 +9,7 @@ import 'package:fluentdeck/services/deck_notification_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_store.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 
 /// Decks settings hub.
 class DecksSettingsScreen extends StatefulWidget {
@@ -189,7 +190,11 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
   Widget build(BuildContext context) {
     final body =
         _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? AppListSkeleton(
+                count: 5,
+                itemHeight: 56,
+                scrollable: !widget.inlineInScroll,
+              )
             : _buildSectionTiles();
 
     if (widget.embedInShell || widget.inlineInScroll) {

@@ -308,7 +308,12 @@ class LanguageHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final service = LanguageLevelsService.instance;
     return Scaffold(
-      appBar: AppBar(title: const Text('Language history')),
+      appBar: AppBar(
+        title: const Text('Language history'),
+        backgroundColor: AppColors.brandPrimary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: AppPageBackground(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),

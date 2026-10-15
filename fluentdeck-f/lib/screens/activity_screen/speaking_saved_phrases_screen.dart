@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/user_note_model.dart';
 import 'package:fluentdeck/services/note_service.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 
 class SpeakingSavedPhrasesScreen extends StatefulWidget {
   const SpeakingSavedPhrasesScreen({super.key});
@@ -59,7 +60,7 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
       ),
       body:
           _loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppListSkeleton()
               : _error != null
               ? Center(
                 child: Padding(

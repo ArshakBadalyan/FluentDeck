@@ -8,6 +8,7 @@ import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/lesson_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 
 class LessonDetailScreen extends StatefulWidget {
   const LessonDetailScreen({super.key, required this.lessonId});
@@ -81,7 +82,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       ),
       body:
           _loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppListSkeleton()
               : _lesson == null
               ? const Center(child: Text('Lesson not found'))
               : ListView(

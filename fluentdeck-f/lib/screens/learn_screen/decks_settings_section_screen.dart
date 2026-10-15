@@ -416,20 +416,26 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         title: Text(widget.section.title),
       ),
       body: AppPageBackground(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-          children: [
-            Text(
-              widget.section.subtitle,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppPageColors.subtitleOf(context),
-                height: 1.4,
+        // Material ancestor for the bare ListTiles in _sectionChildren() —
+        // without it, the ColoredBox above sits between them and the
+        // Scaffold's own Material, so their ink splashes can't paint.
+        child: Material(
+          type: MaterialType.transparency,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            children: [
+              Text(
+                widget.section.subtitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppPageColors.subtitleOf(context),
+                  height: 1.4,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ..._sectionChildren(),
-          ],
+              const SizedBox(height: 16),
+              ..._sectionChildren(),
+            ],
+          ),
         ),
       ),
     );

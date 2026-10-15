@@ -6,6 +6,7 @@ import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 
 class ConversationHistoryScreen extends StatefulWidget {
   const ConversationHistoryScreen({super.key});
@@ -117,7 +118,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
       ),
       body:
           _loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppListSkeleton(itemHeight: 76)
               : _sessions.isEmpty
               ? Center(
                 child: Text(

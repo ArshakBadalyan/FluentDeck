@@ -100,7 +100,13 @@ class UserProgressModel {
                   )
                   .toList()
               : const [],
-      streakDays: attrs['streakDays'] as int? ?? 0,
+      // `streakDays` itself is never incremented server-side (dead field,
+      // always 0) — `flashcardReviewStreakDays` is the one actually kept up
+      // to date, now from both deck reviews and speaking turns.
+      streakDays:
+          attrs['flashcardReviewStreakDays'] as int? ??
+          attrs['streakDays'] as int? ??
+          0,
       totalSpeakingMinutes: attrs['totalSpeakingMinutes'] as int? ?? 0,
       perfectSentencesCount: attrs['perfectSentencesCount'] as int? ?? 0,
       uniqueWordsUsed: attrs['uniqueWordsUsed'] as int? ?? 0,

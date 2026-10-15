@@ -24,6 +24,7 @@ import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/utils/review_queue_order.dart';
 import 'package:fluentdeck/utils/type_answer_utils.dart';
 import 'package:fluentdeck/widgets/image_occlusion_review.dart';
@@ -1224,7 +1225,10 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading || _submitting) {
+    if (_loading) {
+      return const AppListSkeleton(count: 1, itemHeight: 420);
+    }
+    if (_submitting) {
       return const Center(child: CircularProgressIndicator());
     }
 

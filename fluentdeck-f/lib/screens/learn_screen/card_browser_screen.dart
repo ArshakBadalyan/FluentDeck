@@ -1180,18 +1180,24 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                         controller: scrollController,
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                         children: [
-                          AppSelectField<int?>(
-                            label: 'Deck',
-                            value: _safeDeckDropdownValue(deck),
-                            options: [
-                              const AppSelectOption<int?>(value: null, label: 'All decks'),
-                              ..._decks.map(
-                                (d) => AppSelectOption<int?>(value: d.id, label: d.name),
-                              ),
-                            ],
-                            onChanged: (v) => setSheetState(() => deck = v),
-                          ),
-                          const SizedBox(height: 16),
+                          // Fixed-deck scope (opened for one specific deck) has
+                          // no deck picker in the toolbar either — this field
+                          // let you switch to "All decks"/another deck from
+                          // inside the sheet, silently escaping that scope.
+                          if (!_fixedDeckScope) ...[
+                            AppSelectField<int?>(
+                              label: 'Deck',
+                              value: _safeDeckDropdownValue(deck),
+                              options: [
+                                const AppSelectOption<int?>(value: null, label: 'All decks'),
+                                ..._decks.map(
+                                  (d) => AppSelectOption<int?>(value: d.id, label: d.name),
+                                ),
+                              ],
+                              onChanged: (v) => setSheetState(() => deck = v),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           AppSelectField<String>(
                             label: 'Language',
                             value: language,

@@ -3,7 +3,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/achievement_model.dart';
 import 'package:fluentdeck/services/achievement_service.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/ui_elements/loading_overlay.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/responsive_layout.dart';
 
@@ -45,7 +45,7 @@ class _ProfileAchievementsScreenState extends State<ProfileAchievementsScreen> {
       ),
       body:
           _loading
-              ? const Center(child: LoadingOverlay())
+              ? const AchievementsScreenSkeleton()
               : RefreshIndicator(
                 onRefresh: _load,
                 color: AppColors.brandPrimary,

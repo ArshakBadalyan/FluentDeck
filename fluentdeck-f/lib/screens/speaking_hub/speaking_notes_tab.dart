@@ -14,6 +14,7 @@ import '../../screens/speaking_hub/widgets/my_notes_filters_sheet.dart';
 import '../../services/conversation_service.dart';
 import '../../services/my_notes_linked_decks_store.dart';
 import '../../services/note_service.dart';
+import '../../ui_elements/app_skeletons.dart';
 import '../../utils/learning_language_utils.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
@@ -677,7 +678,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   Widget _buildList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppListSkeleton();
     }
     if (_error != null) {
       return Center(

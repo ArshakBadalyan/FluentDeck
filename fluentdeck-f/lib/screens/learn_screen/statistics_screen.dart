@@ -10,6 +10,7 @@ import 'package:fluentdeck/services/flashcard_stats_export_service.dart';
 import 'package:fluentdeck/screens/learn_screen/review_log_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
 import 'package:fluentdeck/services/decks_help_hints_store.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/utils/statistics_labels.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/activity_preview_list.dart';
@@ -90,8 +91,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return AppPageBackground(
-        child: const Center(child: CircularProgressIndicator()),
+      return const AppPageBackground(
+        child: AppListSkeleton(count: 4, itemHeight: 160),
       );
     }
 
@@ -616,7 +617,7 @@ class _FilterCard extends StatelessWidget {
                 tooltip: 'Export PDF',
                 visualDensity: VisualDensity.compact,
                 onPressed: onExport,
-                icon: Icon(Icons.picture_as_pdf_outlined, color: AppPageColors.subtitleOf(context)),
+                icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.brandPrimaryDeep),
               ),
             ],
           ),
@@ -855,6 +856,10 @@ class _BarChartSeries extends StatelessWidget {
     }
 
     final maxY = series.map((e) => e.count).fold<int>(0, (a, b) => a > b ? a : b).toDouble();
+    final yInterval = maxY <= 5 ? 1.0 : (maxY / 4).ceilToDouble();
+    // Showing every date would overlap on a 30-point series — thin them out
+    // to roughly 5-6 labels across the chart.
+    final labelEvery = (series.length / 5).ceil().clamp(1, series.length);
 
     return BarChart(
       BarChartData(
@@ -862,18 +867,50 @@ class _BarChartSeries extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: maxY <= 5 ? 1 : (maxY / 4).ceilToDouble(),
+          horizontalInterval: yInterval,
           getDrawingHorizontalLine: (_) => FlLine(
             color: Colors.grey.shade200,
             strokeWidth: 1,
           ),
         ),
         borderData: FlBorderData(show: false),
-        titlesData: const FlTitlesData(
-          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              interval: yInterval,
+              getTitlesWidget: (value, meta) => Text(
+                value.toInt().toString(),
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+              ),
+            ),
+          ),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              // BarChart ignores `interval` for bottom titles — every bar's
+              // index gets a callback regardless, so thin them out by hand
+              // or every date renders and they all overlap into mush.
+              getTitlesWidget: (value, meta) {
+                final i = value.round();
+                if (i < 0 || i >= series.length) return const SizedBox.shrink();
+                if (i % labelEvery != 0 && i != series.length - 1) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _shortDayLabel(series[i].date),
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
         barGroups:
             series.asMap().entries.map((e) {
@@ -902,6 +939,17 @@ class _BarChartSeries extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "2026-10-15" -> "Oct 15"; falls back to the raw string if it doesn't parse.
+String _shortDayLabel(String isoDate) {
+  final date = DateTime.tryParse(isoDate);
+  if (date == null) return isoDate;
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  return '${months[date.month - 1]} ${date.day}';
 }
 
 class _ButtonCountsChart extends StatelessWidget {

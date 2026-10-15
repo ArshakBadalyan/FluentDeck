@@ -8,6 +8,7 @@ import '../../models/speaking_session_context.dart';
 import '../../services/conversation_service.dart';
 import '../../services/flashcard_service.dart';
 import '../../services/speaking_preferences_service.dart';
+import '../../ui_elements/app_skeletons.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingPracticeTab extends StatefulWidget {
@@ -149,7 +150,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
 
   Widget _buildList() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppListSkeleton();
     }
     if (_error != null) {
       return Center(

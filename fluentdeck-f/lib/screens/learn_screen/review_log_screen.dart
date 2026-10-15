@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_stats_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 
 class ReviewLogScreen extends StatefulWidget {
@@ -63,7 +64,7 @@ class _ReviewLogScreenState extends State<ReviewLogScreen> {
       ),
       body:
           _loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppListSkeleton(itemHeight: 56)
               : _error != null
               ? Center(
                 child: Padding(

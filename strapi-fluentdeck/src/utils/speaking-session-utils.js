@@ -63,7 +63,9 @@ async function getOrCreateUserProgress(strapi, userId) {
 async function recordSpeakingPractice(strapi, userId, durationMinutes, now = new Date()) {
   const progress = await getOrCreateUserProgress(strapi, userId);
   const addedMinutes = Math.min(Math.max(Number(durationMinutes) || 1, 1), 120);
-  const streakDays = computeSpeakingStreak({
+  // Legacy, speaking-only streak — kept updated for compatibility, but no
+  // longer what the app displays (see flashcardReviewStreakDays below).
+  const legacyStreakDays = computeSpeakingStreak({
     lastPracticeAt: progress.lastPracticeAt ?? progress.last_practice_at,
     currentStreakDays: progress.streakDays ?? progress.streak_days ?? 0,
     now,
@@ -75,11 +77,17 @@ async function recordSpeakingPractice(strapi, userId, durationMinutes, now = new
   await strapi.db.query('api::user-progress.user-progress').update({
     where: { id: progress.id },
     data: {
-      streakDays,
+      streakDays: legacyStreakDays,
       totalSpeakingMinutes,
       lastPracticeAt: now,
     },
   });
+
+  // The Profile/Activity hero cards read this one — it's shared with deck
+  // reviews and free-chat turns, so a scored speaking session counts toward
+  // the same streak instead of its own disconnected counter.
+  const { recordFlashcardReviewStreak } = require('./flashcard-streak');
+  const streakDays = await recordFlashcardReviewStreak(strapi, userId, now);
 
   return { streakDays, totalSpeakingMinutes };
 }

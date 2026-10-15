@@ -17,7 +17,7 @@ import '../../services/main_navigation_coordinator.dart';
 import '../../services/main_tab_config.dart';
 import '../../services/subscription_service.dart';
 import '../../ui_elements/dialogs/account_info_save_dialog.dart';
-import '../../ui_elements/loading_overlay.dart';
+import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/primary_button.dart';
 
 class ProfileAccountTab extends StatefulWidget {
@@ -153,7 +153,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const AppPageBackground(child: Center(child: LoadingOverlay()));
+      return const ProfileAccountSkeleton();
     }
 
     final disableInputs = _processing;
