@@ -35,6 +35,7 @@ async function buildDetailedStats(strapi, userId, { deckId = null, range = '12m'
     cardIds.length
       ? await strapi.db.query('api::card-review-state.card-review-state').findMany({
           where: { user: userId, flashcard: { $in: cardIds } },
+          populate: ['flashcard'],
         })
       : [];
 

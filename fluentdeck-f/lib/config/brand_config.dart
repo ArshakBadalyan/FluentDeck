@@ -32,8 +32,10 @@ abstract final class BrandConfig {
   /// Text/icons on [primaryOnDark].
   static const Color onPrimaryDark = Color(0xFF04191B);
 
-  /// Hero / banner gradient (white text must stay readable on both stops).
-  static const List<Color> heroGradient = [primary, primaryDeep];
+  /// Hero / banner fill — both stops equal so every hero card renders as a
+  /// flat [primaryDeep], matching the header and buttons exactly instead of
+  /// visibly fading between two shades.
+  static const List<Color> heroGradient = [primaryDeep, primaryDeep];
 
   // ── Accents ─────────────────────────────────────────────────────────────
   /// Speaking features: mic, voice waves, speaking highlights.

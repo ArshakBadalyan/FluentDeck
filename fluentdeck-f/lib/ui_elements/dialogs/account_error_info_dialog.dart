@@ -27,7 +27,7 @@ class AccountErrorInfoDialog extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 const Text(
-                  'Fehler',
+                  'Error',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18,
@@ -63,7 +63,7 @@ class AccountErrorInfoDialog extends StatelessWidget {
                       Navigator.of(context).pop();
                     },
                     child: const Text(
-                      'Verstanden',
+                      'Got it',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,

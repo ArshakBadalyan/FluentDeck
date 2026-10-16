@@ -68,6 +68,7 @@ async function pullSyncData(strapi, userId, { since = null } = {}) {
             flashcard: { $in: cardIds },
             ...(forceFull ? {} : sinceFilter(sinceDate)),
           },
+          populate: ['flashcard'],
         })
       : [];
 

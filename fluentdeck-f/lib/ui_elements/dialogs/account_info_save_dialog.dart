@@ -20,7 +20,7 @@ class AccountInfoSaveDialog extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Erfolgreich aktualisiert',
+                  'Successfully updated',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18,
@@ -45,7 +45,7 @@ class AccountInfoSaveDialog extends StatelessWidget {
                       Navigator.of(context).pop();
                     },
                     child: const Text(
-                      'Verstanden',
+                      'Got it',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,

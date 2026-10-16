@@ -71,7 +71,9 @@ class _SpeakingSessionHistoryScreenState
         title: Text(l10n.t('speaking-activity.session-history.title')),
         backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.35),
+        scrolledUnderElevation: 8,
       ),
       body:
           _loading

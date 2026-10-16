@@ -300,9 +300,11 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+        backgroundColor: AppColors.brandPrimary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.35),
+        scrolledUnderElevation: 8,
         title: Text(widget.isEditing ? 'Edit note' : 'New note'),
       ),
       body: SingleChildScrollView(

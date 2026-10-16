@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
@@ -97,9 +98,11 @@ class ProfileSettingsTabState extends State<ProfileSettingsTab> {
             (context) => Scaffold(
               backgroundColor: AppPageColors.pageBgOf(context),
               appBar: AppBar(
-                backgroundColor: AppPageColors.pageBgOf(context),
-                foregroundColor: Theme.of(context).colorScheme.onSurface,
-                elevation: 0,
+                backgroundColor: AppColors.brandPrimaryDeep,
+                foregroundColor: Colors.white,
+                elevation: 4,
+                shadowColor: Colors.black.withValues(alpha: 0.35),
+                scrolledUnderElevation: 8,
                 title: Text(title),
               ),
               body: page,

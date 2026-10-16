@@ -61,6 +61,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       TabController(length: _activitySubTabs.length, vsync: this);
   bool _speakInSession = false;
   int _notificationUnreadCount = 0;
+  bool _bottomNavShowShadow = false;
   /// When set before [PageController] navigation, overrides default sub-tab 0.
   int? _pendingSubIndex;
   final GlobalKey<DecksShellScreenState> _decksShellKey = GlobalKey();
@@ -379,6 +380,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: MainAppBar(
         title: _currentTitle,
+        suppressShadow: isSpeak && _speakInSession,
         // Profile: log out sits to the right of the bell.
         trailingAction:
             isProfile
@@ -467,17 +469,35 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
         children: [
           const _OfflineSyncBanner(),
           Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: _mainPagePhysics,
-              onPageChanged: _onMainPageChanged,
-              children: _orderedPages,
+            child: NotificationListener<ScrollNotification>(
+              // Shows a shadow above the bottom nav bar whenever the
+              // current tab's own list isn't scrolled all the way to its
+              // bottom edge, mirroring the top app bar's scrolled-under
+              // shadow. Ignores the PageView's own horizontal page-swipe
+              // notifications — only vertical list scrolling counts.
+              onNotification: (notification) {
+                if (notification.metrics.axis != Axis.vertical) {
+                  return false;
+                }
+                final showShadow = notification.metrics.extentAfter > 0;
+                if (showShadow != _bottomNavShowShadow) {
+                  setState(() => _bottomNavShowShadow = showShadow);
+                }
+                return false;
+              },
+              child: PageView(
+                controller: _pageController,
+                physics: _mainPagePhysics,
+                onPageChanged: _onMainPageChanged,
+                children: _orderedPages,
+              ),
             ),
           ),
         ],
       ),
       bottomNavigationBar: EnglishBottomNav(
         currentIndex: _currentIndex,
+        showShadow: _bottomNavShowShadow,
         onTap: (index) async {
           if (index == _currentIndex) return;
           _pendingSubIndex = null;

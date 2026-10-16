@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/conversation_session_model.dart';
 import 'package:fluentdeck/services/conversation_history_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
@@ -107,11 +108,17 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: AppColors.brandPrimary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.35),
+        scrolledUnderElevation: 8,
         title: const Text('Conversation history'),
         actions: [
           if (_sessions.isNotEmpty)
             TextButton(
               onPressed: _confirmClearAll,
+              style: TextButton.styleFrom(foregroundColor: Colors.white),
               child: const Text('Clear all'),
             ),
         ],

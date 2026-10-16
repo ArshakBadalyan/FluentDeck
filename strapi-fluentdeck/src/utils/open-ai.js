@@ -9,6 +9,17 @@ const openaiDavo = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY_DAVO,
 });
 
+const SOLUTION_MODEL = process.env.AI_SOLUTION_MODEL || "gpt-5.2";
+const SOLUTION_SEO_MODEL = process.env.AI_SOLUTION_SEO_MODEL || "gpt-5.2";
+const CATEGORY_LESSON_MODEL = process.env.AI_CATEGORY_LESSON_MODEL || "gpt-5.2";
+const QUESTION_GENERATION_MODEL = process.env.AI_QUESTION_GENERATION_MODEL || "gpt-5.2";
+const QUESTION_GENERATION_MULTISTEP_MODEL =
+  process.env.AI_QUESTION_GENERATION_MULTISTEP_MODEL || "gpt-5.2";
+const QUESTION_REVIEW_MODEL = process.env.AI_QUESTION_REVIEW_MODEL || "gpt-5.2";
+const QUESTION_REVIEW_MULTISTEP_MODEL =
+  process.env.AI_QUESTION_REVIEW_MULTISTEP_MODEL || "gpt-5.2";
+const IMPROVEMENT_MODEL = process.env.AI_IMPROVEMENT_MODEL || "gpt-4o";
+
 function extractBodyHtml(initialText) {
   if (typeof initialText !== "string") {
     return "";
@@ -46,7 +57,7 @@ const getSolution = async (exercise, answer, category, categoryID) => {
   }
   try {
     return await openai.chat.completions.create({
-      model: "gpt-5.2",
+      model: SOLUTION_MODEL,
       messages: [
         {
           "role": "system",
@@ -90,7 +101,7 @@ const getSolutionSeo = async (
 
   try {
     return await openai.chat.completions.create({
-      model: "gpt-5.2",
+      model: SOLUTION_SEO_MODEL,
       messages: [
         {
           role: "system",
@@ -165,7 +176,7 @@ const getCategoryLesson = async (
   const userContent = userLines.join("\n");
   try {
     return await openai.chat.completions.create({
-      model: "gpt-5.2",
+      model: CATEGORY_LESSON_MODEL,
       messages: [
         {
           role: "system",
@@ -291,7 +302,7 @@ const createNewQuestions = async (content, categoryID, questionsCount) => {
   );
   let additionalMessage = systemMessages.newQuestions[categoryID] ? systemMessages.newQuestions[categoryID] : '';
   const requestPayload = {
-    model: "gpt-5.2",
+    model: QUESTION_GENERATION_MODEL,
     messages: [
       {
         role: "system",
@@ -368,7 +379,7 @@ const createNewQuestionsMultistep = async (
     ? systemMessages.newQuestions[categoryID]
     : "";
   const requestPayload = {
-    model: "gpt-5.2",
+    model: QUESTION_GENERATION_MULTISTEP_MODEL,
     messages: [
       {
         role: "system",
@@ -424,7 +435,7 @@ const reviewNewQuestions = async (content, categoryID, questionsCount, generated
   ].join("\n");
 
   const requestPayload = {
-    model: "gpt-5.2",
+    model: QUESTION_REVIEW_MODEL,
     messages: [
       { role: "system", content: systemMessage },
       { role: "user", content: userMessage },
@@ -513,7 +524,7 @@ const reviewNewQuestionsMultistep = async (
   ].join("\n");
 
   const requestPayload = {
-    model: "gpt-5.2",
+    model: QUESTION_REVIEW_MULTISTEP_MODEL,
     messages: [
       { role: "system", content: systemMessage },
       { role: "user", content: userMessage },
@@ -550,7 +561,7 @@ const getImprovement = async (text, notHTML) => {
 
   try {
     return await openaiDavo.chat.completions.create({
-      model: "gpt-4o",
+      model: IMPROVEMENT_MODEL,
       messages: [
         {
           "role": "system",

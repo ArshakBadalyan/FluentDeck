@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fluentdeck/app_colors.dart';
@@ -63,7 +64,11 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.cloud_off_outlined, size: 48, color: Colors.grey.shade500),
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 48,
+                  color: Colors.grey.shade500,
+                ),
                 const SizedBox(height: 12),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
@@ -84,93 +89,102 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
         onRefresh: _load,
         color: AppColors.brandPrimary,
         child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            children: [
-              _HeroCard(
-                languageLabel: currentLabel,
-                estimatedLevel: snapshot.estimatedLevel,
-                tutorLevel: snapshot.tutorLevel,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _MetricTile(
-                      icon: Icons.mic_none_rounded,
-                      label: 'Speaking turns',
-                      value: '${snapshot.speakingTurns}',
-                      color: const Color(0xFF2196F3),
-                    ),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          children: [
+            _HeroCard(
+              languageLabel: currentLabel,
+              estimatedLevel: snapshot.estimatedLevel,
+              tutorLevel: snapshot.tutorLevel,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _MetricTile(
+                    icon: Icons.mic_none_rounded,
+                    label: 'Speaking turns',
+                    value: '${snapshot.speakingTurns}',
+                    color: const Color(0xFF2196F3),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _MetricTile(
-                      icon: Icons.style_outlined,
-                      label: 'Deck words',
-                      value: '${snapshot.deckWordsReviewed}',
-                      color: const Color(0xFFFF9800),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _MetricTile(
-                icon: Icons.abc_rounded,
-                label: 'Unique words spoken',
-                value: '${snapshot.uniqueWordsSpoken}',
-                color: AppColors.brandPrimary,
-                fullWidth: true,
-              ),
-              const SizedBox(height: 24),
-              Builder(
-                builder: (context) {
-                  final current = snapshot.languages.where(
-                    (r) => r.languageCode == snapshot.practiceLanguage,
-                  );
-                  return _Section(
-                    title: 'Language history',
-                    icon: Icons.history_rounded,
-                    trailing:
-                        snapshot.languages.length > 1
-                            ? 'All ${snapshot.languages.length}'
-                            : null,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => LanguageHistoryScreen(snapshot: snapshot),
-                      ),
-                    ),
-                    child: current.isEmpty
-                        ? const _EmptyHint(
-                            text:
-                                'Save notes or practise speaking to build your language history.',
-                          )
-                        : _LanguageHistoryCard.fromRecord(
-                            current.first,
-                            languageLabel: service.languageLabel(
-                              current.first.languageCode,
-                            ),
-                            isCurrent: true,
-                          ),
-                  );
-                },
-              ),
-              if (snapshot.levelHistory.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _Section(
-                  title: 'Level timeline (${currentLabel})',
-                  icon: Icons.timeline_rounded,
-                  child: Column(
-                    children: [
-                      for (final entry in snapshot.levelHistory.reversed)
-                        _TimelineRow(entry: entry),
-                    ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _MetricTile(
+                    icon: Icons.style_outlined,
+                    label: 'Deck words',
+                    value: '${snapshot.deckWordsReviewed}',
+                    color: const Color(0xFFFF9800),
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            _MetricTile(
+              icon: Icons.abc_rounded,
+              label: 'Unique words spoken',
+              value: '${snapshot.uniqueWordsSpoken}',
+              color: AppColors.brandPrimary,
+              fullWidth: true,
+            ),
+            const SizedBox(height: 24),
+            Builder(
+              builder: (context) {
+                final current = snapshot.languages.where(
+                  (r) => r.languageCode == snapshot.practiceLanguage,
+                );
+                return _Section(
+                  title: 'Language history',
+                  icon: Icons.history_rounded,
+                  trailing: snapshot.languages.length > 1
+                      ? 'All ${snapshot.languages.length}'
+                      : null,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LanguageHistoryScreen(snapshot: snapshot),
+                    ),
+                  ),
+                  child: current.isEmpty
+                      ? const _EmptyHint(
+                          text:
+                              'Save notes or practise speaking to build your language history.',
+                        )
+                      : _LanguageHistoryCard.fromRecord(
+                          current.first,
+                          languageLabel: service.languageLabel(
+                            current.first.languageCode,
+                          ),
+                          isCurrent: true,
+                        ),
+                );
+              },
+            ),
+            if (snapshot.levelHistory.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _Section(
+                title: 'Level timeline (${currentLabel})',
+                icon: Icons.timeline_rounded,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (snapshot.levelHistory.length >= 2)
+                      SizedBox(
+                        height: 160,
+                        child: _LevelProgressionChart(
+                          history: snapshot.levelHistory,
+                        ),
+                      ),
+                    if (snapshot.levelHistory.length >= 2)
+                      const SizedBox(height: 14),
+                    for (final entry in snapshot.levelHistory.reversed)
+                      _TimelineRow(entry: entry),
+                  ],
+                ),
+              ),
             ],
-          ),
+          ],
         ),
-      );
+      ),
+    );
   }
 }
 
@@ -286,7 +300,13 @@ class _MetricTile extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(height: 10),
-          Text(label, style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context))),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppPageColors.subtitleOf(context),
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             value,
@@ -343,6 +363,7 @@ class _Section extends StatelessWidget {
   final String title;
   final IconData icon;
   final Widget child;
+
   /// Makes the title row open a detail page.
   final VoidCallback? onTap;
   final String? trailing;
@@ -369,7 +390,10 @@ class _Section extends StatelessWidget {
             ),
           ),
         if (onTap != null)
-          const Icon(Icons.chevron_right_rounded, color: AppColors.brandPrimary),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: AppColors.brandPrimary,
+          ),
       ],
     );
     return Container(
@@ -412,7 +436,8 @@ class _LanguageHistoryCard extends StatelessWidget {
        speakingTurns = record.speakingTurns,
        deckWords = record.deckWordsReviewed,
        noteCount = record.noteCount,
-       lastActive = record.lastActiveAt;
+       lastActive = record.lastActiveAt,
+       levelHistory = record.levelHistory;
 
   final String languageLabel;
   final bool isCurrent;
@@ -422,6 +447,7 @@ class _LanguageHistoryCard extends StatelessWidget {
   final int deckWords;
   final int noteCount;
   final DateTime? lastActive;
+  final List<LanguageLevelHistoryEntry> levelHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -432,11 +458,8 @@ class _LanguageHistoryCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: isCurrent
-            ? AppColors.brandPrimary.withValues(alpha: 0.12)
-            : AppPageColors.fieldBgOf(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isCurrent
@@ -444,53 +467,130 @@ class _LanguageHistoryCard extends StatelessWidget {
               : AppPageColors.subtleBorderOf(context),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      // BoxShadow + BlurStyle.inner paints a tint across the *whole* shape
+      // (only its edges get blurred) — on a card this size that just reads
+      // as a solid fill, not a shadow. A CustomPaint stroke along the
+      // border, blurred and clipped to the card's own bounds, only lets the
+      // part of the blur that falls inward show — true edge-only shadow,
+      // center stays fully transparent.
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Text(
-                languageLabel,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+          if (isCurrent)
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _InnerEdgeShadowPainter(
+                  color: AppColors.brandPrimary.withValues(alpha: 0.22),
+                  blurSigma: 6,
+                  borderRadius: 14,
+                ),
               ),
-              if (isCurrent) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandPrimary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Current',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.brandPrimary,
+            ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      languageLabel,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
                     ),
+                    if (isCurrent) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.brandPrimary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Current',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.brandPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const Spacer(),
+                    Text(
+                      estimatedLevel,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                if (levelHistory.length >= 2) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 44,
+                    child: _LevelProgressionChart(
+                      history: levelHistory,
+                      compact: true,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Text(
+                  'AI tutor $tutorLevel · $noteCount notes · $speakingTurns turns · '
+                  '$deckWords deck reviews · $dateLabel',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppPageColors.subtitleOf(context),
                   ),
                 ),
               ],
-              const Spacer(),
-              Text(
-                estimatedLevel,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'AI tutor $tutorLevel · $noteCount notes · $speakingTurns turns · '
-            '$deckWords deck reviews · $dateLabel',
-            style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _InnerEdgeShadowPainter extends CustomPainter {
+  _InnerEdgeShadowPainter({
+    required this.color,
+    required this.blurSigma,
+    required this.borderRadius,
+  });
+
+  final Color color;
+  final double blurSigma;
+  final double borderRadius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(borderRadius),
+    );
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = blurSigma * 2
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma);
+    canvas.save();
+    canvas.clipRRect(rrect);
+    canvas.drawRRect(rrect, paint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _InnerEdgeShadowPainter old) =>
+      old.color != color ||
+      old.blurSigma != blurSigma ||
+      old.borderRadius != borderRadius;
 }
 
 class _TimelineRow extends StatelessWidget {
@@ -524,7 +624,10 @@ class _TimelineRow extends StatelessWidget {
           Expanded(
             child: Text(
               when,
-              style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
+              style: TextStyle(
+                fontSize: 12,
+                color: AppPageColors.subtitleOf(context),
+              ),
             ),
           ),
         ],
@@ -542,7 +645,159 @@ class _EmptyHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: TextStyle(color: AppPageColors.subtitleOf(context), fontSize: 14, height: 1.45),
+      style: TextStyle(
+        color: AppPageColors.subtitleOf(context),
+        fontSize: 14,
+        height: 1.45,
+      ),
+    );
+  }
+}
+
+const _cefrLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
+int _cefrIndex(String level) {
+  final i = _cefrLevels.indexOf(level.trim().toUpperCase());
+  return i >= 0 ? i : 0;
+}
+
+/// CEFR level (A1-C2) over time — a step-like line chart with a gradient
+/// area. [compact] hides axes/grid/touch for use inside a small card.
+class _LevelProgressionChart extends StatelessWidget {
+  const _LevelProgressionChart({required this.history, this.compact = false});
+
+  final List<LanguageLevelHistoryEntry> history;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final points = history.where((e) => e.recordedAt != null).toList();
+    if (points.length < 2) return const SizedBox.shrink();
+
+    final spots = points
+        .asMap()
+        .entries
+        .map(
+          (e) => FlSpot(
+            e.key.toDouble(),
+            _cefrIndex(e.value.estimatedLevel).toDouble(),
+          ),
+        )
+        .toList();
+    final labelEvery = (points.length / 4).ceil().clamp(1, points.length);
+
+    return LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: (points.length - 1).toDouble(),
+        minY: 0,
+        maxY: (_cefrLevels.length - 1).toDouble(),
+        gridData: FlGridData(
+          show: !compact,
+          drawVerticalLine: false,
+          horizontalInterval: 1,
+          getDrawingHorizontalLine: (_) =>
+              FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+        ),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: !compact,
+              reservedSize: 32,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                final i = value.round();
+                if (i < 0 || i >= _cefrLevels.length) {
+                  return const SizedBox.shrink();
+                }
+                return Text(
+                  _cefrLevels[i],
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                );
+              },
+            ),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: !compact,
+              reservedSize: 22,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                final i = value.round();
+                if (i < 0 || i >= points.length) return const SizedBox.shrink();
+                if (i % labelEvery != 0 && i != points.length - 1) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    DateFormat('MMM d').format(points[i].recordedAt!.toLocal()),
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        lineTouchData: LineTouchData(
+          enabled: !compact,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) =>
+                AppColors.brandPrimary.withValues(alpha: 0.95),
+            getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
+              final i = spot.x.round();
+              final level = i >= 0 && i < points.length
+                  ? points[i].estimatedLevel
+                  : '';
+              return LineTooltipItem(
+                level,
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: false,
+            color: AppColors.brandPrimary,
+            barWidth: compact ? 2 : 3,
+            dotData: FlDotData(
+              getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                radius: compact ? 2.5 : 4,
+                color: AppColors.brandPrimary,
+                strokeWidth: 1.5,
+                strokeColor: Colors.white,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.brandPrimary.withValues(alpha: 0.3),
+                  AppColors.brandPrimary.withValues(alpha: 0.0),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
@@ -5,7 +6,6 @@ import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/deck_detail_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/deck_count_buttons.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/deck_edit_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
@@ -45,14 +45,15 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.black,
-          elevation: 0,
-          scrolledUnderElevation: 0,
+          backgroundColor: AppColors.brandPrimaryDeep,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shadowColor: Colors.black.withValues(alpha: 0.35),
+          scrolledUnderElevation: 8,
           title: Row(
             children: [
               if (deck.isFiltered) ...[
-                Icon(Icons.filter_list, size: 20, color: Colors.grey.shade700),
+                Icon(Icons.filter_list, size: 20, color: Colors.white.withValues(alpha: 0.85)),
                 const SizedBox(width: 6),
               ],
               Expanded(
@@ -202,16 +203,9 @@ class _DeckHeroCard extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade200),
       ),
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.brandPrimary.withValues(alpha: 0.08),
-              Colors.white,
-            ],
-          ),
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(18)),
+          color: AppColors.brandPrimaryDeep,
         ),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
         child: Column(
@@ -223,6 +217,7 @@ class _DeckHeroCard extends StatelessWidget {
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Rubik',
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 4),
@@ -230,30 +225,31 @@ class _DeckHeroCard extends StatelessWidget {
               'Track new, learning, and review progress',
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey.shade600,
+                color: Colors.white.withValues(alpha: 0.78),
                 height: 1.35,
               ),
             ),
             const SizedBox(height: 18),
-            Center(
-              child: DeckCountButtons(
-                newCount: newCount,
-                learningCount: learningCount,
-                reviewCount: reviewCount,
-                size: DeckCountButtonSize.large,
+            if (newCount + learningCount + reviewCount > 0)
+              Center(
+                child: SizedBox(
+                  width: 240,
+                  height: 110,
+                  child: _DeckCountBarChart(
+                    newCount: newCount,
+                    learningCount: learningCount,
+                    reviewCount: reviewCount,
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'No cards in this deck yet.',
+                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.78)),
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _StatLabel('New', const Color(0xFF2196F3)),
-                const SizedBox(width: 16),
-                _StatLabel('Learning', const Color(0xFFE53935)),
-                const SizedBox(width: 16),
-                _StatLabel('To review', const Color(0xFF43A047)),
-              ],
-            ),
           ],
         ),
       ),
@@ -261,29 +257,93 @@ class _DeckHeroCard extends StatelessWidget {
   }
 }
 
-class _StatLabel extends StatelessWidget {
-  const _StatLabel(this.label, this.color);
+/// Rounded-capsule bar chart (fl_chart "pill" style) for the New/Learning/
+/// Review split — a background track plus a filled, color-matched bar.
+class _DeckCountBarChart extends StatelessWidget {
+  const _DeckCountBarChart({
+    required this.newCount,
+    required this.learningCount,
+    required this.reviewCount,
+  });
 
-  final String label;
-  final Color color;
+  final int newCount;
+  final int learningCount;
+  final int reviewCount;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 72,
-      child: Column(
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    final values = [
+      (label: 'New', count: newCount, color: const Color(0xFF4994EC)),
+      (label: 'Learning', count: learningCount, color: const Color(0xFFED7249)),
+      (label: 'To review', count: reviewCount, color: const Color(0xFF7FFB66)),
+    ];
+    final maxY =
+        values.map((e) => e.count).fold<int>(0, (a, b) => a > b ? a : b).toDouble();
+    final chartMaxY = maxY < 1 ? 1.0 : maxY * 1.15;
+
+    return BarChart(
+      BarChartData(
+        maxY: chartMaxY,
+        alignment: BarChartAlignment.spaceAround,
+        gridData: const FlGridData(show: false),
+        borderData: FlBorderData(show: false),
+        barTouchData: BarTouchData(
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (group) => values[group.x.toInt()].color.withValues(alpha: 0.9),
+            getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
+              rod.toY.toInt().toString(),
+              const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+        ),
+        titlesData: FlTitlesData(
+          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              getTitlesWidget: (value, meta) {
+                final i = value.toInt();
+                if (i < 0 || i >= values.length) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    values[i].label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
+        ),
+        barGroups: [
+          for (var i = 0; i < values.length; i++)
+            BarChartGroupData(
+              x: i,
+              barRods: [
+                BarChartRodData(
+                  toY: values[i].count.toDouble(),
+                  color: values[i].color,
+                  width: 30,
+                  borderRadius: BorderRadius.circular(30),
+                  backDrawRodData: BackgroundBarChartRodData(
+                    show: true,
+                    toY: chartMaxY,
+                    color: Colors.white.withValues(alpha: 0.18),
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -306,7 +366,7 @@ class _PrimaryDeckAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.brandPrimary,
+      color: AppColors.brandPrimaryDeep,
       borderRadius: BorderRadius.circular(14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

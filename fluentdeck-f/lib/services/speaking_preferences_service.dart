@@ -1,8 +1,14 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/speaking_preferences.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
 
-class SpeakingPreferencesService {
+/// Notifies listeners whenever the cached preferences change, so screens
+/// showing the same value (e.g. the Daily goal slider in Profile → Settings
+/// and the draggable gauge on Activity → Speaking) stay in sync live instead
+/// of only agreeing after a manual reload.
+class SpeakingPreferencesService extends ChangeNotifier {
   SpeakingPreferencesService._();
   static final SpeakingPreferencesService instance = SpeakingPreferencesService._();
 
@@ -19,6 +25,7 @@ class SpeakingPreferencesService {
       final data = await ApiService.get('users/me/speaking-preferences');
       if (data is Map && data['error'] == null) {
         _cached = SpeakingPreferences.fromUser(Map<String, dynamic>.from(data));
+        notifyListeners();
         return _cached;
       }
     } catch (_) {}
@@ -28,6 +35,7 @@ class SpeakingPreferencesService {
       _cached = SpeakingPreferences.fromUser(
         Map<String, dynamic>.from(res['user'] as Map),
       );
+      notifyListeners();
     }
     return _cached;
   }
@@ -46,6 +54,7 @@ class SpeakingPreferencesService {
                 ? 'none'
                 : preferences.translationLanguage,
       );
+      notifyListeners();
       return (ok: true, errorMessage: null);
     }
 
@@ -67,8 +76,17 @@ class SpeakingPreferencesService {
     return result.ok;
   }
 
+  /// Updates the cached value and notifies listeners without a network
+  /// call — used for optimistic, instant UI sync (e.g. while dragging a
+  /// slider or gauge) ahead of the debounced [saveWithDetails] call.
+  void updateLocal(SpeakingPreferences preferences) {
+    _cached = preferences;
+    notifyListeners();
+  }
+
   void applyFromUser(Map<String, dynamic>? user) {
     _cached = SpeakingPreferences.fromUser(user);
+    notifyListeners();
   }
 }
 

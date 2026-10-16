@@ -95,8 +95,15 @@ class _NotificationPanelState extends State<NotificationPanel> {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: AppColors.heroGradient),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: AppColors.heroGradient),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -129,7 +136,11 @@ class _NotificationPanelState extends State<NotificationPanel> {
                             style: const TextStyle(color: Colors.white),
                           ),
                         ),
-
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        tooltip: 'Close',
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
                     ],
                   ),
                 ],

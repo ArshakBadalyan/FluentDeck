@@ -1011,24 +1011,7 @@ class _StatsCard extends StatelessWidget {
               ),
             )
           : null,
-      action: SizedBox(
-        width: double.infinity,
-        child: FilledButton(
-          onPressed: onReview,
-          style: FilledButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: AppColors.brandPrimary,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-          child: const Text(
-            'Study now',
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-      ),
+      onIconTap: onReview,
     );
   }
 }

@@ -10,6 +10,8 @@ import 'package:fluentdeck/services/flashcard_stats_export_service.dart';
 import 'package:fluentdeck/screens/learn_screen/review_log_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
 import 'package:fluentdeck/services/decks_help_hints_store.dart';
+import 'package:fluentdeck/services/main_navigation_coordinator.dart';
+import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/utils/statistics_labels.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
@@ -224,10 +226,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               subtitle: 'Questions answered per day',
               child: SizedBox(
                 height: 160,
-                child: _BarChartSeries(
+                child: _LineChartSeries(
                   series: stats.reviewsByDay,
-                  barColor: const Color(0xFF2196F3),
-                  useGradient: true,
+                  lineColor: const Color(0xFF2196F3),
                 ),
               ),
             ),
@@ -265,10 +266,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               subtitle: 'Reviews scheduled in the next 30 days',
               child: SizedBox(
                 height: 160,
-                child: _BarChartSeries(
+                child: _LineChartSeries(
                   series: stats.futureDueByDay,
-                  barColor: AppColors.brandPrimary,
-                  useGradient: true,
+                  lineColor: AppColors.brandPrimary,
                 ),
               ),
             ),
@@ -299,10 +299,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               subtitle: 'New cards studied per day',
               child: SizedBox(
                 height: 160,
-                child: _BarChartSeries(
+                child: _LineChartSeries(
                   series: stats.addedByDay,
-                  barColor: AppColors.greenCorrect,
-                  useGradient: true,
+                  lineColor: AppColors.greenCorrect,
                 ),
               ),
             ),
@@ -484,16 +483,23 @@ class _DeckStatsHero extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.collections_bookmark_outlined,
-              size: 40,
-              color: Colors.white,
+          Material(
+            color: Colors.white.withValues(alpha: 0.18),
+            shape: const CircleBorder(),
+            child: InkWell(
+              onTap: () => MainNavigationCoordinator.goToTab(
+                MainTabId.decks,
+                subIndex: 1,
+              ),
+              customBorder: const CircleBorder(),
+              child: const Padding(
+                padding: EdgeInsets.all(16),
+                child: Icon(
+                  Icons.collections_bookmark_outlined,
+                  size: 40,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ],
@@ -767,7 +773,8 @@ class _CardCountsPie extends StatelessWidget {
                 value: e.value.toDouble(),
                 title: '${e.value}',
                 color: e.color,
-                radius: 44,
+                radius: 40,
+                titlePositionPercentageOffset: 0.62,
                 titleStyle: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
@@ -781,12 +788,30 @@ class _CardCountsPie extends StatelessWidget {
       children: [
         Expanded(
           flex: 3,
-          child: PieChart(
-            PieChartData(
-              sectionsSpace: 3,
-              centerSpaceRadius: 32,
-              sections: sections,
-            ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  sectionsSpace: 3,
+                  centerSpaceRadius: 36,
+                  sections: sections,
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$total',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    total == 1 ? 'card' : 'cards',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         Expanded(
@@ -838,16 +863,14 @@ class _CardCountsPie extends StatelessWidget {
   }
 }
 
-class _BarChartSeries extends StatelessWidget {
-  const _BarChartSeries({
+class _LineChartSeries extends StatelessWidget {
+  const _LineChartSeries({
     required this.series,
-    required this.barColor,
-    this.useGradient = false,
+    required this.lineColor,
   });
 
   final List<FlashcardDayCount> series;
-  final Color barColor;
-  final bool useGradient;
+  final Color lineColor;
 
   @override
   Widget build(BuildContext context) {
@@ -860,9 +883,15 @@ class _BarChartSeries extends StatelessWidget {
     // Showing every date would overlap on a 30-point series — thin them out
     // to roughly 5-6 labels across the chart.
     final labelEvery = (series.length / 5).ceil().clamp(1, series.length);
+    final spots = series.asMap().entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value.count.toDouble()))
+        .toList();
 
-    return BarChart(
-      BarChartData(
+    return LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: (series.length - 1).toDouble(),
+        minY: 0,
         maxY: maxY < 1 ? 1 : maxY * 1.2,
         gridData: FlGridData(
           show: true,
@@ -892,9 +921,7 @@ class _BarChartSeries extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 24,
-              // BarChart ignores `interval` for bottom titles — every bar's
-              // index gets a callback regardless, so thin them out by hand
-              // or every date renders and they all overlap into mush.
+              interval: 1,
               getTitlesWidget: (value, meta) {
                 final i = value.round();
                 if (i < 0 || i >= series.length) return const SizedBox.shrink();
@@ -912,30 +939,41 @@ class _BarChartSeries extends StatelessWidget {
             ),
           ),
         ),
-        barGroups:
-            series.asMap().entries.map((e) {
-              return BarChartGroupData(
-                x: e.key,
-                barRods: [
-                  BarChartRodData(
-                    toY: e.value.count.toDouble(),
-                    color: useGradient ? null : barColor,
-                    gradient: useGradient
-                        ? LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              barColor.withValues(alpha: 0.65),
-                              barColor,
-                            ],
-                          )
-                        : null,
-                    width: 7,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => lineColor.withValues(alpha: 0.9),
+            getTooltipItems: (touchedSpots) => touchedSpots
+                .map(
+                  (spot) => LineTooltipItem(
+                    spot.y.toInt().toString(),
+                    const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
+                )
+                .toList(),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            curveSmoothness: 0.3,
+            preventCurveOverShooting: true,
+            color: lineColor,
+            barWidth: 3,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  lineColor.withValues(alpha: 0.32),
+                  lineColor.withValues(alpha: 0.0),
                 ],
-              );
-            }).toList(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -976,6 +1014,19 @@ class _ButtonCountsChart extends StatelessWidget {
         maxY: max * 1.2,
         gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
+        barTouchData: BarTouchData(
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (group) => items[group.x.toInt()].$3.withValues(alpha: 0.9),
+            getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
+              rod.toY.toInt().toString(),
+              const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
         titlesData: FlTitlesData(
           leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -1087,6 +1138,19 @@ class _EaseHistogram extends StatelessWidget {
         maxY: max * 1.2,
         gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
+        barTouchData: BarTouchData(
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (group) => items[group.x.toInt()].$3.withValues(alpha: 0.9),
+            getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
+              rod.toY.toInt().toString(),
+              const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
         titlesData: FlTitlesData(
           leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -1255,6 +1319,19 @@ class _HourlyChart extends StatelessWidget {
           getDrawingHorizontalLine: (_) => FlLine(color: Colors.grey.shade200, strokeWidth: 1),
         ),
         borderData: FlBorderData(show: false),
+        barTouchData: BarTouchData(
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (_) => AppColors.brandPrimary.withValues(alpha: 0.9),
+            getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
+              rod.toY.toInt().toString(),
+              const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
         titlesData: const FlTitlesData(
           leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -1310,6 +1387,19 @@ class _IntervalBucketsChart extends StatelessWidget {
         maxY: max * 1.2,
         gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
+        barTouchData: BarTouchData(
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (group) => items[group.x.toInt()].$3.withValues(alpha: 0.9),
+            getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
+              rod.toY.toInt().toString(),
+              const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
         titlesData: FlTitlesData(
           leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),

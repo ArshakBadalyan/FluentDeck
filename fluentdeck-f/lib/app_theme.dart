@@ -1,9 +1,9 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_text_theme.dart';
 import 'config/brand_config.dart';
-import 'ui_elements/app_motion.dart';
 import 'ui_elements/modern_page_widgets.dart';
 
 /// Central light/dark themes seeded from the brand color in [BrandConfig].
@@ -186,7 +186,14 @@ abstract final class AppTheme {
   }
 }
 
+/// Shared-axis page transitions (from the `animations` package) for every
+/// pushed [MaterialPageRoute] app-wide, with reduced-motion support.
 class _AppSharedAxisTransitionsBuilder extends PageTransitionsBuilder {
+  static const _delegate = SharedAxisPageTransitionsBuilder(
+    transitionType: SharedAxisTransitionType.horizontal,
+    fillColor: Colors.transparent,
+  );
+
   @override
   Widget buildTransitions<T>(
     PageRoute<T> route,
@@ -197,14 +204,12 @@ class _AppSharedAxisTransitionsBuilder extends PageTransitionsBuilder {
   ) {
     if (MediaQuery.disableAnimationsOf(context)) return child;
 
-    final offsetAnimation = Tween<Offset>(
-      begin: const Offset(0.06, 0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: animation, curve: AppMotion.curve));
-
-    return FadeTransition(
-      opacity: animation,
-      child: SlideTransition(position: offsetAnimation, child: child),
+    return _delegate.buildTransitions(
+      route,
+      context,
+      animation,
+      secondaryAnimation,
+      child,
     );
   }
 }

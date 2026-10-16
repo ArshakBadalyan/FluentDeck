@@ -31,6 +31,12 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Optional action shown to the right of the bell (e.g. log out on Profile).
   final Widget? trailingAction;
 
+  /// True when another colored header (e.g. the Speak tab's in-session chat
+  /// header) sits directly beneath this bar with no light content between
+  /// them — the shadow would just smear across that header instead of
+  /// separating it from the page, so it's suppressed in that case.
+  final bool suppressShadow;
+
   const MainAppBar({
     super.key,
     required this.title,
@@ -47,6 +53,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.tabBarTrailing,
     this.helpAction,
     this.trailingAction,
+    this.suppressShadow = false,
   });
 
   static const double _toolbarHeight = 56.0;
@@ -81,7 +88,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
       ),
-      elevation: 0,
+      elevation: suppressShadow ? 0 : 4,
+      shadowColor: suppressShadow ? null : Colors.black.withValues(alpha: 0.35),
+      scrolledUnderElevation: suppressShadow ? 0 : 8,
       backgroundColor: AppColors.brandPrimaryDeep,
       titleSpacing: 24,
       centerTitle: false,
@@ -188,44 +197,39 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   PreferredSizeWidget _buildTabBar() {
     return PreferredSize(
-      preferredSize: const Size.fromHeight(kTextTabBarHeight + 1),
+      preferredSize: const Size.fromHeight(kTextTabBarHeight),
       child: Material(
-        color: Colors.white,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        color: AppColors.brandPrimaryDeep,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TabBar(
-                    key: ScreenTutorialKeys.mainAppBarTabs,
-                    controller: controller,
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    padding: const EdgeInsets.only(left: 12),
-                    labelColor: AppColors.brandPrimary,
-                    unselectedLabelColor: AppColors.navInactive,
-                    indicatorColor: Colors.transparent,
-                    dividerColor: Colors.transparent,
-                    labelStyle: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    tabs: tabs!,
-                  ),
+            Expanded(
+              child: TabBar(
+                key: ScreenTutorialKeys.mainAppBarTabs,
+                controller: controller,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                padding: const EdgeInsets.only(left: 12),
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white.withValues(alpha: 0.65),
+                indicatorColor: Colors.white,
+                indicatorSize: TabBarIndicatorSize.label,
+                dividerColor: Colors.transparent,
+                labelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
-                if (tabBarTrailing != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: tabBarTrailing,
-                  ),
-              ],
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: tabs!,
+              ),
             ),
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE8E8EC)),
+            if (tabBarTrailing != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: tabBarTrailing,
+              ),
           ],
         ),
       ),
@@ -234,7 +238,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize {
-    final tabsHeight = tabs == null ? 0.0 : kTextTabBarHeight + 1;
+    final tabsHeight = tabs == null ? 0.0 : kTextTabBarHeight;
     return Size.fromHeight(_toolbarHeight + tabsHeight);
   }
 }

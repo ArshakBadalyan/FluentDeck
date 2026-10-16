@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/config/brand_config.dart';
@@ -230,11 +232,13 @@ class AppSettingsGroup extends StatelessWidget {
     required this.title,
     required this.child,
     this.subtitle,
+    this.borderRadius = 16,
   });
 
   final String title;
   final String? subtitle;
   final Widget child;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +248,7 @@ class AppSettingsGroup extends StatelessWidget {
         color: AppPageColors.cardBgOf(context),
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(borderRadius),
           side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
         ),
         clipBehavior: Clip.antiAlias,
@@ -299,6 +303,134 @@ class AppSettingsGroup extends StatelessWidget {
   }
 }
 
+/// A circular ring showing two solid-color arcs on the same 0..1 scale: a
+/// "target" arc marking where a goal is set, and a "progress" arc showing
+/// how far actual progress has reached — drawn on top so it covers the
+/// target arc where the two overlap, and extends past it once progress
+/// exceeds the target.
+class DualArcProgressRing extends StatelessWidget {
+  const DualArcProgressRing({
+    super.key,
+    required this.targetFraction,
+    required this.progressFraction,
+    required this.targetColor,
+    required this.progressColor,
+    this.size = 76,
+    this.strokeWidth = 5,
+    this.trackColor,
+    this.center,
+  });
+
+  /// 0..1 — where the target/goal marker sits on the ring.
+  final double targetFraction;
+
+  /// 0..1 — how far actual progress has filled the ring.
+  final double progressFraction;
+  final Color targetColor;
+  final Color progressColor;
+  final double size;
+  final double strokeWidth;
+  final Color? trackColor;
+  final Widget? center;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CustomPaint(
+            size: Size.square(size),
+            painter: _DualArcPainter(
+              targetFraction: targetFraction,
+              progressFraction: progressFraction,
+              targetColor: targetColor,
+              progressColor: progressColor,
+              strokeWidth: strokeWidth,
+              trackColor: trackColor ?? Colors.grey.shade200,
+            ),
+          ),
+          if (center != null) center!,
+        ],
+      ),
+    );
+  }
+}
+
+class _DualArcPainter extends CustomPainter {
+  _DualArcPainter({
+    required this.targetFraction,
+    required this.progressFraction,
+    required this.targetColor,
+    required this.progressColor,
+    required this.strokeWidth,
+    required this.trackColor,
+  });
+
+  final double targetFraction;
+  final double progressFraction;
+  final Color targetColor;
+  final Color progressColor;
+  final double strokeWidth;
+  final Color trackColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = (size.shortestSide - strokeWidth) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = trackColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth,
+    );
+
+    final target = targetFraction.clamp(0.0, 1.0);
+    if (target > 0) {
+      canvas.drawArc(
+        rect,
+        -pi / 2,
+        target * 2 * pi,
+        false,
+        Paint()
+          ..color = targetColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    final progress = progressFraction.clamp(0.0, 1.0);
+    if (progress > 0) {
+      canvas.drawArc(
+        rect,
+        -pi / 2,
+        progress * 2 * pi,
+        false,
+        Paint()
+          ..color = progressColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DualArcPainter old) =>
+      old.targetFraction != targetFraction ||
+      old.progressFraction != progressFraction ||
+      old.targetColor != targetColor ||
+      old.progressColor != progressColor ||
+      old.trackColor != trackColor;
+}
+
 class AppHeroCard extends StatelessWidget {
   const AppHeroCard({
     super.key,
@@ -308,6 +440,7 @@ class AppHeroCard extends StatelessWidget {
     required this.icon,
     this.badge,
     this.action,
+    this.onIconTap,
   });
 
   final String value;
@@ -316,6 +449,7 @@ class AppHeroCard extends StatelessWidget {
   final IconData icon;
   final Widget? badge;
   final Widget? action;
+  final VoidCallback? onIconTap;
 
   @override
   Widget build(BuildContext context) {
@@ -374,13 +508,17 @@ class AppHeroCard extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
+          Material(
+            color: Colors.white.withValues(alpha: 0.18),
+            shape: const CircleBorder(),
+            child: InkWell(
+              onTap: onIconTap,
+              customBorder: const CircleBorder(),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Icon(icon, size: 40, color: Colors.white),
+              ),
             ),
-            child: Icon(icon, size: 40, color: Colors.white),
           ),
         ],
       ),

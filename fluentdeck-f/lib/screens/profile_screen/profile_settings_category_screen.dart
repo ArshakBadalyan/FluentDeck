@@ -1,5 +1,6 @@
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
@@ -100,9 +101,11 @@ class _ProfileSettingsCategoryScreenState extends State<ProfileSettingsCategoryS
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: AppPageColors.pageBgOf(context),
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
-        elevation: 0,
+        backgroundColor: AppColors.brandPrimaryDeep,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.35),
+        scrolledUnderElevation: 8,
         title: Text(widget.category.title),
       ),
       body: AppPageBackground(

@@ -11,10 +11,16 @@ class EnglishBottomNav extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.showShadow = false,
   });
 
   final int currentIndex;
   final ValueChanged<int> onTap;
+
+  /// True while the current tab's content is scrolled away from its
+  /// bottom edge — shows a shadow above the bar to hint there's more
+  /// content below, mirroring the top app bar's own scrolled-under shadow.
+  final bool showShadow;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +35,15 @@ class EnglishBottomNav extends StatelessWidget {
             width: 0.5,
           ),
         ),
+        boxShadow: showShadow
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.18),
+                  blurRadius: 10,
+                  offset: const Offset(0, -3),
+                ),
+              ]
+            : null,
       ),
       child: BottomNavigationBar(
         key: ScreenTutorialKeys.mainBottomNav,

@@ -4,7 +4,7 @@ enum DeckCountKind { newCards, learning, review }
 
 enum DeckCountButtonSize { compact, large }
 
-/// Deck counts: blue = new, red = learning, green = review.
+/// Deck counts: blue = new, orange = learning, green = review.
 class DeckCountButtons extends StatelessWidget {
   const DeckCountButtons({
     super.key,
@@ -74,11 +74,11 @@ class DeckCountButton extends StatelessWidget {
   Color get _color {
     switch (kind) {
       case DeckCountKind.newCards:
-        return const Color(0xFF2196F3);
+        return const Color(0xFF4994EC);
       case DeckCountKind.learning:
-        return const Color(0xFFE53935);
+        return const Color(0xFFED7249);
       case DeckCountKind.review:
-        return const Color(0xFF43A047);
+        return const Color(0xFF7FFB66);
     }
   }
 

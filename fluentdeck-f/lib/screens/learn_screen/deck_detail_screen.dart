@@ -128,9 +128,11 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+        backgroundColor: AppColors.brandPrimaryDeep,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.35),
+        scrolledUnderElevation: 8,
         leading: BackButton(
           onPressed: () => Navigator.pop(context, _changed ? true : null),
         ),

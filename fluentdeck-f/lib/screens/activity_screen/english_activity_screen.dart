@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/language_levels_snapshot.dart';
+import 'package:fluentdeck/models/speaking_preferences.dart';
+import 'package:fluentdeck/models/speaking_session_context.dart';
 import 'package:fluentdeck/models/speaking_session_record_model.dart';
 import 'package:fluentdeck/models/user_note_model.dart';
 import 'package:fluentdeck/models/user_progress_model.dart';
@@ -10,8 +15,10 @@ import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/screens/activity_screen/speaking_saved_phrases_screen.dart';
 import 'package:fluentdeck/screens/activity_screen/speaking_session_detail_screen.dart';
 import 'package:fluentdeck/screens/activity_screen/speaking_session_history_screen.dart';
+import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/language_levels_service.dart';
 import 'package:fluentdeck/services/note_service.dart';
+import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/services/user_progress_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
@@ -31,12 +38,39 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
   LanguageLevelsSnapshot? _languageLevels;
   List<SpeakingSessionRecord> _history = [];
   List<UserNoteModel> _savedPhrases = [];
+  SpeakingPreferences _speakingPrefs = const SpeakingPreferences();
   String? _error;
+  Timer? _goalSaveDebounce;
+  int? _pendingGoal;
 
   @override
   void initState() {
     super.initState();
+    SpeakingPreferencesService.instance.addListener(_onPrefsChanged);
     _load();
+  }
+
+  @override
+  void dispose() {
+    SpeakingPreferencesService.instance.removeListener(_onPrefsChanged);
+    if (_goalSaveDebounce?.isActive ?? false) {
+      _goalSaveDebounce!.cancel();
+      final goal = _pendingGoal;
+      final toSave = goal == null
+          ? _speakingPrefs
+          : SpeakingPreferencesService.instance.current.copyWith(
+              correctSentenceGoal: goal,
+            );
+      SpeakingPreferencesService.instance.saveWithDetails(toSave);
+    }
+    super.dispose();
+  }
+
+  // Lets this screen pick up goal changes made on Profile → Settings'
+  // Daily goal slider (and vice versa) while both are mounted.
+  void _onPrefsChanged() {
+    if (!mounted) return;
+    setState(() => _speakingPrefs = SpeakingPreferencesService.instance.current);
   }
 
   Future<void> _load() async {
@@ -50,6 +84,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
         LanguageLevelsService.instance.fetch(forceRefresh: true),
         SpeakingSessionService.instance.fetchRecent(limit: 50),
         NoteService.instance.fetchNotes(),
+        SpeakingPreferencesService.instance.load(forceRefresh: true),
       ]);
       final notes = results[3] as List<UserNoteModel>;
       final speakingNotes =
@@ -61,6 +96,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
         _languageLevels = results[1] as LanguageLevelsSnapshot;
         _history = results[2] as List<SpeakingSessionRecord>;
         _savedPhrases = speakingNotes;
+        _speakingPrefs = results[4] as SpeakingPreferences;
         _loading = false;
       });
     } catch (e) {
@@ -70,6 +106,32 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
         _loading = false;
       });
     }
+  }
+
+  // Goal changes come from dragging the gauge ring, which fires on every
+  // pointer move — update locally for an instant, responsive drag, but only
+  // send the PUT request 2 seconds after the user settles on a value.
+  void _onGoalChanged(int goal) {
+    // Base the update on the service's latest cached value, not this
+    // screen's possibly-stale local copy — see the matching comment in
+    // ProfileSettingsSpeakingSection._onGoalSliderChanged.
+    final next = SpeakingPreferencesService.instance.current.copyWith(
+      correctSentenceGoal: goal,
+    );
+    setState(() => _speakingPrefs = next);
+    SpeakingPreferencesService.instance.updateLocal(next);
+    _pendingGoal = goal;
+    _goalSaveDebounce?.cancel();
+    // Re-read the cache (not `_speakingPrefs`) when the timer fires — see
+    // the matching comment in ProfileSettingsSpeakingSection.
+    _goalSaveDebounce = Timer(const Duration(seconds: 2), () async {
+      _pendingGoal = null;
+      final toSave = SpeakingPreferencesService.instance.current.copyWith(
+        correctSentenceGoal: goal,
+      );
+      await SpeakingPreferencesService.instance.saveWithDetails(toSave);
+      await ConversationService.instance.refreshSpeakingSettings();
+    });
   }
 
   String _formatSessionTime(DateTime dt) {
@@ -122,7 +184,13 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
         child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
-            _StreakHero(streakDays: progress.streakDays, l10n: l10n),
+            _StreakHero(
+              streakDays: progress.streakDays,
+              l10n: l10n,
+              goal: _speakingPrefs.correctSentenceGoal,
+              today: _speakingPrefs.correctSentencesToday,
+              onGoalChanged: _onGoalChanged,
+            ),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -166,6 +234,45 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 24),
+            _ActivitySection(
+              title: 'Score trend',
+              icon: Icons.show_chart_rounded,
+              child: _history.isEmpty
+                  ? const _EmptyHint(
+                      text: 'Scores from your speaking sessions will chart here.',
+                    )
+                  : SizedBox(
+                      height: 160,
+                      child: _ScoreTrendChart(sessions: _history),
+                    ),
+            ),
+            const SizedBox(height: 16),
+            _ActivitySection(
+              title: 'Daily speaking activity',
+              icon: Icons.calendar_today_outlined,
+              child: _history.isEmpty
+                  ? const _EmptyHint(
+                      text: 'Sessions per day will chart here once you start practicing.',
+                    )
+                  : SizedBox(
+                      height: 160,
+                      child: _DailyActivityChart(sessions: _history),
+                    ),
+            ),
+            const SizedBox(height: 16),
+            _ActivitySection(
+              title: 'Practice mix',
+              icon: Icons.donut_small_outlined,
+              child: _history.isEmpty
+                  ? const _EmptyHint(
+                      text: 'How you practice (chat, role-play, games…) will chart here.',
+                    )
+                  : SizedBox(
+                      height: 180,
+                      child: _PracticeMixDonut(sessions: _history),
+                    ),
             ),
             const SizedBox(height: 24),
             _ActivitySection(
@@ -243,6 +350,21 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                             alignment: BarChartAlignment.spaceAround,
                             minY: 0,
                             maxY: topWeakMaxY,
+                            barTouchData: BarTouchData(
+                              touchTooltipData: BarTouchTooltipData(
+                                getTooltipColor: (_) =>
+                                    AppColors.brandPrimary.withValues(alpha: 0.9),
+                                getTooltipItem: (group, groupIndex, rod, rodIndex) =>
+                                    BarTooltipItem(
+                                  '${_humanizeErrorType(topWeak[group.x.toInt()].errorType)}\n${rod.toY.toInt()}',
+                                  const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ),
                             titlesData: FlTitlesData(
                               leftTitles: AxisTitles(
                                 sideTitles: SideTitles(
@@ -279,14 +401,12 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                                     if (i < 0 || i >= topWeak.length) {
                                       return const SizedBox.shrink();
                                     }
-                                    final label = topWeak[i].errorType;
-                                    final short = label.length > 10
-                                        ? '${label.substring(0, 9)}…'
-                                        : label;
+                                    final label =
+                                        _humanizeErrorType(topWeak[i].errorType);
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8),
                                       child: Text(
-                                        short,
+                                        label,
                                         style: TextStyle(
                                           fontSize: 10,
                                           color: Colors.grey.shade700,
@@ -356,10 +476,19 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
 }
 
 class _StreakHero extends StatelessWidget {
-  const _StreakHero({required this.streakDays, required this.l10n});
+  const _StreakHero({
+    required this.streakDays,
+    required this.l10n,
+    required this.goal,
+    required this.today,
+    required this.onGoalChanged,
+  });
 
   final int streakDays;
   final AppLocalizations l10n;
+  final int goal;
+  final int today;
+  final ValueChanged<int> onGoalChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -418,19 +547,83 @@ class _StreakHero extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.local_fire_department_rounded,
-              size: 44,
-              color: Colors.orange.shade300,
-            ),
-          ),
+          _StreakGaugeIcon(goal: goal, today: today, onGoalChanged: onGoalChanged),
         ],
+      ),
+    );
+  }
+}
+
+const double _goalGaugeSize = 76;
+const int _goalGaugeMin = 1;
+const int _goalGaugeMax = 50;
+
+/// Flame icon ringed by a single circular progress bar for the daily
+/// correct-sentence goal. The ring fills white as today's correct-sentence
+/// count accumulates toward the goal, turning orange/fire once the goal is
+/// reached. Press-and-drag anywhere on the ring to set a new goal (synced to
+/// the same value shown on Profile → Settings → Daily goal).
+class _StreakGaugeIcon extends StatefulWidget {
+  const _StreakGaugeIcon({
+    required this.goal,
+    required this.today,
+    required this.onGoalChanged,
+  });
+
+  final int goal;
+  final int today;
+  final ValueChanged<int> onGoalChanged;
+
+  @override
+  State<_StreakGaugeIcon> createState() => _StreakGaugeIconState();
+}
+
+class _StreakGaugeIconState extends State<_StreakGaugeIcon> {
+  void _handleDrag(Offset localPosition) {
+    const center = Offset(_goalGaugeSize / 2, _goalGaugeSize / 2);
+    final dx = localPosition.dx - center.dx;
+    final dy = localPosition.dy - center.dy;
+    var theta = atan2(dy, dx) + pi / 2;
+    if (theta < 0) theta += 2 * pi;
+    final fraction = theta / (2 * pi);
+    final goal = (fraction * _goalGaugeMax)
+        .round()
+        .clamp(_goalGaugeMin, _goalGaugeMax);
+    if (goal != widget.goal) widget.onGoalChanged(goal);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final safeGoal = widget.goal <= 0 ? 1 : widget.goal;
+    final reached = widget.today >= safeGoal;
+    final targetFraction = (safeGoal / _goalGaugeMax).clamp(0.0, 1.0);
+    final progressFraction = (widget.today / _goalGaugeMax).clamp(0.0, 1.0);
+
+    // A plain GestureDetector's pan recognizer competes with the ancestor
+    // ListView's vertical-scroll recognizer in the same gesture arena —
+    // dragging around a circle is mostly vertical motion, so the list kept
+    // winning that arena and swallowing the drag instead of the ring. A
+    // Listener bypasses the arena entirely (raw pointer events always reach
+    // it), which is what actually makes dragging reliable here.
+    return Listener(
+      onPointerDown: (event) => _handleDrag(event.localPosition),
+      onPointerMove: (event) => _handleDrag(event.localPosition),
+      child: DualArcProgressRing(
+        targetFraction: targetFraction,
+        progressFraction: progressFraction,
+        size: _goalGaugeSize,
+        strokeWidth: 14,
+        trackColor: Colors.white.withValues(alpha: 0.15),
+        targetColor: const Color(0xFF2196F3),
+        progressColor: reached ? AppColors.greenCorrect : Colors.orange.shade300,
+        center: Padding(
+          padding: const EdgeInsets.all(13),
+          child: Icon(
+            Icons.local_fire_department_rounded,
+            size: 34,
+            color: reached ? AppColors.greenCorrect : Colors.orange,
+          ),
+        ),
       ),
     );
   }
@@ -712,6 +905,383 @@ class _PhraseCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Turns a raw snake_case error-type key (e.g. "article_usage", as stored
+/// by the backend) into a readable label (e.g. "Article usage") for the
+/// "Top weak areas" chart.
+String _humanizeErrorType(String raw) {
+  final spaced = raw.replaceAll('_', ' ').trim();
+  if (spaced.isEmpty) return spaced;
+  return spaced[0].toUpperCase() + spaced.substring(1);
+}
+
+String _modeLabel(SpeakingMode mode) {
+  switch (mode) {
+    case SpeakingMode.chat:
+      return 'Chat';
+    case SpeakingMode.rolePlay:
+      return 'Role-Play';
+    case SpeakingMode.topic:
+      return 'Topics';
+    case SpeakingMode.game:
+      return 'Games';
+    case SpeakingMode.lesson:
+      return 'Lesson';
+  }
+}
+
+Color _modeColor(SpeakingMode mode) {
+  switch (mode) {
+    case SpeakingMode.chat:
+      return const Color(0xFF4994EC);
+    case SpeakingMode.rolePlay:
+      return const Color(0xFF7FFB66);
+    case SpeakingMode.topic:
+      return const Color(0xFFED7249);
+    case SpeakingMode.game:
+      return const Color(0xFFD52E57);
+    case SpeakingMode.lesson:
+      return const Color(0xFFF6C543);
+  }
+}
+
+/// Smooth gradient-area line chart of session scores (0-10) over time.
+class _ScoreTrendChart extends StatelessWidget {
+  const _ScoreTrendChart({required this.sessions});
+
+  final List<SpeakingSessionRecord> sessions;
+
+  @override
+  Widget build(BuildContext context) {
+    final ordered = sessions.reversed.toList(); // oldest -> newest
+    final recent =
+        ordered.length > 20 ? ordered.sublist(ordered.length - 20) : ordered;
+    final spots = recent
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value.score.toDouble()))
+        .toList();
+    final labelEvery = (recent.length / 5).ceil().clamp(1, recent.length);
+
+    return LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: (recent.length - 1).toDouble(),
+        minY: 0,
+        maxY: 10,
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 2,
+          getDrawingHorizontalLine: (_) =>
+              FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+        ),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              interval: 2,
+              getTitlesWidget: (value, meta) => Text(
+                value.toInt().toString(),
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+              ),
+            ),
+          ),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                final i = value.round();
+                if (i < 0 || i >= recent.length) return const SizedBox.shrink();
+                if (i % labelEvery != 0 && i != recent.length - 1) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    DateFormat('MMM d').format(recent[i].completedAt.toLocal()),
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => AppColors.greenCorrect.withValues(alpha: 0.9),
+            getTooltipItems: (touchedSpots) => touchedSpots
+                .map(
+                  (spot) => LineTooltipItem(
+                    '${spot.y.toInt()}/10',
+                    const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            curveSmoothness: 0.3,
+            preventCurveOverShooting: true,
+            color: AppColors.greenCorrect,
+            barWidth: 3,
+            dotData: FlDotData(
+              getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                radius: 3,
+                color: AppColors.greenCorrect,
+                strokeWidth: 0,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.greenCorrect.withValues(alpha: 0.28),
+                  AppColors.greenCorrect.withValues(alpha: 0.0),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Smooth gradient-area line chart of sessions-per-day.
+class _DailyActivityChart extends StatelessWidget {
+  const _DailyActivityChart({required this.sessions});
+
+  final List<SpeakingSessionRecord> sessions;
+
+  @override
+  Widget build(BuildContext context) {
+    final counts = <String, int>{};
+    for (final s in sessions) {
+      final key = DateFormat('yyyy-MM-dd').format(s.completedAt.toLocal());
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    final days = counts.keys.toList()..sort();
+    final series = [
+      for (final d in days) (date: DateTime.parse(d), count: counts[d]!),
+    ];
+    final maxY =
+        series.map((e) => e.count).fold<int>(0, (a, b) => a > b ? a : b).toDouble();
+    final yInterval = maxY <= 5 ? 1.0 : (maxY / 4).ceilToDouble();
+    final labelEvery = (series.length / 5).ceil().clamp(1, series.length);
+    final spots = series
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value.count.toDouble()))
+        .toList();
+
+    return LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: (series.length - 1).toDouble(),
+        minY: 0,
+        maxY: maxY < 1 ? 1 : maxY * 1.2,
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: yInterval,
+          getDrawingHorizontalLine: (_) =>
+              FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+        ),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              interval: yInterval,
+              getTitlesWidget: (value, meta) => Text(
+                value.toInt().toString(),
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+              ),
+            ),
+          ),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                final i = value.round();
+                if (i < 0 || i >= series.length) return const SizedBox.shrink();
+                if (i % labelEvery != 0 && i != series.length - 1) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    DateFormat('MMM d').format(series[i].date),
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => const Color(0xFF2196F3).withValues(alpha: 0.9),
+            getTooltipItems: (touchedSpots) => touchedSpots
+                .map(
+                  (spot) => LineTooltipItem(
+                    spot.y.toInt().toString(),
+                    const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            curveSmoothness: 0.3,
+            preventCurveOverShooting: true,
+            color: const Color(0xFF2196F3),
+            barWidth: 3,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  const Color(0xFF2196F3).withValues(alpha: 0.28),
+                  const Color(0xFF2196F3).withValues(alpha: 0.0),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Donut of sessions by practice mode (chat/role-play/topics/games/lesson).
+class _PracticeMixDonut extends StatelessWidget {
+  const _PracticeMixDonut({required this.sessions});
+
+  final List<SpeakingSessionRecord> sessions;
+
+  @override
+  Widget build(BuildContext context) {
+    final counts = <SpeakingMode, int>{};
+    for (final s in sessions) {
+      counts[s.mode] = (counts[s.mode] ?? 0) + 1;
+    }
+    final total = sessions.length;
+    final entries = [
+      for (final m in SpeakingMode.values)
+        if ((counts[m] ?? 0) > 0) (mode: m, count: counts[m]!),
+    ];
+
+    final sections = entries
+        .map(
+          (e) => PieChartSectionData(
+            value: e.count.toDouble(),
+            title: '${e.count}',
+            color: _modeColor(e.mode),
+            radius: 40,
+            titlePositionPercentageOffset: 0.62,
+            titleStyle: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        )
+        .toList();
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  sectionsSpace: 3,
+                  centerSpaceRadius: 36,
+                  sections: sections,
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$total',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    total == 1 ? 'session' : 'sessions',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: entries
+                .map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: _modeColor(e.mode),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _modeLabel(e.mode),
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                          ),
+                        ),
+                        Text(
+                          '${e.count}',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -575,9 +575,11 @@ class _CardEditScreenState extends State<CardEditScreen> {
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: AppPageColors.pageBgOf(context),
-        foregroundColor: Colors.black,
-        elevation: 0,
+        backgroundColor: AppColors.brandPrimary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.35),
+        scrolledUnderElevation: 8,
         title: Text(widget.isEditing ? 'Edit note' : 'Add note'),
         actions: [
           IconButton(
@@ -586,7 +588,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
             onPressed: _loading || _saving ? null : _preview,
           ),
           IconButton(
-            icon: const Icon(Icons.check_rounded, color: AppColors.brandPrimary),
+            icon: const Icon(Icons.check_rounded, color: Colors.white),
             tooltip: 'Save',
             onPressed: _saving || _loading ? null : _save,
           ),

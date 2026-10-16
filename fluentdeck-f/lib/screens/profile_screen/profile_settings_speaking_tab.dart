@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
@@ -26,11 +28,68 @@ class _ProfileSettingsSpeakingSectionState
   bool _saving = false;
   bool _isPremium = false;
   SpeakingPreferences _speakingPrefs = const SpeakingPreferences();
+  Timer? _goalSaveDebounce;
+  int? _pendingGoal;
 
   @override
   void initState() {
     super.initState();
+    SpeakingPreferencesService.instance.addListener(_onPrefsChanged);
     _load();
+  }
+
+  @override
+  void dispose() {
+    SpeakingPreferencesService.instance.removeListener(_onPrefsChanged);
+    if (_goalSaveDebounce?.isActive ?? false) {
+      _goalSaveDebounce!.cancel();
+      final goal = _pendingGoal;
+      final toSave = goal == null
+          ? _speakingPrefs
+          : SpeakingPreferencesService.instance.current.copyWith(
+              correctSentenceGoal: goal,
+            );
+      SpeakingPreferencesService.instance.saveWithDetails(toSave);
+    }
+    super.dispose();
+  }
+
+  // Lets this screen pick up goal changes dragged in on Activity →
+  // Speaking's gauge icon (and vice versa) while both are mounted.
+  void _onPrefsChanged() {
+    if (!mounted) return;
+    setState(() => _speakingPrefs = SpeakingPreferencesService.instance.current);
+  }
+
+  /// Updates the goal locally right away so the slider stays responsive,
+  /// then waits for the user to settle on a value before sending the PUT
+  /// request — sending one per drag tick made every control on this screen
+  /// lock (`_saving`) and unlock on each tick.
+  void _onGoalSliderChanged(double value) {
+    final goal = value.round();
+    // Base the update on the service's latest cached value, not this
+    // screen's possibly-stale local copy — otherwise an older snapshot
+    // here (e.g. `correctSentencesToday` logged by a session elsewhere)
+    // can clobber a newer value when merged back into the shared cache.
+    final next = SpeakingPreferencesService.instance.current.copyWith(
+      correctSentenceGoal: goal,
+    );
+    setState(() => _speakingPrefs = next);
+    SpeakingPreferencesService.instance.updateLocal(next);
+    _pendingGoal = goal;
+    _goalSaveDebounce?.cancel();
+    // Re-read the cache (not `_speakingPrefs`) when the timer fires: if
+    // something else updated the cache in the meantime (e.g. the other
+    // screen's own reload racing this one), this still saves the goal the
+    // user actually chose instead of silently losing it to that race.
+    _goalSaveDebounce = Timer(const Duration(seconds: 2), () {
+      _pendingGoal = null;
+      _saveSpeakingPreferences(
+        SpeakingPreferencesService.instance.current.copyWith(
+          correctSentenceGoal: goal,
+        ),
+      );
+    });
   }
 
   Future<void> _load() async {
@@ -360,6 +419,7 @@ class _ProfileSettingsSpeakingSectionState
           ),
         ),
         AppSettingsGroup(
+          borderRadius: 24,
           title: 'Daily goal',
           subtitle: 'Track correct sentences toward your daily target.',
           child: Column(
@@ -372,12 +432,8 @@ class _ProfileSettingsSpeakingSectionState
                 max: 50,
                 divisions: 49,
                 label: '${_speakingPrefs.correctSentenceGoal} sentences',
-                enabled: !_saving,
-                onChanged: (value) {
-                  _saveSpeakingPreferences(
-                    _speakingPrefs.copyWith(correctSentenceGoal: value.round()),
-                  );
-                },
+                enabled: true,
+                onChanged: _onGoalSliderChanged,
               ),
               const SizedBox(height: 8),
               _CorrectSentenceProgress(
@@ -397,7 +453,9 @@ class _ProfileSettingsSpeakingSectionState
   }
 }
 
-/// Shows progress toward today's "correct sentence goal" — resets daily.
+/// Shows today's progress toward the "correct sentence goal" as plain text
+/// — resets daily. The visual ring for this lives on the Activity → Speaking
+/// tab, around the streak icon, not duplicated here.
 class _CorrectSentenceProgress extends StatelessWidget {
   const _CorrectSentenceProgress({required this.today, required this.goal});
 
@@ -407,37 +465,21 @@ class _CorrectSentenceProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final safeGoal = goal <= 0 ? 1 : goal;
-    final progress = (today / safeGoal).clamp(0.0, 1.0);
     final reached = today >= safeGoal;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Today',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            ),
-            Text(
-              '$today / $goal correct sentences',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: reached ? AppColors.greenCorrect : Colors.grey.shade700,
-              ),
-            ),
-          ],
+        Text(
+          'Today',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
         ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 6,
-            backgroundColor: Colors.grey.shade200,
-            color: reached ? AppColors.greenCorrect : AppColors.brandPrimary,
+        Text(
+          '$today / $goal correct sentences',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: reached ? AppColors.greenCorrect : Colors.grey.shade700,
           ),
         ),
       ],

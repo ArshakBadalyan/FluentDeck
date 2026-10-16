@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 /// Phase 4 — shared motion tokens and lightweight animation widgets.
@@ -164,14 +165,12 @@ class AppSharedAxisRoute<T> extends PageRouteBuilder<T> {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           if (MediaQuery.disableAnimationsOf(context)) return child;
 
-          final offsetAnimation = Tween<Offset>(
-            begin: const Offset(0.06, 0),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: AppMotion.curve));
-
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(position: offsetAnimation, child: child),
+          return SharedAxisTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.horizontal,
+            fillColor: Colors.transparent,
+            child: child,
           );
         },
         transitionDuration: AppMotion.normal,
