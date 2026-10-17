@@ -16,6 +16,7 @@ import 'package:fluentdeck/services/push_notification_service.dart';
 import 'package:fluentdeck/services/token_storage.dart';
 import 'package:fluentdeck/services/mobile_app_update_gate.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/mobile_force_update_screen.dart';
 import 'package:fluentdeck/widgets/mobile_soft_update_host.dart';
 
@@ -125,9 +126,9 @@ class _AppStartState extends State<AppStart> {
     if (_forcedUpdate != null) {
       return MobileForceUpdateScreen(storeUrl: _forcedUpdate!.storeUrl);
     }
-    return const Scaffold(
-      backgroundColor: Colors.white,
-      body: AppLaunchSkeleton(),
+    return Scaffold(
+      backgroundColor: AppPageColors.pageBgOf(context),
+      body: const AppLaunchSkeleton(),
     );
   }
 }

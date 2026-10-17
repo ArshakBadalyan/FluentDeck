@@ -91,6 +91,12 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: suppressShadow ? 0 : 4,
       shadowColor: suppressShadow ? null : Colors.black.withValues(alpha: 0.35),
       scrolledUnderElevation: suppressShadow ? 0 : 8,
+      // Material3 tints an elevated AppBar's surface with colorScheme.surfaceTint
+      // by default — in dark mode that's the bright cyan brandPrimaryOnDark, so
+      // the toolbar (elevated) ends up a visibly different, lighter teal than the
+      // flat tab-bar Material directly below it even though both use the same
+      // backgroundColor. Disabling the tint keeps elevation as a pure shadow.
+      surfaceTintColor: Colors.transparent,
       backgroundColor: AppColors.brandPrimaryDeep,
       titleSpacing: 24,
       centerTitle: false,

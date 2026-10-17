@@ -2,6 +2,7 @@ import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class UnsavedChangesService extends ChangeNotifier {
   static final UnsavedChangesService _instance =
@@ -48,10 +49,10 @@ class UnsavedChangesService extends ChangeNotifier {
                       Text(
                         '${context.tr('popups.leave-page-popup.first-title')}\n${context.tr('popups.leave-page-popup.second-title')}',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                          color: AppPageColors.textPrimaryOf(context),
                           height: 1.3,
                         ),
                       ),
@@ -60,9 +61,9 @@ class UnsavedChangesService extends ChangeNotifier {
                       Text(
                         '${context.tr('popups.leave-page-popup.first-text')}\n${context.tr('popups.leave-page-popup.second-text')}.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: Colors.black87,
+                          color: AppPageColors.subtitleOf(context),
                           height: 1.3,
                         ),
                       ),

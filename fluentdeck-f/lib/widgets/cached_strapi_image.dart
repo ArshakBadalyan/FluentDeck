@@ -35,7 +35,7 @@ class CachedStrapiImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final placeholder = placeholderColor ?? AppPageColors.fieldBg;
+    final placeholder = placeholderColor ?? AppPageColors.fieldBgOf(context);
 
     Widget image = CachedNetworkImage(
       imageUrl: url,

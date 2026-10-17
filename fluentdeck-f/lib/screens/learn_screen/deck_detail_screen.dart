@@ -7,6 +7,7 @@ import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 
 class DeckDetailScreen extends StatefulWidget {
@@ -126,13 +127,14 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         backgroundColor: AppColors.brandPrimaryDeep,
         foregroundColor: Colors.white,
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.35),
         scrolledUnderElevation: 8,
+        surfaceTintColor: Colors.transparent,
         leading: BackButton(
           onPressed: () => Navigator.pop(context, _changed ? true : null),
         ),
@@ -180,7 +182,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
           child: Text(
             'No cards in this deck yet.\nTap + to add a note.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade700),
+            style: TextStyle(color: AppPageColors.subtitleOf(context)),
           ),
         ),
       );
@@ -206,12 +208,12 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
             return false;
           },
           child: Material(
-            color: Colors.white,
+            color: AppPageColors.cardBgOf(context),
             borderRadius: BorderRadius.circular(10),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+                border: Border.all(color: AppPageColors.subtleBorderOf(context)),
               ),
               child: ListTile(
                 title: Text(
@@ -224,7 +226,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
                     card.templateName,
                     card.reviewState?.state ?? 'new',
                   ].join(' · '),
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                 ),
               ),
             ),

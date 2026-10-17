@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class SoftwarePage extends StatelessWidget {
   const SoftwarePage({super.key});
@@ -19,7 +20,7 @@ class SoftwarePage extends StatelessWidget {
             (_, __) => Divider(
               height: 24,
               thickness: 0.6,
-              color: Colors.grey.withValues(alpha: 0.3),
+              color: AppPageColors.subtleBorderOf(context),
             ),
         itemBuilder: (context, index) {
           return Text(

@@ -120,7 +120,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
     return Material(
       elevation: 3,
-      color: Colors.white,
+      color: AppPageColors.cardBgOf(context),
       shadowColor: Colors.black.withValues(alpha: 0.12),
       child: content,
     );
@@ -229,7 +229,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     final icon = Icon(
       Icons.drag_indicator_rounded,
       size: 20,
-      color: _selectMode ? Colors.grey.shade300 : Colors.grey.shade500,
+      color: AppPageColors.subtitleOf(context).withValues(alpha: _selectMode ? 0.5 : 1),
     );
 
     if (_selectMode) {
@@ -800,13 +800,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.35),
         scrolledUnderElevation: 8,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Card browser'),
         actions: [
           IconButton(
@@ -847,14 +848,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   onPressed: _load,
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppPageColors.fieldBgOf(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+                  borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+                  borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1044,7 +1045,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                     labelStyle: TextStyle(
                       fontSize: 13,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                      color: selected ? AppColors.brandPrimary : Colors.grey.shade800,
+                      color: selected ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
                     ),
                     selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
                     backgroundColor: AppPageColors.cardBgOf(context),
@@ -1130,7 +1131,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
             TextStyle fieldLabelStyle = TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: AppPageColors.subtitleOf(context),
             );
 
             Widget labeledField(String label, Widget field) {
@@ -1244,7 +1245,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                             'Tag',
                             TextFormField(
                               initialValue: tag,
-                              decoration: appSheetFieldDecoration(hint: 'Filter by tag'),
+                              decoration: appSheetFieldDecoration(context, hint: 'Filter by tag'),
                               onChanged: (v) => tag = v,
                             ),
                           ),
@@ -1314,7 +1315,9 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                         border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(ctx))),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
+                            color: Theme.of(ctx).brightness == Brightness.dark
+                                ? Colors.transparent
+                                : Colors.black.withValues(alpha: 0.04),
                             blurRadius: 8,
                             offset: const Offset(0, -2),
                           ),
@@ -1396,7 +1399,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
         child: Container(
           width: 12,
           alignment: Alignment.center,
-          child: Container(width: 2, height: 20, color: Colors.grey.shade300),
+          child: Container(width: 2, height: 20, color: AppPageColors.subtleBorderOf(context)),
         ),
       ),
     );
@@ -1451,7 +1454,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.cloud_off_outlined, size: 40, color: Colors.grey.shade500),
+              Icon(Icons.cloud_off_outlined, size: 40, color: AppPageColors.subtitleOf(context)),
               const SizedBox(height: 12),
               Text(_error!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
@@ -1469,11 +1472,11 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.shade400),
+              Icon(Icons.search_off_rounded, size: 48, color: AppPageColors.subtitleOf(context)),
               const SizedBox(height: 12),
               Text(
                 'No cards match your filters',
-                style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                style: TextStyle(color: AppPageColors.subtitleOf(context), fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
@@ -1668,7 +1671,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     TextStyle headerStyle({bool active = false}) => TextStyle(
       fontSize: 11,
       fontWeight: FontWeight.w700,
-      color: active ? AppColors.brandPrimary : Colors.grey.shade700,
+      color: active ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
     );
 
     Widget headerCell(String label, CardBrowserSortField field, {double? width}) {
@@ -1698,7 +1701,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
             child: Icon(
               Icons.drag_indicator_rounded,
               size: 16,
-              color: Colors.grey.shade400,
+              color: AppPageColors.subtitleOf(context),
             ),
           ),
           if (_selectMode)
@@ -1792,7 +1795,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   cardTypeLabel(card.cardType),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                  style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
                 ),
               ),
               SizedBox(
@@ -1805,7 +1808,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   _deckLabel(card),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                  style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
                 ),
               ),
               SizedBox(
@@ -1835,7 +1838,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     final style = TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w700,
-      color: active ? AppColors.brandPrimary : Colors.grey.shade700,
+      color: active ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
     );
 
     return SizedBox(
@@ -1878,7 +1881,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
             child: Icon(
               Icons.drag_indicator_rounded,
               size: narrow ? 16 : 18,
-              color: Colors.grey.shade400,
+              color: AppPageColors.subtitleOf(context),
             ),
           ),
           _sortableHeader('Question', CardBrowserSortField.front, width: qWidth),
@@ -1969,7 +1972,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 width: typeWidth,
                 child: Text(
                   cardTypeLabel(card.cardType),
-                  style: TextStyle(fontSize: narrow ? 11 : 12, color: Colors.grey.shade700),
+                  style: TextStyle(fontSize: narrow ? 11 : 12, color: AppPageColors.subtitleOf(context)),
                 ),
               ),
               if (!narrow) const SizedBox(width: 12),
@@ -1984,7 +1987,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   _deckLabel(card),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: narrow ? 11 : 12, color: Colors.grey.shade700),
+                  style: TextStyle(fontSize: narrow ? 11 : 12, color: AppPageColors.subtitleOf(context)),
                 ),
               ),
               _CardRowMenu(

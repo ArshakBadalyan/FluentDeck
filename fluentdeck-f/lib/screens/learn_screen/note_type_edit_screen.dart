@@ -174,7 +174,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         backgroundColor: AppPageColors.pageBgOf(context),
-        foregroundColor: Colors.black,
+        foregroundColor: AppPageColors.textPrimaryOf(context),
         elevation: 0,
         title: Text(
           widget.styleOnly
@@ -235,7 +235,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
                 subtitle: 'Built-in type — you can change the card style only',
                 child: Text(
                   'Fields and templates are fixed for this note type.',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.4),
+                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context), height: 1.4),
                 ),
               ),
               const SizedBox(height: 16),
@@ -308,7 +308,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
               children: [
                 Text(
                   'Required',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                 ),
                 AppSwitch(
                   value: row.required,
@@ -317,7 +317,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
               ],
             ),
             IconButton(
-              icon: Icon(Icons.close_rounded, size: 18, color: Colors.grey.shade500),
+              icon: Icon(Icons.close_rounded, size: 18, color: AppPageColors.subtitleOf(context)),
               tooltip: 'Remove field',
               onPressed: () => _removeField(index),
             ),
@@ -339,15 +339,15 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
           color: preset.backgroundColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? AppColors.brandPrimary : Colors.black.withValues(alpha: 0.08),
+            color: selected ? AppPageColors.accentOf(context) : AppPageColors.subtleBorderOf(context),
             width: selected ? 2.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color:
                   selected
-                      ? AppColors.brandPrimary.withValues(alpha: 0.25)
-                      : Colors.black.withValues(alpha: 0.04),
+                      ? AppPageColors.accentOf(context).withValues(alpha: 0.25)
+                      : AppPageColors.subtleBorderOf(context),
               blurRadius: selected ? 10 : 6,
               offset: const Offset(0, 2),
             ),

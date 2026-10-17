@@ -296,7 +296,7 @@ class CardBrowserOptionsMenu {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: AppPageColors.subtitleOf(context),
             ),
           ),
         ),
@@ -320,7 +320,7 @@ class CardBrowserOptionsMenu {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: AppPageColors.subtitleOf(context),
             ),
           ),
         ),

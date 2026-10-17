@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/config/brand_config.dart';
 import 'package:fluentdeck/services/english_level_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class CefrLevelChips extends StatelessWidget {
   const CefrLevelChips({
@@ -69,22 +70,25 @@ class _LevelChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = AppPageColors.accentOf(context);
     late final Color background;
     late final Color border;
     late final Color labelColor;
 
     if (isSelected) {
-      background = AppColors.brandPrimary.withValues(alpha: 0.12);
-      border = AppColors.brandPrimary.withValues(alpha: 0.35);
-      labelColor = AppColors.brandPrimary;
+      background = accentColor.withValues(alpha: 0.12);
+      border = accentColor.withValues(alpha: 0.35);
+      labelColor = accentColor;
     } else if (locked) {
-      background = const Color(0xFFF2F2F5);
-      border = const Color(0xFFE0E0E5);
-      labelColor = Colors.grey.shade500;
+      background = AppPageColors.fieldBgOf(context);
+      border = AppPageColors.subtleBorderOf(context);
+      labelColor = AppPageColors.subtitleOf(context);
     } else {
-      background = Colors.white;
-      border = const Color(0xFFE0E0E5);
-      labelColor = const Color(0xFF5C5C66);
+      background = AppPageColors.cardBgOf(context);
+      border = AppPageColors.subtleBorderOf(context);
+      labelColor = Theme.of(context).brightness == Brightness.dark
+          ? BrandConfig.darkTextPrimary
+          : const Color(0xFF5C5C66);
     }
 
     return Material(

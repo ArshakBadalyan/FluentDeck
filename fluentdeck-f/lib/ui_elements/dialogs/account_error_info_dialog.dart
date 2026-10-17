@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class AccountErrorInfoDialog extends StatelessWidget {
   const AccountErrorInfoDialog({super.key});
@@ -7,7 +8,7 @@ class AccountErrorInfoDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -32,18 +33,17 @@ class AccountErrorInfoDialog extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(height: 12),
 
-                const Text(
+                Text(
                   'Username must be unique',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
-                    color: Colors.black87,
+                    color: AppPageColors.subtitleOf(context),
                   ),
                 ),
                 const SizedBox(height: 24),

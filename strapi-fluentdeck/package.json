@@ -13,7 +13,8 @@
     "test:queue": "node --test tests/flashcard-review-queue.test.js",
     "test:speaking-premium": "node --test tests/speaking-premium-access.test.js",
     "test:ai-rate-limit": "node --test tests/ai-rate-limit.test.js",
-    "test": "yarn test:apkg && yarn test:queue && yarn test:speaking-premium && yarn test:ai-rate-limit"
+    "test": "yarn test:apkg && yarn test:queue && yarn test:speaking-premium && yarn test:ai-rate-limit && yarn test:language-levels",
+    "test:language-levels": "node --test tests/language-level-analytics.test.js tests/speaking-proficiency-assessment.test.js"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",

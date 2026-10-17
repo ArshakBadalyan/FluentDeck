@@ -127,7 +127,7 @@ class _SummaryBanner extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Practice speaking, review cards, and complete lessons to earn badges.',
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.35),
+            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context), height: 1.35),
           ),
           const SizedBox(height: 14),
           ClipRRect(
@@ -166,13 +166,13 @@ class _AchievementTile extends StatelessWidget {
         border: Border.all(
           color:
               unlocked
-                  ? AppColors.brandPrimary.withValues(alpha: 0.35)
-                  : Colors.black.withValues(alpha: 0.05),
+                  ? AppPageColors.accentOf(context).withValues(alpha: 0.35)
+                  : AppPageColors.subtleBorderOf(context),
         ),
         boxShadow: [
           if (unlocked)
             BoxShadow(
-              color: AppColors.brandPrimary.withValues(alpha: 0.08),
+              color: AppPageColors.accentOf(context).withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -190,12 +190,12 @@ class _AchievementTile extends StatelessWidget {
                   shape: BoxShape.circle,
                   color:
                       unlocked
-                          ? AppColors.brandPrimary.withValues(alpha: 0.12)
-                          : Colors.grey.shade100,
+                          ? AppPageColors.accentOf(context).withValues(alpha: 0.12)
+                          : AppPageColors.fieldBgOf(context),
                 ),
                 child: Icon(
                   def.icon,
-                  color: unlocked ? AppColors.brandPrimary : Colors.grey.shade400,
+                  color: unlocked ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
                   size: 22,
                 ),
               ),
@@ -203,7 +203,7 @@ class _AchievementTile extends StatelessWidget {
               if (unlocked)
                 const Icon(Icons.check_circle, size: 18, color: AppColors.greenCorrect)
               else
-                Icon(Icons.lock_outline, size: 16, color: Colors.grey.shade400),
+                Icon(Icons.lock_outline, size: 16, color: AppPageColors.subtitleOf(context)),
             ],
           ),
           const SizedBox(height: 12),
@@ -212,7 +212,7 @@ class _AchievementTile extends StatelessWidget {
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: unlocked ? Colors.black87 : Colors.grey.shade700,
+              color: unlocked ? AppPageColors.textPrimaryOf(context) : AppPageColors.subtitleOf(context),
             ),
           ),
           const SizedBox(height: 4),
@@ -222,7 +222,7 @@ class _AchievementTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 height: 1.3,
-                color: Colors.grey.shade600,
+                color: AppPageColors.subtitleOf(context),
               ),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -234,7 +234,7 @@ class _AchievementTile extends StatelessWidget {
             child: LinearProgressIndicator(
               value: status.progress,
               minHeight: 5,
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: AppPageColors.subtleBorderOf(context),
               color: unlocked ? AppColors.primaryYellow : AppColors.brandPrimary,
             ),
           ),
@@ -244,7 +244,7 @@ class _AchievementTile extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade500,
+              color: AppPageColors.subtitleOf(context),
             ),
           ),
         ],

@@ -211,7 +211,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
                 scenario.isLocal
                     ? IconButton(
                       tooltip: 'Delete',
-                      icon: Icon(Icons.delete_outline, color: Colors.grey.shade600),
+                      icon: Icon(Icons.delete_outline, color: AppPageColors.subtitleOf(context)),
                       onPressed: () => _deleteCustom(scenario),
                     )
                     : null,
@@ -258,7 +258,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
             child: Text(
               '$_customCount of $kFreeCustomRolePlayLimit free custom role-plays used',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
             ),
           ),
         const SizedBox(height: 8),
@@ -365,7 +365,7 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppPageColors.subtleBorderOf(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -458,7 +458,7 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
           ),
           Container(
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
             ),
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
             child: SizedBox(

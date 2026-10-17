@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class AccountInfoSaveDialog extends StatelessWidget {
   const AccountInfoSaveDialog({super.key});
@@ -7,7 +8,7 @@ class AccountInfoSaveDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -25,7 +26,6 @@ class AccountInfoSaveDialog extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(height: 24),

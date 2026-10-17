@@ -58,7 +58,7 @@ class SharedDecksScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppPageColors.pageBgOf(context),
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: const Text('Shared decks'),
       ),
@@ -104,7 +104,7 @@ class SharedDecksScreen extends StatelessWidget {
                                 : 'Check back soon for a browsable deck library',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey.shade700,
+                              color: AppPageColors.subtitleOf(context),
                             ),
                           ),
                         ),

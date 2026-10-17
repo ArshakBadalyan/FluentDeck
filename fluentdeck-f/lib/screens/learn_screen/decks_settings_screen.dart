@@ -10,6 +10,7 @@ import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_store.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Decks settings hub.
 class DecksSettingsScreen extends StatefulWidget {
@@ -152,8 +153,9 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
     await _load();
   }
 
-  Widget _sectionTile(DecksSettingsSection section) {
+  Widget _sectionTile(BuildContext context, DecksSettingsSection section) {
     return decksSettingsNavTile(
+      context: context,
       icon: section.icon,
       title: section.title,
       subtitle: section.subtitle,
@@ -161,9 +163,9 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
     );
   }
 
-  Widget _buildSectionTiles() {
+  Widget _buildSectionTiles(BuildContext context) {
     final tiles = <Widget>[
-      for (final section in widget.sections) _sectionTile(section),
+      for (final section in widget.sections) _sectionTile(context, section),
     ];
 
     if (widget.inlineInScroll) {
@@ -178,7 +180,7 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Text(
               'Review, sync, backup, and study options for your decks.',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
           ),
         ...tiles,
@@ -195,7 +197,7 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
                 itemHeight: 56,
                 scrollable: !widget.inlineInScroll,
               )
-            : _buildSectionTiles();
+            : _buildSectionTiles(context);
 
     if (widget.embedInShell || widget.inlineInScroll) {
       return body;

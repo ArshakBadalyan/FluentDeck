@@ -106,7 +106,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.cloud_off_outlined, size: 48, color: Colors.grey.shade500),
+                Icon(Icons.cloud_off_outlined, size: 48, color: AppPageColors.subtitleOf(context)),
                 const SizedBox(height: 12),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
@@ -207,7 +207,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade800,
+                  color: AppPageColors.subtitleOf(context),
                   height: 1.45,
                 ),
               ),
@@ -737,7 +737,7 @@ class _EmptyHint extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          color: Colors.grey.shade600,
+          color: AppPageColors.subtitleOf(context),
           fontSize: 14,
           height: 1.45,
         ),
@@ -807,7 +807,7 @@ class _CardCountsPie extends StatelessWidget {
                   ),
                   Text(
                     total == 1 ? 'card' : 'cards',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
                   ),
                 ],
               ),
@@ -840,7 +840,7 @@ class _CardCountsPie extends StatelessWidget {
                                 e.label,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey.shade700,
+                                  color: AppPageColors.subtitleOf(context),
                                 ),
                               ),
                             ),
@@ -898,8 +898,9 @@ class _LineChartSeries extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: yInterval,
           getDrawingHorizontalLine: (_) => FlLine(
-            color: Colors.grey.shade200,
+            color: AppPageColors.subtleBorderOf(context),
             strokeWidth: 1,
+            dashArray: [4, 4],
           ),
         ),
         borderData: FlBorderData(show: false),
@@ -911,7 +912,7 @@ class _LineChartSeries extends StatelessWidget {
               interval: yInterval,
               getTitlesWidget: (value, meta) => Text(
                 value.toInt().toString(),
-                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 10, color: AppPageColors.subtitleOf(context)),
               ),
             ),
           ),
@@ -932,7 +933,7 @@ class _LineChartSeries extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     _shortDayLabel(series[i].date),
-                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 10, color: AppPageColors.subtitleOf(context)),
                   ),
                 );
               },
@@ -1044,7 +1045,7 @@ class _ButtonCountsChart extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700,
+                      color: AppPageColors.subtitleOf(context),
                     ),
                   ),
                 );
@@ -1168,7 +1169,7 @@ class _EaseHistogram extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700,
+                      color: AppPageColors.subtitleOf(context),
                     ),
                   ),
                 );
@@ -1274,7 +1275,7 @@ class _RetentionTile extends StatelessWidget {
           ),
           Text(
             sublabel,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
           ),
           const SizedBox(height: 10),
           Text(
@@ -1289,7 +1290,7 @@ class _RetentionTile extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '$reviews reviews',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
           ),
         ],
       ),
@@ -1316,7 +1317,7 @@ class _HourlyChart extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+          getDrawingHorizontalLine: (_) => FlLine(color: AppPageColors.subtleBorderOf(context), strokeWidth: 1, dashArray: [4, 4]),
         ),
         borderData: FlBorderData(show: false),
         barTouchData: BarTouchData(
@@ -1417,7 +1418,7 @@ class _IntervalBucketsChart extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700,
+                      color: AppPageColors.subtitleOf(context),
                     ),
                   ),
                 );

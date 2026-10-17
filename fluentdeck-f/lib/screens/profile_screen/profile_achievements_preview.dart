@@ -129,7 +129,7 @@ class _BadgeChip extends StatelessWidget {
           border: Border.all(
             color:
                 unlocked
-                    ? AppColors.brandPrimary.withValues(alpha: 0.35)
+                    ? AppPageColors.accentOf(context).withValues(alpha: 0.35)
                     : AppPageColors.subtleBorderOf(context),
           ),
         ),
@@ -138,7 +138,7 @@ class _BadgeChip extends StatelessWidget {
             Icon(
               def.icon,
               size: 20,
-              color: unlocked ? AppColors.brandPrimary : Colors.grey.shade400,
+              color: unlocked ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -147,7 +147,7 @@ class _BadgeChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: unlocked ? null : Colors.grey.shade600,
+                  color: unlocked ? null : AppPageColors.subtitleOf(context),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

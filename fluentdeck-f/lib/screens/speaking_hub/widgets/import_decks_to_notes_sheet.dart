@@ -7,6 +7,7 @@ import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/my_notes_linked_decks_store.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class ImportDecksToNotesSheet extends StatefulWidget {
   const ImportDecksToNotesSheet({super.key});
@@ -22,7 +23,12 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
   /// Decks already in My notes when the sheet opened (pre-checked).
   final Set<int> _linkedDeckIds = {};
 
-  static final Color _checkedRowColor = Colors.black.withValues(alpha: 0.06);
+  // A subtle brand tint over the card background reads as "selected" in
+  // both themes, unlike a flat black overlay (invisible-to-muddy on dark).
+  Color _checkedRowColor(BuildContext context) => Color.alphaBlend(
+        AppColors.brandPrimary.withValues(alpha: 0.08),
+        AppPageColors.cardBgOf(context),
+      );
   bool _loading = true;
   bool _submitting = false;
   String? _error;
@@ -179,7 +185,7 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppPageColors.subtitleOf(context).withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -257,7 +263,7 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
                     tristate: true,
                     onChanged: (value) => _toggleAll(value ?? false),
                     activeColor: AppColors.brandPrimary,
-                    tileColor: allSelected == true ? _checkedRowColor : null,
+                    tileColor: allSelected == true ? _checkedRowColor(context) : null,
                     title: const Text(
                       'Select all decks',
                       style: TextStyle(fontWeight: FontWeight.w600),
@@ -274,7 +280,7 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
                       // Same grey as the hover highlight, so checked rows stay marked.
                       tileColor:
                           _selectedDeckIds.contains(deck.id)
-                              ? _checkedRowColor
+                              ? _checkedRowColor(context)
                               : null,
                       title: Text(deck.name),
                       subtitle: Text(
@@ -290,7 +296,7 @@ class _ImportDecksToNotesSheetState extends State<ImportDecksToNotesSheet> {
             ),
           Container(
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
             ),
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
             child: SizedBox(

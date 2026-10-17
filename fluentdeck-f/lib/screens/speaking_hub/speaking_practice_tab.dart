@@ -9,6 +9,7 @@ import '../../services/conversation_service.dart';
 import '../../services/flashcard_service.dart';
 import '../../services/speaking_preferences_service.dart';
 import '../../ui_elements/app_skeletons.dart';
+import '../../ui_elements/modern_page_widgets.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingPracticeTab extends StatefulWidget {
@@ -214,7 +215,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
             style: TextStyle(
               fontSize: 13,
               height: 1.4,
-              color: Colors.grey.shade700,
+              color: AppPageColors.subtitleOf(context),
               fontFamily: 'Rubik',
             ),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/config/brand_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
@@ -83,10 +84,21 @@ class MainTabConfig {
     return parsed;
   }
 
-  static Color _iconColor(bool active) =>
-      active ? AppColors.brandPrimary : AppColors.navInactive;
+  // `context` is only available when a widget actually needs to paint these
+  // icons (English bottom nav); callers that just want e.g. a tab's title
+  // (english_main_screen.dart) don't have one and don't need icon color, so
+  // this falls back to the light-mode color rather than requiring context
+  // everywhere `MainTabDefinition` is touched.
+  static Color _iconColor(bool active, BuildContext? context) {
+    final isDark = context != null &&
+        Theme.of(context).brightness == Brightness.dark;
+    if (active) {
+      return isDark ? AppColors.brandPrimaryOnDark : AppColors.brandPrimary;
+    }
+    return isDark ? BrandConfig.darkTextSecondary : AppColors.navInactive;
+  }
 
-  static MainTabDefinition definition(MainTabId id) {
+  static MainTabDefinition definition(MainTabId id, [BuildContext? context]) {
     switch (id) {
       case MainTabId.speak:
         return MainTabDefinition(
@@ -94,7 +106,7 @@ class MainTabConfig {
           title: 'Speak',
           navLabel: 'Speak',
           iconBuilder:
-              (active) => Icon(Icons.mic, color: _iconColor(active)),
+              (active) => Icon(Icons.mic, color: _iconColor(active, context)),
         );
       case MainTabId.decks:
         return MainTabDefinition(
@@ -103,7 +115,7 @@ class MainTabConfig {
           navLabel: 'Decks',
           iconBuilder:
               (active) =>
-                  Icon(Icons.style_outlined, color: _iconColor(active)),
+                  Icon(Icons.style_outlined, color: _iconColor(active, context)),
         );
       case MainTabId.activity:
         return MainTabDefinition(
@@ -115,7 +127,7 @@ class MainTabConfig {
                 'assets/buttons/activity.svg',
                 width: 26,
                 colorFilter: ColorFilter.mode(
-                  _iconColor(active),
+                  _iconColor(active, context),
                   BlendMode.srcIn,
                 ),
               ),
@@ -130,7 +142,7 @@ class MainTabConfig {
                 'assets/buttons/profile.svg',
                 width: 26,
                 colorFilter: ColorFilter.mode(
-                  _iconColor(active),
+                  _iconColor(active, context),
                   BlendMode.srcIn,
                 ),
               ),
@@ -139,5 +151,8 @@ class MainTabConfig {
   }
 
   static List<MainTabDefinition> get definitions =>
-      order.map(definition).toList();
+      order.map((id) => definition(id)).toList();
+
+  static List<MainTabDefinition> definitionsFor(BuildContext context) =>
+      order.map((id) => definition(id, context)).toList();
 }

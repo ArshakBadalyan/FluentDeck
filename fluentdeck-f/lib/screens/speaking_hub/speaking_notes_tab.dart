@@ -334,7 +334,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
     return Material(
       color: selected
           ? AppColors.brandPrimary.withValues(alpha: 0.1)
-          : Colors.white,
+          : AppPageColors.fieldBgOf(context),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -344,7 +344,9 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? AppColors.brandPrimary : Colors.grey.shade300,
+              color: selected
+                  ? AppPageColors.accentOf(context)
+                  : AppPageColors.subtleBorderOf(context),
             ),
           ),
           child: Text(
@@ -352,7 +354,9 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-              color: selected ? AppColors.brandPrimary : const Color(0xFF777481),
+              color: selected
+                  ? AppPageColors.accentOf(context)
+                  : AppPageColors.subtitleOf(context),
               fontFamily: 'Rubik',
             ),
           ),
@@ -469,11 +473,13 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        color: AppPageColors.cardBgOf(context),
+        border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -703,7 +709,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
             'No saved notes match these filters.\n'
             'Save words from speaking chat, or tap + to add a deck.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade700, height: 1.4),
+            style: TextStyle(color: AppPageColors.subtitleOf(context), height: 1.4),
           ),
         ),
       );
@@ -744,7 +750,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
                   '${_selectedIds.length} of ${_notes.length} selected',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade700,
+                    color: AppPageColors.subtitleOf(context),
                     fontFamily: 'Rubik',
                   ),
                 ),
@@ -771,7 +777,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
                       onPressed: () => _openEditNote(note),
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete_outline, size: 20, color: Colors.grey.shade600),
+                      icon: Icon(Icons.delete_outline, size: 20, color: AppPageColors.subtitleOf(context)),
                       tooltip: 'Delete note',
                       visualDensity: VisualDensity.compact,
                       onPressed: () => _confirmDeleteNote(note),

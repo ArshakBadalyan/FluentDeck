@@ -96,7 +96,7 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         backgroundColor: AppPageColors.pageBgOf(context),
-        foregroundColor: Colors.black,
+        foregroundColor: AppPageColors.textPrimaryOf(context),
         elevation: 0,
         title: const Text('Note types'),
       ),
@@ -121,12 +121,12 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 40, color: Colors.grey.shade400),
+              Icon(Icons.error_outline_rounded, size: 40, color: AppPageColors.subtitleOf(context)),
               const SizedBox(height: 12),
               Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade700),
+                style: TextStyle(color: AppPageColors.subtitleOf(context)),
               ),
               const SizedBox(height: 16),
               FilledButton(
@@ -168,7 +168,7 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
               Text(
                 'Create a custom type to define your own fields and card templates.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.4),
+                style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context), height: 1.4),
               ),
             ],
           ),
@@ -211,7 +211,9 @@ class _NoteTypeCard extends StatelessWidget {
             border: Border.all(color: AppPageColors.subtleBorderOf(context)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -261,7 +263,7 @@ class _NoteTypeCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     IconButton(
-                      icon: Icon(Icons.delete_outline_rounded, size: 20, color: Colors.grey.shade500),
+                      icon: Icon(Icons.delete_outline_rounded, size: 20, color: AppPageColors.subtitleOf(context)),
                       tooltip: 'Delete',
                       onPressed: onDelete,
                     ),
@@ -281,7 +283,7 @@ class _NoteTypeCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded, size: 20, color: Colors.grey.shade500),
+                    Icon(Icons.chevron_right_rounded, size: 20, color: AppPageColors.subtitleOf(context)),
                   ],
                 ],
               ),
@@ -324,14 +326,14 @@ class _MetaChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: muted ? Colors.grey.shade600 : AppColors.brandPrimary),
+          Icon(icon, size: 12, color: muted ? AppPageColors.subtitleOf(context) : AppPageColors.accentOf(context)),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: muted ? Colors.grey.shade700 : AppColors.brandPrimary,
+              color: muted ? AppPageColors.subtitleOf(context) : AppPageColors.accentOf(context),
             ),
           ),
         ],
@@ -353,9 +355,9 @@ class _NoteTypesSkeleton extends StatelessWidget {
         itemBuilder: (_, __) => Container(
           height: 92,
           decoration: BoxDecoration(
-            color: AppPageColors.cardBg,
+            color: AppPageColors.cardBgOf(context),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.black12),
+            border: Border.all(color: AppPageColors.subtleBorderOf(context)),
           ),
           padding: const EdgeInsets.all(16),
           child: const Column(

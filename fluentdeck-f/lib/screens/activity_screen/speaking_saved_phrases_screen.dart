@@ -3,6 +3,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/user_note_model.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class SpeakingSavedPhrasesScreen extends StatefulWidget {
   const SpeakingSavedPhrasesScreen({super.key});
@@ -16,8 +17,6 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
   bool _loading = true;
   String? _error;
   List<UserNoteModel> _phrases = const [];
-
-  static const _pageBg = AppColors.pageBg;
 
   @override
   void initState() {
@@ -51,7 +50,7 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _pageBg,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         title: const Text('Saved phrases'),
         backgroundColor: AppColors.brandPrimary,
@@ -82,7 +81,7 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
                   child: Text(
                     'Save corrections from speaking conversations to build your phrase list.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade600, height: 1.45),
+                    style: TextStyle(color: AppPageColors.subtitleOf(context), height: 1.45),
                   ),
                 ),
               )
@@ -113,10 +112,10 @@ class _SavedPhraseCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.brandPrimary.withValues(alpha: 0.12),
+          color: AppPageColors.accentOf(context).withValues(alpha: 0.12),
         ),
       ),
       child: Row(
@@ -125,7 +124,7 @@ class _SavedPhraseCard extends StatelessWidget {
           Icon(
             Icons.format_quote_rounded,
             size: 18,
-            color: AppColors.brandPrimary.withValues(alpha: 0.6),
+            color: AppPageColors.accentOf(context).withValues(alpha: 0.6),
           ),
           const SizedBox(width: 8),
           Expanded(

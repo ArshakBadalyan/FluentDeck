@@ -166,7 +166,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   child: Icon(
                     Icons.drag_indicator_rounded,
                     size: 20,
-                    color: Colors.grey.shade500,
+                    color: AppPageColors.subtitleOf(context),
                   ),
                 ),
               ),
@@ -627,7 +627,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.cloud_off_outlined, size: 48, color: Colors.grey.shade500),
+                Icon(Icons.cloud_off_outlined, size: 48, color: AppPageColors.subtitleOf(context)),
                 const SizedBox(height: 12),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
@@ -687,7 +687,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                         dueSummary,
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: Colors.grey.shade600,
+                                          color: AppPageColors.subtitleOf(context),
                                         ),
                                       ),
                                   ],
@@ -706,7 +706,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                       icon: Icon(
                                         Icons.more_vert,
                                         size: 22,
-                                        color: Colors.grey.shade700,
+                                        color: AppPageColors.subtitleOf(context),
                                       ),
                                     ),
                                   ],
@@ -799,7 +799,7 @@ class _SyncStatusButton extends StatelessWidget {
       ),
       FlashcardSyncStatus.offline => (
         Icons.cloud_off_outlined,
-        Colors.grey.shade600,
+        AppPageColors.subtitleOf(context),
         'Offline — tap to retry sync',
       ),
     };
@@ -949,7 +949,9 @@ class _TodayFooter extends StatelessWidget {
         border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -958,7 +960,7 @@ class _TodayFooter extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.today_outlined, size: 16, color: Colors.grey.shade600),
+          Icon(Icons.today_outlined, size: 16, color: AppPageColors.subtitleOf(context)),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
@@ -967,7 +969,7 @@ class _TodayFooter extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey.shade700,
+                color: AppPageColors.subtitleOf(context),
               ),
             ),
           ),

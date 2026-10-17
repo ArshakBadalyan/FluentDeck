@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 
 /// Modal preview of note fields as they would appear in review.
@@ -68,7 +69,7 @@ class _NotePreviewSheetState extends State<NotePreviewSheet> {
               ],
             ),
             if (widget.mediaUrl != null && widget.mediaUrl!.trim().isNotEmpty) ...[
-              Text('Media: ${widget.mediaUrl}', style: TextStyle(color: Colors.grey.shade600)),
+              Text('Media: ${widget.mediaUrl}', style: TextStyle(color: AppPageColors.subtitleOf(context))),
               const SizedBox(height: 8),
             ],
             GestureDetector(
@@ -92,7 +93,7 @@ class _NotePreviewSheetState extends State<NotePreviewSheet> {
             Text(
               _revealed ? 'Tap to hide answer' : 'Tap to reveal answer',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
             if (widget.noteType == 'basic_type_answer' && !_revealed) ...[
               const SizedBox(height: 16),
@@ -100,7 +101,7 @@ class _NotePreviewSheetState extends State<NotePreviewSheet> {
                 decoration: InputDecoration(
                   hintText: 'Type your answer…',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppPageColors.fieldBgOf(context),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),

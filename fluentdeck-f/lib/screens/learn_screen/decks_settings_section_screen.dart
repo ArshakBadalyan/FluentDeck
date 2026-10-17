@@ -136,19 +136,27 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                         height: 4,
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
+                          color: AppPageColors.subtleBorderOf(ctx),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
-                    const Text(
+                    Text(
                       'Start of next day',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(ctx).textTheme.bodyLarge?.color,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Cards due before this time still count as "today". Affects daily limits and stats — deck limits are set per deck.',
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.35),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppPageColors.subtitleOf(ctx),
+                        height: 1.35,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -196,7 +204,9 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                                   style: TextStyle(
                                     fontSize: isSelected ? 20 : 17,
                                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected ? Colors.black87 : Colors.grey.shade500,
+                                    color: isSelected
+                                        ? Theme.of(ctx).textTheme.bodyLarge?.color
+                                        : AppPageColors.subtitleOf(ctx),
                                   ),
                                 ),
                               );
@@ -240,7 +250,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
     final picked = await showModalBottomSheet<ReviewGestureAction>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.cardBgOf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -254,13 +264,17 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(ctx).textTheme.bodyLarge?.color,
+                      ),
                     ),
                   ),
                   ...ReviewGestureAction.values.map(
                     (action) => ListTile(
                       title: Text(reviewGestureActionLabel(action)),
-                      trailing: decksSettingsCheckIcon(current == action),
+                      trailing: decksSettingsCheckIcon(ctx, current == action),
                       onTap: () => Navigator.pop(ctx, action),
                     ),
                   ),
@@ -276,7 +290,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
   Future<void> _pickNewCardPosition() async {
     final picked = await showModalBottomSheet<NewCardPosition>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.cardBgOf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -285,17 +299,21 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Padding(
-                  padding: EdgeInsets.all(16),
+                Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Text(
                     'New card position',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(ctx).textTheme.bodyLarge?.color,
+                    ),
                   ),
                 ),
                 ...NewCardPosition.values.map(
                   (pos) => ListTile(
                     title: Text(newCardPositionLabel(pos)),
-                    trailing: decksSettingsCheckIcon(_settings.newCardPosition == pos),
+                    trailing: decksSettingsCheckIcon(ctx, _settings.newCardPosition == pos),
                     onTap: () => Navigator.pop(ctx, pos),
                   ),
                 ),
@@ -399,6 +417,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
     ValueChanged<ReviewGestureAction> onChanged,
   ) {
     return decksSettingsPickerTile(
+      context: context,
       title: label,
       valueLabel: reviewGestureActionLabel(action),
       onTap: () => _pickGesture(label, action, onChanged),
@@ -470,42 +489,55 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
 
   List<Widget> _general() {
     return [
-      decksSettingsPickerTile(
-        title: 'Start of next day',
-        subtitle: Text('Day rolls over at ${_hourLabel(_settings.nextDayStartHour)}'),
-        valueLabel: 'Change',
-        onTap: _pickNextDayStart,
+      AppSettingsGroup(
+        title: 'Daily rollover',
+        child: decksSettingsPickerTile(
+          context: context,
+          title: 'Start of next day',
+          subtitle: Text('Day rolls over at ${_hourLabel(_settings.nextDayStartHour)}'),
+          valueLabel: 'Change',
+          onTap: _pickNextDayStart,
+        ),
       ),
       decksSettingsNote(
+        context,
         'Affects daily limits and “today” statistics. Deck limits are set per deck.',
       ),
       const SizedBox(height: 12),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Shared decks'),
-        subtitle: const Text('Browse community decks or import a deck file'),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () async {
-          final imported = await Navigator.of(context).push<bool>(
-            MaterialPageRoute<bool>(builder: (_) => const SharedDecksScreen()),
-          );
-          if (imported == true && mounted) {
-            AppToast.showSnackBar(context, 
-              const SnackBar(content: Text('Shared deck imported')),
-            );
-          }
-        },
-      ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Manage note types'),
-        subtitle: const Text('Built-in and custom note templates'),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const NoteTypesScreen()),
-          );
-        },
+      AppSettingsGroup(
+        title: 'Library',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Shared decks'),
+              subtitle: const Text('Browse community decks or import a deck file'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final imported = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute<bool>(builder: (_) => const SharedDecksScreen()),
+                );
+                if (imported == true && mounted) {
+                  AppToast.showSnackBar(context,
+                    const SnackBar(content: Text('Shared deck imported')),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Manage note types'),
+              subtitle: const Text('Built-in and custom note templates'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const NoteTypesScreen()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     ];
   }
@@ -516,6 +548,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         title: 'New card order',
         subtitle: 'Where new cards appear relative to reviews.',
         child: decksSettingsPickerTile(
+          context: context,
           title: 'New card position',
           subtitle: const Text('Order of new cards vs reviews in a session'),
           valueLabel: newCardPositionLabel(_settings.newCardPosition),
@@ -547,6 +580,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         ),
       ),
       decksSettingsNote(
+        context,
         'Learn ahead may show cards due slightly early when supported by the scheduler.',
       ),
     ];
@@ -554,178 +588,202 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
 
   List<Widget> _reviewing() {
     return [
-      AppToggleRow(
-        title: 'Tap to reveal answer',
-        value: _settings.tapToReveal,
-        onChanged: (v) => _save(_settings.copyWith(tapToReveal: v)),
-      ),
-      AppToggleRow(
-        title: 'Show interval previews',
-        subtitle: 'Display “1m”, “4d”, etc. on rating buttons',
-        value: _settings.showIntervalPreviews,
-        onChanged: (v) => _save(_settings.copyWith(showIntervalPreviews: v)),
-      ),
-      const SizedBox(height: 8),
-      Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: AppColors.orangeHard.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+      AppSettingsGroup(
+        title: 'Answer behavior',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppToggleRow(
+              title: 'Tap to reveal answer',
+              value: _settings.tapToReveal,
+              onChanged: (v) => _save(_settings.copyWith(tapToReveal: v)),
             ),
-            child: const Icon(
-              Icons.trending_down_rounded,
-              size: 16,
-              color: AppColors.orangeHard,
+            AppToggleRow(
+              title: 'Show interval previews',
+              subtitle: 'Display “1m”, “4d”, etc. on rating buttons',
+              value: _settings.showIntervalPreviews,
+              onChanged: (v) => _save(_settings.copyWith(showIntervalPreviews: v)),
             ),
-          ),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              'Rating buttons',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      AppToggleRow(
-        title: 'Show Hard button',
-        subtitle: 'Adds a fourth rating between Again and Good',
-        value: _settings.showHardButton,
-        onChanged: (v) => _save(_settings.copyWith(showHardButton: v)),
-      ),
-      const SizedBox(height: 6),
-      decksSettingsLabelField('Again button label', _settings.labelAgain, (v) {
-        _save(_settings.copyWith(labelAgain: v));
-      }),
-      if (_settings.showHardButton)
-        decksSettingsLabelField('Hard button label', _settings.labelHard, (v) {
-          _save(_settings.copyWith(labelHard: v));
-        }),
-      decksSettingsLabelField('Good button label', _settings.labelGood, (v) {
-        _save(_settings.copyWith(labelGood: v));
-      }),
-      decksSettingsLabelField('Easy button label', _settings.labelEasy, (v) {
-        _save(_settings.copyWith(labelEasy: v));
-      }),
-      const SizedBox(height: 16),
-      decksSettingsSectionHeader('Leeches'),
-      AppToggleRow(
-        title: 'Leech auto-suspend',
-        subtitle: 'Notify when a card is auto-suspended',
-        value: _settings.leechAutoSuspend,
-        onChanged: (v) => _save(_settings.copyWith(leechAutoSuspend: v)),
-      ),
-      const SizedBox(height: 4),
-      Text('Leech threshold', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
-      Row(
-        children: [
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.brandPrimary,
-                thumbColor: AppColors.brandPrimary,
-                overlayColor: AppColors.brandPrimary.withValues(alpha: 0.15),
-              ),
-              child: Slider(
-                value: _settings.leechThreshold.toDouble(),
-                min: 4,
-                max: 20,
-                divisions: 16,
-                label: '${_settings.leechThreshold} lapses',
-                onChanged: (v) => _save(_settings.copyWith(leechThreshold: v.round())),
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.brandPrimary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              '${_settings.leechThreshold}',
-              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.brandPrimary),
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 16),
-      decksSettingsSectionHeader('Daily reminder'),
-      if (kIsWeb)
-        decksSettingsNote('Daily reminders are available on Android and iOS only.'),
-      AppToggleRow(
-        title: 'Daily review reminder',
-        subtitle:
-            _settings.reviewReminderEnabled
-                ? 'At ${_timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute)}'
-                : 'Off',
-        value: _settings.reviewReminderEnabled,
-        enabled: !kIsWeb,
-        onChanged:
-            kIsWeb
-                ? null
-                : (v) => _save(_settings.copyWith(reviewReminderEnabled: v)),
-      ),
-      if (_settings.reviewReminderEnabled && !kIsWeb) ...[
-        const SizedBox(height: 8),
-        decksSettingsPickerTile(
-          title: 'Reminder time',
-          valueLabel: _timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute),
-          onTap: _pickReminderTime,
+          ],
         ),
-      ],
+      ),
+      AppSettingsGroup(
+        title: 'Rating buttons',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppToggleRow(
+              title: 'Show Hard button',
+              subtitle: 'Adds a fourth rating between Again and Good',
+              value: _settings.showHardButton,
+              onChanged: (v) => _save(_settings.copyWith(showHardButton: v)),
+            ),
+            const SizedBox(height: 6),
+            decksSettingsLabelField(context, 'Again button label', _settings.labelAgain, (v) {
+              _save(_settings.copyWith(labelAgain: v));
+            }),
+            if (_settings.showHardButton)
+              decksSettingsLabelField(context, 'Hard button label', _settings.labelHard, (v) {
+                _save(_settings.copyWith(labelHard: v));
+              }),
+            decksSettingsLabelField(context, 'Good button label', _settings.labelGood, (v) {
+              _save(_settings.copyWith(labelGood: v));
+            }),
+            decksSettingsLabelField(context, 'Easy button label', _settings.labelEasy, (v) {
+              _save(_settings.copyWith(labelEasy: v));
+            }),
+          ],
+        ),
+      ),
+      AppSettingsGroup(
+        title: 'Leeches',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppToggleRow(
+              title: 'Leech auto-suspend',
+              subtitle: 'Notify when a card is auto-suspended',
+              value: _settings.leechAutoSuspend,
+              onChanged: (v) => _save(_settings.copyWith(leechAutoSuspend: v)),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Leech threshold',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: AppColors.brandPrimary,
+                      thumbColor: AppColors.brandPrimary,
+                      overlayColor: AppColors.brandPrimary.withValues(alpha: 0.15),
+                    ),
+                    child: Slider(
+                      value: _settings.leechThreshold.toDouble(),
+                      min: 4,
+                      max: 20,
+                      divisions: 16,
+                      label: '${_settings.leechThreshold} lapses',
+                      onChanged: (v) => _save(_settings.copyWith(leechThreshold: v.round())),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandPrimary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${_settings.leechThreshold}',
+                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.brandPrimary),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      AppSettingsGroup(
+        title: 'Daily reminder',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (kIsWeb)
+              decksSettingsNote(context, 'Daily reminders are available on Android and iOS only.'),
+            AppToggleRow(
+              title: 'Daily review reminder',
+              subtitle:
+                  _settings.reviewReminderEnabled
+                      ? 'At ${_timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute)}'
+                      : 'Off',
+              value: _settings.reviewReminderEnabled,
+              enabled: !kIsWeb,
+              onChanged:
+                  kIsWeb
+                      ? null
+                      : (v) => _save(_settings.copyWith(reviewReminderEnabled: v)),
+            ),
+            if (_settings.reviewReminderEnabled && !kIsWeb) ...[
+              const SizedBox(height: 8),
+              decksSettingsPickerTile(
+                context: context,
+                title: 'Reminder time',
+                valueLabel: _timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute),
+                onTap: _pickReminderTime,
+              ),
+            ],
+          ],
+        ),
+      ),
     ];
   }
 
   List<Widget> _sync() {
     return [
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Last sync'),
-        subtitle: Text(widget.syncLog.lastSuccessLabel),
-      ),
-      if (widget.syncLog.lastError != null)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Last sync error'),
-          subtitle: Text(
-            widget.syncLog.lastError!,
-            style: TextStyle(color: Colors.red.shade700, fontSize: 13),
-          ),
+      AppSettingsGroup(
+        title: 'Sync status',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Last sync'),
+              subtitle: Text(widget.syncLog.lastSuccessLabel),
+            ),
+            if (widget.syncLog.lastError != null)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Last sync error'),
+                subtitle: Text(
+                  widget.syncLog.lastError!,
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.red.shade300
+                        : Colors.red.shade700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            if (widget.syncLog.lastApplied > 0 || widget.syncLog.lastSkipped > 0)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Last upload'),
+                subtitle: Text(
+                  '${widget.syncLog.lastApplied} applied, ${widget.syncLog.lastSkipped} skipped (server wins on conflict)',
+                ),
+              ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Sync now'),
+              subtitle: const Text('Upload pending reviews and pull latest decks'),
+              trailing:
+                  widget.syncing
+                      ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Icon(Icons.sync),
+              onTap: widget.syncing ? null : widget.onSyncNow,
+            ),
+          ],
         ),
-      if (widget.syncLog.lastApplied > 0 || widget.syncLog.lastSkipped > 0)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Last upload'),
-          subtitle: Text(
-            '${widget.syncLog.lastApplied} applied, ${widget.syncLog.lastSkipped} skipped (server wins on conflict)',
-          ),
-        ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('Sync now'),
-        subtitle: const Text('Upload pending reviews and pull latest decks'),
-        trailing:
-            widget.syncing
-                ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                : const Icon(Icons.sync),
-        onTap: widget.syncing ? null : widget.onSyncNow,
       ),
-      decksSettingsNote('Syncs to your account on our server.'),
+      decksSettingsNote(context, 'Syncs to your account on our server.'),
     ];
   }
 
   List<Widget> _notifications() {
     return [
       if (kIsWeb)
-        decksSettingsNote('Daily reminders are available on Android and iOS only.'),
+        decksSettingsNote(context, 'Daily reminders are available on Android and iOS only.'),
       AppToggleRow(
         title: 'Daily review reminder',
         subtitle:
@@ -794,6 +852,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         }),
       ],
       decksSettingsNote(
+        context,
         'Defaults: swipe left = Again, swipe right = Good, swipe up = reveal.',
       ),
     ];
@@ -850,6 +909,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
             ),
             if (_settings.autoBackupEnabled)
               decksSettingsPickerTile(
+                context: context,
                 title: 'Backup interval',
                 valueLabel: switch (_settings.autoBackupIntervalDays) {
                   1 => 'Daily',
@@ -896,6 +956,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                                     _ => '$days days',
                                   }),
                                   trailing: decksSettingsCheckIcon(
+                                    ctx,
                                     _settings.autoBackupIntervalDays == days,
                                   ),
                                   onTap: () => Navigator.pop(ctx, days),
@@ -939,7 +1000,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                     const SizedBox(height: 2),
                     Text(
                       widget.lastBackupLabel,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                     ),
                   ],
                 ),
@@ -954,18 +1015,21 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             decksSettingsActionTile(
+              context: context,
               icon: Icons.backup_outlined,
               title: 'Back up now',
               subtitle: 'Export full collection JSON',
               onTap: widget.onBackupNow,
             ),
             decksSettingsActionTile(
+              context: context,
               icon: Icons.restore_outlined,
               title: 'Restore from backup',
               subtitle: 'Import a JSON backup file',
               onTap: _restoreBackup,
             ),
             decksSettingsActionTile(
+              context: context,
               icon: Icons.download_outlined,
               title: 'Export JSON',
               subtitle: 'Manual export to file or share',
@@ -986,12 +1050,14 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             decksSettingsActionTile(
+              context: context,
               icon: Icons.upload_outlined,
               title: 'Export review settings',
               subtitle: 'Share a JSON file of your preferences',
               onTap: _exportSettings,
             ),
             decksSettingsActionTile(
+              context: context,
               icon: Icons.download_outlined,
               title: 'Import review settings',
               subtitle: 'Load preferences from a JSON file',
@@ -1004,6 +1070,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         title: 'Reset',
         subtitle: 'Restore all Decks review preferences to factory defaults.',
         child: decksSettingsActionTile(
+          context: context,
           icon: Icons.restart_alt_rounded,
           title: 'Reset review settings',
           subtitle: 'Cannot be undone',
@@ -1033,6 +1100,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         },
       ),
       decksSettingsNote(
+        context,
         'Flashcards use spaced repetition with cloud sync to your account.',
       ),
     ];

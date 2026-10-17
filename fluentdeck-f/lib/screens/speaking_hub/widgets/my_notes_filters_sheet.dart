@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/speaking_hub_widgets.dart';
 
 class MyNotesFiltersSheet extends StatefulWidget {
@@ -63,7 +64,7 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppPageColors.subtitleOf(context).withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -104,7 +105,7 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 'Level, language, and topic filters apply when viewing All or From speaking.',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.35),
+                style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context), height: 1.35),
               ),
             ),
           Opacity(
@@ -121,7 +122,7 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
+                        color: AppPageColors.subtitleOf(context),
                       ),
                     ),
                   ),
@@ -137,7 +138,7 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
+                        color: AppPageColors.subtitleOf(context),
                       ),
                     ),
                   ),
@@ -153,7 +154,7 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
+                        color: AppPageColors.subtitleOf(context),
                       ),
                     ),
                   ),
@@ -200,15 +201,15 @@ class _MyNotesFiltersSheetState extends State<MyNotesFiltersSheet> {
       selected: selected,
       onSelected: (_) => setState(() => _topicFilter = value),
       selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
-      checkmarkColor: AppColors.brandPrimary,
+      checkmarkColor: AppPageColors.accentOf(context),
       labelStyle: TextStyle(
         fontSize: 12,
-        color: selected ? AppColors.brandPrimary : const Color(0xFF777481),
+        color: selected ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
         fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
         fontFamily: 'Rubik',
       ),
       side: BorderSide(
-        color: selected ? AppColors.brandPrimary : Colors.grey.shade300,
+        color: selected ? AppPageColors.accentOf(context) : AppPageColors.subtleBorderOf(context),
       ),
       visualDensity: VisualDensity.compact,
     );

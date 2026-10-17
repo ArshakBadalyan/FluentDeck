@@ -23,7 +23,15 @@ class LanguageLevelHistoryEntry {
 class LanguageLevelRecord {
   final String languageCode;
   final String tutorLevel;
-  final String estimatedLevel;
+
+  /// Null when there is no committed AI speaking assessment yet — see
+  /// [estimatedLevelStatus] for why (not enough evidence, or a legacy
+  /// activity-based estimate that was never a real assessment). Callers
+  /// must not assume this is always a valid CEFR string.
+  final String? estimatedLevel;
+
+  /// 'assessed' | 'insufficient_evidence' | 'legacy_unassessed'.
+  final String estimatedLevelStatus;
   final DateTime? lastActiveAt;
   final DateTime? firstSelectedAt;
   final int speakingTurns;
@@ -35,7 +43,8 @@ class LanguageLevelRecord {
   const LanguageLevelRecord({
     required this.languageCode,
     this.tutorLevel = 'A1',
-    this.estimatedLevel = 'A1',
+    this.estimatedLevel,
+    this.estimatedLevelStatus = 'insufficient_evidence',
     this.lastActiveAt,
     this.firstSelectedAt,
     this.speakingTurns = 0,
@@ -44,12 +53,17 @@ class LanguageLevelRecord {
     this.levelHistory = const [],
   });
 
+  /// True once a real AI speaking assessment has committed a level.
+  bool get hasAssessedLevel => estimatedLevelStatus == 'assessed' && estimatedLevel != null;
+
   factory LanguageLevelRecord.fromJson(Map<String, dynamic> json) {
     final rawHistory = json['levelHistory'];
     return LanguageLevelRecord(
       languageCode: json['languageCode'] as String? ?? 'en',
       tutorLevel: json['tutorLevel'] as String? ?? 'A1',
-      estimatedLevel: json['estimatedLevel'] as String? ?? 'A1',
+      estimatedLevel: json['estimatedLevel'] as String?,
+      estimatedLevelStatus:
+          json['estimatedLevelStatus'] as String? ?? 'insufficient_evidence',
       lastActiveAt: json['lastActiveAt'] != null
           ? DateTime.tryParse(json['lastActiveAt'].toString())
           : null,
@@ -75,7 +89,13 @@ class LanguageLevelRecord {
 class LanguageLevelsSnapshot {
   final String practiceLanguage;
   final String tutorLevel;
-  final String estimatedLevel;
+
+  /// Null when there is no committed AI speaking assessment yet for
+  /// [practiceLanguage] — see [estimatedLevelStatus].
+  final String? estimatedLevel;
+
+  /// 'assessed' | 'insufficient_evidence' | 'legacy_unassessed'.
+  final String estimatedLevelStatus;
   final int speakingTurns;
   final int deckWordsReviewed;
   final int uniqueWordsSpoken;
@@ -85,7 +105,8 @@ class LanguageLevelsSnapshot {
   const LanguageLevelsSnapshot({
     this.practiceLanguage = 'en',
     this.tutorLevel = 'A1',
-    this.estimatedLevel = 'A1',
+    this.estimatedLevel,
+    this.estimatedLevelStatus = 'insufficient_evidence',
     this.speakingTurns = 0,
     this.deckWordsReviewed = 0,
     this.uniqueWordsSpoken = 0,
@@ -93,13 +114,18 @@ class LanguageLevelsSnapshot {
     this.languages = const [],
   });
 
+  /// True once a real AI speaking assessment has committed a level.
+  bool get hasAssessedLevel => estimatedLevelStatus == 'assessed' && estimatedLevel != null;
+
   factory LanguageLevelsSnapshot.fromJson(Map<String, dynamic> json) {
     final rawLanguages = json['languages'];
     final rawHistory = json['levelHistory'];
     return LanguageLevelsSnapshot(
       practiceLanguage: json['practiceLanguage'] as String? ?? 'en',
       tutorLevel: json['tutorLevel'] as String? ?? 'A1',
-      estimatedLevel: json['estimatedLevel'] as String? ?? 'A1',
+      estimatedLevel: json['estimatedLevel'] as String?,
+      estimatedLevelStatus:
+          json['estimatedLevelStatus'] as String? ?? 'insufficient_evidence',
       speakingTurns: json['speakingTurns'] as int? ?? 0,
       deckWordsReviewed: json['deckWordsReviewed'] as int? ?? 0,
       uniqueWordsSpoken: json['uniqueWordsSpoken'] as int? ?? 0,

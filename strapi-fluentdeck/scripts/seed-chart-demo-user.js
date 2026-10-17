@@ -598,44 +598,66 @@ async function seed(strapi) {
       uniqueWordsUsed: randInt(220, 350),
       lastPracticeAt: new Date(),
       lastFlashcardReviewAt: new Date(),
+      // New per-skill shape (see language-level-analytics.js) — demo data
+      // written directly as already-"assessed" so the Activity screen has a
+      // realistic, populated example of the real evidence-based flow rather
+      // than a freshly-migrated "legacy_unassessed" entry.
       languageLevels: {
         en: {
           tutorLevel: 'B2',
-          estimatedLevel: 'B2',
-          speakingTurns: 142,
-          perfectSentences: 58,
-          correctionCount: 37,
-          uniqueWordsSpoken: 310,
-          deckWordsReviewed: 286,
+          skills: {
+            speaking: {
+              estimatedLevel: 'B2',
+              status: 'assessed',
+              confidence: 'high',
+              lastAssessedAt: dateAt(8, 9, 30).toISOString(),
+              turnsSinceLastAssessment: 3,
+              pendingSuggestedLevel: null,
+              pendingTranscripts: [],
+            },
+            listening: { estimatedLevel: null, status: 'insufficient_evidence' },
+            reading: { estimatedLevel: null, status: 'insufficient_evidence' },
+            writing: { estimatedLevel: null, status: 'insufficient_evidence' },
+          },
+          activity: { speakingTurns: 142, deckWordsReviewed: 286, uniqueWordsSpoken: 310 },
           firstSelectedAt: dateAt(70, 9, 0).toISOString(),
           lastActiveAt: new Date().toISOString(),
           levelHistory: [
-            { estimatedLevel: 'A1', recordedAt: dateAt(45, 9, 0).toISOString(), source: 'analytics' },
-            { estimatedLevel: 'A2', recordedAt: dateAt(34, 10, 0).toISOString(), source: 'analytics' },
-            { estimatedLevel: 'B1', recordedAt: dateAt(21, 11, 0).toISOString(), source: 'analytics' },
-            { estimatedLevel: 'B2', recordedAt: dateAt(8, 9, 30).toISOString(), source: 'analytics' },
+            { skill: 'speaking', previousLevel: null, newLevel: 'A1', recordedAt: dateAt(45, 9, 0).toISOString(), confidence: 'medium', method: 'ai-assessment-v1', evidenceSummary: 'Short, simple sentences with frequent basic errors.' },
+            { skill: 'speaking', previousLevel: 'A1', newLevel: 'A2', recordedAt: dateAt(34, 10, 0).toISOString(), confidence: 'medium', method: 'ai-assessment-v1', evidenceSummary: 'Handles familiar topics with simple connected sentences.' },
+            { skill: 'speaking', previousLevel: 'A2', newLevel: 'B1', recordedAt: dateAt(21, 11, 0).toISOString(), confidence: 'high', method: 'ai-assessment-v1', evidenceSummary: 'Sustains conversation with occasional hesitation.' },
+            { skill: 'speaking', previousLevel: 'B1', newLevel: 'B2', recordedAt: dateAt(8, 9, 30).toISOString(), confidence: 'high', method: 'ai-assessment-v1', evidenceSummary: 'Clear, detailed, well-organized responses with good range.' },
           ],
         },
         es: {
           tutorLevel: 'A2',
-          estimatedLevel: 'A2',
-          speakingTurns: 18,
-          perfectSentences: 5,
-          correctionCount: 9,
-          uniqueWordsSpoken: 40,
-          deckWordsReviewed: 0,
+          skills: {
+            speaking: {
+              estimatedLevel: 'A2',
+              status: 'assessed',
+              confidence: 'medium',
+              lastAssessedAt: dateAt(3, 17, 0).toISOString(),
+              turnsSinceLastAssessment: 2,
+              pendingSuggestedLevel: null,
+              pendingTranscripts: [],
+            },
+            listening: { estimatedLevel: null, status: 'insufficient_evidence' },
+            reading: { estimatedLevel: null, status: 'insufficient_evidence' },
+            writing: { estimatedLevel: null, status: 'insufficient_evidence' },
+          },
+          activity: { speakingTurns: 18, deckWordsReviewed: 0, uniqueWordsSpoken: 40 },
           firstSelectedAt: dateAt(12, 18, 0).toISOString(),
           lastActiveAt: dateAt(3, 17, 0).toISOString(),
           levelHistory: [
-            { estimatedLevel: 'A1', recordedAt: dateAt(12, 18, 0).toISOString(), source: 'analytics' },
-            { estimatedLevel: 'A2', recordedAt: dateAt(3, 17, 0).toISOString(), source: 'analytics' },
+            { skill: 'speaking', previousLevel: null, newLevel: 'A1', recordedAt: dateAt(12, 18, 0).toISOString(), confidence: 'low', method: 'ai-assessment-v1', evidenceSummary: 'Very basic phrases, heavy reliance on isolated words.' },
+            { skill: 'speaking', previousLevel: 'A1', newLevel: 'A2', recordedAt: dateAt(3, 17, 0).toISOString(), confidence: 'medium', method: 'ai-assessment-v1', evidenceSummary: 'Simple everyday exchanges on familiar topics.' },
           ],
         },
       },
       user: user.id,
     },
   });
-  console.log('Created user-progress record with 2-language level history (en, es).');
+  console.log('Created user-progress record with 2-language level history (en, es), new per-skill shape.');
 }
 
 main().catch((err) => {

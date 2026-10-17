@@ -63,7 +63,7 @@ Future<void> showFlashcardCheckResultDialog(
                               padding: const EdgeInsets.only(bottom: 6),
                               child: Text(
                                 '• $d',
-                                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                                style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(ctx)),
                               ),
                             ),
                           ),
@@ -105,7 +105,7 @@ Future<bool?> _showConfirmDialog(
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
-                Text(message, style: TextStyle(color: Colors.grey.shade700, height: 1.4)),
+                Text(message, style: TextStyle(color: AppPageColors.subtitleOf(ctx), height: 1.4)),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -156,7 +156,7 @@ Future<void> _showInfoDialog(
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
-                Text(message, style: TextStyle(color: Colors.grey.shade700, height: 1.4)),
+                Text(message, style: TextStyle(color: AppPageColors.subtitleOf(ctx), height: 1.4)),
               ],
             ),
           ),

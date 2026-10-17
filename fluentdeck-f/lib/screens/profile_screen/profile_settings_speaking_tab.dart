@@ -268,7 +268,7 @@ class _ProfileSettingsSpeakingSectionState
                                     ? Icon(
                                         Icons.lock_outline_rounded,
                                         size: 16,
-                                        color: Colors.grey.shade500,
+                                        color: AppPageColors.subtitleOf(context),
                                       )
                                     : null,
                           ),
@@ -472,14 +472,14 @@ class _CorrectSentenceProgress extends StatelessWidget {
       children: [
         Text(
           'Today',
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
         ),
         Text(
           '$today / $goal correct sentences',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: reached ? AppColors.greenCorrect : Colors.grey.shade700,
+            color: reached ? AppColors.greenCorrect : AppPageColors.subtitleOf(context),
           ),
         ),
       ],

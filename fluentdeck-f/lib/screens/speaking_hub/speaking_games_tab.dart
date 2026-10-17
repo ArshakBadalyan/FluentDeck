@@ -9,6 +9,7 @@ import '../../services/speaking_scores_service.dart';
 import '../../utils/speaking_item_icons.dart';
 import '../../utils/speaking_premium_gate.dart';
 import '../../ui_elements/app_skeletons.dart';
+import '../../ui_elements/modern_page_widgets.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 
 class SpeakingGamesTab extends StatefulWidget {
@@ -131,7 +132,7 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
               game.descriptionPreview,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey.shade700,
+                color: AppPageColors.subtitleOf(context),
                 height: 1.35,
               ),
             ),
@@ -227,7 +228,7 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Text(
               progressLabel,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
           ),
         Expanded(child: _buildGrid()),

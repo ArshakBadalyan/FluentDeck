@@ -7,6 +7,7 @@ import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/services/screen_tutorial_segments.dart';
 import 'package:fluentdeck/services/screen_tutorial_service.dart';
 import 'package:fluentdeck/services/user_session.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/screen_tutorial_targets.dart';
 
 /// Air between spotlight edge and arrow tip ([_PointerGlyph]); all steps share this.
@@ -496,7 +497,7 @@ class _CoachMarkHostState extends State<_CoachMarkHost> {
     );
     final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
       height: 1.38,
-      color: Colors.black87,
+      color: Theme.of(context).textTheme.bodyLarge?.color,
       fontSize: 15,
     );
 
@@ -530,7 +531,7 @@ class _CoachMarkHostState extends State<_CoachMarkHost> {
       constraints: const BoxConstraints(maxHeight: 380),
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -546,7 +547,7 @@ class _CoachMarkHostState extends State<_CoachMarkHost> {
         children: [
           Text(
             counter,
-            style: const TextStyle(fontSize: 12, color: Colors.black45),
+            style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
           ),
           const SizedBox(height: 10),
           ConstrainedBox(
@@ -582,7 +583,7 @@ class _CoachMarkHostState extends State<_CoachMarkHost> {
                   color:
                       _stepIndex == i
                           ? AppColors.brandPrimary
-                          : Colors.grey.shade300,
+                          : AppPageColors.subtleBorderOf(context),
                   borderRadius: BorderRadius.circular(3),
                 ),
               );

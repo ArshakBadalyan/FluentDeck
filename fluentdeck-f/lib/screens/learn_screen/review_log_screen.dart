@@ -4,6 +4,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_stats_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 
 class ReviewLogScreen extends StatefulWidget {
@@ -19,8 +20,6 @@ class _ReviewLogScreenState extends State<ReviewLogScreen> {
   bool _loading = true;
   String? _error;
   List<FlashcardReviewLogEntry> _log = const [];
-
-  static const _pageBg = AppColors.pageBg;
 
   @override
   void initState() {
@@ -55,7 +54,7 @@ class _ReviewLogScreenState extends State<ReviewLogScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _pageBg,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         title: const Text('Review log'),
         backgroundColor: AppColors.brandPrimary,
@@ -86,7 +85,7 @@ class _ReviewLogScreenState extends State<ReviewLogScreen> {
                   child: Text(
                     'No review log entries yet.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade600, height: 1.45),
+                    style: TextStyle(color: AppPageColors.subtitleOf(context), height: 1.45),
                   ),
                 ),
               )
@@ -134,7 +133,7 @@ class ReviewLogEntryTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
@@ -180,7 +179,7 @@ class ReviewLogEntryTile extends StatelessWidget {
                     if (entry.durationMs > 0)
                       '${(entry.durationMs / 1000).toStringAsFixed(0)}s',
                   ].join(' · '),
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                 ),
               ],
             ),

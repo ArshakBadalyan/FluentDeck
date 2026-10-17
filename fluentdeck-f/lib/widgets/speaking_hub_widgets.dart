@@ -96,6 +96,16 @@ class SpeakingSelectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cardBg = AppPageColors.cardBgOf(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // A solid 2px brandPrimary border reads as a normal selection outline on
+    // white, but the same color looks like a glowing neon ring against the
+    // near-black dark surfaces (irradiation — a saturated color against a
+    // dark background looks far more vivid than its actual RGB value) — so
+    // dark mode dials the border back to a translucent, thinner version of
+    // the same selected-state indicator instead of a different color.
+    final selectedBorderColor = isDark
+        ? AppColors.brandPrimaryOnDark.withValues(alpha: 0.6)
+        : AppColors.brandPrimary;
     return Opacity(
       opacity: isPremiumLocked ? 0.55 : 1,
       child: Material(
@@ -117,9 +127,9 @@ class SpeakingSelectionCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: selected
-                  ? AppColors.brandPrimary
+                  ? selectedBorderColor
                   : AppPageColors.subtleBorderOf(context),
-              width: selected ? 2 : 1,
+              width: selected ? (isDark ? 1.5 : 2) : 1,
             ),
           ),
           child: Row(
@@ -146,7 +156,7 @@ class SpeakingSelectionCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: AppPageColors.subtitleOf(context),
                           height: 1.3,
                           fontFamily: 'Rubik',
                         ),
@@ -159,7 +169,7 @@ class SpeakingSelectionCard extends StatelessWidget {
               if (isPremiumLocked)
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
-                  child: Icon(Icons.lock_outline, color: Colors.grey.shade600, size: 20),
+                  child: Icon(Icons.lock_outline, color: AppPageColors.subtitleOf(context), size: 20),
                 ),
               if (score != null)
                 Text(
@@ -266,10 +276,10 @@ class SpeakingGameGridCard extends StatelessWidget {
                   ),
                 ),
               if (isPremiumLocked)
-                const Positioned(
+                Positioned(
                   top: 0,
                   right: 0,
-                  child: Icon(Icons.lock_outline, color: Colors.black45, size: 18),
+                  child: Icon(Icons.lock_outline, color: AppPageColors.subtitleOf(context), size: 18),
                 ),
               Padding(
                 padding: const EdgeInsets.only(top: 14),
@@ -444,12 +454,12 @@ class _SpeakingFilterChipsState extends State<SpeakingFilterChips> {
               selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
               checkmarkColor: AppColors.brandPrimary,
               labelStyle: TextStyle(
-                color: selected ? AppColors.brandPrimary : const Color(0xFF777481),
+                color: selected ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                 fontFamily: 'Rubik',
               ),
               side: BorderSide(
-                color: selected ? AppColors.brandPrimary : Colors.grey.shade300,
+                color: selected ? AppPageColors.accentOf(context) : AppPageColors.subtleBorderOf(context),
               ),
             ),
           );

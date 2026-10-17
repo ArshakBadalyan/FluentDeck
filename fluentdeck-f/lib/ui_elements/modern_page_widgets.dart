@@ -39,6 +39,26 @@ class AppPageColors {
       Theme.of(context).brightness == Brightness.dark
           ? BrandConfig.darkTextSecondary
           : BrandConfig.textSecondary;
+
+  /// Primary (highest-emphasis) body text — for the common bug pattern of a
+  /// widget hardcoding `Colors.black` / `Colors.black87` instead of inheriting
+  /// the theme's text color, which reads as near-invisible dark text on a
+  /// dark surface.
+  static Color textPrimaryOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? BrandConfig.darkTextPrimary
+          : BrandConfig.textPrimary;
+
+  /// Brand teal for text/icons/selected-state accents — [AppColors.brandPrimary]
+  /// (#0D7C86) is tuned for contrast on light surfaces and reads muddy on the
+  /// dark surfaces above, so dark mode swaps to the brighter
+  /// [AppColors.brandPrimaryOnDark] (#2EC4CF; see the WCAG note in
+  /// `brand_config.dart`). Use this anywhere brandPrimary was being used as a
+  /// foreground color that also needs to work in dark mode.
+  static Color accentOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppColors.brandPrimaryOnDark
+          : AppColors.brandPrimary;
 }
 
 class AppPageBackground extends StatelessWidget {
@@ -215,7 +235,7 @@ class AppSettingsCategoryTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: Colors.grey.shade500),
+                Icon(Icons.chevron_right_rounded, color: AppPageColors.subtitleOf(context)),
               ],
             ),
           ),
@@ -349,7 +369,7 @@ class DualArcProgressRing extends StatelessWidget {
               targetColor: targetColor,
               progressColor: progressColor,
               strokeWidth: strokeWidth,
-              trackColor: trackColor ?? Colors.grey.shade200,
+              trackColor: trackColor ?? AppPageColors.subtleBorderOf(context),
             ),
           ),
           if (center != null) center!,
@@ -545,12 +565,14 @@ class AppMetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppPageColors.cardBg,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04,
+            ),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -572,7 +594,7 @@ class AppMetricTile extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: AppPageColors.subtitleOf(context),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -635,7 +657,7 @@ class AppTextField extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: AppPageColors.subtitleOf(context),
             ),
           ),
           const SizedBox(height: 8),
@@ -663,11 +685,11 @@ class AppTextField extends StatelessWidget {
             suffixIcon: suffixIcon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+              borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+              borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -684,8 +706,8 @@ class AppTextField extends StatelessWidget {
   }
 }
 
-InputDecoration appDropdownDecoration(String label) {
-  return appSheetFieldDecoration(label: label);
+InputDecoration appDropdownDecoration(BuildContext context, String label) {
+  return appSheetFieldDecoration(context, label: label);
 }
 
 /// One choice in [AppSelectField] / [showAppSelectSheet].
@@ -787,7 +809,7 @@ Future<_PickedOption<T>?> showAppSelectSheet<T>({
                                                   : FontWeight.w500,
                                           color:
                                               selected == option.value
-                                                  ? AppColors.brandPrimary
+                                                  ? AppPageColors.accentOf(ctx)
                                                   : null,
                                         ),
                                       ),
@@ -795,9 +817,9 @@ Future<_PickedOption<T>?> showAppSelectSheet<T>({
                                     if (option.trailing != null)
                                       option.trailing!
                                     else if (selected == option.value)
-                                      const Icon(
+                                      Icon(
                                         Icons.check_rounded,
-                                        color: AppColors.brandPrimary,
+                                        color: AppPageColors.accentOf(ctx),
                                         size: 22,
                                       ),
                                   ],
@@ -869,21 +891,21 @@ class AppSelectField<T> extends StatelessWidget {
             style: TextStyle(
               fontSize: compact ? 12 : 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: AppPageColors.subtitleOf(context),
             ),
           ),
           SizedBox(height: compact ? 6 : 8),
         ],
         Material(
-          color: Colors.white,
+          color: AppPageColors.fieldBgOf(context),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(compact ? 12 : 14),
             side: BorderSide(
               color:
                   active
-                      ? Colors.grey.shade200
-                      : Colors.grey.shade200.withValues(alpha: 0.7),
+                      ? AppPageColors.subtleBorderOf(context)
+                      : AppPageColors.subtleBorderOf(context).withValues(alpha: 0.7),
             ),
           ),
           clipBehavior: Clip.antiAlias,
@@ -917,7 +939,9 @@ class AppSelectField<T> extends StatelessWidget {
                         style: TextStyle(
                           fontSize: compact ? 13 : 15,
                           fontWeight: hasSelection ? FontWeight.w600 : FontWeight.w500,
-                          color: hasSelection ? AppColors.brandPrimary : Colors.grey.shade600,
+                          color: hasSelection
+                              ? AppPageColors.accentOf(context)
+                              : AppPageColors.subtitleOf(context),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -925,7 +949,9 @@ class AppSelectField<T> extends StatelessWidget {
                     Icon(
                       Icons.expand_more_rounded,
                       size: compact ? 20 : 24,
-                      color: active ? AppColors.brandPrimary : Colors.grey.shade500,
+                      color: active
+                          ? AppPageColors.accentOf(context)
+                          : AppPageColors.subtitleOf(context),
                     ),
                   ],
                 ),
@@ -1055,7 +1081,7 @@ class AppSwitch extends StatelessWidget {
       value: value,
       onChanged: onChanged,
       activeTrackColor: dark ? BrandConfig.primaryOnDark : BrandConfig.primary,
-      inactiveTrackColor: dark ? const Color(0xFF3A3A3C) : const Color(0xFFE5E5EA),
+      inactiveTrackColor: dark ? AppPageColors.fieldBgOf(context) : const Color(0xFFE5E5EA),
       thumbColor: Colors.white,
     );
   }
@@ -1101,7 +1127,7 @@ class AppToggleRow extends StatelessWidget {
                     subtitle!,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey.shade600,
+                      color: AppPageColors.subtitleOf(context),
                       height: 1.35,
                     ),
                   ),
@@ -1160,7 +1186,7 @@ class AppNavRow extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: Colors.grey.shade500),
+              Icon(Icons.chevron_right_rounded, color: AppPageColors.subtitleOf(context)),
             ],
           ),
         ),
@@ -1181,7 +1207,7 @@ class AppEmptyHint extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          color: Colors.grey.shade600,
+          color: AppPageColors.subtitleOf(context),
           fontSize: 14,
           height: 1.45,
         ),
@@ -1267,7 +1293,7 @@ class AppSheetHandle extends StatelessWidget {
           width: 40,
           height: 4,
           decoration: BoxDecoration(
-            color: Colors.grey.shade300,
+            color: AppPageColors.subtitleOf(context).withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -1314,10 +1340,10 @@ class AppSheetHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.brandPrimary.withValues(alpha: 0.1),
+              color: AppPageColors.accentOf(context).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: AppColors.brandPrimary, size: 20),
+            child: Icon(icon, color: AppPageColors.accentOf(context), size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -1332,7 +1358,7 @@ class AppSheetHeader extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                   ),
                 ],
               ],
@@ -1345,26 +1371,31 @@ class AppSheetHeader extends StatelessWidget {
   }
 }
 
-InputDecoration appSheetFieldDecoration({String? label, String? hint, Widget? prefixIcon}) {
+InputDecoration appSheetFieldDecoration(
+  BuildContext context, {
+  String? label,
+  String? hint,
+  Widget? prefixIcon,
+}) {
   return InputDecoration(
     labelText: label,
     hintText: hint,
     prefixIcon: prefixIcon,
     filled: true,
-    fillColor: Colors.white,
+    fillColor: AppPageColors.fieldBgOf(context),
     isDense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+      borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+      borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
+      borderSide: BorderSide(color: AppPageColors.accentOf(context), width: 1.5),
     ),
   );
 }
@@ -1445,7 +1476,7 @@ class AppSheetActionTile extends StatelessWidget {
                             subtitle!,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade600,
+                              color: AppPageColors.subtitleOf(context),
                               height: 1.35,
                             ),
                           ),
@@ -1456,7 +1487,7 @@ class AppSheetActionTile extends StatelessWidget {
                   if (trailing != null)
                     trailing!
                   else if (showChevron)
-                    Icon(Icons.chevron_right_rounded, color: Colors.grey.shade500),
+                    Icon(Icons.chevron_right_rounded, color: AppPageColors.subtitleOf(context)),
                 ],
               ),
             ),
@@ -1500,10 +1531,10 @@ Future<String?> showAppPromptDialog(
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.brandPrimary.withValues(alpha: 0.1),
+                        color: AppPageColors.accentOf(ctx).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(icon, color: AppColors.brandPrimary, size: 22),
+                      child: Icon(icon, color: AppPageColors.accentOf(ctx), size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -1523,7 +1554,7 @@ Future<String?> showAppPromptDialog(
                               subtitle!,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: AppPageColors.subtitleOf(ctx),
                               ),
                             ),
                           ],

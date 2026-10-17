@@ -10,6 +10,7 @@ import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
 import 'package:fluentdeck/services/card_tag_undo_store.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/api_exception.dart';
 import 'package:fluentdeck/utils/card_browser_utils.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
@@ -97,13 +98,13 @@ class CardRowActions {
       height: _itemHeight,
       child: Row(
         children: [
-          Icon(icon, size: 18, color: color ?? Colors.grey.shade700),
+          Icon(icon, size: 18, color: color ?? AppPageColors.subtitleOf(context)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(label, style: TextStyle(fontSize: 14, color: color)),
           ),
           if (trailingArrow)
-            Icon(Icons.chevron_right, size: 18, color: Colors.grey.shade500),
+            Icon(Icons.chevron_right, size: 18, color: AppPageColors.subtitleOf(context)),
         ],
       ),
     );
@@ -145,7 +146,7 @@ class CardRowActions {
           builder: (menuContext) => Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _flagButton(menuContext, 0, Icons.outlined_flag, Colors.grey.shade600, 'Clear flag'),
+              _flagButton(menuContext, 0, Icons.outlined_flag, AppPageColors.subtitleOf(menuContext), 'Clear flag'),
               for (final e in flagColors.entries)
                 _flagButton(menuContext, e.key, Icons.flag, e.value, 'Flag ${e.key}'),
             ],
@@ -313,7 +314,7 @@ class CardRowActions {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 88, child: Text(label, style: TextStyle(color: Colors.grey.shade600))),
+          SizedBox(width: 88, child: Text(label, style: TextStyle(color: AppPageColors.subtitleOf(context)))),
           Expanded(child: Text(value)),
         ],
       ),
@@ -534,7 +535,7 @@ class CardRowActions {
     if (!context.mounted) return;
     final rating = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.cardBgOf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),

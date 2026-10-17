@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 
 /// Text field with a minimal HTML formatting toolbar.
@@ -41,9 +41,9 @@ class HtmlFieldEditor extends StatelessWidget {
         SizedBox(height: trailing != null ? 2 : 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppPageColors.fieldBgOf(context),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200, width: 1),
+            border: Border.all(color: AppPageColors.subtleBorderOf(context), width: 1),
           ),
           child: Column(
             children: [
@@ -54,7 +54,7 @@ class HtmlFieldEditor extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: hint,
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppPageColors.fieldBgOf(context),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                 ),
@@ -78,10 +78,15 @@ class _Toolbar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
       child: Row(
         children: [
-          _btn(Icons.format_bold, () => wrapHtmlSelection(controller, '<b>', '</b>')),
-          _btn(Icons.format_italic, () => wrapHtmlSelection(controller, '<i>', '</i>')),
-          _btn(Icons.format_underlined, () => wrapHtmlSelection(controller, '<u>', '</u>')),
+          _btn(context, Icons.format_bold, () => wrapHtmlSelection(controller, '<b>', '</b>')),
+          _btn(context, Icons.format_italic, () => wrapHtmlSelection(controller, '<i>', '</i>')),
           _btn(
+            context,
+            Icons.format_underlined,
+            () => wrapHtmlSelection(controller, '<u>', '</u>'),
+          ),
+          _btn(
+            context,
             Icons.format_color_text,
             () => wrapHtmlSelection(
               controller,
@@ -90,6 +95,7 @@ class _Toolbar extends StatelessWidget {
             ),
           ),
           _btn(
+            context,
             Icons.functions,
             () => wrapLatexInline(controller),
             tooltip: 'Insert LaTeX \\( \\)',
@@ -99,10 +105,15 @@ class _Toolbar extends StatelessWidget {
     );
   }
 
-  Widget _btn(IconData icon, VoidCallback onPressed, {String? tooltip}) {
+  Widget _btn(
+    BuildContext context,
+    IconData icon,
+    VoidCallback onPressed, {
+    String? tooltip,
+  }) {
     return IconButton(
       icon: Icon(icon, size: 20),
-      color: AppColors.brandPrimary,
+      color: AppPageColors.accentOf(context),
       tooltip: tooltip ?? 'Format selection',
       onPressed: onPressed,
       visualDensity: VisualDensity.compact,

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/services/app_review_webhook_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Play / App Store targets when CMS policy is not loaded (matches [mobile_app_update_gate] fallbacks).
@@ -164,7 +165,7 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppPageColors.subtleBorderOf(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -178,7 +179,7 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
             const SizedBox(height: 8),
             Text(
               t('app-review-subtitle'),
-              style: const TextStyle(fontSize: 16, color: Colors.black87),
+              style: TextStyle(fontSize: 16, color: AppPageColors.textPrimaryOf(context)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -199,7 +200,7 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
                   },
                   icon: Icon(
                     selected ? Icons.star_rounded : Icons.star_outline_rounded,
-                    color: selected ? Colors.amber.shade700 : Colors.grey,
+                    color: selected ? Colors.amber.shade700 : AppPageColors.subtitleOf(context),
                   ),
                 );
               }),

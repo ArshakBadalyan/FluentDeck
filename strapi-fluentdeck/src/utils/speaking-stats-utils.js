@@ -106,6 +106,7 @@ async function recordSpeakingTurnStats(strapi, userId, { userText, corrections }
       isPerfect: perfectDelta === 1,
       correctionCount: hasCorrections ? corrections.length : 0,
       newWords,
+      userText,
     });
   } catch (err) {
     strapi.log.warn('[recordSpeakingTurnStats] language analytics failed', err);

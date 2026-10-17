@@ -3,6 +3,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/services/audio_service.dart';
 import 'package:fluentdeck/services/auth_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
 
 /// Shown on logout if the user has no password yet: set password (same rules as
@@ -123,7 +124,7 @@ class _NicknameLogoutDialogState extends State<NicknameLogoutDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -143,16 +144,15 @@ class _NicknameLogoutDialogState extends State<NicknameLogoutDialog> {
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     context.tr('profile.account.logout-text'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w300,
-                      color: Colors.black87,
+                      color: AppPageColors.subtitleOf(context),
                     ),
                   ),
                   const SizedBox(height: 20),

@@ -91,7 +91,7 @@ class _ConversationChatSettingsSheetState
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppPageColors.subtleBorderOf(context),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -120,7 +120,7 @@ class _ConversationChatSettingsSheetState
             const SizedBox(height: 4),
             Text(
               'Applies to this conversation and saves to your account.',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
             const SizedBox(height: 12),
             if (_loading)

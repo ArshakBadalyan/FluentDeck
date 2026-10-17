@@ -56,7 +56,7 @@ class CardEditScreen extends StatefulWidget {
       isDismissible: true,
       enableDrag: true,
       useSafeArea: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.fieldBgOf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -580,6 +580,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.35),
         scrolledUnderElevation: 8,
+        surfaceTintColor: Colors.transparent,
         title: Text(widget.isEditing ? 'Edit note' : 'Add note'),
         actions: [
           IconButton(
@@ -609,7 +610,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: AppPageColors.subtitleOf(context).withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -630,7 +631,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
                     ),
                     Text(
                       'Create a new flashcard',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                     ),
                   ],
                 ),
@@ -646,11 +647,13 @@ class _CardEditScreenState extends State<CardEditScreen> {
         Expanded(child: _buildBody()),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            color: AppPageColors.cardBgOf(context),
+            border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),
@@ -784,7 +787,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
             const SizedBox(height: 6),
             Text(
               '${_activeType!.cardTemplateNames.join(', ')} card(s) will be created',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
           ],
           if (_needsFullEditor) ...[
@@ -963,14 +966,14 @@ class _CardEditScreenState extends State<CardEditScreen> {
                 decoration: InputDecoration(
                   labelText: 'Mask ${region.id}',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppPageColors.fieldBgOf(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                    borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                    borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
                   ),
                 ),
               ),
@@ -1136,19 +1139,19 @@ class _CardEditScreenState extends State<CardEditScreen> {
     return InputDecoration(
       prefixIcon: prefixIcon,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppPageColors.fieldBgOf(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
+        borderSide: BorderSide(color: AppPageColors.accentOf(context), width: 1.5),
       ),
     );
   }
@@ -1160,7 +1163,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
   TextStyle get _fieldLabelStyle => TextStyle(
     fontSize: 13,
     fontWeight: FontWeight.w600,
-    color: Colors.grey.shade700,
+    color: AppPageColors.subtitleOf(context),
   );
 
   Widget _labeledField(String label, Widget field) {

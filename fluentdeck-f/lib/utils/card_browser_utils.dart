@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_colors.dart';
 import '../models/flashcard_model.dart';
+import '../ui_elements/modern_page_widgets.dart';
 import 'html_text_utils.dart';
 
 /// Sort + filter helpers for the card browser (Phase 4D).
@@ -99,7 +100,7 @@ class CardDueLabel extends StatelessWidget {
     final label = formatDueLabel(card);
     final textStyle = TextStyle(
       fontSize: 11,
-      color: scheduled ? AppColors.brandPrimary : Colors.grey.shade700,
+      color: scheduled ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
       fontWeight: scheduled ? FontWeight.w600 : FontWeight.w400,
     );
 

@@ -6,6 +6,7 @@ import 'package:fluentdeck/models/speaking_session_record_model.dart';
 import 'package:fluentdeck/screens/activity_screen/speaking_session_detail_screen.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class SpeakingSessionHistoryScreen extends StatefulWidget {
   const SpeakingSessionHistoryScreen({super.key});
@@ -20,8 +21,6 @@ class _SpeakingSessionHistoryScreenState
   bool _loading = true;
   String? _error;
   List<SpeakingSessionRecord> _history = const [];
-
-  static const _pageBg = AppColors.pageBg;
 
   @override
   void initState() {
@@ -66,7 +65,7 @@ class _SpeakingSessionHistoryScreenState
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: _pageBg,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         title: Text(l10n.t('speaking-activity.session-history.title')),
         backgroundColor: AppColors.brandPrimary,
@@ -74,6 +73,7 @@ class _SpeakingSessionHistoryScreenState
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.35),
         scrolledUnderElevation: 8,
+        surfaceTintColor: Colors.transparent,
       ),
       body:
           _loading
@@ -102,7 +102,7 @@ class _SpeakingSessionHistoryScreenState
                   child: Text(
                     l10n.t('speaking-activity.session-history.empty'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade600, height: 1.45),
+                    style: TextStyle(color: AppPageColors.subtitleOf(context), height: 1.45),
                   ),
                 ),
               )
@@ -144,7 +144,7 @@ class _SessionHistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppPageColors.cardBgOf(context),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -191,7 +191,7 @@ class _SessionHistoryCard extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: AppPageColors.subtitleOf(context),
                       ),
                     ),
                   ],
@@ -214,7 +214,7 @@ class _SessionHistoryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.chevron_right, color: Colors.grey.shade500, size: 20),
+              Icon(Icons.chevron_right, color: AppPageColors.subtitleOf(context), size: 20),
             ],
           ),
         ),

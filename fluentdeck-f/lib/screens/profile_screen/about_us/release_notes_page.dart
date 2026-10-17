@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../localization/app_localizations.dart';
 import '../../../ui_elements/app_skeletons.dart';
+import '../../../ui_elements/modern_page_widgets.dart';
 
 class ReleaseNotesPopup extends StatefulWidget {
   const ReleaseNotesPopup({super.key});
@@ -81,9 +82,9 @@ class _ReleaseNotesPopupState extends State<ReleaseNotesPopup> {
                     ),
                     Text(
                       v['date'],
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Colors.black54,
+                        color: AppPageColors.subtitleOf(context),
                       ),
                     ),
                     const SizedBox(height: 8),

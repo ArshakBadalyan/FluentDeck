@@ -8,6 +8,7 @@ import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class ConversationHistoryScreen extends StatefulWidget {
   const ConversationHistoryScreen({super.key});
@@ -106,13 +107,14 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.35),
         scrolledUnderElevation: 8,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Conversation history'),
         actions: [
           if (_sessions.isNotEmpty)
@@ -131,7 +133,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
                 child: Text(
                   'No saved conversations yet.\nChat on the Speak tab — history is saved after each exchange.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade700),
+                  style: TextStyle(color: AppPageColors.subtitleOf(context)),
                 ),
               )
               : ListView.separated(

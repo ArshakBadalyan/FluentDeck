@@ -38,9 +38,9 @@ class DecksListSkeleton extends StatelessWidget {
                 height: 56,
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: AppPageColors.cardBg,
+                  color: AppPageColors.cardBgOf(context),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.black12),
+                  border: Border.all(color: AppPageColors.subtleBorderOf(context)),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: const Row(
@@ -117,9 +117,9 @@ class LessonsListSkeleton extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppPageColors.cardBgOf(context),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.black12),
+                    border: Border.all(color: AppPageColors.subtleBorderOf(context)),
                   ),
                   child: const Row(
                     children: [
@@ -156,7 +156,7 @@ class ActivityScreenSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Skeletonizer(
       child: ColoredBox(
-        color: AppPageColors.pageBg,
+        color: AppPageColors.pageBgOf(context),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
@@ -191,9 +191,9 @@ class ActivityScreenSkeleton extends StatelessWidget {
                 height: 68,
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppPageColors.cardBgOf(context),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.black12),
+                  border: Border.all(color: AppPageColors.subtleBorderOf(context)),
                 ),
               ),
             ],
@@ -212,9 +212,9 @@ class _MetricSkeleton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black12),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,9 +272,9 @@ class AppLaunchSkeleton extends StatelessWidget {
                     height: 64,
                     margin: const EdgeInsets.only(bottom: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppPageColors.cardBgOf(context),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.black12),
+                      border: Border.all(color: AppPageColors.subtleBorderOf(context)),
                     ),
                   ),
                 ],
@@ -386,9 +386,9 @@ class _SectionCardSkeleton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black12),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,18 +429,18 @@ class AchievementsScreenSkeleton extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppPageColors.cardBgOf(context),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.black12),
+              border: Border.all(color: AppPageColors.subtleBorderOf(context)),
             ),
           ),
           for (var i = 0; i < 7; i++)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppPageColors.cardBgOf(context),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.black12),
+                border: Border.all(color: AppPageColors.subtleBorderOf(context)),
               ),
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -478,14 +478,14 @@ class AppListSkeleton extends StatelessWidget {
   /// of a `ListView`, which would otherwise be given unbounded height.
   final bool scrollable;
 
-  Widget _item() {
+  Widget _item(BuildContext context) {
     return Container(
       height: itemHeight,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black12),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: const Row(
         children: [
@@ -517,7 +517,7 @@ class AppListSkeleton extends StatelessWidget {
             children: [
               for (var i = 0; i < count; i++) ...[
                 if (i > 0) const SizedBox(height: 10),
-                _item(),
+                _item(context),
               ],
             ],
           ),
@@ -530,7 +530,7 @@ class AppListSkeleton extends StatelessWidget {
         padding: padding,
         itemCount: count,
         separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, index) => _item(),
+        itemBuilder: (context, index) => _item(context),
       ),
     );
   }
@@ -566,9 +566,9 @@ class AppGridSkeleton extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppPageColors.cardBgOf(context),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.black12),
+                border: Border.all(color: AppPageColors.subtleBorderOf(context)),
               ),
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,

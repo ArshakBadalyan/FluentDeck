@@ -805,7 +805,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
             Text(
               word.$1,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
             const SizedBox(height: 2),
             Text(
@@ -849,7 +849,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                       ),
                       TextSpan(
                         text: ' — $meaning',
-                        style: TextStyle(color: Colors.grey.shade800),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
                       ),
                     ],
                   ),
@@ -870,7 +870,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         // Same dark brand bar as the main app header; white text and icons.
         backgroundColor: AppColors.brandPrimaryDeep,
@@ -1246,12 +1246,18 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
               Icon(
                 _startedEmpty ? Icons.inbox_outlined : Icons.check_circle,
                 size: 64,
-                color: _startedEmpty ? Colors.grey : AppColors.greenCorrect,
+                color: _startedEmpty
+                    ? AppPageColors.subtitleOf(context)
+                    : AppColors.greenCorrect,
               ),
               const SizedBox(height: 16),
               Text(
                 _startedEmpty ? 'No cards due' : 'Session complete',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -1259,7 +1265,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                     ? 'Add notes to this deck or study another deck.'
                     : 'You reviewed ${_queue.length} card${_queue.length == 1 ? '' : 's'}.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(color: AppPageColors.subtitleOf(context)),
               ),
               const SizedBox(height: 24),
               FilledButton(
@@ -1293,12 +1299,12 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
               if (_isCloze(card) && card.clozeIndex != null)
                 Text(
                   'Cloze c${card.clozeIndex}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                 ),
               if (imageOcclusion)
                 Text(
                   'IO mask ${(card.clozeIndex ?? 0) + 1}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                 ),
               const Spacer(),
             ],
@@ -1352,7 +1358,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                           width: double.infinity,
                           padding: EdgeInsets.all(imageOcclusion ? 8 : 24),
                           decoration: BoxDecoration(
-                            color: cardTheme?.backgroundColor ?? const Color(0xFFF2F2F5),
+                            color: cardTheme?.backgroundColor ?? AppPageColors.fieldBgOf(context),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: card.flag != 0
@@ -1382,7 +1388,8 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                                         style: TextStyle(
                                           fontSize: (cardTheme?.fontSize ?? 22) * textScale,
                                           fontWeight: cardTheme?.fontWeight ?? FontWeight.w600,
-                                          color: cardTheme?.textColor,
+                                          color: cardTheme?.textColor ??
+                                              Theme.of(context).textTheme.bodyLarge?.color,
                                           height: 1.35,
                                         ),
                                         textAlign: TextAlign.center,
@@ -1395,7 +1402,9 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                                           style: TextStyle(
                                             fontSize: 15 * textScale,
                                             fontStyle: FontStyle.italic,
-                                            color: (cardTheme?.textColor ?? Colors.black87)
+                                            color: (cardTheme?.textColor ??
+                                                    Theme.of(context).textTheme.bodyLarge?.color ??
+                                                    Colors.black87)
                                                 .withValues(alpha: 0.6),
                                             height: 1.35,
                                           ),
@@ -1416,10 +1425,10 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                           decoration: InputDecoration(
                             hintText: 'Type your answer…',
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: AppPageColors.fieldBgOf(context),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade200),
+                              borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                             ),
                           ),
                         ),
@@ -1452,7 +1461,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                             ? (_revealed ? 'Tap to hide · swipe to rate' : 'Tap the hidden region to reveal')
                             : (_revealed ? 'Tap to hide answer' : 'Tap to reveal answer'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                        style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                       ),
                       if (_settings.gesturesEnabled && !typeAnswer)
                         Padding(
@@ -1460,7 +1469,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                           child: Text(
                             'Gestures: ← Again · → Good · ↑ Reveal',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                            style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
                           ),
                         ),
                       if (!typeAnswer && _revealed && !imageOcclusion)

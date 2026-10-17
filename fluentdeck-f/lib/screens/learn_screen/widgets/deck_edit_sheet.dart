@@ -133,19 +133,19 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
   InputDecoration _fieldDecoration() {
     return InputDecoration(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppPageColors.fieldBgOf(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
+        borderSide: BorderSide(color: AppPageColors.accentOf(context), width: 1.5),
       ),
     );
   }
@@ -153,7 +153,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
   TextStyle get _labelStyle => TextStyle(
     fontSize: 13,
     fontWeight: FontWeight.w600,
-    color: Colors.grey.shade700,
+    color: AppPageColors.subtitleOf(context),
   );
 
   Widget _labeledField(String label, Widget field) {
@@ -283,7 +283,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: AppPageColors.subtitleOf(context).withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -304,7 +304,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
                     ),
                     Text(
                       widget.deck.name,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                     ),
                   ],
                 ),
@@ -365,7 +365,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
               if (_canEditOptions) ...[
                 const SizedBox(height: 16),
                 Material(
-                  color: Colors.grey.shade100,
+                  color: AppPageColors.fieldBgOf(context),
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
@@ -384,14 +384,14 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
                                 ),
                                 Text(
                                   'Daily limits, steps, intervals',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                                 ),
                               ],
                             ),
                           ),
                           Icon(
                             _showAdvanced ? Icons.expand_less : Icons.expand_more,
-                            color: Colors.grey.shade700,
+                            color: AppPageColors.subtitleOf(context),
                           ),
                         ],
                       ),
@@ -436,11 +436,13 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
         ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            color: AppPageColors.cardBgOf(context),
+            border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),

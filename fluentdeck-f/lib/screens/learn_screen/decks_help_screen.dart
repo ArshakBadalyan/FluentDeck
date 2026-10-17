@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/data/decks_help_content.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// In-app Decks help and FAQ (Phase 5G).
 class DecksHelpScreen extends StatefulWidget {
@@ -60,18 +60,19 @@ class _DecksHelpScreenState extends State<DecksHelpScreen>
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = AppPageColors.accentOf(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: const Text('Help & FAQ'),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppColors.brandPrimary,
-          unselectedLabelColor: Colors.grey.shade600,
-          indicatorColor: AppColors.brandPrimary,
+          labelColor: accentColor,
+          unselectedLabelColor: AppPageColors.subtitleOf(context),
+          indicatorColor: accentColor,
           tabs: const [
             Tab(text: 'Guide'),
             Tab(text: 'FAQ'),
@@ -108,7 +109,11 @@ class _GuideTab extends StatelessWidget {
       children: [
         Text(
           'Learn how Decks works — study, import, sync, and review flashcards.',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
+          style: TextStyle(
+            fontSize: 14,
+            color: AppPageColors.subtitleOf(context),
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: 12),
         ...decksHelpSections.map(
@@ -148,21 +153,26 @@ class _HelpSectionTileState extends State<_HelpSectionTile> {
 
   @override
   Widget build(BuildContext context) {
+    final bodyColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final accentColor = AppPageColors.accentOf(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: 0,
+      color: AppPageColors.cardBgOf(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: _expanded,
           onExpansionChanged: (v) => setState(() => _expanded = v),
+          iconColor: accentColor,
+          collapsedIconColor: AppPageColors.subtitleOf(context),
           title: Text(
             widget.section.title,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: TextStyle(fontWeight: FontWeight.w600, color: bodyColor),
           ),
           children: [
             Padding(
@@ -173,7 +183,7 @@ class _HelpSectionTileState extends State<_HelpSectionTile> {
                   ...widget.section.paragraphs.map(
                     (p) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(p, style: TextStyle(color: Colors.grey.shade800, height: 1.45)),
+                      child: Text(p, style: TextStyle(color: bodyColor, height: 1.45)),
                     ),
                   ),
                   if (widget.section.bullets.isNotEmpty) ...[
@@ -184,11 +194,11 @@ class _HelpSectionTileState extends State<_HelpSectionTile> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('• ', style: TextStyle(color: AppColors.brandPrimary)),
+                            Text('• ', style: TextStyle(color: accentColor)),
                             Expanded(
                               child: Text(
                                 b,
-                                style: TextStyle(color: Colors.grey.shade800, height: 1.4),
+                                style: TextStyle(color: bodyColor, height: 1.4),
                               ),
                             ),
                           ],
@@ -211,35 +221,43 @@ class _FaqTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bodyColor = Theme.of(context).textTheme.bodyLarge?.color;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text(
           '${decksFaqItems.length} common questions about Decks, import, sync, and review.',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+          style: TextStyle(fontSize: 14, color: AppPageColors.subtitleOf(context)),
         ),
         const SizedBox(height: 12),
         ...decksFaqItems.map(
           (item) => Card(
             margin: const EdgeInsets.only(bottom: 8),
             elevation: 0,
+            color: AppPageColors.cardBgOf(context),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+              side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
+                iconColor: AppPageColors.accentOf(context),
+                collapsedIconColor: AppPageColors.subtitleOf(context),
                 title: Text(
                   item.question,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: bodyColor,
+                  ),
                 ),
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: Text(
                       item.answer,
-                      style: TextStyle(color: Colors.grey.shade800, height: 1.45),
+                      style: TextStyle(color: bodyColor, height: 1.45),
                     ),
                   ),
                 ],

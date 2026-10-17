@@ -15,6 +15,7 @@ import 'package:fluentdeck/services/speaking_scores_service.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/utils/correction_text_utils.dart';
 import 'package:fluentdeck/utils/vocabulary_highlight_utils.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/ai_daily_usage_bar.dart';
 
 import 'conversation_chat_settings_sheet.dart';
@@ -250,7 +251,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Widget build(BuildContext context) {
     final statusLine = _compactStatusLine();
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FA),
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar:
           widget.embedInShell
               ? null
@@ -283,7 +284,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                         statusLine,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade800,
+                          color: AppPageColors.subtitleOf(context),
                           fontWeight: FontWeight.w500,
                         ),
                         maxLines: 2,
@@ -499,7 +500,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
         (widget.onSaveSelection != null ? 1 : 0);
     final actionPadding = actionIconCount * 28.0;
     final baseStyle = TextStyle(
-      color: isUser ? Colors.white : Colors.black87,
+      color: isUser ? Colors.white : AppPageColors.textPrimaryOf(context),
       fontSize: 15,
       height: 1.35,
     );
@@ -546,7 +547,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: isUser ? AppColors.brandPrimary : Colors.white,
+                    color: isUser ? AppColors.brandPrimary : AppPageColors.cardBgOf(context),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -555,7 +556,9 @@ class _TurnBubbleState extends State<_TurnBubble> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.transparent
+                            : Colors.black.withValues(alpha: 0.05),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -637,7 +640,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                                                     isUser
                                                         ? Colors.white
                                                             .withValues(alpha: 0.9)
-                                                        : AppColors.brandPrimary,
+                                                        : AppPageColors.accentOf(context),
                                               ),
                                             )
                                             : Icon(
@@ -650,7 +653,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                                                       ? Colors.white.withValues(
                                                         alpha: 0.9,
                                                       )
-                                                      : AppColors.brandPrimary,
+                                                      : AppPageColors.accentOf(context),
                                             ),
                                     onPressed:
                                         _loadingTranslation
@@ -675,7 +678,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                                       color:
                                           isUser
                                               ? Colors.white.withValues(alpha: 0.9)
-                                              : AppColors.brandPrimary,
+                                              : AppPageColors.accentOf(context),
                                     ),
                                     onPressed: () => _openSaveSheet(turn.text.trim()),
                                   ),
@@ -748,7 +751,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                   translation,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey.shade700,
+                    color: AppPageColors.subtitleOf(context),
                     fontStyle: FontStyle.italic,
                     height: 1.3,
                   ),
@@ -836,7 +839,7 @@ class _CorrectionCardState extends State<_CorrectionCard> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 320),
           child: Material(
-            color: Colors.white,
+            color: AppPageColors.cardBgOf(context),
             borderRadius: BorderRadius.circular(12),
             child: InkWell(
               onTap: () => setState(() => _expanded = !_expanded),
@@ -930,7 +933,7 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                         widget.correction.explanation,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey.shade700,
+                          color: AppPageColors.subtitleOf(context),
                         ),
                       ),
                       if (!_isSaved) ...[
@@ -954,7 +957,7 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                           'Added to your From speaking deck',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey.shade600,
+                            color: AppPageColors.subtitleOf(context),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -1006,7 +1009,7 @@ class _ProcessingIndicator extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(label, style: TextStyle(color: Colors.grey.shade700)),
+            child: Text(label, style: TextStyle(color: AppPageColors.subtitleOf(context))),
           ),
           if (onCancel != null)
             TextButton(onPressed: onCancel, child: const Text('Cancel')),
@@ -1075,10 +1078,12 @@ class _InputBar extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppPageColors.cardBgOf(context),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.black.withValues(alpha: 0.06),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -1103,10 +1108,10 @@ class _InputBar extends StatelessWidget {
                       decoration: InputDecoration(
                         hintText: 'Type your message…',
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: AppPageColors.fieldBgOf(context),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
+                          borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -1132,13 +1137,13 @@ class _InputBar extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   recordingLabel,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  style: TextStyle(color: AppPageColors.subtitleOf(context), fontSize: 13),
                 ),
               ],
             ] else
               Text(
                 isRecording ? recordingLabel : 'Tap the mic to speak',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                style: TextStyle(color: AppPageColors.subtitleOf(context), fontSize: 13),
               ),
             if (onCancel != null) ...[
               const SizedBox(height: 6),

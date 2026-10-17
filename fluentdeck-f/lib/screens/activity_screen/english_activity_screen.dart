@@ -154,7 +154,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.cloud_off_outlined, size: 48, color: Colors.grey.shade500),
+                Icon(Icons.cloud_off_outlined, size: 48, color: AppPageColors.subtitleOf(context)),
                 const SizedBox(height: 12),
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
@@ -385,7 +385,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                                       value.toInt().toString(),
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: Colors.grey.shade600,
+                                        color: AppPageColors.subtitleOf(context),
                                       ),
                                       textAlign: TextAlign.right,
                                     );
@@ -409,7 +409,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                                         label,
                                         style: TextStyle(
                                           fontSize: 10,
-                                          color: Colors.grey.shade700,
+                                          color: AppPageColors.subtitleOf(context),
                                           fontWeight: FontWeight.w500,
                                         ),
                                         textAlign: TextAlign.center,
@@ -434,8 +434,9 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                                   ? 1
                                   : (topWeakMaxY / 4).ceilToDouble(),
                               getDrawingHorizontalLine: (_) => FlLine(
-                                color: Colors.grey.shade200,
+                                color: AppPageColors.subtleBorderOf(context),
                                 strokeWidth: 1,
+                                dashArray: [4, 4],
                               ),
                             ),
                             borderData: FlBorderData(show: false),
@@ -731,7 +732,7 @@ class _ActivitySection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: AppColors.brandPrimary),
+              Icon(icon, size: 20, color: AppPageColors.accentOf(context)),
               const SizedBox(width: 8),
               Text(
                 title,
@@ -977,7 +978,7 @@ class _ScoreTrendChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: 2,
           getDrawingHorizontalLine: (_) =>
-              FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+              FlLine(color: AppPageColors.subtleBorderOf(context), strokeWidth: 1, dashArray: [4, 4]),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
@@ -988,7 +989,7 @@ class _ScoreTrendChart extends StatelessWidget {
               interval: 2,
               getTitlesWidget: (value, meta) => Text(
                 value.toInt().toString(),
-                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 10, color: AppPageColors.subtitleOf(context)),
               ),
             ),
           ),
@@ -1009,7 +1010,7 @@ class _ScoreTrendChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     DateFormat('MMM d').format(recent[i].completedAt.toLocal()),
-                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 10, color: AppPageColors.subtitleOf(context)),
                   ),
                 );
               },
@@ -1100,7 +1101,7 @@ class _DailyActivityChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: yInterval,
           getDrawingHorizontalLine: (_) =>
-              FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+              FlLine(color: AppPageColors.subtleBorderOf(context), strokeWidth: 1, dashArray: [4, 4]),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
@@ -1111,7 +1112,7 @@ class _DailyActivityChart extends StatelessWidget {
               interval: yInterval,
               getTitlesWidget: (value, meta) => Text(
                 value.toInt().toString(),
-                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 10, color: AppPageColors.subtitleOf(context)),
               ),
             ),
           ),
@@ -1132,7 +1133,7 @@ class _DailyActivityChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     DateFormat('MMM d').format(series[i].date),
-                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 10, color: AppPageColors.subtitleOf(context)),
                   ),
                 );
               },
@@ -1237,7 +1238,7 @@ class _PracticeMixDonut extends StatelessWidget {
                   ),
                   Text(
                     total == 1 ? 'session' : 'sessions',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
                   ),
                 ],
               ),
@@ -1267,7 +1268,7 @@ class _PracticeMixDonut extends StatelessWidget {
                         Expanded(
                           child: Text(
                             _modeLabel(e.mode),
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                            style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                           ),
                         ),
                         Text(

@@ -4,14 +4,13 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/models/speaking_session_record_model.dart';
 import 'package:fluentdeck/routing/app_route_names.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/user_facing_api_error.dart';
 
 class SpeakingSessionDetailScreen extends StatelessWidget {
   const SpeakingSessionDetailScreen({super.key, required this.session});
 
   final SpeakingSessionRecord session;
-
-  static const _pageBg = AppColors.pageBg;
 
   String _formatSessionTime(BuildContext context, DateTime dt) {
     final locale = Localizations.localeOf(context).toString();
@@ -24,7 +23,7 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
     final title = session.summary.isNotEmpty ? session.summary : session.title;
 
     return Scaffold(
-      backgroundColor: _pageBg,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         title: Text(l10n.t('speaking-activity.session-detail.title')),
         backgroundColor: AppColors.brandPrimary,
@@ -78,7 +77,7 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             l10n.t('speaking-activity.session-detail.transcript-hint'),
-            style: TextStyle(color: Colors.grey.shade600, height: 1.45),
+            style: TextStyle(color: AppPageColors.subtitleOf(context), height: 1.45),
           ),
         ],
       ),
@@ -106,7 +105,7 @@ class _ScoreHero extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.greenCorrect.withValues(alpha: 0.3),
@@ -125,7 +124,7 @@ class _ScoreHero extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             AppLocalizations.of(context).t('speaking-activity.session-detail.score'),
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(color: AppPageColors.subtitleOf(context)),
           ),
         ],
       ),
@@ -143,9 +142,9 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(children: children),
     );
@@ -169,7 +168,7 @@ class _InfoRow extends StatelessWidget {
             width: 110,
             child: Text(
               label,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              style: TextStyle(color: AppPageColors.subtitleOf(context), fontSize: 13),
             ),
           ),
           Expanded(
@@ -196,9 +195,9 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

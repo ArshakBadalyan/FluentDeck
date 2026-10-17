@@ -1,10 +1,10 @@
 import 'package:fluentdeck/ui_elements/screen_tutorial_targets.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/services/analytics_service.dart';
 import 'package:fluentdeck/services/click_tracking.dart';
 import 'package:fluentdeck/services/interaction_haptics.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class EnglishBottomNav extends StatelessWidget {
   const EnglishBottomNav({
@@ -24,14 +24,15 @@ class EnglishBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = MainTabConfig.definitions;
+    final tabs = MainTabConfig.definitionsFor(context);
 
+    final navBg = AppPageColors.cardBgOf(context);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: navBg,
         border: Border(
           top: BorderSide(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: AppPageColors.subtleBorderOf(context),
             width: 0.5,
           ),
         ),
@@ -47,7 +48,7 @@ class EnglishBottomNav extends StatelessWidget {
       ),
       child: BottomNavigationBar(
         key: ScreenTutorialKeys.mainBottomNav,
-        backgroundColor: Colors.white,
+        backgroundColor: navBg,
         type: BottomNavigationBarType.fixed,
         currentIndex: currentIndex.clamp(0, tabs.length - 1),
         onTap: (index) {
@@ -63,8 +64,8 @@ class EnglishBottomNav extends StatelessWidget {
           onTap(index);
         },
         showUnselectedLabels: true,
-        selectedItemColor: AppColors.brandPrimary,
-        unselectedItemColor: AppColors.navInactive,
+        selectedItemColor: AppPageColors.accentOf(context),
+        unselectedItemColor: AppPageColors.subtitleOf(context),
         elevation: 0,
         items: [
           for (var i = 0; i < tabs.length; i++)

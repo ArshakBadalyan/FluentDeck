@@ -112,7 +112,7 @@ class _LessonsListTabState extends State<LessonsListTab> {
                     child: Text(
                       'No lessons yet.\nAdd lessons in Strapi admin.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade700),
+                      style: TextStyle(color: AppPageColors.subtitleOf(context)),
                     ),
                   )
                   : RefreshIndicator(
@@ -145,7 +145,7 @@ class _LessonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppPageColors.cardBgOf(context),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -154,7 +154,7 @@ class _LessonCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+            border: Border.all(color: AppPageColors.subtleBorderOf(context)),
           ),
           child: Row(
             children: [
@@ -184,7 +184,7 @@ class _LessonCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${lesson.skillType} · ${lesson.exercises.length} exercises',
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                      style: TextStyle(color: AppPageColors.subtitleOf(context), fontSize: 13),
                     ),
                   ],
                 ),

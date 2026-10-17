@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/services/conversation_limit_service.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Compact daily AI speaking meter for the conversation screen.
 class AiDailyUsageBar extends StatelessWidget {
@@ -74,10 +75,10 @@ class AiDailyUsageBar extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1C1B1F),
+                            color: AppPageColors.textPrimaryOf(context),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -89,7 +90,7 @@ class AiDailyUsageBar extends StatelessWidget {
                             color:
                                 exhausted
                                     ? AppColors.redWrong.withValues(alpha: 0.9)
-                                    : Colors.grey.shade700,
+                                    : AppPageColors.subtitleOf(context),
                           ),
                         ),
                       ],
@@ -115,7 +116,7 @@ class AiDailyUsageBar extends StatelessWidget {
                     fit: StackFit.expand,
                     children: [
                       ColoredBox(
-                        color: Colors.black.withValues(alpha: 0.06),
+                        color: AppPageColors.subtleBorderOf(context),
                       ),
                       TweenAnimationBuilder<double>(
                         tween: Tween(begin: 0, end: progress),

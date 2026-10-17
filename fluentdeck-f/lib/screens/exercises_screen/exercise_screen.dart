@@ -3,6 +3,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/exercise_model.dart';
 import 'package:fluentdeck/services/user_progress_service.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class ExerciseScreen extends StatefulWidget {
   const ExerciseScreen({
@@ -90,7 +91,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 : _isFillBlank
                 ? 'Fill in the blank'
                 : widget.exercise.type,
-            style: TextStyle(color: Colors.grey.shade700),
+            style: TextStyle(color: AppPageColors.subtitleOf(context)),
           ),
           const SizedBox(height: 8),
           Text(
@@ -105,8 +106,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 child: Material(
                   color:
                       _selectedIndex == i
-                          ? AppColors.brandPrimary.withValues(alpha: 0.12)
-                          : Colors.white,
+                          ? AppPageColors.accentOf(context).withValues(alpha: 0.12)
+                          : AppPageColors.cardBgOf(context),
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
                     onTap:
@@ -122,8 +123,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                         border: Border.all(
                           color:
                               _selectedIndex == i
-                                  ? AppColors.brandPrimary
-                                  : Colors.black.withValues(alpha: 0.08),
+                                  ? AppPageColors.accentOf(context)
+                                  : AppPageColors.subtleBorderOf(context),
                         ),
                       ),
                       child: Text(widget.exercise.options[i]),
@@ -139,7 +140,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               decoration: InputDecoration(
                 hintText: 'Type your answer',
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppPageColors.fieldBgOf(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

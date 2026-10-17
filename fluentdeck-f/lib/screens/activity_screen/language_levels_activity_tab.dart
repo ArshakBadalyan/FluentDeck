@@ -67,7 +67,7 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
                 Icon(
                   Icons.cloud_off_outlined,
                   size: 48,
-                  color: Colors.grey.shade500,
+                  color: AppPageColors.subtitleOf(context),
                 ),
                 const SizedBox(height: 12),
                 Text(_error!, textAlign: TextAlign.center),
@@ -94,6 +94,7 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
             _HeroCard(
               languageLabel: currentLabel,
               estimatedLevel: snapshot.estimatedLevel,
+              estimatedLevelStatus: snapshot.estimatedLevelStatus,
               tutorLevel: snapshot.tutorLevel,
             ),
             const SizedBox(height: 16),
@@ -192,11 +193,15 @@ class _HeroCard extends StatelessWidget {
   const _HeroCard({
     required this.languageLabel,
     required this.estimatedLevel,
+    required this.estimatedLevelStatus,
     required this.tutorLevel,
   });
 
   final String languageLabel;
-  final String estimatedLevel;
+
+  /// Null when there's no committed AI speaking assessment yet.
+  final String? estimatedLevel;
+  final String estimatedLevelStatus;
   final String tutorLevel;
 
   @override
@@ -232,9 +237,9 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            estimatedLevel,
-            style: const TextStyle(
-              fontSize: 48,
+            estimatedLevel ?? 'Not enough evidence yet',
+            style: TextStyle(
+              fontSize: estimatedLevel != null ? 48 : 22,
               fontWeight: FontWeight.w800,
               color: Colors.white,
               height: 1,
@@ -242,7 +247,9 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Estimated from speaking + decks',
+            estimatedLevelStatus == 'legacy_unassessed'
+                ? 'Keep speaking — your level will be reassessed soon'
+                : 'AI-estimated from your speaking practice',
             style: TextStyle(
               fontSize: 13,
               color: Colors.white.withValues(alpha: 0.82),
@@ -442,7 +449,9 @@ class _LanguageHistoryCard extends StatelessWidget {
   final String languageLabel;
   final bool isCurrent;
   final String tutorLevel;
-  final String estimatedLevel;
+
+  /// Null when there's no committed AI speaking assessment yet.
+  final String? estimatedLevel;
   final int speakingTurns;
   final int deckWords;
   final int noteCount;
@@ -458,139 +467,96 @@ class _LanguageHistoryCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 10),
-      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
+        color: isCurrent
+            ? AppColors.brandPrimary.withValues(alpha: 0.06)
+            : AppPageColors.fieldBgOf(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isCurrent
-              ? AppColors.brandPrimary.withValues(alpha: 0.25)
+              ? AppColors.brandPrimary.withValues(alpha: 0.2)
               : AppPageColors.subtleBorderOf(context),
         ),
+        boxShadow: isCurrent
+            ? [
+                BoxShadow(
+                  color: AppColors.brandPrimary.withValues(alpha: 0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
-      // BoxShadow + BlurStyle.inner paints a tint across the *whole* shape
-      // (only its edges get blurred) — on a card this size that just reads
-      // as a solid fill, not a shadow. A CustomPaint stroke along the
-      // border, blurred and clipped to the card's own bounds, only lets the
-      // part of the blur that falls inward show — true edge-only shadow,
-      // center stays fully transparent.
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isCurrent)
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _InnerEdgeShadowPainter(
-                  color: AppColors.brandPrimary.withValues(alpha: 0.22),
-                  blurSigma: 6,
-                  borderRadius: 14,
+          Row(
+            children: [
+              Text(
+                languageLabel,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
                 ),
               ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      languageLabel,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                    ),
-                    if (isCurrent) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.brandPrimary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          'Current',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.brandPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                    const Spacer(),
-                    Text(
-                      estimatedLevel,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-                if (levelHistory.length >= 2) ...[
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 44,
-                    child: _LevelProgressionChart(
-                      history: levelHistory,
-                      compact: true,
-                    ),
+              if (isCurrent) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
                   ),
-                ],
-                const SizedBox(height: 6),
-                Text(
-                  'AI tutor $tutorLevel · $noteCount notes · $speakingTurns turns · '
-                  '$deckWords deck reviews · $dateLabel',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppPageColors.subtitleOf(context),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandPrimary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Current',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.brandPrimary,
+                    ),
                   ),
                 ),
               ],
+              const Spacer(),
+              Text(
+                estimatedLevel ?? 'Not assessed',
+                style: TextStyle(
+                  fontSize: estimatedLevel != null ? 18 : 12,
+                  fontWeight: FontWeight.w800,
+                  color: estimatedLevel != null
+                      ? null
+                      : AppPageColors.subtitleOf(context),
+                ),
+              ),
+            ],
+          ),
+          if (levelHistory.length >= 2) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 44,
+              child: _LevelProgressionChart(
+                history: levelHistory,
+                compact: true,
+              ),
+            ),
+          ],
+          const SizedBox(height: 6),
+          Text(
+            'AI tutor $tutorLevel · $noteCount notes · $speakingTurns turns · '
+            '$deckWords deck reviews · $dateLabel',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppPageColors.subtitleOf(context),
             ),
           ),
         ],
       ),
     );
   }
-}
-
-class _InnerEdgeShadowPainter extends CustomPainter {
-  _InnerEdgeShadowPainter({
-    required this.color,
-    required this.blurSigma,
-    required this.borderRadius,
-  });
-
-  final Color color;
-  final double blurSigma;
-  final double borderRadius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rrect = RRect.fromRectAndRadius(
-      Offset.zero & size,
-      Radius.circular(borderRadius),
-    );
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = blurSigma * 2
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma);
-    canvas.save();
-    canvas.clipRRect(rrect);
-    canvas.drawRRect(rrect, paint);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _InnerEdgeShadowPainter old) =>
-      old.color != color ||
-      old.blurSigma != blurSigma ||
-      old.borderRadius != borderRadius;
 }
 
 class _TimelineRow extends StatelessWidget {
@@ -697,7 +663,7 @@ class _LevelProgressionChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: 1,
           getDrawingHorizontalLine: (_) =>
-              FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+              FlLine(color: AppPageColors.subtleBorderOf(context), strokeWidth: 1, dashArray: [4, 4]),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
@@ -716,7 +682,7 @@ class _LevelProgressionChart extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                    color: AppPageColors.subtitleOf(context),
                   ),
                 );
               },
@@ -743,7 +709,7 @@ class _LevelProgressionChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     DateFormat('MMM d').format(points[i].recordedAt!.toLocal()),
-                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 10, color: AppPageColors.subtitleOf(context)),
                   ),
                 );
               },

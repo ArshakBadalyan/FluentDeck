@@ -167,19 +167,19 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
       hintText: hint,
       prefixIcon: prefixIcon,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppPageColors.fieldBgOf(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
+        borderSide: BorderSide(color: AppPageColors.accentOf(context), width: 1.5),
       ),
     );
   }
@@ -187,7 +187,7 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
   TextStyle get _labelStyle => TextStyle(
     fontSize: 13,
     fontWeight: FontWeight.w600,
-    color: Colors.grey.shade700,
+    color: AppPageColors.subtitleOf(context),
   );
 
   Widget _labeledField(String label, Widget field) {
@@ -216,7 +216,9 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withValues(alpha: 0.2),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -376,11 +378,13 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
         ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            color: AppPageColors.cardBgOf(context),
+            border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),
@@ -438,21 +442,27 @@ class _StateChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.brandPrimary : Colors.white,
+          color: selected ? AppColors.brandPrimary : AppPageColors.fieldBgOf(context),
           borderRadius: BorderRadius.circular(10),
-          border: !selected ? Border.all(color: Colors.grey.shade200, width: 1) : null,
+          border: !selected
+              ? Border.all(color: AppPageColors.subtleBorderOf(context), width: 1)
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: selected ? Colors.white : Colors.grey.shade700),
+            Icon(
+              icon,
+              size: 16,
+              color: selected ? Colors.white : AppPageColors.subtitleOf(context),
+            ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : Colors.grey.shade800,
+                color: selected ? Colors.white : AppPageColors.subtitleOf(context),
               ),
             ),
           ],

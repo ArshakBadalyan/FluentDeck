@@ -155,7 +155,7 @@ class _ProfileSettingsGeneralSectionState
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade400,
+                    color: AppPageColors.subtleBorderOf(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

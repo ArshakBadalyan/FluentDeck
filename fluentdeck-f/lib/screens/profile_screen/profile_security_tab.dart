@@ -205,7 +205,7 @@ class _ProfileSecurityTabState extends State<ProfileSecurityTab> {
                     suffixIcon: IconButton(
                       icon: Icon(
                         _hidePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: Colors.grey.shade600,
+                        color: AppPageColors.subtitleOf(context),
                       ),
                       tooltip: _hidePassword ? 'Show password' : 'Hide password',
                       onPressed: () => setState(() => _hidePassword = !_hidePassword),
@@ -219,7 +219,7 @@ class _ProfileSecurityTabState extends State<ProfileSecurityTab> {
                     suffixIcon: IconButton(
                       icon: Icon(
                         _hideConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: Colors.grey.shade600,
+                        color: AppPageColors.subtitleOf(context),
                       ),
                       tooltip: _hideConfirm ? 'Show password' : 'Hide password',
                       onPressed: () => setState(() => _hideConfirm = !_hideConfirm),

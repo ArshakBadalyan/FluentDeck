@@ -324,9 +324,9 @@ class _StatusHeroCard extends StatelessWidget {
                   colors: AppColors.heroGradient,
                 )
                 : null,
-        color: isPremium ? null : Colors.white,
+        color: isPremium ? null : AppPageColors.cardBgOf(context),
         borderRadius: BorderRadius.circular(20),
-        border: isPremium ? null : Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: isPremium ? null : Border.all(color: AppPageColors.subtleBorderOf(context)),
         boxShadow: [
           BoxShadow(
             color: (isPremium ? AppColors.brandPrimary : Colors.black).withValues(
@@ -356,7 +356,7 @@ class _StatusHeroCard extends StatelessWidget {
                       ? Icons.workspace_premium_rounded
                       : Icons.lock_open_rounded,
                   size: 30,
-                  color: isPremium ? Colors.white : AppColors.brandPrimary,
+                  color: isPremium ? Colors.white : AppPageColors.accentOf(context),
                 ),
               ),
               const SizedBox(width: 16),
@@ -371,7 +371,9 @@ class _StatusHeroCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
-                        color: isPremium ? Colors.white : Colors.black87,
+                        color: isPremium
+                            ? Colors.white
+                            : Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -388,7 +390,7 @@ class _StatusHeroCard extends StatelessWidget {
                         color:
                             isPremium
                                 ? Colors.white.withValues(alpha: 0.85)
-                                : Colors.grey.shade600,
+                                : AppPageColors.subtitleOf(context),
                       ),
                     ),
                   ],
@@ -406,7 +408,7 @@ class _StatusHeroCard extends StatelessWidget {
                 color:
                     isPremium
                         ? Colors.white.withValues(alpha: 0.9)
-                        : Colors.grey.shade700,
+                        : AppPageColors.subtitleOf(context),
               ),
             ),
             const SizedBox(height: 6),
@@ -418,9 +420,9 @@ class _StatusHeroCard extends StatelessWidget {
                 backgroundColor:
                     isPremium
                         ? Colors.white.withValues(alpha: 0.22)
-                        : Colors.grey.shade200,
+                        : AppPageColors.subtleBorderOf(context),
                 color:
-                    isPremium ? Colors.white : AppColors.brandPrimary,
+                    isPremium ? Colors.white : AppPageColors.accentOf(context),
               ),
             ),
           ],
@@ -442,7 +444,7 @@ class _FeatureList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent =
-        isPremium ? AppColors.brandPrimary : Colors.grey.shade400;
+        isPremium ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context);
     final features = <(String, IconData)>[
       ('No ads, ever', Icons.block_flipped),
       ('AI-generated word meanings', Icons.auto_awesome_rounded),
@@ -510,7 +512,11 @@ class _DailyTurnsPicker extends StatelessWidget {
           Text(
             'Drag the bar to set how many AI tutor turns you want each day. '
             'Plan prices update with your choice (recommended: $defaultTurns).',
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.35),
+            style: TextStyle(
+              fontSize: 13,
+              color: AppPageColors.subtitleOf(context),
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -526,7 +532,7 @@ class _DailyTurnsPicker extends StatelessWidget {
               const Spacer(),
               Text(
                 '$min – $max',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
               ),
             ],
           ),
@@ -611,10 +617,14 @@ class _PlanCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? AppColors.brandPrimary.withValues(alpha: 0.06) : Colors.white,
+          color: selected
+              ? AppColors.brandPrimary.withValues(alpha: 0.06)
+              : AppPageColors.cardBgOf(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? AppColors.brandPrimary : Colors.grey.shade300,
+            color: selected
+                ? AppColors.brandPrimary
+                : AppPageColors.subtleBorderOf(context),
             width: selected ? 2 : 1,
           ),
         ),
@@ -625,7 +635,9 @@ class _PlanCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 2),
               child: Icon(
                 selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected ? AppColors.brandPrimary : Colors.grey.shade400,
+                color: selected
+                    ? AppColors.brandPrimary
+                    : AppPageColors.subtitleOf(context),
               ),
             ),
             const SizedBox(width: 12),
@@ -637,7 +649,11 @@ class _PlanCard extends StatelessWidget {
                     children: [
                       Text(
                         plan.title,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
                       ),
                       if (isCurrent) ...[
                         const SizedBox(width: 8),
@@ -679,7 +695,7 @@ class _PlanCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _priceLabel,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                    style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -689,7 +705,7 @@ class _PlanCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade800,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                     ],
@@ -700,7 +716,7 @@ class _PlanCard extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: _capacity,
                       minHeight: 6,
-                      backgroundColor: Colors.grey.shade200,
+                      backgroundColor: AppPageColors.subtleBorderOf(context),
                       color: AppColors.brandPrimary,
                     ),
                   ),

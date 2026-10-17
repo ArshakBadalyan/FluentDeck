@@ -103,6 +103,7 @@ class ProfileSettingsTabState extends State<ProfileSettingsTab> {
                 elevation: 4,
                 shadowColor: Colors.black.withValues(alpha: 0.35),
                 scrolledUnderElevation: 8,
+                surfaceTintColor: Colors.transparent,
                 title: Text(title),
               ),
               body: page,

@@ -50,6 +50,7 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
           elevation: 4,
           shadowColor: Colors.black.withValues(alpha: 0.35),
           scrolledUnderElevation: 8,
+          surfaceTintColor: Colors.transparent,
           title: Row(
             children: [
               if (deck.isFiltered) ...[
@@ -196,11 +197,10 @@ class _DeckHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppColors.brandPrimaryDeep,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: Colors.grey.shade200),
       ),
       child: Container(
         decoration: const BoxDecoration(

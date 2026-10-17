@@ -262,7 +262,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
     style: TextStyle(
       fontSize: 13,
       fontWeight: FontWeight.w600,
-      color: Colors.grey.shade700,
+      color: AppPageColors.subtitleOf(context),
     ),
   );
 
@@ -270,7 +270,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
     padding: const EdgeInsets.only(bottom: 4),
     child: Text(
       text,
-      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey.shade600),
+      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppPageColors.subtitleOf(context)),
     ),
   );
 
@@ -282,13 +282,13 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
     style: const TextStyle(fontSize: 14, height: 1.35),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+      hintStyle: TextStyle(fontSize: 14, color: AppPageColors.subtitleOf(context)),
       isDense: true,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppPageColors.fieldBgOf(context),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200),
+        borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     ),
@@ -320,7 +320,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                   margin: const EdgeInsets.only(bottom: 16),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade400,
+                    color: AppPageColors.subtleBorderOf(context),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -331,7 +331,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                 const SizedBox(height: 4),
                 Text(
                   'Saved to your From speaking deck',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -339,7 +339,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
+                    color: AppPageColors.subtitleOf(context),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -350,7 +350,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
+                    color: AppPageColors.subtitleOf(context),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -381,7 +381,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
+                          color: AppPageColors.subtitleOf(context),
                         ),
                       ),
                     ),
@@ -430,7 +430,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
+                    color: AppPageColors.subtitleOf(context),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -464,7 +464,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                   _showTranslation
                       ? 'AI fills the translation, definition and example.'
                       : 'AI fills the definition and example for the flashcard back.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                 ),
                 const SizedBox(height: 10),
                 _fieldLabel('Definition (${_languageName(_languageCode)})'),

@@ -2,6 +2,7 @@ import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -19,6 +20,7 @@ import 'package:fluentdeck/services/subscription_service.dart';
 
 import 'app_start.dart';
 import 'app_theme.dart';
+import 'config/brand_config.dart';
 import 'package:fluentdeck/ui_elements/app_scroll_behavior.dart';
 import 'package:fluentdeck/ui_elements/responsive_layout.dart';
 import 'services/theme_settings_store.dart';
@@ -139,11 +141,21 @@ class MyApp extends StatelessWidget {
           _clarityRouteObserver,
         ],
         builder: (context, child) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
           // Toasts sit above every route, bottom sheet and dialog.
-          return AppToastHost(
-            child: ResponsiveShell(
-              child: InteractionSwipeHapticsScope(
-                child: ClickTracker(child: child ?? const SizedBox.shrink()),
+          return SkeletonizerConfig(
+            data: SkeletonizerConfigData(
+              effect: ShimmerEffect(
+                baseColor: isDark ? const Color(0xFF1C3338) : BrandConfig.fieldBg,
+                highlightColor:
+                    isDark ? const Color(0xFF2A4A50) : const Color(0xFFDCEAEA),
+              ),
+            ),
+            child: AppToastHost(
+              child: ResponsiveShell(
+                child: InteractionSwipeHapticsScope(
+                  child: ClickTracker(child: child ?? const SizedBox.shrink()),
+                ),
               ),
             ),
           );

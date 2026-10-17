@@ -298,13 +298,14 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.35),
         scrolledUnderElevation: 8,
+        surfaceTintColor: Colors.transparent,
         title: Text(widget.isEditing ? 'Edit note' : 'New note'),
       ),
       body: SingleChildScrollView(
@@ -468,18 +469,18 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           maxLines: maxLines,
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppPageColors.fieldBgOf(context),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+              borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+              borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
+              borderSide: BorderSide(color: AppPageColors.accentOf(context), width: 1.5),
             ),
           ),
         ),

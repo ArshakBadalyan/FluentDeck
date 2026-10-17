@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/widgets/cached_strapi_image.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Draw occlusion masks on an image and edit regions (Phase 4I).
 class ImageOcclusionEditor extends StatefulWidget {
@@ -73,12 +74,12 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F5),
+          color: AppPageColors.fieldBgOf(context),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           'Enter an image URL above, then draw rectangles to hide regions.',
-          style: TextStyle(color: Colors.grey.shade700),
+          style: TextStyle(color: AppPageColors.subtitleOf(context)),
         ),
       );
     }
@@ -90,7 +91,7 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
           children: [
             Text(
               '${widget.regions.length} mask${widget.regions.length == 1 ? '' : 's'}',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
             const Spacer(),
             if (_selectedId != null)
@@ -147,7 +148,7 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
                         url: widget.imageUrl,
                         fit: BoxFit.contain,
                         errorBuilder: (context) => Container(
-                          color: const Color(0xFFF2F2F5),
+                          color: AppPageColors.fieldBgOf(context),
                           alignment: Alignment.center,
                           child: const Text('Could not load image'),
                         ),
@@ -204,7 +205,7 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
         const SizedBox(height: 8),
         Text(
           'Drag on the image to add a mask. Tap a mask to select it.',
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
         ),
       ],
     );

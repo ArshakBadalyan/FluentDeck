@@ -106,6 +106,7 @@ class _ProfileSettingsCategoryScreenState extends State<ProfileSettingsCategoryS
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.35),
         scrolledUnderElevation: 8,
+        surfaceTintColor: Colors.transparent,
         title: Text(widget.category.title),
       ),
       body: AppPageBackground(

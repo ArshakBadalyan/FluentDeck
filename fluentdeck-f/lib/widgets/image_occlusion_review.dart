@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/widgets/cached_strapi_image.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Image occlusion review — one hidden mask per card (Phase 4I).
 class ImageOcclusionReview extends StatelessWidget {
@@ -37,7 +38,7 @@ class ImageOcclusionReview extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16 * textScale,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade800,
+                color: AppPageColors.textPrimaryOf(context),
               ),
             ),
             const SizedBox(height: 12),

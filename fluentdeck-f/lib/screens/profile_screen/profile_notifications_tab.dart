@@ -136,8 +136,11 @@ class _ProfileNotificationsTabState extends State<ProfileNotificationsTab> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
-                      color: (_subscribed ? AppColors.greenCorrect : Colors.grey)
-                          .withValues(alpha: 0.1),
+                      color: _subscribed
+                          ? AppColors.greenCorrect.withValues(alpha: 0.1)
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.black.withValues(alpha: 0.05)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -145,7 +148,7 @@ class _ProfileNotificationsTabState extends State<ProfileNotificationsTab> {
                         Icon(
                           _subscribed ? Icons.check_circle_outline : Icons.notifications_off_outlined,
                           size: 18,
-                          color: _subscribed ? AppColors.greenCorrect : Colors.grey.shade600,
+                          color: _subscribed ? AppColors.greenCorrect : AppPageColors.subtitleOf(context),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -155,7 +158,7 @@ class _ProfileNotificationsTabState extends State<ProfileNotificationsTab> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: _subscribed ? const Color(0xFF1B9E4B) : Colors.grey.shade600,
+                            color: _subscribed ? AppColors.greenCorrect : AppPageColors.subtitleOf(context),
                           ),
                         ),
                       ],
