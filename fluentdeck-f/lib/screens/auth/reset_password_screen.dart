@@ -1,7 +1,7 @@
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/routing/app_route_names.dart';
 import 'package:fluentdeck/routing/app_page_routes.dart';
 import 'package:fluentdeck/ui_elements/auth_secondary_link.dart';
@@ -73,7 +73,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -141,10 +141,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
               SizedBox(
                 height: 50,
-                child: ElevatedButton(
+                // FilledButton (not ElevatedButton+hardcoded colors): the
+                // app's own filledButtonTheme already pairs light/dark
+                // backgrounds with correctly readable text in both modes.
+                child: FilledButton(
                   onPressed: _loading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
+                  style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -153,7 +155,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     _loading
                         ? '${context.tr('over.loading')}...'
                         : context.tr('reset-password.reset-password'),
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    style: const TextStyle(fontSize: 16),
                   ),
                 ),
               ),

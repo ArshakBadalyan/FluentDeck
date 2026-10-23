@@ -4,6 +4,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'main_navigation_coordinator.dart';
+import 'main_tab_config.dart';
 import 'review_settings_store.dart';
 
 /// Daily review reminder (Phase 5B). Mobile only.
@@ -31,12 +33,67 @@ class DeckNotificationService {
     }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings();
+    // Ask only when the user turns the reminder on, not at first launch.
+    const ios = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
+      onDidReceiveNotificationResponse: _onTap,
     );
     _initialized = true;
+
+    final launch = await _plugin.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp == true &&
+        launch?.notificationResponse?.id == _notificationId) {
+      _openDecksOnLaunch = true;
+    }
+
     await syncFromSettings();
+  }
+
+  bool _openDecksOnLaunch = false;
+
+  /// True once if the app was cold-started by tapping the reminder.
+  bool consumeOpenDecksOnLaunch() {
+    final open = _openDecksOnLaunch;
+    _openDecksOnLaunch = false;
+    return open;
+  }
+
+  void _onTap(NotificationResponse response) {
+    if (response.id == _notificationId) {
+      MainNavigationCoordinator.goToTab(MainTabId.decks);
+    }
+  }
+
+  /// Asks the OS for notification permission. False if the user declined.
+  Future<bool> requestPermission() async {
+    if (kIsWeb || !_initialized) return false;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final android =
+          _plugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
+      return await android?.requestNotificationsPermission() ?? true;
+    }
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final ios =
+          _plugin
+              .resolvePlatformSpecificImplementation<
+                IOSFlutterLocalNotificationsPlugin
+              >();
+      return await ios?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          ) ??
+          false;
+    }
+    return true;
   }
 
   Future<void> syncFromSettings() async {
@@ -48,50 +105,74 @@ class DeckNotificationService {
       return;
     }
 
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      final androidPlugin =
-          _plugin
-              .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin
-              >();
-      await androidPlugin?.requestNotificationsPermission();
-    }
-
     await _scheduleDaily(settings.reviewReminderHour, settings.reviewReminderMinute);
   }
 
-  Future<void> _scheduleDaily(int hour, int minute) async {
-    await _plugin.cancel(_notificationId);
-
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(
-      tz.local,
+  /// Next time the reminder should fire: today at [hour]:[minute] if that is
+  /// still ahead of [now], otherwise tomorrow. Built from calendar fields (not
+  /// +24h) so the wall-clock time survives daylight-saving changes.
+  static tz.TZDateTime nextReminderTime(
+    tz.TZDateTime now,
+    int hour,
+    int minute,
+  ) {
+    final today = tz.TZDateTime(
+      now.location,
       now.year,
       now.month,
       now.day,
       hour,
       minute,
     );
-    if (scheduled.isBefore(now)) {
-      scheduled = scheduled.add(const Duration(days: 1));
-    }
+    if (today.isAfter(now)) return today;
+    return tz.TZDateTime(
+      now.location,
+      now.year,
+      now.month,
+      now.day + 1,
+      hour,
+      minute,
+    );
+  }
 
-    const androidDetails = AndroidNotificationDetails(
+  static const _title = 'Time to review';
+  static const _body = 'You have flashcards waiting in Decks.';
+
+  static const _details = NotificationDetails(
+    android: AndroidNotificationDetails(
       _channelId,
       'Review reminders',
       channelDescription: 'Daily flashcard review reminder',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
+    ),
+    iOS: DarwinNotificationDetails(),
+  );
+
+  /// Shows the reminder right now so the user can check it works.
+  /// False if notifications are unavailable or not allowed.
+  Future<bool> showTestReminder() async {
+    if (kIsWeb || !_initialized) return false;
+    if (!await requestPermission()) return false;
+    await _plugin.show(_notificationId, _title, _body, _details);
+    return true;
+  }
+
+  Future<void> _scheduleDaily(int hour, int minute) async {
+    await _plugin.cancel(_notificationId);
+
+    final scheduled = nextReminderTime(
+      tz.TZDateTime.now(tz.local),
+      hour,
+      minute,
     );
-    const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
 
     await _plugin.zonedSchedule(
       _notificationId,
-      'Time to review',
-      'You have flashcards waiting in Decks.',
+      _title,
+      _body,
       scheduled,
-      details,
+      _details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,

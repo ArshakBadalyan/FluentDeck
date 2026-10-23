@@ -228,18 +228,26 @@ async function updateNoteAndCards(strapi, userId, noteId, payload) {
   if (payload.cefrLevel !== undefined) data.cefrLevel = payload.cefrLevel || null;
   if (payload.topic !== undefined) data.topic = payload.topic || null;
 
+  // Validate/generate against the new type+fields BEFORE writing anything —
+  // e.g. switching to Cloze without a `{{c1::...}}` deletion in the text
+  // throws here. Persisting `data.noteType` first and validating after (as
+  // this used to) left the note stuck claiming the new type in the DB while
+  // its cards were never regenerated, since the throw happened after the
+  // write: the note and its cards silently fell out of sync with no way to
+  // recover except changing the type again.
+  const preview = { ...existing, ...data };
+  await generateCardsForNote(strapi, userId, {
+    noteType: preview.noteType ?? preview.note_type,
+    fields: preview.fields ?? {},
+    createReverse: preview.createReverse ?? preview.create_reverse ?? false,
+  });
+
   const note = await strapi.db.query('api::flashcard-note.flashcard-note').update({
     where: { id: noteId },
     data,
   });
 
   const merged = { ...existing, ...note, ...data };
-  await generateCardsForNote(strapi, userId, {
-    noteType: merged.noteType ?? merged.note_type,
-    fields: merged.fields ?? {},
-    createReverse: merged.createReverse ?? merged.create_reverse ?? false,
-  });
-
   const cards = await syncCardsForNote(strapi, userId, merged, {
     preserveReviewState: true,
     deckId: merged.deck?.id ?? merged.deck ?? payload.deckId ?? null,

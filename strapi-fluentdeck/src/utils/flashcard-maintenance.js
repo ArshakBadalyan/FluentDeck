@@ -2,6 +2,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const { ensureReviewState } = require('./flashcard-helpers');
+const { syncCardsForNote } = require('./flashcard-note-sync');
 
 function stripHtml(text) {
   if (!text) return '';
@@ -84,7 +86,18 @@ async function checkDatabaseIntegrity(strapi, userId) {
       issues.push({ kind: 'orphan_card', cardId: card.id, message: 'Card has no deck' });
     }
     if (!card.reviewState) {
-      issues.push({ kind: 'missing_review_state', cardId: card.id, message: 'Card missing review state' });
+      // Safe to auto-repair: a missing review-state row just means this card
+      // was never given SM-2 scheduling state (e.g. created by a path that
+      // skipped `ensureReviewState`). Creating the same default "new" state
+      // every other card gets can't lose data or change a real answer.
+      await ensureReviewState(strapi, userId, card.id);
+      fixed += 1;
+      issues.push({
+        kind: 'missing_review_state',
+        cardId: card.id,
+        message: 'Card missing review state',
+        fixed: true,
+      });
     }
     if (!card.flashcardNote && !card.flashcard_note) {
       issues.push({ kind: 'legacy_card', cardId: card.id, message: 'Card not linked to a note' });
@@ -98,6 +111,69 @@ async function checkDatabaseIntegrity(strapi, userId) {
     }
     if (!note.deck) {
       issues.push({ kind: 'note_without_deck', noteId: note.id, message: 'Note has no deck' });
+      continue;
+    }
+
+    // A note's cards can fall out of sync with its own noteType/fields —
+    // e.g. a type change made before a since-fixed bug left the note
+    // claiming a new type while its cards were never regenerated to match
+    // (a Cloze/Image Occlusion change that failed validation used to still
+    // get written). Re-deriving what this note's cards SHOULD be and
+    // comparing catches any note still stuck in that state, regardless of
+    // when or how it got there, instead of only catching it the moment it
+    // happens.
+    const before = noteCards
+      .map((c) => `${c.templateOrdinal}:${c.cardType}`)
+      .sort()
+      .join(',');
+    try {
+      const synced = await syncCardsForNote(strapi, userId, note, {
+        preserveReviewState: true,
+        deckId: note.deck?.id ?? note.deck,
+      });
+      const after = synced
+        .map((c) => `${c.templateOrdinal}:${c.cardType}`)
+        .sort()
+        .join(',');
+      if (before !== after) {
+        fixed += 1;
+        issues.push({
+          kind: 'note_cards_mismatch',
+          noteId: note.id,
+          message: 'Note type changed but its cards were never regenerated to match',
+          fixed: true,
+        });
+      }
+    } catch (err) {
+      // The note's current type genuinely can't be generated from its
+      // fields (e.g. Cloze with no {{c1::...}} deletion) — fall back to
+      // Basic, which only needs a non-empty Front/Back and so always
+      // succeeds, rather than leaving the note permanently stuck.
+      try {
+        await strapi.db.query('api::flashcard-note.flashcard-note').update({
+          where: { id: note.id },
+          data: { noteType: 'basic' },
+        });
+        await syncCardsForNote(
+          strapi,
+          userId,
+          { ...note, noteType: 'basic' },
+          { preserveReviewState: true, deckId: note.deck?.id ?? note.deck },
+        );
+        fixed += 1;
+        issues.push({
+          kind: 'note_cards_mismatch',
+          noteId: note.id,
+          message: `Note type was invalid for its content (${err.message}) — reset to Basic`,
+          fixed: true,
+        });
+      } catch (fallbackErr) {
+        issues.push({
+          kind: 'note_cards_mismatch',
+          noteId: note.id,
+          message: `Note type invalid for its content and could not be auto-fixed: ${fallbackErr.message}`,
+        });
+      }
     }
   }
 

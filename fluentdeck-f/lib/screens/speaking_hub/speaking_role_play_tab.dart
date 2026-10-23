@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 
@@ -14,9 +15,10 @@ import '../../ui_elements/modern_page_widgets.dart';
 import '../../utils/speaking_item_icons.dart';
 import '../../utils/speaking_premium_gate.dart';
 import '../../widgets/speaking_hub_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 /// Free users can keep this many custom role-plays before Premium is required.
-const int kFreeCustomRolePlayLimit = 3;
+const int kFreeCustomRolePlayLimit = 1;
 
 class SpeakingRolePlayTab extends StatefulWidget {
   const SpeakingRolePlayTab({super.key, required this.onStart});
@@ -48,6 +50,9 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
   int _customCount = 0;
   bool _isPremium = false;
 
+  /// Custom role-plays are never locked; extras past the free limit are hidden instead.
+  bool _isLocked(ConversationPromptModel s) => !s.isLocal && s.isPremiumLocked;
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +69,22 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
       final category = _filters[_filterIndex].$1;
       final catalog = await SpeakingContentService.instance
           .fetchRolePlayCatalog(category: category);
-      final scenarios = catalog.items;
+      final custom = await CustomRolePlayService.instance.fetchAll();
+      final status = await SubscriptionService.instance.fetchStatus();
+      // Free users only see their oldest custom role-plays, up to the limit.
+      final freeCustomIds =
+          (custom.map((p) => p.id).toList()..sort())
+              .take(kFreeCustomRolePlayLimit)
+              .toSet();
+      final scenarios =
+          catalog.items
+              .where(
+                (s) =>
+                    !s.isLocal ||
+                    status.isPremium ||
+                    freeCustomIds.contains(s.id),
+              )
+              .toList();
 
       final scores = <String, int?>{};
       for (final s in scenarios) {
@@ -72,20 +92,18 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
             await SpeakingScoresService.instance.getScore(s.referenceKey);
       }
 
-      final customCount = (await CustomRolePlayService.instance.fetchAll()).length;
-      final status = await SubscriptionService.instance.fetchStatus();
 
       if (!mounted) return;
       setState(() {
+        _customCount = custom.length;
+        _isPremium = status.isPremium;
         _scenarios = scenarios;
         _selected =
             scenarios.any((s) => s.referenceKey == _selected?.referenceKey)
                 ? _selected
-                : firstUnlocked(scenarios, (s) => s.isPremiumLocked) ??
+                : firstUnlocked(scenarios, _isLocked) ??
                     (scenarios.isNotEmpty ? scenarios.first : null);
         _scoreCache = scores;
-        _customCount = customCount;
-        _isPremium = status.isPremium;
         _loading = false;
       });
     } catch (e) {
@@ -100,7 +118,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
   Future<void> _deleteCustom(ConversationPromptModel scenario) async {
     if (!scenario.isLocal) return;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -156,7 +174,10 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
 
   Widget _buildList() {
     if (_loading) {
-      return const AppListSkeleton();
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const AppListSkeleton(),
+    );
     }
     if (_error != null) {
       return Center(
@@ -187,7 +208,9 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
       );
     }
 
-    return RefreshIndicator(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: RefreshIndicator(
       onRefresh: _load,
       color: AppColors.brandPrimary,
       child: ListView.separated(
@@ -197,7 +220,9 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
           final scenario = _scenarios[index];
-          return SpeakingSelectionCard(
+          return AppStaggeredFadeIn(
+                          index: index,
+                          child: SpeakingSelectionCard(
             title: scenario.displayTitle,
             subtitle: scenario.rolesSubtitle,
             icon: resolveSpeakingListIcon(
@@ -206,7 +231,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
             ),
             score: _scoreCache[scenario.referenceKey],
             selected: _selected?.referenceKey == scenario.referenceKey,
-            isPremiumLocked: !scenario.isLocal && scenario.isPremiumLocked,
+            isPremiumLocked: _isLocked(scenario),
             trailing:
                 scenario.isLocal
                     ? IconButton(
@@ -216,15 +241,17 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
                     )
                     : null,
             onTap: () {
-              if (!scenario.isLocal && scenario.isPremiumLocked) {
+              if (_isLocked(scenario)) {
                 showSpeakingPremiumSnackBar(context);
                 return;
               }
               setState(() => _selected = scenario);
             },
-          );
+          ),
+                        );
         },
       ),
+    ),
     );
   }
 
@@ -257,7 +284,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
             child: Text(
-              '$_customCount of $kFreeCustomRolePlayLimit free custom role-plays used',
+              '${_customCount.clamp(0, kFreeCustomRolePlayLimit)} of $kFreeCustomRolePlayLimit free custom role-play used',
               style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
             ),
           ),
@@ -265,10 +292,9 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
         Expanded(child: _buildList()),
         SpeakingStartButton(
           label: 'Start Role-Play',
-          enabled: _selected != null && (!_selected!.isPremiumLocked || _selected!.isLocal),
+          enabled: _selected != null && !_isLocked(_selected!),
           onPressed:
-              _selected == null ||
-                  (_selected!.isPremiumLocked && !_selected!.isLocal)
+              _selected == null || _isLocked(_selected!)
                   ? null
                   : () {
                     widget.onStart(
@@ -297,6 +323,48 @@ class _RolePlayDraft {
   final String situation;
 }
 
+/// Any letter in any script (Latin, Armenian, Cyrillic, Arabic, CJK, ...).
+final _letterPattern = RegExp(r'\p{L}', unicode: true);
+
+/// A word: two or more letters (combining marks allowed, e.g. Hindi, Thai).
+final _wordPattern = RegExp(r'\p{L}[\p{L}\p{M}]+', unicode: true);
+
+/// Scripts written without spaces between words, where word counts don't apply.
+final _noSpaceScriptPattern = RegExp(
+  r'[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}'
+  r'\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Myanmar}]',
+  unicode: true,
+);
+
+/// Rejects empty, too short/long, or junk input (e.g. "A", "aaaa", "!!!")
+/// in any language.
+String? _validateRolePlayText(
+  String value, {
+  required String field,
+  required int minLength,
+  required int maxLength,
+  int minWords = 1,
+}) {
+  if (value.isEmpty) return '$field is required';
+  final noSpaces = _noSpaceScriptPattern.hasMatch(value);
+  // One CJK/Thai character carries roughly a word, so short text is fine.
+  final min = noSpaces ? (minLength / 2).ceil() : minLength;
+  final length = value.runes.length;
+  if (length < min) return '$field must be at least $min characters';
+  if (length > maxLength) {
+    return '$field must be at most $maxLength characters';
+  }
+  final letters =
+      _letterPattern.allMatches(value.toLowerCase()).map((m) => m[0]).toList();
+  if (letters.length < min ~/ 2 || letters.toSet().length < 2) {
+    return 'Please use real words';
+  }
+  if (!noSpaces && _wordPattern.allMatches(value).length < minWords) {
+    return '$field needs at least $minWords words';
+  }
+  return null;
+}
+
 class _CreateRolePlaySheet extends StatefulWidget {
   const _CreateRolePlaySheet();
 
@@ -310,6 +378,8 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
   late final TextEditingController _tutorRoleController;
   late final TextEditingController _situationController;
   String? _titleError;
+  String? _userRoleError;
+  String? _tutorRoleError;
   String? _situationError;
 
   @override
@@ -332,19 +402,54 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
 
   void _save() {
     final title = _titleController.text.trim();
+    final userRole = _userRoleController.text.trim();
+    final tutorRole = _tutorRoleController.text.trim();
     final situation = _situationController.text.trim();
     setState(() {
-      _titleError = title.isEmpty ? 'Give your role-play a title' : null;
-      _situationError = situation.isEmpty ? 'Describe the situation' : null;
+      _titleError = _validateRolePlayText(
+        title,
+        field: 'Title',
+        minLength: 3,
+        maxLength: 60,
+      );
+      _userRoleError = _validateRolePlayText(
+        userRole,
+        field: 'My role',
+        minLength: 3,
+        maxLength: 40,
+      );
+      _tutorRoleError = _validateRolePlayText(
+        tutorRole,
+        field: "Tutor's role",
+        minLength: 3,
+        maxLength: 40,
+      );
+      if (_userRoleError == null &&
+          _tutorRoleError == null &&
+          userRole.toLowerCase() == tutorRole.toLowerCase()) {
+        _tutorRoleError = 'Must differ from your role';
+      }
+      _situationError = _validateRolePlayText(
+        situation,
+        field: 'Situation',
+        minLength: 20,
+        maxLength: 500,
+        minWords: 4,
+      );
     });
-    if (_titleError != null || _situationError != null) return;
+    if (_titleError != null ||
+        _userRoleError != null ||
+        _tutorRoleError != null ||
+        _situationError != null) {
+      return;
+    }
 
     Navigator.pop(
       context,
       _RolePlayDraft(
         title: title,
-        userRole: _userRoleController.text.trim(),
-        tutorRole: _tutorRoleController.text.trim(),
+        userRole: userRole,
+        tutorRole: tutorRole,
         situation: situation,
       ),
     );
@@ -425,6 +530,12 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
                         child: AppTextField(
                           controller: _userRoleController,
                           label: 'My role',
+                          errorText: _userRoleError,
+                          onChanged: (_) {
+                            if (_userRoleError != null) {
+                              setState(() => _userRoleError = null);
+                            }
+                          },
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -432,6 +543,12 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
                         child: AppTextField(
                           controller: _tutorRoleController,
                           label: "Tutor's role",
+                          errorText: _tutorRoleError,
+                          onChanged: (_) {
+                            if (_tutorRoleError != null) {
+                              setState(() => _tutorRoleError = null);
+                            }
+                          },
                         ),
                       ),
                     ],

@@ -1,35 +1,39 @@
-import 'dart:convert';
-
 import 'package:fluentdeck/models/card_style_preset.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluentdeck/services/api_service.dart';
+import 'package:fluentdeck/services/auth_service.dart';
 
-/// Persists card style (theme) choices for built-in note types per device.
+/// Per-account card style (theme) choices for built-in note types.
+///
+/// Stored on the user record server-side (not on-device) so it follows the
+/// account across devices, reinstalls, and web — a device-local store (e.g.
+/// SharedPreferences) would silently "reset" on every new install/browser
+/// origin, which looked like data loss but was really just never having
+/// been there for that device in the first place.
 class NoteTypeStyleStore {
   NoteTypeStyleStore._();
 
   static final NoteTypeStyleStore instance = NoteTypeStyleStore._();
 
-  static const _key = 'builtin_note_type_styles_v1';
-
   Future<Map<String, String>> loadAll() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key);
-    if (raw == null || raw.isEmpty) return const {};
     try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! Map) return const {};
-      return decoded.map((k, v) => MapEntry(k.toString(), v.toString()));
+      final data = await ApiService.get('flashcards/note-type-styles');
+      if (data is! Map) return <String, String>{};
+      final styles = data['styles'];
+      if (styles is! Map) return <String, String>{};
+      return styles.map((k, v) => MapEntry(k.toString(), v.toString()));
     } catch (_) {
-      return const {};
+      return <String, String>{};
     }
   }
 
   Future<void> save(String noteTypeId, String themeId) async {
-    final prefs = await SharedPreferences.getInstance();
     final all = await loadAll();
     all[noteTypeId] = themeId;
-    await prefs.setString(_key, jsonEncode(all));
+    final res = await AuthService.updateUser({'note_type_styles': all});
+    if (res['status'] != 'success') {
+      throw Exception(res['message'] ?? 'Could not save card style');
+    }
   }
 
   static List<NoteTypeModel> applyStyles(

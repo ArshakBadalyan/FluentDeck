@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
@@ -69,7 +70,7 @@ class PushPromptCoordinator {
     if (!context.mounted) return;
 
     final accepted =
-        await showDialog<bool>(
+        await showAppDialog<bool>(
           context: context,
           barrierDismissible: true,
           builder:

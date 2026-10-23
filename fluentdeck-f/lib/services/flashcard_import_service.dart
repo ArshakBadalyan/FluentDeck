@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:convert';
 
@@ -89,7 +90,7 @@ Future<void> showImportResultSnackBar(
   );
 
   if (result.errors.isNotEmpty && context.mounted) {
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.35),
       builder:

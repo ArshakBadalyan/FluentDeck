@@ -26,9 +26,12 @@ import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/utils/review_queue_order.dart';
+import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 import 'package:fluentdeck/utils/type_answer_utils.dart';
 import 'package:fluentdeck/widgets/image_occlusion_review.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:animations/animations.dart';
 
 class ReviewSessionScreen extends StatefulWidget {
   const ReviewSessionScreen({super.key, this.deckId});
@@ -52,6 +55,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   final Map<int, String> _cardTranslations = {};
   int? _translationVisibleFor;
   int? _translatingCardId;
+  bool _isPremium = SubscriptionService.instance.cachedStatus.isPremium;
   bool _submitting = false;
   bool _answerChecked = false;
   bool? _answerCorrect;
@@ -65,8 +69,18 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   Map<String, CardStylePreset> _themeByNoteTypeId = const {};
   final InterstitialAdManager _adManager = InterstitialAdManager();
 
-  CardStylePreset? _themeForCard(FlashcardModel card) =>
-      card.noteTypeId != null ? _themeByNoteTypeId[card.noteTypeId] : null;
+  CardStylePreset? _themeForCard(FlashcardModel card) {
+    if (card.noteTypeId == null) return null;
+    final preset = _themeByNoteTypeId[card.noteTypeId];
+    // 'classic' is the default every note type starts with until someone
+    // opens Card style and picks something else — treat it as "no style
+    // chosen" so an unconfigured note type follows the app's light/dark
+    // theme instead of always rendering a hardcoded white card face. A
+    // deliberately picked preset (Minimal/Playful/Ocean/Warm/Dark) still
+    // renders exactly as designed, same as before.
+    if (preset?.id == 'classic') return null;
+    return preset;
+  }
 
   @override
   void dispose() {
@@ -212,6 +226,9 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     if (!SubscriptionService.instance.cachedStatus.isPremium) {
       _adManager.load();
     }
+    SubscriptionService.instance.fetchStatus().then((status) {
+      if (mounted) setState(() => _isPremium = status.isPremium);
+    });
   }
 
   /// Free users see an interstitial after finishing a review session — a
@@ -692,6 +709,14 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
       return;
     }
     if (_savedTranslation(card) == null) {
+      if (!_isPremium) {
+        showPremiumUpgradeSnackBar(
+          context,
+          'Generating translations is a Premium feature. '
+          'You can add a translation yourself when editing the card.',
+        );
+        return;
+      }
       setState(() => _translatingCardId = card.id);
       final translated = await NoteService.instance.translateWithGlossary(
         word: stripHtml(_frontHtml(card)),
@@ -756,7 +781,9 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                 ? 'Hide translation'
                 : translation != null
                 ? 'Show translation'
-                : 'Translate to $languageName',
+                : _isPremium
+                ? 'Translate to $languageName'
+                : 'Translate to $languageName · Premium',
           ),
           style: TextButton.styleFrom(
             foregroundColor: AppColors.brandPrimary,
@@ -872,6 +899,26 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
+        // Session progress eases forward as each card is answered.
+        bottom: _queue.isEmpty || _loading
+            ? null
+            : PreferredSize(
+                preferredSize: const Size.fromHeight(3),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(
+                    end: (_index / _queue.length).clamp(0.0, 1.0),
+                  ),
+                  duration: AppMotion.duration(context, AppMotion.normal),
+                  curve: AppMotion.standardCurve,
+                  builder: (context, value, _) => LinearProgressIndicator(
+                    value: value,
+                    minHeight: 3,
+                    // White on the dark brand bar (yellow is for rewards only).
+                    backgroundColor: Colors.white.withValues(alpha: 0.18),
+                    color: Colors.white,
+                  ),
+                ),
+              ),
         // Same dark brand bar as the main app header; white text and icons.
         backgroundColor: AppColors.brandPrimaryDeep,
         surfaceTintColor: Colors.transparent,
@@ -939,7 +986,10 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
             tooltip: 'Review settings',
             onPressed: () async {
               await Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const DecksSettingsScreen()),
+                AppSharedAxisRoute<void>(
+                  transitionType: SharedAxisTransitionType.scaled,
+                  page: const DecksSettingsScreen(),
+                ),
               );
               final settings = await ReviewSettingsStore.instance.load();
               if (mounted) {
@@ -1243,13 +1293,35 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                _startedEmpty ? Icons.inbox_outlined : Icons.check_circle,
-                size: 64,
-                color: _startedEmpty
-                    ? AppPageColors.subtitleOf(context)
-                    : AppColors.greenCorrect,
-              ),
+              // "Session complete" pops in (spring scale) with a confetti
+              // burst; an empty deck just shows its icon.
+              if (_startedEmpty)
+                Icon(
+                  Icons.inbox_outlined,
+                  size: 64,
+                  color: AppPageColors.subtitleOf(context),
+                )
+              else
+                AppConfettiBurst(
+                  colors: const [
+                    AppColors.brandPrimary,
+                    AppColors.primaryYellow,
+                    AppColors.greenCorrect,
+                    AppColors.voice,
+                  ],
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.4, end: 1),
+                    duration: AppMotion.duration(context, AppMotion.slow),
+                    curve: AppMotion.spring,
+                    builder: (context, scale, child) =>
+                        Transform.scale(scale: scale, child: child),
+                    child: const Icon(
+                      Icons.check_circle,
+                      size: 64,
+                      color: AppColors.greenCorrect,
+                    ),
+                  ),
+                ),
               const SizedBox(height: 16),
               Text(
                 _startedEmpty ? 'No cards due' : 'Session complete',
@@ -1267,11 +1339,13 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppPageColors.subtitleOf(context)),
               ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Done'),
-              ),
+              if (!_startedEmpty) ...[
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Done'),
+                ),
+              ],
             ],
           ),
         ),
@@ -1383,7 +1457,12 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
-                                      BasicHtmlText(
+                                      AnimatedSwitcher(
+                                        duration: AppMotion.duration(context, const Duration(milliseconds: 150)),
+                                        switchInCurve: AppMotion.decelerateCurve,
+                                        switchOutCurve: AppMotion.accelerateCurve,
+                                        child: BasicHtmlText(
+                                        key: ValueKey(_revealed),
                                         html: _revealed ? _backHtml(card) : _frontHtml(card),
                                         style: TextStyle(
                                           fontSize: (cardTheme?.fontSize ?? 22) * textScale,
@@ -1393,6 +1472,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                                           height: 1.35,
                                         ),
                                         textAlign: TextAlign.center,
+                                      ),
                                       ),
                                       if (_revealed && _answerParts(card).example.isNotEmpty) ...[
                                         const SizedBox(height: 10),
@@ -1490,39 +1570,59 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
           ),
           if (_revealed) ...[
             const SizedBox(height: 12),
-            _ratingButton(
+            AppFadeIn(
+              // Quick (≤240 ms) and never blocks taps or shortcuts.
+              delay: Duration(milliseconds: 0),
+              duration: AppMotion.fast,
+              child: _ratingButton(
               _settings.labelAgain,
               AppColors.redWrong,
               'again',
               preview('again'),
               icon: Icons.replay_rounded,
               lightText: true,
+            )
             ),
             const SizedBox(height: 8),
             if (_settings.showHardButton) ...[
-              _ratingButton(
+              AppFadeIn(
+              // Quick (≤240 ms) and never blocks taps or shortcuts.
+              delay: Duration(milliseconds: 20),
+              duration: AppMotion.fast,
+              child: _ratingButton(
                 _settings.labelHard,
                 AppColors.orangeHard,
                 'hard',
                 preview('hard'),
                 icon: Icons.trending_down_rounded,
-              ),
+              )
+            ),
               const SizedBox(height: 8),
             ],
-            _ratingButton(
+            AppFadeIn(
+              // Quick (≤240 ms) and never blocks taps or shortcuts.
+              delay: Duration(milliseconds: 40),
+              duration: AppMotion.fast,
+              child: _ratingButton(
               _settings.labelGood,
               AppColors.primaryYellow,
               'good',
               preview('good'),
               icon: Icons.check_rounded,
+            )
             ),
             const SizedBox(height: 8),
-            _ratingButton(
+            AppFadeIn(
+              // Quick (≤240 ms) and never blocks taps or shortcuts.
+              delay: Duration(milliseconds: 60),
+              duration: AppMotion.fast,
+              child: _ratingButton(
               _settings.labelEasy,
               AppColors.greenCorrect,
               'easy',
               preview('easy'),
               icon: Icons.bolt_rounded,
+            )
             ),
           ],
         ],

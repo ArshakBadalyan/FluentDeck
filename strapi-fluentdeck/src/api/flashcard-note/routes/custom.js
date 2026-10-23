@@ -6,6 +6,11 @@ module.exports = {
       handler: 'flashcard-note.listNoteTypes',
     },
     {
+      method: 'GET',
+      path: '/flashcards/note-type-styles',
+      handler: 'flashcard-note.getNoteTypeStyles',
+    },
+    {
       method: 'POST',
       path: '/flashcards/notes',
       handler: 'flashcard-note.createNote',

@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
@@ -231,7 +232,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
             ? 'Delete filtered deck "${widget.deck.name}"? Cards stay in their original decks.'
             : 'Delete "${widget.deck.name}" and all ${widget.deck.total} cards in it? This cannot be undone.';
 
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(

@@ -12,6 +12,8 @@ const {
   createMyNote,
   formatMyNote,
   plainText,
+  getOrCreateDefaultDeck,
+  deckSlugForSource,
 } = require('../../../utils/flashcard-auto-create');
 const { normalizePracticeLanguage } = require('../../../utils/practice-languages');
 const {
@@ -168,10 +170,19 @@ module.exports = ({ strapi }) => ({
     const existing = await findMyNote(strapi, userId, noteId);
     if (!existing) return ctx.notFound('Note not found');
 
-    const { word, definition, exampleSentence, translation, tags, languageCode, cefrLevel, topic } =
+    const { word, definition, exampleSentence, translation, tags, languageCode, cefrLevel, topic, source } =
       ctx.request.body ?? {};
 
     const payload = {};
+    // Moves the note (and its card) between the two My Notes default decks —
+    // the "Deck" field on Edit note sends this only when the user actually
+    // changed it, so an edit that never touches Deck can't reclassify a note
+    // that came from somewhere else (a word list, an actual flashcard deck).
+    if (source === 'speaking' || source === 'manual') {
+      const deck = await getOrCreateDefaultDeck(strapi, userId, deckSlugForSource(source));
+      payload.deckId = deck.id;
+      payload.source = source;
+    }
     const fields = { ...(existing.fields ?? {}) };
     if (BASIC_NOTE_TYPES.has(existing.noteType)) {
       if (word != null && String(word).trim()) fields.Front = String(word).trim();

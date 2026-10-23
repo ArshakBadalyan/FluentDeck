@@ -119,20 +119,20 @@ class _RegisterFormState extends State<RegisterForm> {
       children: [
         TextField(
           controller: _nicknameController,
-          decoration: authInput(context.tr('inputs.nickname')),
+          decoration: authInput(context, context.tr('inputs.nickname')),
         ),
         const SizedBox(height: 20),
         TextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           autocorrect: false,
-          decoration: authInput(context.tr('inputs.E-mail-address')),
+          decoration: authInput(context, context.tr('inputs.E-mail-address')),
         ),
         const SizedBox(height: 20),
         TextField(
           controller: _passwordController,
           obscureText: _obscure,
-          decoration: authInput(context.tr('inputs.password')).copyWith(
+          decoration: authInput(context, context.tr('inputs.password')).copyWith(
             suffixIcon: IconButton(
               icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
               tooltip: _obscure ? 'Show password' : 'Hide password',

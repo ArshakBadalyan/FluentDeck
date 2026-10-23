@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../app_colors.dart';
+import 'app_motion.dart';
 import '../services/analytics_service.dart';
 import '../services/click_tracking.dart';
 
@@ -44,33 +45,48 @@ class PrimaryButton extends StatelessWidget {
 
     final tallLabel = (maxLines ?? 1) > 1;
 
-    return SizedBox(
+    return AppPressScale(
+      enabled: enabled && !isLoading,
+      child: SizedBox(
       width: double.infinity,
       height: tallLabel ? 68 : 52,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: enabled ? baseColor : baseColor.withOpacity(0.5),
           foregroundColor: Colors.white,
+          // Without these, ElevatedButton swaps in its own grey
+          // disabled-state colors once onPressed is null below, instead of
+          // keeping this dimmed brand color.
+          disabledBackgroundColor: baseColor.withOpacity(0.5),
+          disabledForegroundColor: Colors.white,
           elevation: 0,
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         ),
-        onPressed: () {
-          if (!enabled) return;
-          final id = analyticsId;
-          if (id != null && id.isNotEmpty) {
-            ClickTracker.recordNamedTap();
-            unawaited(
-              AnalyticsService.instance.logTap(targetId: id),
-            );
-          }
-          onPressed?.call();
-        },
+        // `enabled: false` must make this a truly disabled button (no tap
+        // target, no ripple) — not just a dimmed one a tap still reaches.
+        onPressed: enabled
+            ? () {
+                final id = analyticsId;
+                if (id != null && id.isNotEmpty) {
+                  ClickTracker.recordNamedTap();
+                  unawaited(
+                    AnalyticsService.instance.logTap(targetId: id),
+                  );
+                }
+                onPressed?.call();
+              }
+            : null,
         child: Stack(
           children: [
             Center(
-              child: isLoading
+              child: AnimatedSwitcher(
+                duration: AppMotion.duration(context, AppMotion.fast),
+                switchInCurve: AppMotion.decelerateCurve,
+                switchOutCurve: AppMotion.accelerateCurve,
+                child: isLoading
                   ? const SizedBox(
+                key: ValueKey('loading'),
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
@@ -79,6 +95,7 @@ class PrimaryButton extends StatelessWidget {
                 ),
               )
                   : Padding(
+                key: const ValueKey('label'),
                 padding: const EdgeInsets.symmetric(horizontal: 44),
                 child: Text(
                   text,
@@ -90,6 +107,7 @@ class PrimaryButton extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+              ),
               ),
             ),
             Positioned(
@@ -110,6 +128,7 @@ class PrimaryButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

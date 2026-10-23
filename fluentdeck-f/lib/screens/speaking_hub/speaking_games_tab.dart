@@ -11,6 +11,7 @@ import '../../utils/speaking_premium_gate.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../widgets/speaking_hub_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class SpeakingGamesTab extends StatefulWidget {
   const SpeakingGamesTab({super.key, required this.onStart});
@@ -144,7 +145,10 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
 
   Widget _buildGrid() {
     if (_loading) {
-      return const AppGridSkeleton(count: 9, crossAxisCount: 3, childAspectRatio: 0.85);
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const AppGridSkeleton(count: 9, crossAxisCount: 3, childAspectRatio: 0.85),
+    );
     }
     if (_error != null) {
       return Center(
@@ -173,7 +177,9 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
       );
     }
 
-    return RefreshIndicator(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: RefreshIndicator(
       onRefresh: _load,
       color: AppColors.brandPrimary,
       child: GridView.builder(
@@ -210,6 +216,7 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
           );
         },
       ),
+    ),
     );
   }
 

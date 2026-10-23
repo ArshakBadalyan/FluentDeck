@@ -1,4 +1,6 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_achievements_navigation.dart';
@@ -19,6 +21,7 @@ import '../../services/subscription_service.dart';
 import '../../ui_elements/dialogs/account_info_save_dialog.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/primary_button.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class ProfileAccountTab extends StatefulWidget {
   const ProfileAccountTab({super.key});
@@ -39,6 +42,22 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   AchievementSnapshot? _achievementSnapshot;
   SubscriptionStatus _subscriptionStatus = SubscriptionStatus.none;
   StudySettingsModel? _studySettings;
+  /// Field values as last loaded/saved; Save stays disabled until one differs.
+  List<String> _savedValues = const [];
+
+  List<String> get _currentValues => [
+    emailCtrl.text.trim(),
+    nameCtrl.text.trim(),
+    surnameCtrl.text.trim(),
+    nicknameCtrl.text.trim(),
+  ];
+
+  bool get _hasChanges => !listEquals(_currentValues, _savedValues);
+
+  void _onFieldChanged(String _) {
+    setState(() {});
+    UnsavedChangesService().hasUnsavedChanges = _hasChanges;
+  }
 
   @override
   void initState() {
@@ -83,6 +102,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
       surnameCtrl.text = (u['surname'] ?? '').toString();
       nicknameCtrl.text = (u['username'] ?? '').toString();
     }
+    _savedValues = _currentValues;
 
     if (!mounted) return;
     setState(() {
@@ -106,6 +126,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
 
   Future<bool> _saveProfile({bool showSuccessDialog = true}) async {
     if (_saving || _processing) return false;
+    if (!_hasChanges) return true;
 
     setState(() => _saving = true);
 
@@ -122,10 +143,11 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
     setState(() => _saving = false);
 
     if (res['status'] == 'success') {
+      setState(() => _savedValues = _currentValues);
       UnsavedChangesService().hasUnsavedChanges = false;
       if (!mounted) return true;
       if (showSuccessDialog) {
-        showDialog(
+        showAppDialog(
           context: context,
           barrierDismissible: true,
           builder: (_) => const AccountInfoSaveDialog(),
@@ -141,7 +163,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
         SnackBar(content: Text(message)),
       );
     } else {
-      showDialog(
+      showAppDialog(
         context: context,
         barrierDismissible: true,
         builder: (_) => const AccountErrorInfoDialog(),
@@ -153,12 +175,17 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const ProfileAccountSkeleton();
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const ProfileAccountSkeleton(),
+    );
     }
 
     final disableInputs = _processing;
 
-    return PopScope(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: PopScope(
       canPop: !UnsavedChangesService().hasUnsavedChanges,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
@@ -250,28 +277,28 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                         label: context.tr('inputs.E-mail-address'),
                         enabled: !disableInputs,
                         keyboardType: TextInputType.emailAddress,
-                        onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
+                        onChanged: _onFieldChanged,
                       ),
                       const SizedBox(height: 14),
                       AppTextField(
                         controller: nameCtrl,
                         label: context.tr('inputs.name'),
                         enabled: !disableInputs,
-                        onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
+                        onChanged: _onFieldChanged,
                       ),
                       const SizedBox(height: 14),
                       AppTextField(
                         controller: surnameCtrl,
                         label: context.tr('inputs.surname'),
                         enabled: !disableInputs,
-                        onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
+                        onChanged: _onFieldChanged,
                       ),
                       const SizedBox(height: 14),
                       AppTextField(
                         controller: nicknameCtrl,
                         label: context.tr('inputs.nickname'),
                         enabled: !disableInputs,
-                        onChanged: (_) => UnsavedChangesService().hasUnsavedChanges = true,
+                        onChanged: _onFieldChanged,
                       ),
                     ],
                   ),
@@ -282,13 +309,14 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                     _saving
                         ? '${context.tr('buttons.save').toUpperCase()}...'
                         : context.tr('buttons.save').toUpperCase(),
-                enabled: !_saving && !_processing,
+                enabled: !_saving && !_processing && _hasChanges,
                 onPressed: () => _saveProfile(),
               ),
             ],
           ),
         ),
       ),
+    ),
     );
   }
 }

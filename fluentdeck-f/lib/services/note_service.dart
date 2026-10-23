@@ -68,6 +68,7 @@ class NoteService {
     String? languageCode,
     String? cefrLevel,
     String? topic,
+    String source = 'manual',
   }) async {
     final data = await ApiService.post('notes', {
       'word': word,
@@ -76,7 +77,7 @@ class NoteService {
       if (translation != null && translation.trim().isNotEmpty)
         'translation': translation.trim(),
       'tags': tags ?? [],
-      'source': 'manual',
+      'source': source,
       if (languageCode != null && languageCode.isNotEmpty)
         'languageCode': languageCode,
       if (cefrLevel != null && cefrLevel.isNotEmpty) 'cefrLevel': cefrLevel,
@@ -258,8 +259,12 @@ class NoteService {
     String? topic,
     bool clearCefrLevel = false,
     bool clearTopic = false,
+    // Moves the note to "Saved words" ('manual') or "From speaking"
+    // ('speaking'); omit to leave its deck as-is.
+    String? source,
   }) async {
     final body = <String, dynamic>{};
+    if (source != null) body['source'] = source;
     if (word != null) body['word'] = word;
     if (definition != null) body['definition'] = definition;
     if (exampleSentence != null) body['exampleSentence'] = exampleSentence;

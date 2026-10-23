@@ -4,10 +4,12 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/deck_detail_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/deck_edit_sheet.dart';
+import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dart';
+import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 /// Deck overview — opened by tapping deck name or count buttons.
 class DeckOverviewScreen extends StatefulWidget {
@@ -25,12 +27,67 @@ class DeckOverviewScreen extends StatefulWidget {
 }
 
 class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
+  late FlashcardDeckModel _deck = widget.deck;
+  // True once this screen's counts have diverged from what the caller (the
+  // Decks list) was showing when it opened this screen — tells the caller
+  // on the way back whether it needs to reload too, same as the explicit
+  // `Navigator.pop(context, true)` already used after add/view-all-cards.
+  bool _changed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // The deck counts passed in may already be stale by the time this
+    // screen opens (e.g. reviews done elsewhere since the caller last
+    // fetched its deck list) — refresh once up front rather than only
+    // after this screen's own actions change something.
+    _refreshDeck();
+  }
+
+  /// Re-fetches this deck from the server so counts reflect reviews/edits
+  /// made on a screen pushed from here (study session, card browser) —
+  /// those write straight to the server, but this screen was handed a
+  /// snapshot at construction time and never saw the update on its own.
+  Future<void> _refreshDeck() async {
+    try {
+      final decks = await FlashcardService.instance.fetchDecks();
+      FlashcardDeckModel? match;
+      for (final d in decks) {
+        if (d.id == _deck.id) {
+          match = d;
+          break;
+        }
+      }
+      final refreshed = match;
+      if (refreshed != null && mounted) {
+        if (refreshed.total != _deck.total ||
+            refreshed.newCount != _deck.newCount ||
+            refreshed.learningCount != _deck.learningCount ||
+            refreshed.reviewDueCount != _deck.reviewDueCount) {
+          _changed = true;
+        }
+        setState(() => _deck = refreshed);
+      }
+    } catch (_) {
+      // Offline or request failed — keep showing the last known counts
+      // rather than erroring out of the whole screen over a refresh.
+    }
+  }
+
   Future<void> _editDeck(BuildContext context) async {
-    final saved = await showDeckEditSheet(
-      context,
-      deck: widget.deck,
-      allDecks: widget.allDecks,
-    );
+    final saved =
+        _deck.isFiltered
+            ? await showFilteredDeckDialog(
+                  context,
+                  decks: widget.allDecks,
+                  existing: _deck,
+                ) !=
+                null
+            : await showDeckEditSheet(
+              context,
+              deck: _deck,
+              allDecks: widget.allDecks,
+            );
     if (saved == true && context.mounted) {
       Navigator.pop(context, true);
     }
@@ -38,8 +95,14 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final deck = widget.deck;
-    final totalCards = deck.newCount + deck.learningCount + deck.reviewDueCount;
+    final deck = _deck;
+    // `deck.total` is every card in the deck (backend `deckStats.total`,
+    // never affected by review state); new/learning/review only counts
+    // cards actually available for study, so a deck of only
+    // suspended/buried cards previously showed "0 cards" / "No cards in
+    // this deck yet" here even though the Card browser correctly listed
+    // them — summing just the active buckets undercounted it.
+    final totalCards = deck.total;
 
     return AppPageBackground(
       child: Scaffold(
@@ -51,6 +114,10 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
           shadowColor: Colors.black.withValues(alpha: 0.35),
           scrolledUnderElevation: 8,
           surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context, _changed),
+          ),
           title: Row(
             children: [
               if (deck.isFiltered) ...[
@@ -69,12 +136,11 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
             ],
           ),
           actions: [
-            if (!deck.isFiltered)
-              IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: 'Edit deck',
-                onPressed: () => _editDeck(context),
-              ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit deck',
+              onPressed: () => _editDeck(context),
+            ),
           ],
         ),
         body: ListView(
@@ -84,7 +150,7 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  _filterDescription(deck.filterQuery!),
+                  _filterDescription(deck.filterQuery!, widget.allDecks),
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ),
@@ -107,12 +173,13 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                     subtitle: deck.reviewDueCount + deck.newCount + deck.learningCount > 0
                         ? 'Review cards due today'
                         : 'No cards due right now',
-                    onTap: () {
-                      Navigator.of(context).push(
+                    onTap: () async {
+                      await Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => ReviewSessionScreen(deckId: deck.id),
                         ),
                       );
+                      _refreshDeck();
                     },
                   ),
                   if (!deck.isFiltered) ...[
@@ -143,32 +210,17 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (!deck.isFiltered)
-                    AppSheetActionTile(
-                      icon: Icons.list_alt_rounded,
-                      title: 'View all cards',
-                      subtitle: 'Scroll through every card in this deck',
-                      onTap: () async {
-                        final changed = await Navigator.of(context).push<bool>(
-                          MaterialPageRoute<bool>(
-                            builder: (_) => DeckDetailScreen(deckId: deck.id),
-                          ),
-                        );
-                        if (changed == true && context.mounted) {
-                          Navigator.pop(context, true);
-                        }
-                      },
-                    ),
                   AppSheetActionTile(
                     icon: Icons.manage_search_rounded,
                     title: 'Browse cards',
                     subtitle: 'Search, filter, and edit cards in a table',
-                    onTap: () {
-                      Navigator.of(context).push(
+                    onTap: () async {
+                      await Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => CardBrowserScreen(deckId: deck.id),
                         ),
                       );
+                      _refreshDeck();
                     },
                   ),
                 ],
@@ -246,7 +298,9 @@ class _DeckHeroCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
-                  'No cards in this deck yet.',
+                  totalCards == 0
+                      ? 'No cards in this deck yet.'
+                      : 'All cards are suspended or buried.',
                   style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.78)),
                 ),
               ),
@@ -281,7 +335,9 @@ class _DeckCountBarChart extends StatelessWidget {
         values.map((e) => e.count).fold<int>(0, (a, b) => a > b ? a : b).toDouble();
     final chartMaxY = maxY < 1 ? 1.0 : maxY * 1.15;
 
-    return BarChart(
+    return AppChartReveal(
+      style: AppChartRevealStyle.up,
+      child: BarChart(
       BarChartData(
         maxY: chartMaxY,
         alignment: BarChartAlignment.spaceAround,
@@ -346,6 +402,7 @@ class _DeckCountBarChart extends StatelessWidget {
             ),
         ],
       ),
+    ),
     );
   }
 }
@@ -421,16 +478,41 @@ class _PrimaryDeckAction extends StatelessWidget {
   }
 }
 
-String _filterDescription(Map<String, dynamic> filter) {
+String _filterDescription(
+  Map<String, dynamic> filter,
+  List<FlashcardDeckModel> decks,
+) {
   final parts = <String>[];
   final q = filter['q']?.toString();
   if (q != null && q.isNotEmpty) parts.add('text "$q"');
   final tag = filter['tag']?.toString();
   if (tag != null && tag.isNotEmpty) parts.add('tag "$tag"');
-  final state = filter['state']?.toString();
-  if (state != null && state.isNotEmpty) parts.add('state $state');
-  if (filter['sourceDeckId'] != null) {
-    parts.add('deck #${filter['sourceDeckId']}');
+  // state / flag / cefrLevel may be a list (multi-select) or a single value.
+  List<String> values(Object? raw) => [
+    for (final v in raw is List ? raw : [if (raw != null) raw])
+      if ('$v'.isNotEmpty && '$v' != 'all') '$v',
+  ];
+  final states = values(filter['state']);
+  if (states.isNotEmpty) parts.add('state ${states.join(', ')}');
+  final levels = values(filter['cefrLevel']);
+  if (levels.isNotEmpty) {
+    parts.add('level ${levels.map((l) => l == 'none' ? 'no level' : l).join(', ')}');
+  }
+  final flags = values(filter['flag']);
+  if (flags.isNotEmpty) {
+    parts.add(flags.map((f) => f == 'none' ? 'no flag' : 'flag $f').join(', '));
+  }
+  final many = filter['sourceDeckIds'];
+  final ids = [
+    if (filter['sourceDeckId'] != null) filter['sourceDeckId'],
+    if (many is List) ...many,
+  ];
+  if (ids.isNotEmpty) {
+    final names = [
+      for (final id in ids)
+        decks.where((d) => '${d.id}' == '$id').firstOrNull?.name ?? '#$id',
+    ];
+    parts.add('${names.length == 1 ? 'deck' : 'decks'} ${names.join(', ')}');
   }
   return parts.isEmpty ? 'All cards' : parts.join(' · ');
 }

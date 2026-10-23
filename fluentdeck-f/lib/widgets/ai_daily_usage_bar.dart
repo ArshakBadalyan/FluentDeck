@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/services/conversation_limit_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/utils/practice_time_format.dart';
 
 /// Compact daily AI speaking meter for the conversation screen.
 class AiDailyUsageBar extends StatelessWidget {
@@ -97,7 +98,7 @@ class AiDailyUsageBar extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${usage.usedToday}/${usage.dailyLimit}',
+                    formatPracticeTime(usage.usedToday),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
@@ -157,21 +158,8 @@ class AiDailyUsageBar extends StatelessWidget {
 
   String _subtitle({required bool exhausted, required int remaining}) {
     if (exhausted) {
-      return 'Daily limit reached · resets at midnight';
+      return 'Daily practice time used · resets at midnight';
     }
-    if (!usage.isPremium || usage.premiumDailyLimit <= 0) {
-      return '$remaining of ${usage.dailyLimit} turns left';
-    }
-
-    final freeLeft =
-        (usage.freeDailyLimit - usage.freeUsedToday).clamp(0, usage.freeDailyLimit);
-    final premiumLeft =
-        (usage.premiumDailyLimit - usage.premiumUsedToday)
-            .clamp(0, usage.premiumDailyLimit);
-
-    if (usage.phase == 'free' || freeLeft > 0) {
-      return 'Free $freeLeft/${usage.freeDailyLimit} first · then ${usage.premiumDailyLimit} premium';
-    }
-    return 'Premium $premiumLeft/${usage.premiumDailyLimit} left · $remaining of ${usage.dailyLimit} total';
+    return '${formatPracticeTime(remaining)} left of ${formatPracticeTime(usage.dailyLimit)}';
   }
 }

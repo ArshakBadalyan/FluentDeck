@@ -43,10 +43,13 @@ class _ProfileAchievementsPreviewState extends State<ProfileAchievementsPreview>
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Padding(
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
         child: LinearProgressIndicator(minHeight: 2),
-      );
+      ),
+    );
     }
 
     final snapshot = _snapshot;
@@ -61,7 +64,9 @@ class _ProfileAchievementsPreviewState extends State<ProfileAchievementsPreview>
     final total = snapshot.achievements.length;
     final preview = snapshot.achievements.take(4).toList();
 
-    return Column(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
@@ -104,6 +109,7 @@ class _ProfileAchievementsPreviewState extends State<ProfileAchievementsPreview>
           ],
         ),
       ],
+    ),
     );
   }
 }

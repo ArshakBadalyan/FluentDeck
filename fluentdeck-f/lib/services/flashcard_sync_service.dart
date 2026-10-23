@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/data/flashcard_offline_store.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
@@ -98,6 +99,14 @@ class FlashcardSyncService extends ChangeNotifier {
     await syncNow();
   }
 
+  /// On sign-out: the next account must run its own [syncOnAppStart].
+  void resetForSignOut() {
+    _appStartSyncDone = false;
+    _status = FlashcardSyncStatus.synced;
+    _log = const FlashcardSyncLog();
+    notifyListeners();
+  }
+
   void markPending() {
     _status = FlashcardSyncStatus.pending;
     notifyListeners();
@@ -108,7 +117,7 @@ class FlashcardSyncService extends ChangeNotifier {
     required int skipped,
   }) async {
     if (skipped <= 0 || !context.mounted) return;
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder:
           (ctx) => AlertDialog(

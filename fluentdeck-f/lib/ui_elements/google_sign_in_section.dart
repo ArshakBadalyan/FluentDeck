@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 import '../services/google_auth_service.dart';
 import '../services/audio_service.dart';
@@ -126,8 +127,8 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
                 ? _showWebUnavailableMessage
                 : _handleGoogleSignIn,
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.black87,
-          side: const BorderSide(color: Colors.black26),
+          foregroundColor: AppPageColors.textPrimaryOf(context),
+          side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(5),
           ),

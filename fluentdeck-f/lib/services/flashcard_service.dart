@@ -248,6 +248,7 @@ class FlashcardService {
     int? parentDeckId,
     bool clearParent = false,
     Map<String, dynamic>? deckOptions,
+    Map<String, dynamic>? filterQuery,
   }) async {
     final body = <String, dynamic>{};
     if (name != null) body['name'] = name;
@@ -258,6 +259,7 @@ class FlashcardService {
       body['parentDeckId'] = parentDeckId;
     }
     if (deckOptions != null) body['deckOptions'] = deckOptions;
+    if (filterQuery != null) body['filterQuery'] = filterQuery;
     final data = await ApiService.put('flashcards/decks/$deckId', body);
     if (data is! Map) return null;
     final err = _extractError(data);
@@ -586,11 +588,11 @@ class FlashcardService {
     int? deckId,
     String? query,
     String? tag,
-    String? state,
+    Set<String> states = const {},
     bool? marked,
-    int? flag,
+    Set<int> flags = const {},
     String? languageCode,
-    String? cefrLevel,
+    Set<String> cefrLevels = const {},
   }) async {
     final params = <String>[];
     if (deckId != null) params.add('deckId=$deckId');
@@ -600,16 +602,17 @@ class FlashcardService {
     if (tag != null && tag.trim().isNotEmpty) {
       params.add('tag=${Uri.encodeComponent(tag.trim())}');
     }
-    if (state != null && state.isNotEmpty) params.add('state=$state');
+    // Multi-select filters go as comma-separated lists; a card matches any value.
+    if (states.isNotEmpty) params.add('state=${states.join(',')}');
     if (marked != null) params.add('marked=$marked');
-    if (flag != null) {
-      params.add(flag == 0 ? 'flag=none' : 'flag=$flag');
+    if (flags.isNotEmpty) {
+      params.add('flag=${flags.map((f) => f == 0 ? 'none' : '$f').join(',')}');
     }
     if (languageCode != null && languageCode.isNotEmpty && languageCode != 'all') {
       params.add('languageCode=${Uri.encodeComponent(languageCode)}');
     }
-    if (cefrLevel != null && cefrLevel.isNotEmpty && cefrLevel != 'all') {
-      params.add('cefrLevel=${Uri.encodeComponent(cefrLevel)}');
+    if (cefrLevels.isNotEmpty) {
+      params.add('cefrLevel=${Uri.encodeComponent(cefrLevels.join(','))}');
     }
 
     final qs = params.isEmpty ? '' : '?${params.join('&')}';

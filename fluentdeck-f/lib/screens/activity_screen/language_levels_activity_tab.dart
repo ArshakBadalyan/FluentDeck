@@ -6,6 +6,7 @@ import 'package:fluentdeck/models/language_levels_snapshot.dart';
 import 'package:fluentdeck/services/language_levels_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 /// Activity tab: current learning language, AI tutor level, analytics estimate, history.
 class LanguageLevelsActivityTab extends StatefulWidget {
@@ -53,7 +54,10 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const ActivityScreenSkeleton();
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const ActivityScreenSkeleton(),
+    );
     }
 
     if (_error != null) {
@@ -84,7 +88,9 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
     final service = LanguageLevelsService.instance;
     final currentLabel = service.languageLabel(snapshot.practiceLanguage);
 
-    return AppPageBackground(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: AppPageBackground(
       child: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.brandPrimary,
@@ -185,6 +191,7 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -652,7 +659,9 @@ class _LevelProgressionChart extends StatelessWidget {
         .toList();
     final labelEvery = (points.length / 4).ceil().clamp(1, points.length);
 
-    return LineChart(
+    return AppChartReveal(
+      style: AppChartRevealStyle.right,
+      child: LineChart(
       LineChartData(
         minX: 0,
         maxX: (points.length - 1).toDouble(),
@@ -764,6 +773,7 @@ class _LevelProgressionChart extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

@@ -93,9 +93,11 @@ class FlashcardMaintenanceService {
     final details = <String>[];
 
     if (db is Map) {
+      final fixed = db['fixed'] as int? ?? 0;
       details.add(
         'Database: ${db['cards']} cards, ${db['notes']} notes, ${db['decks']} decks — '
-        '${db['issueCount'] ?? 0} issue(s)',
+        '${db['issueCount'] ?? 0} issue(s)'
+        '${fixed > 0 ? ' ($fixed auto-fixed)' : ''}',
       );
     }
     if (media is Map) {
@@ -120,10 +122,14 @@ class FlashcardMaintenanceService {
     if (err != null) throw Exception(err);
 
     final issueCount = data['issueCount'] as int? ?? 0;
+    final fixed = data['fixed'] as int? ?? 0;
     final issues = (data['issues'] as List? ?? []).whereType<Map>();
     final details =
         issues
-            .map((i) => i['message']?.toString() ?? 'Issue')
+            .map((i) {
+              final message = i['message']?.toString() ?? 'Issue';
+              return i['fixed'] == true ? '$message (fixed)' : message;
+            })
             .take(20)
             .toList();
 
@@ -132,7 +138,8 @@ class FlashcardMaintenanceService {
       summary:
           issueCount == 0
               ? 'Database OK (${data['cards']} cards, ${data['notes']} notes)'
-              : '$issueCount database issue(s) found',
+              : '$issueCount database issue(s) found'
+                  '${fixed > 0 ? ' — $fixed auto-fixed' : ''}',
       details: details,
     );
   }

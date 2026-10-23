@@ -16,6 +16,7 @@ import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/utils/statistics_labels.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/activity_preview_list.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -93,9 +94,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const AppPageBackground(
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const AppPageBackground(
         child: AppListSkeleton(count: 4, itemHeight: 160),
-      );
+      ),
+    );
     }
 
     if (_error != null) {
@@ -126,7 +130,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
     final matureRetention = stats.retention.mature;
 
-    return AppPageBackground(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: AppPageBackground(
       child: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.brandPrimary,
@@ -343,6 +349,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -791,13 +798,16 @@ class _CardCountsPie extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              PieChart(
+              AppChartReveal(
+      style: AppChartRevealStyle.grow,
+      child: PieChart(
                 PieChartData(
                   sectionsSpace: 3,
                   centerSpaceRadius: 36,
                   sections: sections,
                 ),
               ),
+    ),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -887,7 +897,9 @@ class _LineChartSeries extends StatelessWidget {
         .map((e) => FlSpot(e.key.toDouble(), e.value.count.toDouble()))
         .toList();
 
-    return LineChart(
+    return AppChartReveal(
+      style: AppChartRevealStyle.right,
+      child: LineChart(
       LineChartData(
         minX: 0,
         maxX: (series.length - 1).toDouble(),
@@ -976,6 +988,7 @@ class _LineChartSeries extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -1010,7 +1023,9 @@ class _ButtonCountsChart extends StatelessWidget {
       return const _EmptyHint(text: 'No reviews logged yet.');
     }
 
-    return BarChart(
+    return AppChartReveal(
+      style: AppChartRevealStyle.up,
+      child: BarChart(
       BarChartData(
         maxY: max * 1.2,
         gridData: const FlGridData(show: false),
@@ -1075,6 +1090,7 @@ class _ButtonCountsChart extends StatelessWidget {
               );
             }).toList(),
       ),
+    ),
     );
   }
 }
@@ -1134,7 +1150,9 @@ class _EaseHistogram extends StatelessWidget {
       return const _EmptyHint(text: 'No ease data yet.');
     }
 
-    return BarChart(
+    return AppChartReveal(
+      style: AppChartRevealStyle.up,
+      child: BarChart(
       BarChartData(
         maxY: max * 1.2,
         gridData: const FlGridData(show: false),
@@ -1199,6 +1217,7 @@ class _EaseHistogram extends StatelessWidget {
               );
             }).toList(),
       ),
+    ),
     );
   }
 }
@@ -1298,6 +1317,12 @@ class _RetentionTile extends StatelessWidget {
   }
 }
 
+String _hourAxisLabel(int hour) {
+  final period = hour < 12 ? 'a' : 'p';
+  final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+  return '$displayHour$period';
+}
+
 class _HourlyChart extends StatelessWidget {
   const _HourlyChart({required this.hourly});
 
@@ -1311,7 +1336,9 @@ class _HourlyChart extends StatelessWidget {
 
     final max = hourly.map((e) => e.count).fold<int>(0, (a, b) => a > b ? a : b);
 
-    return BarChart(
+    return AppChartReveal(
+      style: AppChartRevealStyle.up,
+      child: BarChart(
       BarChartData(
         maxY: max < 1 ? 1 : max * 1.2,
         gridData: FlGridData(
@@ -1333,11 +1360,35 @@ class _HourlyChart extends StatelessWidget {
             ),
           ),
         ),
-        titlesData: const FlTitlesData(
-          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        titlesData: FlTitlesData(
+          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 18,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                final index = value.round();
+                if (index < 0 || index >= hourly.length) return const SizedBox.shrink();
+                final hour = hourly[index].hour;
+                // Every 3 hours keeps the axis legible instead of cramming
+                // a label under all 24 bars.
+                if (hour % 3 != 0) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    _hourAxisLabel(hour),
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: AppPageColors.subtitleOf(context),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
         barGroups:
             hourly.asMap().entries.map((e) {
@@ -1361,6 +1412,7 @@ class _HourlyChart extends StatelessWidget {
               );
             }).toList(),
       ),
+    ),
     );
   }
 }
@@ -1383,7 +1435,9 @@ class _IntervalBucketsChart extends StatelessWidget {
       return const _EmptyHint(text: 'No interval data yet.');
     }
 
-    return BarChart(
+    return AppChartReveal(
+      style: AppChartRevealStyle.up,
+      child: BarChart(
       BarChartData(
         maxY: max * 1.2,
         gridData: const FlGridData(show: false),
@@ -1448,6 +1502,7 @@ class _IntervalBucketsChart extends StatelessWidget {
               );
             }).toList(),
       ),
+    ),
     );
   }
 }

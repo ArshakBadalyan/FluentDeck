@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -6,6 +7,7 @@ import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/screens/learn_screen/note_type_edit_screen.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 /// Built-in and custom note types — the field/template layouts that define
 /// how a note's data is turned into cards.
@@ -53,14 +55,15 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
       context,
       MaterialPageRoute(builder: (_) => NoteTypeEditScreen(existing: existing)),
     );
-    if (changed == true) _load();
+    // Card style (built-in types) saves on tap, so there is no result to wait for.
+    if (changed == true || (existing != null && !existing.isCustom)) _load();
   }
 
   Future<void> _deleteType(NoteTypeModel type) async {
     final id = type.customDbId;
     if (id == null) return;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -100,19 +103,30 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
         elevation: 0,
         title: const Text('Note types'),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openEditor(),
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Custom type'),
+      // The FAB grows into the editor (container transform).
+      floatingActionButton: AppFabContainer<bool>(
+        extended: true,
+        fab: FloatingActionButton.extended(
+          onPressed: () {},
+          backgroundColor: AppColors.brandPrimary,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Custom type'),
+        ),
+        openBuilder: (_) => const NoteTypeEditScreen(),
+        onClosed: (changed) {
+          if (changed == true) _load();
+        },
       ),
       body: AppPageBackground(child: _body()),
     );
   }
 
   Widget _body() {
-    if (_loading) return const _NoteTypesSkeleton();
+    if (_loading) return AppLoadingSwitcher(
+      loading: true,
+      child: const _NoteTypesSkeleton(),
+    );
 
     if (_error != null) {
       return Center(
@@ -176,7 +190,9 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
       );
     }
 
-    return ListView.separated(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
       itemCount: _types.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -185,6 +201,7 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
         onTap: () => _openEditor(existing: _types[i]),
         onDelete: _types[i].isCustom ? () => _deleteType(_types[i]) : null,
       ),
+    ),
     );
   }
 }

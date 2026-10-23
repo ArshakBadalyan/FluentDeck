@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'dart:async';
 
 import 'package:fluentdeck/ui_elements/app_toast.dart';
@@ -13,16 +14,22 @@ import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dar
 import 'package:fluentdeck/screens/learn_screen/shared_decks_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/note_types_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_overflow_menu.dart';
+import 'package:fluentdeck/services/app_feature_config_service.dart';
 import 'package:fluentdeck/services/deck_order_store.dart';
 import 'package:fluentdeck/services/deck_backup_service.dart';
 import 'package:fluentdeck/services/flashcard_export_service.dart';
 import 'package:fluentdeck/services/flashcard_import_service.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
+import 'package:fluentdeck/services/subscription_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/utils/api_exception.dart';
+import 'package:fluentdeck/utils/deck_limit.dart';
+import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class _DeckRow {
   const _DeckRow({required this.deck, required this.depth});
@@ -72,7 +79,27 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   bool _loading = true;
   String? _error;
   List<FlashcardDeckModel> _decks = const [];
+  bool _isPremium = false;
+
+  int get _freeMaxDecks => AppFeatureConfigService.instance.config.freeMaxDecks;
+
+  /// Free users at the deck limit see Create deck / Filtered deck disabled.
+  bool get _deckLimitReached => isDeckLimitReached(
+    decks: _decks,
+    isPremium: _isPremium,
+    freeMaxDecks: _freeMaxDecks,
+  );
+
+  Future<void> _refreshPremium() async {
+    try {
+      final status = await SubscriptionService.instance.fetchStatus();
+      if (mounted) setState(() => _isPremium = status.isPremium);
+    } catch (_) {
+      // Keep the last known value; the server still enforces the limit.
+    }
+  }
   List<_DeckRow> _deckRows = const [];
+  bool _reordering = false;
   FlashcardStudyStats? _stats;
   final _sync = FlashcardSyncService.instance;
 
@@ -96,23 +123,26 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   Widget _deckReorderProxy(Widget child, int index, Animation<double> animation) {
     final width = MediaQuery.sizeOf(context).width - 32;
 
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        final t = Curves.easeOut.transform(animation.value);
-        return Material(
-          color: AppPageColors.cardBgOf(context),
-          elevation: 4 * t,
-          shadowColor: Colors.black26,
-          borderRadius: BorderRadius.circular(16),
-          clipBehavior: Clip.antiAlias,
-          child: SizedBox(
-            width: width,
-            child: child,
-          ),
-        );
-      },
-      child: child,
+    return TooltipVisibility(
+      visible: false,
+      child: AnimatedBuilder(
+        animation: animation,
+        builder: (context, child) {
+          final t = Curves.easeOut.transform(animation.value);
+          return Material(
+            color: AppPageColors.cardBgOf(context),
+            elevation: 4 * t,
+            shadowColor: Colors.black26,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: SizedBox(
+              width: width,
+              child: child,
+            ),
+          );
+        },
+        child: child,
+      ),
     );
   }
 
@@ -154,11 +184,14 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       width: _dragColumnWidth,
       child: ReorderableDragStartListener(
         index: index,
-        child: Tooltip(
-          message: 'Drag to reorder',
+        // Not a Tooltip: its OverlayPortal breaks when the row is lifted into
+        // the drag proxy mid-hover (web: "_RenderLayoutBuilder was mutated").
+        child: Semantics(
+          label: 'Drag to reorder',
           child: Material(
             color: Colors.transparent,
             child: InkWell(
+              mouseCursor: SystemMouseCursors.grab,
               borderRadius: BorderRadius.circular(6),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
@@ -184,6 +217,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     });
     try {
       await _sync.refreshStatus();
+      unawaited(_refreshPremium());
       final decks = await FlashcardService.instance.fetchDecksWithCache();
       FlashcardStudyStats? stats;
       try {
@@ -286,6 +320,13 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       await FlashcardService.instance.createDeck(name: name);
       if (!mounted) return;
       await _load();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      if (e.statusCode == 403) {
+        showPremiumUpgradeSnackBar(context, e.message);
+      } else {
+        AppToast.showSnackBar(context, SnackBar(content: Text(e.message)));
+      }
     } catch (e) {
       if (!mounted) return;
       AppToast.showSnackBar(context, 
@@ -302,6 +343,39 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         SnackBar(content: Text('Created filtered deck "${deck.name}"')),
       );
     }
+  }
+
+  /// A deck-creating menu entry: looks disabled at the free limit, and a tap
+  /// on it then shows the upgrade prompt instead of doing nothing.
+  Widget _deckCreateTile(
+    BuildContext ctx, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String action,
+  }) {
+    final locked = _deckLimitReached;
+    final tile = AppSheetActionTile(
+      icon: icon,
+      title: title,
+      subtitle: locked ? 'Premium · free plan deck limit reached' : subtitle,
+      trailing:
+          locked
+              ? Icon(
+                Icons.lock_outline_rounded,
+                size: 20,
+                color: AppPageColors.subtitleOf(ctx),
+              )
+              : null,
+      enabled: !locked,
+      onTap: () => Navigator.pop(ctx, action),
+    );
+    if (!locked) return tile;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.pop(ctx, 'deck_locked'),
+      child: tile,
+    );
   }
 
   Future<void> _showFabMenu() async {
@@ -338,17 +412,19 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         subtitle: 'Create a new flashcard note',
                         onTap: () => Navigator.pop(ctx, 'note'),
                       ),
-                      AppSheetActionTile(
+                      _deckCreateTile(
+                        ctx,
                         icon: Icons.folder_outlined,
                         title: 'Create deck',
                         subtitle: 'New collection for your cards',
-                        onTap: () => Navigator.pop(ctx, 'deck'),
+                        action: 'deck',
                       ),
-                      AppSheetActionTile(
+                      _deckCreateTile(
+                        ctx,
                         icon: Icons.filter_list_rounded,
                         title: 'Filtered deck',
                         subtitle: 'Study cards matching a saved search',
-                        onTap: () => Navigator.pop(ctx, 'filtered'),
+                        action: 'filtered',
                       ),
                       AppSheetActionTile(
                         icon: Icons.public_outlined,
@@ -373,6 +449,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         await _createDeck();
       case 'filtered':
         await _createFilteredDeck();
+      case 'deck_locked':
+        if (mounted) {
+          showPremiumUpgradeSnackBar(context, deckLimitMessage(_freeMaxDecks));
+        }
       case 'shared':
         await _openSharedDecks();
     }
@@ -494,7 +574,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
             ? 'Delete filtered deck "${deck.name}"? Cards stay in their original decks.'
             : 'Delete "${deck.name}" and all ${deck.total} cards in it? This cannot be undone.';
 
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -530,6 +610,11 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   }
 
   Future<void> _editDeck(FlashcardDeckModel deck) async {
+    if (deck.isFiltered) {
+      final updated = await showFilteredDeckDialog(context, decks: _decks, existing: deck);
+      if (updated != null && mounted) await _load();
+      return;
+    }
     final saved = await showDeckEditSheet(
       context,
       deck: deck,
@@ -572,12 +657,11 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   title: const Text('Sync now'),
                   onTap: () => Navigator.pop(ctx, 'sync'),
                 ),
-                if (!deck.isFiltered)
-                  ListTile(
-                    leading: const Icon(Icons.edit_outlined),
-                    title: const Text('Edit deck'),
-                    onTap: () => Navigator.pop(ctx, 'edit'),
-                  ),
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined),
+                  title: const Text('Edit deck'),
+                  onTap: () => Navigator.pop(ctx, 'edit'),
+                ),
                 if (deck.isDeletable)
                   ListTile(
                     leading: const Icon(Icons.delete_outline_rounded, color: AppColors.redWrong),
@@ -615,8 +699,20 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // A tooltip opening under the pointer mid-drag (its OverlayPortal lays out
+    // via LayoutBuilder) throws "_RenderLayoutBuilder was mutated" on web.
+    return TooltipVisibility(
+      visible: !_reordering,
+      child: _buildScreen(context),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context) {
     if (_loading) {
-      return const DecksListSkeleton();
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const DecksListSkeleton(),
+    );
     }
 
     if (_error != null) {
@@ -642,7 +738,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     final stats = _stats;
     final dueSummary = stats != null ? '${stats.dueNow} due' : '';
 
-    return AppPageBackground(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: AppPageBackground(
       child: Stack(
         children: [
           Column(
@@ -728,11 +826,18 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                           sliver: SliverReorderableList(
                             itemCount: _deckRows.length,
                             onReorder: _onDeckReorder,
+                            onReorderStart: (_) =>
+                                setState(() => _reordering = true),
+                            onReorderEnd: (_) =>
+                                setState(() => _reordering = false),
                             proxyDecorator: _deckReorderProxy,
                             itemBuilder: (context, index) {
                               final row = _deckRows[index];
-                              return _DeckListTile(
+                              return AppStaggeredFadeIn(
+                                // Reorderable lists need the key on the item root.
                                 key: ValueKey('deck-row-${row.deck.id}'),
+                                index: index,
+                                child: _DeckListTile(
                                 deck: row.deck,
                                 depth: row.depth,
                                 dragHandle: _deckDragHandle(index),
@@ -743,6 +848,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                     row.deck.isDeletable
                                         ? () => _deleteDeck(row.deck)
                                         : null,
+                                ),
                               );
                             },
                           ),
@@ -769,6 +875,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -821,7 +928,6 @@ class _SyncStatusButton extends StatelessWidget {
 
 class _DeckListTile extends StatelessWidget {
   const _DeckListTile({
-    super.key,
     required this.deck,
     required this.depth,
     required this.dragHandle,

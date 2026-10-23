@@ -2,6 +2,7 @@ import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/english_main_screen.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import '../../routing/app_route_names.dart';
 import '../../routing/app_page_routes.dart';
 import '../../services/audio_service.dart';
@@ -97,13 +98,13 @@ class _LoginFormState extends State<LoginForm> {
       children: [
         TextField(
           controller: _emailController,
-          decoration: authInput(context.tr('inputs.E-mail-nickname')),
+          decoration: authInput(context, context.tr('inputs.E-mail-nickname')),
         ),
         const SizedBox(height: 20),
         TextField(
           controller: _passwordController,
           obscureText: _obscure,
-          decoration: authInput(context.tr('inputs.password')).copyWith(
+          decoration: authInput(context, context.tr('inputs.password')).copyWith(
             suffixIcon: IconButton(
               icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
               tooltip: _obscure ? 'Show password' : 'Hide password',
@@ -126,7 +127,7 @@ class _LoginFormState extends State<LoginForm> {
             },
             child: Text(
               context.tr('login-register.forgot-password'),
-              style: const TextStyle(fontSize: 14, color: Colors.black),
+              style: TextStyle(fontSize: 14, color: AppPageColors.textPrimaryOf(context)),
               textAlign: TextAlign.end,
             ),
           ),

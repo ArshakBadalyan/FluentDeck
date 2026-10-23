@@ -4,65 +4,73 @@ const { test, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const {
   getSubscriptionPlans,
+  dailyMinutesForProductId,
+  isAllowedSubscriptionProductId,
   formatPrice,
   periodSuffix,
 } = require('../src/utils/subscription-plans');
 
 afterEach(() => {
   for (const key of Object.keys(process.env)) {
-    if (key.startsWith('SUBSCRIPTION_')) delete process.env[key];
+    if (key.startsWith('SUBSCRIPTION_') || key === 'PREMIUM_DAILY_MINUTES') {
+      delete process.env[key];
+    }
   }
 });
 
-test('default plans include 60 daily turns each', () => {
+test('only Monthly and Yearly are sold', () => {
   const plans = getSubscriptionPlans();
-  assert.equal(plans.length, 3);
-  assert.equal(plans[0].durationMonths, 1);
-  assert.equal(plans[0].dailyConversationTurns, 60);
-  assert.equal(plans[1].durationMonths, 3);
-  assert.equal(plans[1].dailyConversationTurns, 60);
-  assert.equal(plans[2].durationMonths, 12);
-  assert.equal(plans[2].dailyConversationTurns, 60);
-  assert.equal(plans[2].badge, 'Best value');
+  assert.deepEqual(plans.map((p) => p.key), ['monthly', 'yearly']);
+  const [monthly, yearly] = plans;
+  assert.equal(monthly.fallbackPrice, '€9.99');
+  assert.equal(monthly.periodSuffix, '/ month');
+  assert.equal(monthly.trialDays, 0);
+  assert.equal(yearly.fallbackPrice, '€59.99');
+  assert.equal(yearly.periodSuffix, '/ year');
+  assert.equal(yearly.badge, 'Save 50%');
+  assert.equal(yearly.trialDays, 7);
 });
 
-test('env can raise daily turns with a plan', () => {
-  process.env.SUBSCRIPTION_YEARLY_DAILY_TURNS = '100';
-  const plans = getSubscriptionPlans();
-  assert.equal(plans[2].dailyConversationTurns, 100);
-  assert.equal(plans[0].dailyConversationTurns, 60);
+test('plans give 4 hours a day by default; env can change one plan', () => {
+  assert.deepEqual(getSubscriptionPlans().map((p) => p.dailyMinutes), [240, 240]);
+  process.env.SUBSCRIPTION_YEARLY_DAILY_MINUTES = '360';
+  assert.deepEqual(getSubscriptionPlans().map((p) => p.dailyMinutes), [240, 360]);
+  process.env.PREMIUM_DAILY_MINUTES = '120';
+  assert.equal(getSubscriptionPlans()[0].dailyMinutes, 120);
 });
 
-test('env overrides price and duration', () => {
+test('no slider/scaled prices are left on plans', () => {
+  for (const plan of getSubscriptionPlans()) {
+    assert.equal(plan.dailyConversationTurns, undefined);
+    assert.equal(plan.basePriceAmount, undefined);
+  }
+});
+
+test('trial days can be turned off with 0', () => {
+  process.env.SUBSCRIPTION_YEARLY_TRIAL_DAYS = '0';
+  assert.equal(getSubscriptionPlans()[1].trialDays, 0);
+});
+
+test('env overrides price', () => {
   process.env.SUBSCRIPTION_MONTHLY_PRICE = '7.49';
-  process.env.SUBSCRIPTION_MONTHLY_DURATION_MONTHS = '1';
   process.env.SUBSCRIPTION_YEARLY_PRICE = '49.99';
-  process.env.SUBSCRIPTION_YEARLY_DURATION_MONTHS = '12';
   const plans = getSubscriptionPlans();
   assert.equal(plans[0].fallbackPrice, '€7.49');
-  assert.equal(plans[2].fallbackPrice, '€49.99');
-  assert.equal(plans[2].periodSuffix, '/ year');
+  assert.equal(plans[1].fallbackPrice, '€49.99');
+});
+
+test('old quarterly subscribers are still accepted, but not sold', () => {
+  assert.equal(isAllowedSubscriptionProductId('fluentdeck_premium_quarterly'), true);
+  assert.equal(isAllowedSubscriptionProductId('fluentdeck_premium_monthly'), true);
+  assert.equal(isAllowedSubscriptionProductId('something_else'), false);
+  assert.equal(isAllowedSubscriptionProductId(''), false);
+  assert.equal(dailyMinutesForProductId('fluentdeck_premium_quarterly'), 240);
+  process.env.SUBSCRIPTION_LEGACY_PRODUCT_IDS = '';
+  assert.equal(isAllowedSubscriptionProductId('fluentdeck_premium_quarterly'), false);
 });
 
 test('helpers format price and period', () => {
   assert.equal(formatPrice(9.99, 'EUR'), '€9.99');
   assert.equal(periodSuffix(1), '/ month');
-  assert.equal(periodSuffix(3), '/ 3 months');
   assert.equal(periodSuffix(12), '/ year');
-});
-
-test('selected daily turns scales plan prices', () => {
-  const {
-    getSubscriptionPlansForDailyTurns,
-    getDailyTurnsSliderConfig,
-  } = require('../src/utils/subscription-plans');
-  const slider = getDailyTurnsSliderConfig();
-  assert.equal(slider.default, 60);
-  const atDefault = getSubscriptionPlansForDailyTurns(60);
-  assert.equal(atDefault[0].fallbackPrice, '€9.99');
-  const at120 = getSubscriptionPlansForDailyTurns(120);
-  assert.equal(at120[0].dailyConversationTurns, 120);
-  assert.equal(at120[0].fallbackPrice, '€19.98');
-  const at30 = getSubscriptionPlansForDailyTurns(30);
-  assert.equal(at30[0].fallbackPrice, '€5.00');
 });

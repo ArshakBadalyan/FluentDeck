@@ -1,7 +1,7 @@
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/routing/app_route_names.dart';
 import 'package:fluentdeck/routing/app_page_routes.dart';
 import 'package:fluentdeck/screens/auth/reset_password_screen.dart';
@@ -29,7 +29,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -50,12 +50,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   labelText: context.tr('inputs.your-email'),
-                  labelStyle: const TextStyle(color: Colors.grey),
-                  enabledBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black26),
+                  labelStyle: TextStyle(color: AppPageColors.subtitleOf(context)),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppPageColors.accentOf(context)),
                   ),
                 ),
               ),
@@ -64,7 +64,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
               SizedBox(
                 height: 50,
-                child: ElevatedButton(
+                // FilledButton (not ElevatedButton+hardcoded colors): the
+                // app's own filledButtonTheme already pairs light/dark
+                // backgrounds with correctly readable text in both modes.
+                child: FilledButton(
                   onPressed:
                       _loading
                           ? null
@@ -105,8 +108,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             }
                           },
 
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
+                  style: FilledButton.styleFrom(
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -114,7 +116,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   child: Text(
                     context.tr('forgot-password.send-email'),
-                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                    style: const TextStyle(fontSize: 16),
                   ),
                 ),
               ),

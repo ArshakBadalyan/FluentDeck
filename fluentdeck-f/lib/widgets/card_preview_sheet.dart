@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
+import 'package:fluentdeck/models/occlusion_model.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/utils/type_answer_utils.dart';
+import 'package:fluentdeck/widgets/image_occlusion_review.dart';
 
 /// Preview a study card from the browser (Phase 4D).
 class CardPreviewSheet extends StatefulWidget {
@@ -35,6 +37,18 @@ class _CardPreviewSheetState extends State<CardPreviewSheet> {
       return widget.card.clozeText!;
     }
     return widget.card.front;
+  }
+
+  /// Same fallback as the review screen: older cards before `occlusionData`
+  /// existed kept the image URL in `front` with no saved regions.
+  OcclusionData get _occlusionData {
+    final data = widget.card.occlusionData;
+    if (data != null && data.imageUrl.isNotEmpty) return data;
+    return OcclusionData(
+      imageUrl: widget.card.front,
+      activeIndex: widget.card.clozeIndex ?? 0,
+      regions: const [],
+    );
   }
 
   @override
@@ -69,27 +83,33 @@ class _CardPreviewSheetState extends State<CardPreviewSheet> {
               style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
             const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => setState(() => _revealed = !_revealed),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppPageColors.fieldBgOf(context),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.2)),
-                ),
-                child: BasicHtmlText(
-                  html: _revealed ? widget.card.back : _frontHtml,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppPageColors.fieldBgOf(context),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.2)),
               ),
+              child: widget.card.isImageOcclusion
+                  ? ImageOcclusionReview(
+                      data: _occlusionData,
+                      revealed: _revealed,
+                      onTap: () => setState(() => _revealed = !_revealed),
+                    )
+                  : GestureDetector(
+                      onTap: () => setState(() => _revealed = !_revealed),
+                      child: BasicHtmlText(
+                        html: _revealed ? widget.card.back : _frontHtml,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
             ),
             const SizedBox(height: 8),
             Text(

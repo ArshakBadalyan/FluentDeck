@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:convert';
 
@@ -206,7 +207,7 @@ class CardBrowserBulkActions {
     if (_noteIds.isEmpty) throw Exception('Selected cards have no linked notes');
     if (decks.isEmpty) throw Exception('No decks available');
 
-    final targetId = await showDialog<int>(
+    final targetId = await showAppDialog<int>(
       context: context,
       builder:
           (ctx) => SimpleDialog(
@@ -237,7 +238,7 @@ class CardBrowserBulkActions {
     final ctrl = TextEditingController();
 
     if (!context.mounted) return;
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => StatefulBuilder(
@@ -357,7 +358,7 @@ class CardBrowserBulkActions {
     final noteIds = _noteIds;
     final orphanCount = selectedCards.where((c) => c.noteId == null).length;
 
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(

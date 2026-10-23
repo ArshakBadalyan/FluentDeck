@@ -5,10 +5,10 @@
  */
 
 const {
-  getFreeDailyConversationTurns,
-  getPremiumDailyConversationTurns,
-  HARD_DEFAULT_FREE_DAILY,
-  HARD_DEFAULT_PREMIUM_DAILY,
+  getFreeDailyMinutes,
+  getPremiumDailyMinutes,
+  HARD_DEFAULT_FREE_DAILY_MINUTES,
+  HARD_DEFAULT_PREMIUM_DAILY_MINUTES,
 } = require('./daily-conversation-limits');
 
 async function seedAppFeatureConfig(strapi) {
@@ -26,11 +26,9 @@ async function seedAppFeatureConfig(strapi) {
       freeMaxSavedWords: 20,
       freeMaxDecks: 1,
       freeMaxNewCardsPerDay: 10,
-      freeDailyConversationTurns: getFreeDailyConversationTurns(
-        HARD_DEFAULT_FREE_DAILY,
-      ),
-      premiumDailyConversationTurns: getPremiumDailyConversationTurns(
-        HARD_DEFAULT_PREMIUM_DAILY,
+      freeDailyMinutes: getFreeDailyMinutes(HARD_DEFAULT_FREE_DAILY_MINUTES),
+      premiumDailyMinutes: getPremiumDailyMinutes(
+        HARD_DEFAULT_PREMIUM_DAILY_MINUTES,
       ),
       freeRolePlayPerCategory: 2,
       freeTopicLevelGroups: ['intermediate'],

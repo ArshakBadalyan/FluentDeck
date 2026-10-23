@@ -24,6 +24,7 @@ import 'package:fluentdeck/services/user_progress_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/activity_preview_list.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class EnglishActivityScreen extends StatefulWidget {
   const EnglishActivityScreen({super.key});
@@ -143,7 +144,10 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
     final l10n = AppLocalizations.of(context);
 
     if (_loading) {
-      return const ActivityScreenSkeleton();
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const ActivityScreenSkeleton(),
+    );
     }
 
     if (_error != null) {
@@ -177,7 +181,9 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
         : topWeak.map((e) => e.count).reduce((a, b) => a > b ? a : b);
     final topWeakMaxY = (topWeakMaxCount + 1).toDouble();
 
-    return AppPageBackground(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: AppPageBackground(
       child: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.brandPrimary,
@@ -345,7 +351,9 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                       height: 220,
                       child: Padding(
                         padding: const EdgeInsets.only(right: 4, top: 4),
-                        child: BarChart(
+                        child: AppChartReveal(
+      style: AppChartRevealStyle.up,
+      child: BarChart(
                           BarChartData(
                             alignment: BarChartAlignment.spaceAround,
                             minY: 0,
@@ -466,12 +474,14 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                             ],
                           ),
                         ),
+    ),
                       ),
                     ),
             ),
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -967,7 +977,9 @@ class _ScoreTrendChart extends StatelessWidget {
         .toList();
     final labelEvery = (recent.length / 5).ceil().clamp(1, recent.length);
 
-    return LineChart(
+    return AppChartReveal(
+      style: AppChartRevealStyle.right,
+      child: LineChart(
       LineChartData(
         minX: 0,
         maxX: (recent.length - 1).toDouble(),
@@ -1059,6 +1071,7 @@ class _ScoreTrendChart extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -1090,7 +1103,9 @@ class _DailyActivityChart extends StatelessWidget {
         .map((e) => FlSpot(e.key.toDouble(), e.value.count.toDouble()))
         .toList();
 
-    return LineChart(
+    return AppChartReveal(
+      style: AppChartRevealStyle.right,
+      child: LineChart(
       LineChartData(
         minX: 0,
         maxX: (series.length - 1).toDouble(),
@@ -1176,6 +1191,7 @@ class _DailyActivityChart extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -1222,13 +1238,16 @@ class _PracticeMixDonut extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              PieChart(
+              AppChartReveal(
+      style: AppChartRevealStyle.grow,
+      child: PieChart(
                 PieChartData(
                   sectionsSpace: 3,
                   centerSpaceRadius: 36,
                   sections: sections,
                 ),
               ),
+    ),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

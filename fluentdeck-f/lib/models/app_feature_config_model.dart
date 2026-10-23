@@ -1,31 +1,3 @@
-class SubscriptionDailyTurnsSliderConfig {
-  const SubscriptionDailyTurnsSliderConfig({
-    this.min = 20,
-    this.max = 120,
-    this.defaultTurns = 60,
-  });
-
-  final int min;
-  final int max;
-  final int defaultTurns;
-
-  factory SubscriptionDailyTurnsSliderConfig.fromJson(Map<String, dynamic>? json) {
-    if (json == null) {
-      return const SubscriptionDailyTurnsSliderConfig();
-    }
-    final min = (json['min'] as num?)?.round() ?? 20;
-    final max = (json['max'] as num?)?.round() ?? 120;
-    final def = (json['default'] as num?)?.round() ?? 60;
-    final lo = min < max ? min : max;
-    final hi = max > min ? max : min;
-    return SubscriptionDailyTurnsSliderConfig(
-      min: lo,
-      max: hi,
-      defaultTurns: def.clamp(lo, hi),
-    );
-  }
-}
-
 class SubscriptionPlanConfig {
   const SubscriptionPlanConfig({
     required this.productId,
@@ -34,7 +6,8 @@ class SubscriptionPlanConfig {
     required this.periodSuffix,
     required this.fallbackPrice,
     this.badge,
-    this.dailyConversationTurns = 60,
+    this.dailyMinutes = 240,
+    this.trialDays = 0,
     this.priceAmount = 0,
   });
 
@@ -44,12 +17,16 @@ class SubscriptionPlanConfig {
   final String periodSuffix;
   final String fallbackPrice;
   final String? badge;
-  final int dailyConversationTurns;
+  /// Daily AI practice time included in the plan.
+  final int dailyMinutes;
+  /// Free-trial label; the trial itself is set up in the stores.
+  final int trialDays;
   final double priceAmount;
 
   factory SubscriptionPlanConfig.fromJson(Map<String, dynamic> json) {
     final months = (json['durationMonths'] as num?)?.round() ?? 1;
-    final daily = (json['dailyConversationTurns'] as num?)?.round() ?? 60;
+    final daily = (json['dailyMinutes'] as num?)?.round() ?? 240;
+    final trial = (json['trialDays'] as num?)?.round() ?? 0;
     return SubscriptionPlanConfig(
       productId: json['productId']?.toString() ?? '',
       title: json['title']?.toString() ?? 'Premium',
@@ -57,7 +34,8 @@ class SubscriptionPlanConfig {
       periodSuffix: json['periodSuffix']?.toString() ?? _suffixFor(months),
       fallbackPrice: json['fallbackPrice']?.toString() ?? '€0.00',
       badge: json['badge']?.toString(),
-      dailyConversationTurns: daily > 0 ? daily : 60,
+      dailyMinutes: daily > 0 ? daily : 240,
+      trialDays: trial > 0 ? trial : 0,
       priceAmount: (json['priceAmount'] as num?)?.toDouble() ?? 0,
     );
   }
@@ -75,8 +53,8 @@ class AppFeatureConfigModel {
   final int freeMaxNewCardsPerDay;
   final int freePreviewWordsPerAdvancedList;
   final int freePlacementRetakesPerMonth;
-  final int freeDailyConversationTurns;
-  final int premiumDailyConversationTurns;
+  final int freeDailyMinutes;
+  final int premiumDailyMinutes;
   final List<String> advancedLevelsRequiringPremium;
   final int freeRolePlayPerCategory;
   final List<String> freeTopicLevelGroups;
@@ -85,7 +63,6 @@ class AppFeatureConfigModel {
   final double defaultEasyIntervalDays;
   final List<String> hiddenSpeakingTabs;
   final List<SubscriptionPlanConfig> subscriptionPlans;
-  final SubscriptionDailyTurnsSliderConfig subscriptionDailyTurnsSlider;
 
   const AppFeatureConfigModel({
     this.freeMaxSavedWords = 20,
@@ -93,8 +70,8 @@ class AppFeatureConfigModel {
     this.freeMaxNewCardsPerDay = 10,
     this.freePreviewWordsPerAdvancedList = 10,
     this.freePlacementRetakesPerMonth = 1,
-    this.freeDailyConversationTurns = 10,
-    this.premiumDailyConversationTurns = 60,
+    this.freeDailyMinutes = 5,
+    this.premiumDailyMinutes = 240,
     this.advancedLevelsRequiringPremium = const ['B2', 'C1', 'C2'],
     this.freeRolePlayPerCategory = 2,
     this.freeTopicLevelGroups = const ['intermediate'],
@@ -103,8 +80,6 @@ class AppFeatureConfigModel {
     this.defaultEasyIntervalDays = 5,
     this.hiddenSpeakingTabs = const [],
     this.subscriptionPlans = const [],
-    this.subscriptionDailyTurnsSlider =
-        const SubscriptionDailyTurnsSliderConfig(),
   });
 
   factory AppFeatureConfigModel.fromJson(Map<String, dynamic> json) {
@@ -112,7 +87,6 @@ class AppFeatureConfigModel {
     final topicGroups = json['freeTopicLevelGroups'];
     final steps = json['defaultLearningStepsMinutes'];
     final plans = json['subscriptionPlans'];
-    final slider = json['subscriptionDailyTurnsSlider'];
     return AppFeatureConfigModel(
       freeMaxSavedWords: json['freeMaxSavedWords'] as int? ?? 20,
       freeMaxDecks: json['freeMaxDecks'] as int? ?? 3,
@@ -121,10 +95,8 @@ class AppFeatureConfigModel {
           json['freePreviewWordsPerAdvancedList'] as int? ?? 10,
       freePlacementRetakesPerMonth:
           json['freePlacementRetakesPerMonth'] as int? ?? 1,
-      freeDailyConversationTurns:
-          json['freeDailyConversationTurns'] as int? ?? 10,
-      premiumDailyConversationTurns:
-          json['premiumDailyConversationTurns'] as int? ?? 60,
+      freeDailyMinutes: json['freeDailyMinutes'] as int? ?? 5,
+      premiumDailyMinutes: json['premiumDailyMinutes'] as int? ?? 240,
       advancedLevelsRequiringPremium:
           advanced is List
               ? advanced.map((e) => e.toString()).toList()
@@ -140,9 +112,6 @@ class AppFeatureConfigModel {
           (json['defaultEasyIntervalDays'] as num?)?.toDouble() ?? 5,
       hiddenSpeakingTabs: _parseHiddenTabs(json['hiddenSpeakingTabs']),
       subscriptionPlans: _parsePlans(plans),
-      subscriptionDailyTurnsSlider: SubscriptionDailyTurnsSliderConfig.fromJson(
-        slider is Map ? Map<String, dynamic>.from(slider) : null,
-      ),
     );
   }
 

@@ -1,12 +1,13 @@
 'use strict';
 
 const { formatCard, isDue, isAvailableForReview } = require('./flashcard-helpers');
-const { cardMatchesFilter } = require('./flashcard-browse-filter');
+const { cardMatchesFilter, normalizeSourceDeckIds } = require('./flashcard-browse-filter');
 
 async function fetchCardsForFilter(strapi, userId, filterQuery = {}) {
   const where = { user: userId };
-  if (filterQuery?.sourceDeckId) {
-    where.deck = filterQuery.sourceDeckId;
+  const sourceDeckIds = normalizeSourceDeckIds(filterQuery ?? {});
+  if (sourceDeckIds.length) {
+    where.deck = { id: { $in: sourceDeckIds } };
   }
 
   const cards = await strapi.db.query('api::flashcard.flashcard').findMany({

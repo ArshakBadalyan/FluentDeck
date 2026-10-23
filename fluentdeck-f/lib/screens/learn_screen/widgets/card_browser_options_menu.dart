@@ -9,7 +9,8 @@ class CardBrowserOptionsState {
   final bool markedFilter;
   final bool suspendedFilter;
   final bool selectMode;
-  final int? flagFilter;
+  /// Selected flags (0 = "No flag"); empty = any flag.
+  final Set<int> flagFilters;
   final String sortLabel;
   final int visibleCount;
 
@@ -17,7 +18,7 @@ class CardBrowserOptionsState {
     this.markedFilter = false,
     this.suspendedFilter = false,
     this.selectMode = false,
-    this.flagFilter,
+    this.flagFilters = const {},
     this.sortLabel = 'Question',
     this.visibleCount = 0,
   });
@@ -83,7 +84,7 @@ class CardBrowserOptionsMenu {
     required VoidCallback onChangeDisplayOrder,
     required VoidCallback onFilterMarked,
     required VoidCallback onFilterSuspended,
-    required Future<void> Function(int? flag) onApplyFlagFilter,
+    required Future<void> Function(Set<int> flags) onApplyFlagFilter,
     required VoidCallback onPreview,
     required VoidCallback onSelectAll,
     required VoidCallback onToggleSelectMode,
@@ -123,13 +124,13 @@ class CardBrowserOptionsMenu {
         AppSheetActionTile(
           icon: Icons.flag_outlined,
           title: 'Filter by flag',
-          iconColor: state.flagFilter != null ? AppColors.brandPrimary : null,
+          iconColor: state.flagFilters.isNotEmpty ? AppColors.brandPrimary : null,
           subtitle:
-              state.flagFilter == null
+              state.flagFilters.isEmpty
                   ? null
-                  : state.flagFilter == 0
-                  ? 'No flag'
-                  : 'Flag ${state.flagFilter}',
+                  : (state.flagFilters.toList()..sort())
+                      .map((f) => f == 0 ? 'No flag' : 'Flag $f')
+                      .join(', '),
           onTap: () => Navigator.pop(context, 'filter_flag'),
         ),
         AppSheetActionTile(
@@ -176,7 +177,7 @@ class CardBrowserOptionsMenu {
       case 'filter_flag':
         await _showFlagFilterSheet(
           context,
-          current: state.flagFilter,
+          current: state.flagFilters,
           onApply: onApplyFlagFilter,
         );
       case 'preview':
@@ -196,46 +197,81 @@ class CardBrowserOptionsMenu {
     }
   }
 
+  /// Multi-select flag picker; "Any flag" and "No flag" are exclusive.
   static Future<void> _showFlagFilterSheet(
     BuildContext context, {
-    required int? current,
-    required Future<void> Function(int? flag) onApply,
+    required Set<int> current,
+    required Future<void> Function(Set<int> flags) onApply,
   }) async {
-    final value = await _showSheet<int?>(
+    final selected = {...current};
+    final value = await _showSheet<Set<int>>(
       context,
       title: 'Filter by flag',
+      subtitle: 'Pick one or more',
       icon: Icons.flag_outlined,
-      initialSize: 0.52,
+      initialSize: 0.62,
       children: [
-        AppSheetActionTile(
-          icon: Icons.flag_outlined,
-          title: 'Any flag',
-          trailing: _checkTrailing(current == null),
-          showChevron: false,
-          onTap: () => Navigator.pop(context, -1),
+        StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            void toggle(int flag) => setSheetState(() {
+              if (!selected.remove(flag)) {
+                selected
+                  ..remove(0)
+                  ..add(flag);
+              }
+            });
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppSheetActionTile(
+                  icon: Icons.flag_outlined,
+                  title: 'Any flag',
+                  trailing: _checkTrailing(selected.isEmpty),
+                  showChevron: false,
+                  onTap: () => setSheetState(selected.clear),
+                ),
+                AppSheetActionTile(
+                  icon: Icons.outlined_flag,
+                  title: 'No flag',
+                  trailing: _checkTrailing(selected.contains(0)),
+                  showChevron: false,
+                  onTap: () => setSheetState(() {
+                    selected
+                      ..clear()
+                      ..add(0);
+                  }),
+                ),
+                for (final e in flagColors.entries)
+                  AppSheetActionTile(
+                    icon: Icons.flag_rounded,
+                    iconColor: e.value,
+                    title: 'Flag ${e.key}',
+                    trailing: _checkTrailing(selected.contains(e.key)),
+                    showChevron: false,
+                    onTap: () => toggle(e.key),
+                  ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.brandPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(ctx, selected),
+                  child: const Text('Apply'),
+                ),
+              ],
+            );
+          },
         ),
-        AppSheetActionTile(
-          icon: Icons.outlined_flag,
-          title: 'No flag',
-          trailing: _checkTrailing(current == 0),
-          showChevron: false,
-          onTap: () => Navigator.pop(context, 0),
-        ),
-        for (final e in flagColors.entries)
-          AppSheetActionTile(
-            icon: Icons.flag_rounded,
-            iconColor: e.value,
-            title: 'Flag ${e.key}',
-            trailing: _checkTrailing(current == e.key),
-            showChevron: false,
-            onTap: () => Navigator.pop(context, e.key),
-          ),
       ],
     );
 
     if (!context.mounted) return;
     if (value == null) return;
-    await onApply(value == -1 ? null : value);
+    await onApply(value);
   }
 
   static Future<void> _showBrowserOptionsSheet(

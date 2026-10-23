@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart' show CupertinoSwitch;
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/config/brand_config.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
+import 'app_motion.dart';
 
 /// Shared visual language for Activity, Decks, and Profile screens.
 class AppPageColors {
@@ -59,6 +61,17 @@ class AppPageColors {
       Theme.of(context).brightness == Brightness.dark
           ? AppColors.brandPrimaryOnDark
           : AppColors.brandPrimary;
+
+  /// Readable text/icon color for a surface painted [accentOf] — e.g. a
+  /// selected chip or a filled CTA. Dark mode's `brandPrimaryOnDark` is a
+  /// *brighter* teal than light mode's `brandPrimary`, so white text that
+  /// works on the light-mode accent fails contrast on the dark-mode one;
+  /// this mirrors the pairing `AppTheme.dark`'s `filledButtonTheme` already
+  /// uses (`BrandConfig.onPrimaryDark`, a near-black).
+  static Color onAccentOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? BrandConfig.onPrimaryDark
+          : Colors.white;
 }
 
 class AppPageBackground extends StatelessWidget {
@@ -103,7 +116,8 @@ class AppSectionCard extends StatelessWidget {
 
     // The shadow sits on an opaque box *behind* the card. Painting it inside
     // an unfilled Container let it show through and tint the card grey.
-    return DecoratedBox(
+    return AppFadeIn(
+      child: DecoratedBox(
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(20),
@@ -166,6 +180,7 @@ class AppSectionCard extends StatelessWidget {
         ),
       ),
       ),
+    ),
     );
   }
 }
@@ -187,7 +202,8 @@ class AppSettingsCategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return AppPressScale(
+      child: Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: AppPageColors.cardBgOf(context),
@@ -241,6 +257,7 @@ class AppSettingsCategoryTile extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -473,7 +490,8 @@ class AppHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppFadeIn(
+      child: Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
@@ -497,7 +515,7 @@ class AppHeroCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppCountUpText(
                   value,
                   style: const TextStyle(
                     fontSize: 44,
@@ -542,6 +560,7 @@ class AppHeroCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -562,7 +581,8 @@ class AppMetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppFadeIn(
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppPageColors.cardBgOf(context),
@@ -599,7 +619,7 @@ class AppMetricTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+          AppCountUpText(
             value,
             style: const TextStyle(
               fontSize: 18,
@@ -610,6 +630,7 @@ class AppMetricTile extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -855,6 +876,7 @@ class AppSelectField<T> extends StatelessWidget {
     this.canSelect,
     this.compact = false,
     this.showLabel = true,
+    this.fieldColor,
   });
 
   final String label;
@@ -868,6 +890,8 @@ class AppSelectField<T> extends StatelessWidget {
   final bool Function(AppSelectOption<T> option)? canSelect;
   final bool compact;
   final bool showLabel;
+  /// Overrides the field's background; defaults to [AppPageColors.fieldBgOf].
+  final Color? fieldColor;
 
   String? get _selectedLabel {
     for (final option in options) {
@@ -897,19 +921,21 @@ class AppSelectField<T> extends StatelessWidget {
           SizedBox(height: compact ? 6 : 8),
         ],
         Material(
-          color: AppPageColors.fieldBgOf(context),
+          color: fieldColor ?? AppPageColors.fieldBgOf(context),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(compact ? 12 : 14),
-            side: BorderSide(
-              color:
-                  active
-                      ? AppPageColors.subtleBorderOf(context)
-                      : AppPageColors.subtleBorderOf(context).withValues(alpha: 0.7),
-            ),
+            // Same border whether active or not — a field being disabled
+            // (e.g. "synced to your learning language") is shown by the
+            // dimmed content below, not by changing the box outline.
+            side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
+            // Web/desktop builds otherwise show Material's default focus
+            // ring around this box once it has been tapped or tabbed to,
+            // which reads as an unrelated accent-colored border.
+            focusColor: Colors.transparent,
             onTap:
                 active
                     ? () async {
@@ -995,7 +1021,9 @@ class AppFilterButton extends StatelessWidget {
             : active
             ? AppColors.brandPrimary
             : onSurface.withValues(alpha: 0.87);
-    return Tooltip(
+    return AppPressScale(
+      enabled: onPressed != null,
+      child: Tooltip(
       message: tooltip,
       child: Material(
         color: active ? AppColors.brandPrimary.withValues(alpha: 0.1) : Colors.transparent,
@@ -1018,12 +1046,15 @@ class AppFilterButton extends StatelessWidget {
                 isLabelVisible: active && count > 0,
                 label: Text('$count'),
                 backgroundColor: AppColors.brandPrimary,
+                // Badge defaults to colorScheme.onError, which is red in dark mode.
+                textColor: Colors.white,
                 child: Icon(Icons.tune_rounded, size: 20, color: iconColor),
               ),
             ),
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -1038,7 +1069,8 @@ class AppClearFiltersButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
+    return AppPressScale(
+      child: Tooltip(
       message: 'Clear all filters',
       child: Material(
         color: AppColors.brandPrimary.withValues(alpha: 0.1),
@@ -1060,6 +1092,7 @@ class AppClearFiltersButton extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -1081,7 +1114,11 @@ class AppSwitch extends StatelessWidget {
       value: value,
       onChanged: onChanged,
       activeTrackColor: dark ? BrandConfig.primaryOnDark : BrandConfig.primary,
-      inactiveTrackColor: dark ? AppPageColors.fieldBgOf(context) : const Color(0xFFE5E5EA),
+      // `fieldBgOf` (darkRaisedBg, #152A2E) was too close in luminance to the
+      // card/sheet surfaces the switch usually sits on to read as a track at
+      // all — this needs to stay visibly lighter than any dark surface in
+      // the app, not just differ from the page background.
+      inactiveTrackColor: dark ? const Color(0xFF2A4A50) : const Color(0xFFE5E5EA),
       thumbColor: Colors.white,
     );
   }
@@ -1157,7 +1194,8 @@ class AppNavRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return AppPressScale(
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -1191,6 +1229,7 @@ class AppNavRow extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -1202,7 +1241,8 @@ class AppEmptyHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return AppFadeIn(
+      child: Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Text(
         text,
@@ -1211,6 +1251,7 @@ class AppEmptyHint extends StatelessWidget {
           fontSize: 14,
           height: 1.45,
         ),
+      ),
       ),
     );
   }
@@ -1426,7 +1467,9 @@ class AppSheetActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = iconColor ?? AppColors.brandPrimary;
-    return Padding(
+    return AppPressScale(
+      enabled: enabled,
+      child: Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: AppPageColors.cardBgOf(context),
@@ -1494,6 +1537,7 @@ class AppSheetActionTile extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -1512,7 +1556,7 @@ Future<String?> showAppPromptDialog(
   String? result;
 
   try {
-    result = await showDialog<String>(
+    result = await showAppDialog<String>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (ctx) {

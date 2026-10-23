@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/flashcards_screen.dart';
 import 'package:fluentdeck/data/flashcard_offline_store.dart';
+import 'package:fluentdeck/services/deck_backup_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/app_theme.dart';
@@ -39,6 +40,7 @@ class DecksShellScreenState extends State<DecksShellScreen> with WidgetsBindingO
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(_syncPendingOnResume());
+      unawaited(DeckBackupService.instance.runAutoBackupIfDue());
     }
   }
 

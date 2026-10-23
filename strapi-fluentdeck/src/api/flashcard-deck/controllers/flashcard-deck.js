@@ -23,7 +23,7 @@ const { recordFlashcardReviewStreak,
 const { recordReviewLog } = require('../../../utils/flashcard-review-log');
 const { buildDetailedStats, listReviewLog } = require('../../../utils/flashcard-detailed-stats');
 const { filteredDeckStats, filteredReviewQueue } = require('../../../utils/flashcard-filtered-deck');
-const { cardMatchesFilter } = require('../../../utils/flashcard-browse-filter');
+const { cardMatchesFilter, normalizeSourceDeckIds } = require('../../../utils/flashcard-browse-filter');
 const { importCsv, importTxt } = require('../../../utils/flashcard-import');
 const { importApkgFile, buildApkgBuffer } = require('../../../utils/flashcard-apkg');
 const { pullSyncData, getSyncMeta, setSyncMeta } = require('../../../utils/flashcard-cloud-sync');
@@ -162,8 +162,17 @@ module.exports = createCoreController(
       });
       if (!deck) return ctx.notFound('Deck not found');
 
-      const { name, description, parentDeckId, deckOptions } = ctx.request.body ?? {};
+      const { name, description, parentDeckId, deckOptions, filterQuery } = ctx.request.body ?? {};
       const data = {};
+      const isFiltered = deck.isFiltered ?? deck.is_filtered;
+
+      if (filterQuery !== undefined) {
+        if (!isFiltered) return ctx.badRequest('Only filtered decks have a filterQuery');
+        if (!filterQuery || typeof filterQuery !== 'object' || Array.isArray(filterQuery)) {
+          return ctx.badRequest('filterQuery must be an object');
+        }
+        data.filterQuery = filterQuery;
+      }
 
       if (description !== undefined) data.description = String(description);
       if (name != null && !deck.isDefault) {
@@ -693,10 +702,21 @@ module.exports = createCoreController(
 
       const { q, deckId, tag, state: stateFilter, marked, flag, languageCode, language, cefrLevel, cefr } = ctx.query ?? {};
       const where = { user: userId };
+      // Filtered decks own no cards; browse them through their saved search.
+      let savedFilter = null;
       if (deckId) {
         const parsedDeckId = parseInt(String(deckId), 10);
-        where.deck = parsedDeckId;
-        await repairCardsDeckFromNotes(strapi, userId, parsedDeckId);
+        const deck = await strapi.db.query('api::flashcard-deck.flashcard-deck').findOne({
+          where: { id: parsedDeckId, user: userId },
+        });
+        if (deck && (deck.isFiltered ?? deck.is_filtered)) {
+          savedFilter = deck.filterQuery ?? deck.filter_query ?? {};
+          const sourceDeckIds = normalizeSourceDeckIds(savedFilter);
+          if (sourceDeckIds.length) where.deck = { id: { $in: sourceDeckIds } };
+        } else {
+          where.deck = parsedDeckId;
+          await repairCardsDeckFromNotes(strapi, userId, parsedDeckId);
+        }
       }
 
       let cards = await strapi.db.query('api::flashcard.flashcard').findMany({
@@ -718,7 +738,7 @@ module.exports = createCoreController(
         tag,
         state: stateFilter,
         marked: marked === 'true' || marked === '1' ? true : marked === 'false' ? false : null,
-        flag: flag != null && flag !== '' ? (flag === 'none' ? 0 : parseInt(String(flag), 10)) : null,
+        flag,
         languageCode: languageCode ?? language,
         cefrLevel: cefrLevel ?? cefr,
       };
@@ -739,7 +759,11 @@ module.exports = createCoreController(
             siblingCardCount: nid ? noteSiblingCounts[nid] ?? 1 : 1,
           });
         })
-        .filter((card) => cardMatchesFilter(card, card.reviewState, filter, now));
+        .filter(
+          (card) =>
+            (!savedFilter || cardMatchesFilter(card, card.reviewState, savedFilter, now)) &&
+            cardMatchesFilter(card, card.reviewState, filter, now),
+        );
 
       ctx.body = { data, total: data.length };
     },

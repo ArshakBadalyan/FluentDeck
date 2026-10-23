@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
@@ -10,7 +11,7 @@ Future<void> showFlashcardCheckResultDialog(
   BuildContext context,
   FlashcardCheckResult result,
 ) async {
-  await showDialog<void>(
+  await showAppDialog<void>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.35),
     builder:
@@ -86,7 +87,7 @@ Future<bool?> _showConfirmDialog(
   String confirmLabel = 'Delete',
   bool destructive = true,
 }) {
-  return showDialog<bool>(
+  return showAppDialog<bool>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.35),
     builder:
@@ -137,7 +138,7 @@ Future<void> _showInfoDialog(
   required String title,
   required String message,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.35),
     builder:
@@ -366,7 +367,7 @@ class DecksOverflowMenu {
   ) async {
     if (!context.mounted) return const FlashcardCheckResult(ok: false, summary: 'Cancelled');
 
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.35),
@@ -403,7 +404,7 @@ class DecksOverflowMenu {
   }) async {
     if (!context.mounted) return;
 
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.35),

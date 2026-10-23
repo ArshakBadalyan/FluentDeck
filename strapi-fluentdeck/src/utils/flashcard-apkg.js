@@ -554,7 +554,10 @@ async function readApkgRows(apkgPath, { strapi, importScheduling = false } = {})
   }
 
   const sqliteBuffer = extractCollectionSqlite(dbEntry.getData());
-  const tmpDb = path.join(os.tmpdir(), `apkg-import-${Date.now()}.anki2`);
+  // Unique folder per import: a timestamp-only name collides when two imports
+  // run in the same millisecond, and one would read the other's collection.
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'apkg-import-'));
+  const tmpDb = path.join(tmpDir, 'collection.anki2');
   fs.writeFileSync(tmpDb, sqliteBuffer);
 
   try {
@@ -672,7 +675,7 @@ async function readApkgRows(apkgPath, { strapi, importScheduling = false } = {})
     return rows;
   } finally {
     try {
-      fs.unlinkSync(tmpDb);
+      fs.rmSync(tmpDir, { recursive: true, force: true });
     } catch (_) {
       // ignore
     }
@@ -802,7 +805,7 @@ async function buildApkgBuffer(strapi, userId, { deckId = null } = {}) {
     `);
     const insertCard = db.prepare(`
       INSERT INTO cards (id,nid,did,ord,mod,usn,type,queue,due,ivl,factor,reps,lapses,left,odue,odid,flags,data)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `);
 
     let noteId = nowSecs() * 1000;

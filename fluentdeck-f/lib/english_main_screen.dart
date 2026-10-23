@@ -19,6 +19,7 @@ import 'package:fluentdeck/services/audio_service.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/auth_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
+import 'package:fluentdeck/services/deck_notification_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/services/notifications_service.dart';
@@ -28,6 +29,7 @@ import 'package:fluentdeck/ui_elements/english_bottom_nav.dart';
 import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
 import 'package:fluentdeck/ui_elements/main_app_bar.dart';
 import 'package:fluentdeck/ui_elements/notification_panel.dart';
+import 'ui_elements/app_motion.dart';
 
 
 class EnglishMainScreen extends StatefulWidget {
@@ -51,6 +53,17 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       widget.initialMainIndex.clamp(0, EnglishMainScreen.mainTabCount - 1);
   late final PageController _pageController =
       PageController(initialPage: _currentIndex);
+
+  /// Material "fade through" between top-level tabs: the old tab fades out
+  /// (value 1 → 0), the page jumps, then the new tab fades in while scaling
+  /// up from 92%. The PageView stays, so tabs keep their lazy build/lifecycle;
+  /// it just no longer swipes.
+  late final AnimationController _tabFade = AnimationController(
+    vsync: this,
+    value: 1,
+  );
+  bool _tabFadingIn = false;
+  int _tabFadeToken = 0;
   late final TabController _profileTabController =
       TabController(length: _profileSubTabs.length, vsync: this);
   late final TabController _decksTabController =
@@ -116,6 +129,11 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   void initState() {
     super.initState();
     MainNavigationCoordinator.navigateToMainTab = setMainIndex;
+    if (DeckNotificationService.instance.consumeOpenDecksOnLaunch()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) MainNavigationCoordinator.goToTab(MainTabId.decks);
+      });
+    }
     // Profile → About → Show tips reads where the user is.
     ScreenTutorialReplayCoordinator.currentMainTabIndex = _tutorialMainIndex;
     ScreenTutorialReplayCoordinator.currentSubTabIndex = _tutorialSubIndex;
@@ -179,6 +197,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     }
     UnsavedChangesService().removeListener(_onUnsavedChangesChanged);
     _pageController.dispose();
+    _tabFade.dispose();
     _profileTabController.dispose();
     _decksTabController.dispose();
     _speakTabController.dispose();
@@ -186,12 +205,9 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     super.dispose();
   }
 
-  ScrollPhysics get _mainPagePhysics {
-    if (_speakInSession || UnsavedChangesService().hasUnsavedChanges) {
-      return const NeverScrollableScrollPhysics();
-    }
-    return const PageScrollPhysics();
-  }
+  /// Top-level tabs change by tapping the bottom nav (fade through), not by
+  /// swiping the page.
+  ScrollPhysics get _mainPagePhysics => const NeverScrollableScrollPhysics();
 
   void _leaveSpeakTabIfNeeded(int nextIndex) {
     if (MainTabConfig.isTab(_currentIndex, MainTabId.speak) &&
@@ -251,7 +267,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     _leaveSpeakTabIfNeeded(next);
     _pendingSubIndex = subIndex;
     if (next != _currentIndex) {
-      _pageController.jumpToPage(next);
+      unawaited(_showMainPage(next));
       return;
     }
     _pendingSubIndex = null;
@@ -269,18 +285,27 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
             : null,
   );
 
-  /// Neighbouring tabs slide; farther tabs jump straight there. Animating
-  /// across several pages fired onPageChanged for every tab in between
-  /// (building them, hitting their APIs and replaying the tab sound).
+  /// Fade through to [index]. Jumping (never animating across pages) keeps
+  /// onPageChanged from firing for the tabs in between.
   Future<void> _showMainPage(int index) async {
-    if ((index - _currentIndex).abs() > 1) {
+    if (MediaQuery.disableAnimationsOf(context)) {
       _pageController.jumpToPage(index);
       return;
     }
-    await _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
+    final token = ++_tabFadeToken;
+    _tabFadingIn = false;
+    await _tabFade.animateTo(
+      0,
+      duration: const Duration(milliseconds: 90),
+      curve: AppMotion.accelerateCurve,
+    );
+    if (!mounted || token != _tabFadeToken) return;
+    _pageController.jumpToPage(index);
+    setState(() => _tabFadingIn = true);
+    await _tabFade.animateTo(
+      1,
+      duration: const Duration(milliseconds: 210),
+      curve: AppMotion.decelerateCurve,
     );
   }
 
@@ -485,11 +510,21 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                 }
                 return false;
               },
-              child: PageView(
-                controller: _pageController,
-                physics: _mainPagePhysics,
-                onPageChanged: _onMainPageChanged,
-                children: _orderedPages,
+              child: AnimatedBuilder(
+                animation: _tabFade,
+                builder: (context, child) => Opacity(
+                  opacity: _tabFade.value,
+                  child: Transform.scale(
+                    scale: _tabFadingIn ? 0.92 + 0.08 * _tabFade.value : 1,
+                    child: child,
+                  ),
+                ),
+                child: PageView(
+                  controller: _pageController,
+                  physics: _mainPagePhysics,
+                  onPageChanged: _onMainPageChanged,
+                  children: _orderedPages,
+                ),
               ),
             ),
           ),
@@ -497,7 +532,14 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       ),
       bottomNavigationBar: EnglishBottomNav(
         currentIndex: _currentIndex,
-        showShadow: _bottomNavShowShadow,
+        // Decks has its own banner directly above the nav bar (streak /
+        // studied-today), and Speak's message composer has its own outlined
+        // pill shape right above it — both already read as a separator, so
+        // the scrolled-under shadow doubling up with them is suppressed.
+        showShadow:
+            _currentTab == MainTabId.decks || _currentTab == MainTabId.speak
+                ? false
+                : _bottomNavShowShadow,
         onTap: (index) async {
           if (index == _currentIndex) return;
           _pendingSubIndex = null;

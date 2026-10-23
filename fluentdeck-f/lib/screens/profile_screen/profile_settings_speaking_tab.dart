@@ -25,7 +25,6 @@ class ProfileSettingsSpeakingSection extends StatefulWidget {
 class _ProfileSettingsSpeakingSectionState
     extends State<ProfileSettingsSpeakingSection> {
   bool _loading = true;
-  bool _saving = false;
   bool _isPremium = false;
   SpeakingPreferences _speakingPrefs = const SpeakingPreferences();
   Timer? _goalSaveDebounce;
@@ -63,8 +62,8 @@ class _ProfileSettingsSpeakingSectionState
 
   /// Updates the goal locally right away so the slider stays responsive,
   /// then waits for the user to settle on a value before sending the PUT
-  /// request — sending one per drag tick made every control on this screen
-  /// lock (`_saving`) and unlock on each tick.
+  /// request — sending one per drag tick would otherwise fire a network
+  /// call per pixel of drag.
   void _onGoalSliderChanged(double value) {
     final goal = value.round();
     // Base the update on the service's latest cached value, not this
@@ -124,15 +123,10 @@ class _ProfileSettingsSpeakingSectionState
   static const _premiumOnlyLevels = {'B2', 'C1', 'C2'};
 
   Future<void> _saveSpeakingPreferences(SpeakingPreferences next) async {
-    setState(() {
-      _speakingPrefs = next;
-      _saving = true;
-    });
+    setState(() => _speakingPrefs = next);
 
     final result = await SpeakingPreferencesService.instance.saveWithDetails(next);
     if (!mounted) return;
-
-    setState(() => _saving = false);
 
     if (!result.ok) {
       final restored = await SpeakingPreferencesService.instance.load(
@@ -178,7 +172,7 @@ class _ProfileSettingsSpeakingSectionState
               AppSelectField<String>(
                 label: 'Language you are learning',
                 value: _speakingPrefs.practiceLanguage,
-                enabled: !_saving,
+                enabled: true,
                 options:
                     SpeakingPreferences.practiceLanguageOptions.entries
                         .map(
@@ -188,24 +182,21 @@ class _ProfileSettingsSpeakingSectionState
                           ),
                         )
                         .toList(),
-                onChanged:
-                    _saving
-                        ? null
-                        : (value) {
-                          // The tutor follows the new learning language; it can
-                          // still be changed separately under Tutor below.
-                          final tutorLanguage =
-                              SpeakingPreferences.responseLanguageOptions
-                                      .containsKey(value)
-                                  ? value
-                                  : _speakingPrefs.responseLanguage;
-                          _saveSpeakingPreferences(
-                            _speakingPrefs.copyWith(
-                              practiceLanguage: value,
-                              responseLanguage: tutorLanguage,
-                            ),
-                          );
-                        },
+                onChanged: (value) {
+                  // The tutor follows the new learning language; it can
+                  // still be changed separately under Tutor below.
+                  final tutorLanguage =
+                      SpeakingPreferences.responseLanguageOptions
+                              .containsKey(value)
+                          ? value
+                          : _speakingPrefs.responseLanguage;
+                  _saveSpeakingPreferences(
+                    _speakingPrefs.copyWith(
+                      practiceLanguage: value,
+                      responseLanguage: tutorLanguage,
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 4),
               AppToggleRow(
@@ -214,7 +205,7 @@ class _ProfileSettingsSpeakingSectionState
                     'Decks, notes, and filters use only your learning language '
                     '(${SpeakingPreferences.practiceLanguageOptions[_speakingPrefs.practiceLanguage] ?? _speakingPrefs.practiceLanguage}).',
                 value: _speakingPrefs.syncLearningLanguage,
-                enabled: !_saving,
+                enabled: true,
                 onChanged: (value) {
                   _saveSpeakingPreferences(
                     _speakingPrefs.copyWith(syncLearningLanguage: value),
@@ -233,7 +224,7 @@ class _ProfileSettingsSpeakingSectionState
               AppSelectField<String>(
                 label: 'Tutor response language',
                 value: _speakingPrefs.responseLanguage,
-                enabled: !_saving,
+                enabled: true,
                 options:
                     SpeakingPreferences.responseLanguageOptions.entries
                         .map(
@@ -243,20 +234,17 @@ class _ProfileSettingsSpeakingSectionState
                           ),
                         )
                         .toList(),
-                onChanged:
-                    _saving
-                        ? null
-                        : (value) {
-                          _saveSpeakingPreferences(
-                            _speakingPrefs.copyWith(responseLanguage: value),
-                          );
-                        },
+                onChanged: (value) {
+                  _saveSpeakingPreferences(
+                    _speakingPrefs.copyWith(responseLanguage: value),
+                  );
+                },
               ),
               const SizedBox(height: 12),
               AppSelectField<String>(
                 label: 'Tutor voice',
                 value: _speakingPrefs.tutorVoice,
-                enabled: !_saving,
+                enabled: true,
                 options:
                     SpeakingPreferences.voiceOptions.entries
                         .map(
@@ -281,19 +269,16 @@ class _ProfileSettingsSpeakingSectionState
                   }
                   return true;
                 },
-                onChanged:
-                    _saving
-                        ? null
-                        : (value) {
-                          _saveSpeakingPreferences(
-                            _speakingPrefs.copyWith(tutorVoice: value),
-                          );
-                        },
+                onChanged: (value) {
+                  _saveSpeakingPreferences(
+                    _speakingPrefs.copyWith(tutorVoice: value),
+                  );
+                },
               ),
               const SizedBox(height: 12),
               CefrLevelChips(
                 selectedLevel: _speakingPrefs.englishLevel,
-                enabled: !_saving,
+                enabled: true,
                 lockedLevels: _isPremium ? const {} : _premiumOnlyLevels,
                 onLockedLevelTap: (_) => showSpeakingPremiumSnackBar(context),
                 onLevelSelected: (level) {
@@ -312,7 +297,7 @@ class _ProfileSettingsSpeakingSectionState
           child: AppSelectField<String>(
             label: 'Translation language',
             value: _speakingPrefs.translationLanguage,
-            enabled: !_saving,
+            enabled: true,
             options:
                 SpeakingPreferences.translationLanguageOptions.entries
                     .map(
@@ -322,14 +307,11 @@ class _ProfileSettingsSpeakingSectionState
                       ),
                     )
                     .toList(),
-            onChanged:
-                _saving
-                    ? null
-                    : (value) {
-                      _saveSpeakingPreferences(
-                        _speakingPrefs.copyWith(translationLanguage: value),
-                      );
-                    },
+            onChanged: (value) {
+              _saveSpeakingPreferences(
+                _speakingPrefs.copyWith(translationLanguage: value),
+              );
+            },
           ),
         ),
         AppSettingsGroup(
@@ -342,7 +324,7 @@ class _ProfileSettingsSpeakingSectionState
                 title: 'Auto-save corrected words',
                 subtitle: 'Add vocabulary fixes to From speaking automatically.',
                 value: _speakingPrefs.autoSaveCorrections,
-                enabled: !_saving,
+                enabled: true,
                 onChanged: (value) {
                   _saveSpeakingPreferences(
                     _speakingPrefs.copyWith(autoSaveCorrections: value),
@@ -353,7 +335,7 @@ class _ProfileSettingsSpeakingSectionState
                 title: 'Sound on',
                 subtitle: 'Play tutor voice responses automatically.',
                 value: _speakingPrefs.soundOn,
-                enabled: !_saving,
+                enabled: true,
                 onChanged: (value) {
                   _saveSpeakingPreferences(_speakingPrefs.copyWith(soundOn: value));
                 },
@@ -362,7 +344,7 @@ class _ProfileSettingsSpeakingSectionState
                 title: 'Type messages',
                 subtitle: 'Show a text field instead of mic-only input.',
                 value: _speakingPrefs.typeMessagesEnabled,
-                enabled: !_saving,
+                enabled: true,
                 onChanged: (value) {
                   _saveSpeakingPreferences(
                     _speakingPrefs.copyWith(typeMessagesEnabled: value),
@@ -373,7 +355,7 @@ class _ProfileSettingsSpeakingSectionState
                 title: 'Auto-play tutor voice',
                 subtitle: 'Play replies automatically, or use Play on each message.',
                 value: _speakingPrefs.autoPlayVoice,
-                enabled: !_saving,
+                enabled: true,
                 onChanged: (value) {
                   _saveSpeakingPreferences(
                     _speakingPrefs.copyWith(autoPlayVoice: value),
@@ -385,7 +367,7 @@ class _ProfileSettingsSpeakingSectionState
                 subtitle: 'Open the mic after the tutor finishes speaking.',
                 value: _speakingPrefs.autoStartRecording ||
                     _speakingPrefs.autoConversation,
-                enabled: !_saving,
+                enabled: true,
                 onChanged: (value) {
                   // Hands-free was merged into this toggle; clear the legacy flag.
                   _saveSpeakingPreferences(
@@ -406,7 +388,7 @@ class _ProfileSettingsSpeakingSectionState
                   divisions: 10,
                   label:
                       '${_speakingPrefs.autoStartRecordingDelaySeconds}s after tutor finishes',
-                  enabled: !_saving,
+                  enabled: true,
                   onChanged: (value) {
                     _saveSpeakingPreferences(
                       _speakingPrefs.copyWith(
@@ -443,11 +425,6 @@ class _ProfileSettingsSpeakingSectionState
             ],
           ),
         ),
-        if (_saving)
-          const Padding(
-            padding: EdgeInsets.only(top: 4),
-            child: LinearProgressIndicator(minHeight: 2),
-          ),
       ],
     );
   }

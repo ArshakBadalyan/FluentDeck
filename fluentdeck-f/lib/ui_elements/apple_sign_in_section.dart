@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 import '../services/apple_auth_service.dart';
 import '../services/audio_service.dart';
@@ -129,15 +130,15 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
         const SizedBox(height: 8),
         Row(
           children: [
-            const Expanded(child: Divider(color: Color(0xFFE0E0E0))),
+            Expanded(child: Divider(color: AppPageColors.subtleBorderOf(context))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
                 label,
-                style: const TextStyle(fontSize: 13, color: Colors.black54),
+                style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
               ),
             ),
-            const Expanded(child: Divider(color: Color(0xFFE0E0E0))),
+            Expanded(child: Divider(color: AppPageColors.subtleBorderOf(context))),
           ],
         ),
         const SizedBox(height: 16),
@@ -159,8 +160,8 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
             child: OutlinedButton.icon(
               onPressed: widget.enabled ? _showWebUnavailableMessage : null,
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black54,
-                side: const BorderSide(color: Colors.black26),
+                foregroundColor: AppPageColors.textPrimaryOf(context),
+                side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5),
                 ),
@@ -172,7 +173,11 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
         else if (!kIsWeb && (Platform.isIOS || Platform.isMacOS))
           SignInWithAppleButton(
             onPressed: widget.enabled ? _handleAppleSignIn : () {},
-            style: SignInWithAppleButtonStyle.black,
+            // Apple's own light/dark button (not Flutter's theme) — black
+            // reads well on a light page, white on a dark one.
+            style: Theme.of(context).brightness == Brightness.dark
+                ? SignInWithAppleButtonStyle.white
+                : SignInWithAppleButtonStyle.black,
             borderRadius: BorderRadius.circular(5),
             height: 50,
           )
@@ -183,8 +188,8 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
             child: OutlinedButton.icon(
               onPressed: widget.enabled ? _handleAppleSignIn : null,
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.black),
+                foregroundColor: AppPageColors.textPrimaryOf(context),
+                side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5),
                 ),

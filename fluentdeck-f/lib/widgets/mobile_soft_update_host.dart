@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -49,7 +50,7 @@ class _MobileSoftUpdateHostState extends State<MobileSoftUpdateHost> {
     final bodyText =
         widget.offer.bodyText.isNotEmpty ? widget.offer.bodyText : defaultBody;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder:

@@ -165,6 +165,10 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
 
   /// Translates the phrase into the user's translation language.
   Future<void> _translateWithAi() async {
+    if (!_isPremium) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
     final word = _phraseController.text.trim();
     if (word.isEmpty) {
       setState(() => _error = 'Enter a word or phrase first.');
@@ -483,6 +487,7 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                             : 'Translation',
                       ),
                     ),
+                    if (!_checkingPremium)
                     TextButton.icon(
                       onPressed: _translating ? null : _translateWithAi,
                       icon:
@@ -493,7 +498,11 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                               : const Icon(Icons.translate_rounded, size: 16),
-                      label: Text(_translating ? 'Translating…' : 'Translate with AI'),
+                      label: Text(
+                        _translating
+                            ? 'Translating…'
+                            : (_isPremium ? 'Translate with AI' : 'Translate · Premium'),
+                      ),
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.brandPrimary,
                         visualDensity: VisualDensity.compact,

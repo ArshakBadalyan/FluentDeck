@@ -30,13 +30,15 @@ function parseHHmm(value) {
  */
 async function sendDailyReminders(strapi, { now = new Date(), windowMinutes = 5 } = {}) {
   const users = await strapi.db.query("plugin::users-permissions.user").findMany({
+    // `blocked` is checked below: users created without it have NULL, which a
+    // `blocked: false` filter would silently skip.
     where: {
       daily_reminder_enabled: true,
       push_subscribed: true,
-      blocked: false,
     },
     select: [
       "id",
+      "blocked",
       "user_timezone",
       "daily_reminder_time",
       "daily_reminder_last_sent_date",
@@ -45,6 +47,7 @@ async function sendDailyReminders(strapi, { now = new Date(), windowMinutes = 5 
 
   let sent = 0;
   for (const user of users) {
+    if (user.blocked === true) continue;
     const timeZone = user.user_timezone || "UTC";
     let nowMinutes;
     let todayKey;
@@ -58,8 +61,10 @@ async function sendDailyReminders(strapi, { now = new Date(), windowMinutes = 5 
     if (user.daily_reminder_last_sent_date === todayKey) continue;
 
     const reminderMinutes = parseHHmm(user.daily_reminder_time);
-    const dueSinceMidnight = nowMinutes - reminderMinutes;
-    if (dueSinceMidnight < 0 || dueSinceMidnight >= windowMinutes) continue;
+    // Wrap around midnight: a 23:58 reminder is first checked at 00:00, which
+    // is 2 minutes late, not 1438 minutes early.
+    const minutesLate = (nowMinutes - reminderMinutes + 1440) % 1440;
+    if (minutesLate >= windowMinutes) continue;
 
     try {
       await sendPushToUser(user.id, {

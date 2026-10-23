@@ -498,6 +498,10 @@ async function transcribeAudio(filePath, originalName, language = 'en') {
     .join(' ')
     .trim();
   let fullText = String(result.text ?? '').trim() || segmentText;
+  const duration = Number(result.duration);
+  const durationSeconds = Number.isFinite(duration) && duration > 0
+    ? Math.ceil(duration)
+    : null;
 
   const hallucinated = looksLikeWhisperHallucination(fullText, segments);
   if (hallucinated) {
@@ -506,6 +510,7 @@ async function transcribeAudio(filePath, originalName, language = 'en') {
       text: '',
       segments: [],
       discardedAsSilence: true,
+      durationSeconds,
     };
   }
 
@@ -517,6 +522,7 @@ async function transcribeAudio(filePath, originalName, language = 'en') {
       end: segment?.end ?? null,
       noSpeechProb: segment?.no_speech_prob ?? null,
     })),
+    durationSeconds,
   };
 }
 

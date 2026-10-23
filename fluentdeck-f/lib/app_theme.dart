@@ -7,6 +7,13 @@ import 'config/brand_config.dart';
 import 'ui_elements/modern_page_widgets.dart';
 
 /// Central light/dark themes seeded from the brand color in [BrandConfig].
+///
+/// Material 2 (m2.material.io/components): `useMaterial3: false`, so buttons,
+/// cards, dialogs, chips and snackbars use M2 shapes, elevation and ripples.
+/// In M2, toggles (switch, checkbox, radio, slider) and the FAB take
+/// `colorScheme.secondary`, so primary *and* secondary are the brand teal —
+/// the seed alone would make them a muted tone. Plan and phases:
+/// docs/motion-and-material-plan.md.
 abstract final class AppTheme {
   static const _seed = AppColors.brandPrimary;
 
@@ -15,10 +22,16 @@ abstract final class AppTheme {
       seedColor: _seed,
       brightness: Brightness.light,
       surface: AppPageColors.pageBg,
+    ).copyWith(
+      primary: AppColors.brandPrimary,
+      onPrimary: Colors.white,
+      secondary: AppColors.brandPrimary,
+      onSecondary: Colors.white,
     );
 
     return ThemeData(
-      useMaterial3: true,
+      useMaterial3: false,
+      splashFactory: InkRipple.splashFactory,
       colorScheme: scheme,
       fontFamily: BrandConfig.fontFamily,
       textTheme: AppTextTheme.textTheme,
@@ -40,7 +53,7 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.brandPrimary,
           foregroundColor: Colors.white,
-        ),
+        ).merge(_m2ButtonShapeAndElevation),
       ),
       // Material3's seed-generated default (colorScheme.primaryContainer) is a
       // pale, washed-out tint of the brand teal — fine for chips, wrong for an
@@ -49,6 +62,12 @@ abstract final class AppTheme {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.brandPrimaryDeep,
         foregroundColor: Colors.white,
+      ),
+      // M2 chips default to grey; keep filter/choice chips on brand.
+      chipTheme: _m2ChipTheme(
+        accent: AppColors.brandPrimary,
+        background: AppPageColors.fieldBg,
+        label: BrandConfig.textPrimary,
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.brandPrimary,
@@ -78,6 +97,27 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: Colors.white,
+        dayPeriodColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.brandPrimary
+              : AppPageColors.fieldBg,
+        ),
+        dayPeriodTextColor: WidgetStateColor.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? Colors.white : BrandConfig.textPrimary,
+        ),
+        hourMinuteColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.brandPrimary.withValues(alpha: 0.12)
+              : AppPageColors.fieldBg,
+        ),
+        hourMinuteTextColor: BrandConfig.textPrimary,
+        dialHandColor: AppColors.brandPrimary,
+        dialBackgroundColor: AppPageColors.fieldBg,
+        entryModeIconColor: AppColors.brandPrimary,
+      ),
       pageTransitionsTheme: _pageTransitionsTheme,
     );
   }
@@ -97,10 +137,13 @@ abstract final class AppTheme {
       surfaceContainer: card,
       primary: AppColors.brandPrimaryOnDark,
       onPrimary: BrandConfig.onPrimaryDark,
+      secondary: AppColors.brandPrimaryOnDark,
+      onSecondary: BrandConfig.onPrimaryDark,
     );
 
     return ThemeData(
-      useMaterial3: true,
+      useMaterial3: false,
+      splashFactory: InkRipple.splashFactory,
       colorScheme: scheme,
       fontFamily: BrandConfig.fontFamily,
       textTheme: AppTextTheme.textTheme.apply(
@@ -134,11 +177,16 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.brandPrimaryOnDark,
           foregroundColor: BrandConfig.onPrimaryDark,
-        ),
+        ).merge(_m2ButtonShapeAndElevation),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.brandPrimaryOnDark,
         foregroundColor: BrandConfig.onPrimaryDark,
+      ),
+      chipTheme: _m2ChipTheme(
+        accent: AppColors.brandPrimaryOnDark,
+        background: raised,
+        label: BrandConfig.darkTextPrimary,
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.brandPrimaryOnDark,
@@ -168,9 +216,76 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: raised,
+        dayPeriodColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.brandPrimaryOnDark
+              : scaffold,
+        ),
+        dayPeriodTextColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? BrandConfig.onPrimaryDark
+              : BrandConfig.darkTextPrimary,
+        ),
+        hourMinuteColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.brandPrimaryOnDark.withValues(alpha: 0.16)
+              : scaffold,
+        ),
+        hourMinuteTextColor: BrandConfig.darkTextPrimary,
+        dialHandColor: AppColors.brandPrimaryOnDark,
+        dialBackgroundColor: scaffold,
+        dialTextColor: BrandConfig.darkTextPrimary,
+        entryModeIconColor: AppColors.brandPrimaryOnDark,
+      ),
       pageTransitionsTheme: _pageTransitionsTheme,
     );
   }
+
+  static ChipThemeData _m2ChipTheme({
+    required Color accent,
+    required Color background,
+    required Color label,
+  }) {
+    return ChipThemeData(
+      backgroundColor: background,
+      selectedColor: accent.withValues(alpha: 0.18),
+      checkmarkColor: accent,
+      // Chips replace (not merge) the default text style, so the font
+      // family must be named here or labels fall back to the system font.
+      labelStyle: TextStyle(
+        fontFamily: BrandConfig.fontFamily,
+        color: label,
+        fontWeight: FontWeight.w500,
+      ),
+      secondaryLabelStyle: TextStyle(
+        fontFamily: BrandConfig.fontFamily,
+        color: accent,
+        fontWeight: FontWeight.w600,
+      ),
+      secondarySelectedColor: accent.withValues(alpha: 0.18),
+      shape: const StadiumBorder(),
+    );
+  }
+
+  /// FilledButton is a Material 3 widget; give it the M2 button look used by
+  /// ElevatedButton under `useMaterial3: false` — 4dp corners, resting
+  /// elevation 2 that rises to 8 while pressed (animated by the button).
+  static final ButtonStyle _m2ButtonShapeAndElevation = ButtonStyle(
+    shape: WidgetStateProperty.all(
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    ),
+    elevation: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.disabled)) return 0;
+      if (states.contains(WidgetState.pressed)) return 8;
+      if (states.contains(WidgetState.hovered) ||
+          states.contains(WidgetState.focused)) {
+        return 4;
+      }
+      return 2;
+    }),
+  );
 
   static PageTransitionsTheme get _pageTransitionsTheme {
     return PageTransitionsTheme(

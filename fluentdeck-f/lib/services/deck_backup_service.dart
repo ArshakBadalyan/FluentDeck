@@ -33,22 +33,59 @@ class DeckBackupService {
         '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
-  Future<void> runAutoBackupIfDue() async {
-    final settings = await ReviewSettingsStore.instance.load();
-    if (!settings.autoBackupEnabled) return;
-
-    final last = await getLastBackupMs();
-    if (last != null) {
-      final elapsed = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(last));
-      if (elapsed.inDays < settings.autoBackupIntervalDays) return;
-    }
-
-    await performBackup(silent: true);
+  /// True when an automatic backup should run: never backed up, the interval
+  /// has fully passed, or the last backup looks to be in the future (clock
+  /// was moved back), which would otherwise block backups indefinitely.
+  static bool isAutoBackupDue({
+    required int? lastBackupMs,
+    required int intervalDays,
+    required DateTime now,
+  }) {
+    if (lastBackupMs == null) return true;
+    final elapsed = now.difference(
+      DateTime.fromMillisecondsSinceEpoch(lastBackupMs),
+    );
+    return elapsed.isNegative || elapsed >= Duration(days: intervalDays);
   }
 
-  Future<void> performBackup({bool silent = false}) async {
+  /// Runs a silent backup when auto-backup is on and due. Called on app start,
+  /// on resume and when the setting changes. Returns true if a backup was
+  /// made; never throws, since callers fire it and forget.
+  Future<bool> runAutoBackupIfDue() async {
+    try {
+      final settings = await ReviewSettingsStore.instance.load();
+      if (!settings.autoBackupEnabled) return false;
+      final due = isAutoBackupDue(
+        lastBackupMs: await getLastBackupMs(),
+        intervalDays: settings.autoBackupIntervalDays,
+        now: DateTime.now(),
+      );
+      if (!due) return false;
+      await performBackup(silent: true);
+      return true;
+    } catch (e) {
+      debugPrint('Auto backup failed: $e');
+      return false;
+    }
+  }
+
+  Future<void>? _inFlight;
+
+  /// Backs up the collection. Joins a backup already in progress instead of
+  /// running two at once. Throws if the collection could not be exported.
+  Future<void> performBackup({bool silent = false}) {
+    return _inFlight ??= _performBackup(
+      silent: silent,
+    ).whenComplete(() => _inFlight = null);
+  }
+
+  Future<void> _performBackup({required bool silent}) async {
     final data = await FlashcardService.instance.exportJson();
-    if (data == null) return;
+    if (data == null) {
+      throw Exception(
+        'Could not export your collection. Check your connection and try again.',
+      );
+    }
 
     final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
     final bytes = utf8.encode(jsonStr);

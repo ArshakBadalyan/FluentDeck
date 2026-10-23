@@ -13,10 +13,13 @@ import '../models/conversation_turn_model.dart';
 import '../models/conversation_training_session.dart';
 import '../models/grammar_correction.dart';
 import '../models/speaking_session_context.dart';
+import '../utils/practice_time_format.dart';
 import 'api_service.dart';
+import 'app_feature_config_service.dart';
 import 'user_progress_service.dart';
 import 'conversation_limit_service.dart';
 import 'conversation_history_service.dart';
+import 'daily_goal_tracker.dart';
 import 'speaking_preferences_service.dart';
 import 'tts_cache_service.dart';
 enum ConversationProcessingStage {
@@ -29,6 +32,7 @@ enum ConversationProcessingStage {
 class ConversationService {
   ConversationService._();
   static final ConversationService instance = ConversationService._();
+
 
   final AudioRecorder _recorder = AudioRecorder();
   final AudioPlayer _ttsPlayer = AudioPlayer();
@@ -234,8 +238,11 @@ class ConversationService {
     stage = ConversationProcessingStage.speaking;
     _notify();
     try {
-      await _playTutorReply(text, sessionEpoch: sessionEpoch)
-          .timeout(const Duration(seconds: 90));
+      await _playTutorReply(
+        text,
+        sessionEpoch: sessionEpoch,
+        sessionOpening: !turns.any((t) => t.isUser),
+      ).timeout(const Duration(seconds: 90));
     } on TimeoutException {
       try {
         await _ttsPlayer.stop();
@@ -490,7 +497,7 @@ class ConversationService {
 
     final data = await ApiService.post('ai/tutor', body);
     if (data is Map && data['limitReached'] == true) {
-      throw Exception('Daily conversation limit reached');
+      throw Exception('Daily AI practice time used up');
     }
     if (data is Map && data['error'] != null) {
       throw Exception(data['error']['message']?.toString() ?? 'Tutor failed');
@@ -504,6 +511,7 @@ class ConversationService {
         Map<String, dynamic>.from(data['usage'] as Map),
       );
     }
+    DailyGoalTracker.instance.applySpeakingStats(data['speakingStats']);
 
     final translation = _sanitizeTranslation(_optionalString(data['translation']));
 
@@ -957,11 +965,11 @@ class ConversationService {
 
   /// Whisper often invents YouTube-style lines from silence/noise.
   String _dailyLimitMessage(ConversationUsageStatus usage) {
-    final limit = usage.dailyLimit;
+    final limit = formatPracticeTime(usage.dailyLimit);
     if (usage.isPremium) {
-      return 'Daily AI limit reached ($limit turns). Comes back tomorrow — fair use keeps practice available for everyone.';
+      return 'You\'ve used today\'s $limit of AI practice. It resets tomorrow — fair use keeps practice available for everyone.';
     }
-    return 'Daily limit reached ($limit turns). Upgrade to Premium for a much higher daily allowance.';
+    return 'You\'ve used today\'s free $limit of AI practice. Upgrade to Premium for up to ${formatPracticeMinutes(AppFeatureConfigService.instance.config.premiumDailyMinutes)} a day.';
   }
 
   bool _looksLikeWhisperHallucination(String text) {
@@ -1135,7 +1143,7 @@ class ConversationService {
       final usageMap = <String, dynamic>{
         'allowed': false,
         'usedToday': (data['usedToday'] as num?)?.round() ?? 0,
-        'dailyLimit': (data['dailyLimit'] as num?)?.round() ?? 10,
+        'dailyLimit': (data['dailyLimit'] as num?)?.round() ?? 300,
         'isPremium': data['isPremium'] == true,
         'unlimited': data['unlimited'] == true,
       };
@@ -1157,6 +1165,7 @@ class ConversationService {
         Map<String, dynamic>.from(data['usage'] as Map),
       );
     }
+    DailyGoalTracker.instance.applySpeakingStats(data['speakingStats']);
 
     final autoSavedWords = <String>[];
     final rawAutoSaved = data['autoSavedWords'];
@@ -1259,6 +1268,7 @@ class ConversationService {
   Future<void> _playTutorReply(
     String text, {
     required int sessionEpoch,
+    bool sessionOpening = false,
   }) async {
     if (text.trim().isEmpty || sessionEpoch != _chatSessionEpoch || !_chatActive) {
       return;
@@ -1281,7 +1291,10 @@ class ConversationService {
       return;
     }
 
-    final data = await ApiService.post('ai/tts', {'text': text});
+    final data = await ApiService.post('ai/tts', {
+      'text': text,
+      if (sessionOpening) 'sessionOpening': true,
+    });
     if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
     if (data is! Map || data['audioBase64'] is! String) {
       throw Exception('Unexpected TTS response');

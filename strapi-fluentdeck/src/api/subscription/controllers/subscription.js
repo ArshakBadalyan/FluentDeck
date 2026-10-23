@@ -22,36 +22,22 @@ async function getAuthenticatedUserId(ctx, strapi) {
 
 function formatSubscription(sub) {
   if (!sub) return null;
+  const { dailyMinutesForProductId } = require("../../../utils/subscription-plans");
   return {
     platform: sub.platform,
     productId: sub.productId,
     status: sub.subscriptionStatus,
     currentPeriodEnd: sub.currentPeriodEnd,
     autoRenewing: sub.autoRenewing,
-    dailyConversationTurns: sub.dailyConversationTurns ?? null,
+    dailyMinutes: dailyMinutesForProductId(sub.productId),
   };
 }
 
 module.exports = createCoreController("api::subscription.subscription", ({ strapi }) => ({
-  /** Public marketing plans (duration + fallback price) from env. */
+  /** Public marketing plans (duration, fallback price, daily minutes) from env. */
   async plans(ctx) {
-    const {
-      getSubscriptionPlans,
-      getSubscriptionPlansForDailyTurns,
-      getDailyTurnsSliderConfig,
-      clampDailyConversationTurns,
-    } = require("../../../utils/subscription-plans");
-    const slider = getDailyTurnsSliderConfig();
-    const requested = ctx.query?.dailyTurns ?? ctx.query?.dailyConversationTurns;
-    const dailyTurns = requested != null
-      ? clampDailyConversationTurns(requested)
-      : slider.default;
-    ctx.body = {
-      slider,
-      dailyConversationTurns: dailyTurns,
-      plans: getSubscriptionPlansForDailyTurns(dailyTurns),
-      basePlans: getSubscriptionPlans(),
-    };
+    const { getSubscriptionPlans } = require("../../../utils/subscription-plans");
+    ctx.body = { plans: getSubscriptionPlans() };
   },
 
   async status(ctx) {
@@ -73,10 +59,7 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
     if (!receiptData) return ctx.badRequest("receiptData is required");
 
     try {
-      const {
-        dailyTurnsForProductId,
-        isAllowedSubscriptionProductId,
-      } = require("../../../utils/subscription-plans");
+      const { isAllowedSubscriptionProductId } = require("../../../utils/subscription-plans");
       const verified = await verifyAppleReceipt({ receiptData });
       if (!isAllowedSubscriptionProductId(verified.productId)) {
         return ctx.badRequest("Unknown subscription product");
@@ -88,7 +71,6 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
         subscriptionStatus: "active",
         currentPeriodEnd: verified.currentPeriodEnd,
         autoRenewing: verified.autoRenewing,
-        dailyConversationTurns: dailyTurnsForProductId(verified.productId),
         rawPayload: verified.rawPayload,
       });
       ctx.body = {
@@ -112,10 +94,7 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
     }
 
     try {
-      const {
-        dailyTurnsForProductId,
-        isAllowedSubscriptionProductId,
-      } = require("../../../utils/subscription-plans");
+      const { isAllowedSubscriptionProductId } = require("../../../utils/subscription-plans");
       if (!isAllowedSubscriptionProductId(productId)) {
         return ctx.badRequest("Unknown subscription product");
       }
@@ -127,7 +106,6 @@ module.exports = createCoreController("api::subscription.subscription", ({ strap
         subscriptionStatus: verified.status,
         currentPeriodEnd: verified.currentPeriodEnd,
         autoRenewing: verified.autoRenewing,
-        dailyConversationTurns: dailyTurnsForProductId(verified.productId),
         rawPayload: verified.rawPayload,
       });
       ctx.body = {

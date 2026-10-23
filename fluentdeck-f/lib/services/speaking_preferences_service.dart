@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/speaking_preferences.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
+import '../utils/api_exception.dart';
 
 /// Notifies listeners whenever the cached preferences change, so screens
 /// showing the same value (e.g. the Daily goal slider in Profile → Settings
@@ -45,7 +46,16 @@ class SpeakingPreferencesService extends ChangeNotifier {
   ) async {
     final payload = preferences.toUpdatePayload();
     AuthService.invalidateUserCache();
-    final data = await ApiService.put('users/me/speaking-preferences', payload);
+    // ApiService throws on 4xx/5xx and network errors; callers expect a
+    // result (they revert their UI on !ok), so report failures that way.
+    final dynamic data;
+    try {
+      data = await ApiService.put('users/me/speaking-preferences', payload);
+    } on ApiException catch (e) {
+      return (ok: false, errorMessage: e.message);
+    } catch (_) {
+      return (ok: false, errorMessage: 'Could not save. Check your connection.');
+    }
 
     if (data is Map && data['error'] == null) {
       _cached = preferences.copyWith(

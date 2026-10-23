@@ -41,6 +41,16 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   String _translationLanguage = 'none';
   bool _generatingMeaning = false;
   bool _translating = false;
+  // My Notes only has two decks a note can land in (My Notes → Saved words /
+  // From speaking filters); the server resolves one of them from this value.
+  // Creating defaults to 'speaking' — this screen's only opened from the
+  // Speak tab. Editing starts from the note's own deck; anything other than
+  // 'speaking' (a word list, an actual flashcard deck) shows as "Saved
+  // words" here, since that's the only other option this toggle has, but
+  // _initialNoteSource below remembers which bucket that really was so an
+  // edit that never touches Deck doesn't silently move the note.
+  String _noteSource = 'speaking';
+  late final String _initialNoteSource;
 
   @override
   void initState() {
@@ -54,6 +64,10 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     _topicCtrl = TextEditingController(text: note?.topic ?? '');
     _languageCode = note?.languageCode ?? 'en';
     _cefrLevel = note?.cefrLevel;
+    if (note != null) {
+      _noteSource = note.source == 'speaking' ? 'speaking' : 'manual';
+    }
+    _initialNoteSource = _noteSource;
     _loadPrefs();
     _loadPremium();
   }
@@ -178,6 +192,10 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
 
   /// Translates the word into the user's translation language.
   Future<void> _translateWithAi() async {
+    if (!_isPremium) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
     final word = _wordCtrl.text.trim();
     if (word.isEmpty) {
       _snack('Enter a word or phrase first');
@@ -254,6 +272,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           clearCefrLevel: _cefrLevel == null,
           topic: _topicCtrl.text.trim(),
           clearTopic: _topicCtrl.text.trim().isEmpty,
+          source: _noteSource == _initialNoteSource ? null : _noteSource,
         );
         if (!mounted) return;
         if (ok) {
@@ -273,6 +292,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           languageCode: _languageCode,
           cefrLevel: _cefrLevel,
           topic: _topicCtrl.text.trim(),
+          source: _noteSource,
         );
         if (!mounted) return;
         if (result.ok) {
@@ -313,6 +333,16 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            AppSelectField<String>(
+              label: 'Deck',
+              value: _noteSource,
+              options: const [
+                AppSelectOption(value: 'speaking', label: 'From speaking'),
+                AppSelectOption(value: 'manual', label: 'Saved words'),
+              ],
+              onChanged: (value) => setState(() => _noteSource = value),
+            ),
+            const SizedBox(height: 16),
             _field('Word or phrase', _wordCtrl),
             const SizedBox(height: 16),
             _field(
@@ -338,7 +368,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
               _translationCtrl,
               maxLines: 2,
               action: _aiAction(
-                label: 'Translate with AI',
+                label: _isPremium ? 'Translate with AI' : 'Translate · Premium',
                 busyLabel: 'Translating…',
                 icon: Icons.translate_rounded,
                 busy: _translating,

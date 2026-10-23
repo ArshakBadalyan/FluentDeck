@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -24,11 +25,13 @@ class FlashcardExportService {
     return names;
   }
 
-  String toCsv(Map<String, dynamic> data) {
+  static const _columns = ['Deck', 'Front', 'Back', 'Type', 'Tags', 'State', 'Due'];
+
+  /// One row per card, in [_columns] order (shared by CSV and Excel).
+  List<List<String>> _rows(Map<String, dynamic> data) {
     final deckNames = _deckNames(data);
     final cards = data['cards'] as List? ?? [];
-    final buffer = StringBuffer();
-    buffer.writeln('Deck,Front,Back,Type,Tags,State,Due');
+    final rows = <List<String>>[];
 
     for (final raw in cards) {
       if (raw is! Map) continue;
@@ -42,19 +45,88 @@ class FlashcardExportService {
       final tagStr =
           tags is List ? tags.map((t) => t.toString()).join('; ') : '';
 
-      buffer.writeln(
-        [
-          _csvCell(deckNames[deckId] ?? 'Deck'),
-          _csvCell(raw['front']?.toString() ?? ''),
-          _csvCell(raw['back']?.toString() ?? ''),
-          _csvCell(raw['cardType']?.toString() ?? 'basic'),
-          _csvCell(tagStr),
-          _csvCell(state),
-          _csvCell(due),
-        ].join(','),
-      );
+      rows.add([
+        deckNames[deckId] ?? 'Deck',
+        raw['front']?.toString() ?? '',
+        raw['back']?.toString() ?? '',
+        raw['cardType']?.toString() ?? 'basic',
+        tagStr,
+        state,
+        due,
+      ]);
+    }
+    return rows;
+  }
+
+  String toCsv(Map<String, dynamic> data) {
+    final buffer = StringBuffer();
+    buffer.writeln(_columns.join(','));
+    for (final row in _rows(data)) {
+      buffer.writeln(row.map(_csvCell).join(','));
     }
     return buffer.toString();
+  }
+
+  /// A minimal one-sheet .xlsx (Office Open XML zip) with a bold header row.
+  List<int> toXlsxBytes(Map<String, dynamic> data) {
+    String esc(String v) => v
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        // Control chars other than tab/newline are invalid in XML.
+        .replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F]'), '');
+    String row(List<String> cells, {bool header = false}) {
+      final style = header ? ' s="1"' : '';
+      final cs = cells
+          .map((c) => '<c t="inlineStr"$style><is><t xml:space="preserve">${esc(c)}</t></is></c>')
+          .join();
+      return '<row>$cs</row>';
+    }
+
+    final sheetRows = [
+      row(_columns, header: true),
+      ..._rows(data).map(row),
+    ].join();
+
+    const xmlHead = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+    final archive = Archive()
+      ..addFile(ArchiveFile.string('[Content_Types].xml', '$xmlHead'
+          '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+          '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+          '<Default Extension="xml" ContentType="application/xml"/>'
+          '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+          '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+          '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+          '</Types>'))
+      ..addFile(ArchiveFile.string('_rels/.rels', '$xmlHead'
+          '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+          '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+          '</Relationships>'))
+      ..addFile(ArchiveFile.string('xl/workbook.xml', '$xmlHead'
+          '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+          'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+          '<sheets><sheet name="Flashcards" sheetId="1" r:id="rId1"/></sheets></workbook>'))
+      ..addFile(ArchiveFile.string('xl/_rels/workbook.xml.rels', '$xmlHead'
+          '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+          '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+          '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+          '</Relationships>'))
+      ..addFile(ArchiveFile.string('xl/styles.xml', '$xmlHead'
+          '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+          '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font>'
+          '<font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+          '<fills count="2"><fill><patternFill patternType="none"/></fill>'
+          '<fill><patternFill patternType="gray125"/></fill></fills>'
+          '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+          '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+          '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+          '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>'
+          '</styleSheet>'))
+      ..addFile(ArchiveFile.string('xl/worksheets/sheet1.xml', '$xmlHead'
+          '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+          '<sheetData>$sheetRows</sheetData></worksheet>'));
+    return ZipEncoder().encodeBytes(archive);
   }
 
   String _csvCell(String value) {
@@ -148,22 +220,22 @@ class FlashcardExportService {
   }
 
   Future<void> exportExcel(Map<String, dynamic> data) async {
-    // Excel opens UTF-8 CSV reliably; use .csv extension with Excel MIME hint.
-    final csv = toCsv(data);
-    final bytes = utf8.encode('\uFEFF$csv');
+    const mimeType =
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    final bytes = toXlsxBytes(data);
     final filename =
-        'flashcards_${DateTime.now().millisecondsSinceEpoch}.csv';
+        'flashcards_${DateTime.now().millisecondsSinceEpoch}.xlsx';
     if (kIsWeb) {
       downloadBytesInBrowser(
         filename: filename,
         bytes: bytes,
-        mimeType: 'application/vnd.ms-excel',
+        mimeType: mimeType,
       );
     } else {
       await saveAndShareBytes(
         filename: filename,
         bytes: bytes,
-        mimeType: 'application/vnd.ms-excel',
+        mimeType: mimeType,
       );
     }
   }

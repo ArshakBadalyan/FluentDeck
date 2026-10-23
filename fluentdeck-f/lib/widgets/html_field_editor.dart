@@ -41,7 +41,10 @@ class HtmlFieldEditor extends StatelessWidget {
         SizedBox(height: trailing != null ? 2 : 8),
         Container(
           decoration: BoxDecoration(
-            color: AppPageColors.fieldBgOf(context),
+            // White (cardBgOf) — this field only has one caller today
+            // (the Add/Edit note sheet), where it was barely distinguishable
+            // from the sheet's own pale background.
+            color: AppPageColors.cardBgOf(context),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppPageColors.subtleBorderOf(context), width: 1),
           ),
@@ -54,7 +57,7 @@ class HtmlFieldEditor extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: hint,
                   filled: true,
-                  fillColor: AppPageColors.fieldBgOf(context),
+                  fillColor: AppPageColors.cardBgOf(context),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                 ),

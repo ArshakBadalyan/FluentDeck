@@ -146,6 +146,10 @@
       "type": "boolean",
       "default": true
     },
+    "note_type_styles": {
+      "type": "json",
+      "default": {}
+    },
     "response_language": {
       "type": "enumeration",
       "enum": ["en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"],
@@ -187,6 +191,20 @@
       "type": "integer",
       "default": 0,
       "min": 0,
+      "private": true
+    },
+    "ai_time_date": {
+      "type": "string",
+      "private": true
+    },
+    "ai_time_seconds": {
+      "type": "integer",
+      "default": 0,
+      "min": 0,
+      "private": true
+    },
+    "ai_time_clock_at": {
+      "type": "datetime",
       "private": true
     },
     "ai_session_opens_date": {

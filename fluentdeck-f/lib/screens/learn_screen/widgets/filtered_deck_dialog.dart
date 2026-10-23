@@ -1,16 +1,19 @@
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/utils/api_exception.dart';
+import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 
-/// Create a filtered deck from a saved search query (Phase 4F).
+/// Create a filtered deck from a saved search query (Phase 4F), or edit
+/// [existing] (name + filter).
 Future<FlashcardDeckModel?> showFilteredDeckDialog(
   BuildContext context, {
   Map<String, dynamic>? initialFilter,
   List<FlashcardDeckModel> decks = const [],
+  FlashcardDeckModel? existing,
 }) {
   return showFrostedBottomSheet<FlashcardDeckModel>(
     context: context,
@@ -26,7 +29,8 @@ Future<FlashcardDeckModel?> showFilteredDeckDialog(
         maxChildSize: 0.95,
         builder: (context, scrollController) {
           return _FilteredDeckSheet(
-            initialFilter: initialFilter ?? const {},
+            initialFilter: existing?.filterQuery ?? initialFilter ?? const {},
+            existing: existing,
             decks: decks,
             scrollController: scrollController,
           );
@@ -41,9 +45,11 @@ class _FilteredDeckSheet extends StatefulWidget {
     required this.initialFilter,
     required this.decks,
     required this.scrollController,
+    this.existing,
   });
 
   final Map<String, dynamic> initialFilter;
+  final FlashcardDeckModel? existing;
   final List<FlashcardDeckModel> decks;
   final ScrollController scrollController;
 
@@ -55,8 +61,10 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _searchCtrl;
   late final TextEditingController _tagCtrl;
-  int? _sourceDeckId;
-  String _state = '';
+  /// Empty = cards from all decks.
+  final Set<int> _sourceDeckIds = {};
+  /// Multi-select card states; empty = any state.
+  final Set<String> _states = {};
   bool _saving = false;
 
   static const _stateOptions = [
@@ -72,16 +80,27 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
   @override
   void initState() {
     super.initState();
-    _nameCtrl = TextEditingController();
+    _nameCtrl = TextEditingController(text: widget.existing?.name ?? '');
     _searchCtrl = TextEditingController(
       text: widget.initialFilter['q']?.toString() ?? '',
     );
     _tagCtrl = TextEditingController(
       text: widget.initialFilter['tag']?.toString() ?? '',
     );
-    final deckId = widget.initialFilter['sourceDeckId'];
-    _sourceDeckId = deckId == null ? null : (deckId as num).toInt();
-    _state = widget.initialFilter['state']?.toString() ?? '';
+    // Older filtered decks stored a single `sourceDeckId`.
+    final single = widget.initialFilter['sourceDeckId'];
+    final many = widget.initialFilter['sourceDeckIds'];
+    for (final id in [if (single != null) single, if (many is List) ...many]) {
+      final parsed = id is num ? id.toInt() : int.tryParse('$id');
+      if (parsed != null) _sourceDeckIds.add(parsed);
+    }
+    // Older filtered decks stored a single state string.
+    final rawState = widget.initialFilter['state'];
+    _states.addAll(
+      [
+        if (rawState is List) ...rawState else if (rawState != null) rawState,
+      ].map((s) => '$s').where((s) => s.isNotEmpty && s != 'all'),
+    );
   }
 
   @override
@@ -98,13 +117,18 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
     final tag = _tagCtrl.text.trim();
     if (q.isNotEmpty) filter['q'] = q;
     if (tag.isNotEmpty) filter['tag'] = tag;
-    if (_sourceDeckId != null) filter['sourceDeckId'] = _sourceDeckId;
-    if (_state.isNotEmpty) filter['state'] = _state;
+    if (_sourceDeckIds.isNotEmpty) {
+      filter['sourceDeckIds'] = _sourceDeckIds.toList()..sort();
+    }
+    if (_states.isNotEmpty) filter['state'] = _states.toList()..sort();
     if (widget.initialFilter['marked'] != null) {
       filter['marked'] = widget.initialFilter['marked'];
     }
-    if (widget.initialFilter['flag'] != null) {
-      filter['flag'] = widget.initialFilter['flag'];
+    // Set in the card browser; carried over as-is (may be lists).
+    for (final key in ['flag', 'cefrLevel', 'languageCode']) {
+      if (widget.initialFilter[key] != null) {
+        filter[key] = widget.initialFilter[key];
+      }
     }
     return filter;
   }
@@ -117,25 +141,25 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
     if (_tagCtrl.text.trim().isNotEmpty) {
       parts.add('tag "${_tagCtrl.text.trim()}"');
     }
-    if (_sourceDeckId != null) {
-      FlashcardDeckModel? match;
-      for (final d in widget.decks) {
-        if (d.id == _sourceDeckId) {
-          match = d;
-          break;
-        }
-      }
-      parts.add('deck ${match?.name ?? _sourceDeckId}');
+    if (_sourceDeckIds.isNotEmpty) {
+      final names = [
+        for (final id in _sourceDeckIds)
+          widget.decks.where((d) => d.id == id).firstOrNull?.name ?? '#$id',
+      ];
+      parts.add('${names.length == 1 ? 'deck' : 'decks'} ${names.join(', ')}');
     }
-    if (_state.isNotEmpty) {
-      final label = _stateOptions.firstWhere((s) => s.$1 == _state).$2;
-      parts.add('state $label');
+    if (_states.isNotEmpty) {
+      final labels = [
+        for (final o in _stateOptions)
+          if (_states.contains(o.$1)) o.$2,
+      ];
+      parts.add('${labels.length == 1 ? 'state' : 'states'} ${labels.join(', ')}');
     }
     if (parts.isEmpty) return 'All cards — no filters applied yet';
     return parts.join(' · ');
   }
 
-  Future<void> _create() async {
+  Future<void> _submit() async {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       AppToast.showSnackBar(context, 
@@ -146,13 +170,36 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
 
     setState(() => _saving = true);
     try {
-      final deck = await FlashcardService.instance.createFilteredDeck(
-        name: name,
-        filterQuery: _buildFilterQuery(),
-      );
+      final existing = widget.existing;
+      final deck =
+          existing != null
+              ? await FlashcardService.instance.updateDeck(
+                existing.id,
+                name: name,
+                filterQuery: _buildFilterQuery(),
+              )
+              : await FlashcardService.instance.createFilteredDeck(
+                name: name,
+                filterQuery: _buildFilterQuery(),
+              );
       if (!mounted) return;
-      if (deck == null) throw Exception('Failed to create filtered deck');
+      if (deck == null) {
+        throw Exception(
+          existing != null
+              ? 'Failed to update filtered deck'
+              : 'Failed to create filtered deck',
+        );
+      }
       Navigator.pop(context, deck);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      if (e.statusCode == 403) {
+        showPremiumUpgradeSnackBar(context, e.message);
+        Navigator.pop(context);
+        return;
+      }
+      AppToast.showSnackBar(context, SnackBar(content: Text(e.message)));
+      setState(() => _saving = false);
     } catch (e) {
       if (!mounted) return;
       AppToast.showSnackBar(context, 
@@ -212,7 +259,7 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: AppColors.brandPrimary,
+            color: AppPageColors.accentOf(context),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             boxShadow: [
               BoxShadow(
@@ -234,7 +281,7 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: AppPageColors.onAccentOf(context).withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -248,12 +295,12 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
+                        color: AppPageColors.onAccentOf(context).withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.filter_list_rounded,
-                        color: Colors.white,
+                        color: AppPageColors.onAccentOf(context),
                         size: 20,
                       ),
                     ),
@@ -262,19 +309,21 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Create filtered deck',
+                          Text(
+                            widget.existing != null
+                                ? 'Edit filtered deck'
+                                : 'Create filtered deck',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                              color: AppPageColors.onAccentOf(context),
                             ),
                           ),
                           Text(
                             'Study cards matching a saved search',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.78),
+                              color: AppPageColors.onAccentOf(context).withValues(alpha: 0.78),
                             ),
                           ),
                         ],
@@ -295,7 +344,7 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
                 'Deck name',
                 TextField(
                   controller: _nameCtrl,
-                  autofocus: true,
+                  autofocus: widget.existing == null,
                   decoration: _fieldDecoration(hint: 'e.g. Hard French verbs'),
                 ),
               ),
@@ -324,16 +373,34 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              AppSelectField<int?>(
-                label: 'Source deck',
-                value: _sourceDeckId,
-                options: [
-                  const AppSelectOption<int?>(value: null, label: 'Any deck'),
-                  ...realDecks.map(
-                    (d) => AppSelectOption<int?>(value: d.id, label: d.name),
+              Text('Source decks', style: _labelStyle),
+              const SizedBox(height: 4),
+              Text(
+                'Pick one or more decks, or "All decks" to search every deck.',
+                style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _StateChip(
+                    label: 'All decks',
+                    icon: Icons.all_inclusive_rounded,
+                    selected: _sourceDeckIds.isEmpty,
+                    onTap: () => setState(_sourceDeckIds.clear),
                   ),
+                  for (final d in realDecks)
+                    _StateChip(
+                      label: d.name,
+                      icon: Icons.folder_outlined,
+                      selected: _sourceDeckIds.contains(d.id),
+                      onTap:
+                          () => setState(() {
+                            if (!_sourceDeckIds.remove(d.id)) _sourceDeckIds.add(d.id);
+                          }),
+                    ),
                 ],
-                onChanged: (v) => setState(() => _sourceDeckId = v),
               ),
               const SizedBox(height: 16),
               Text('Card state', style: _labelStyle),
@@ -346,8 +413,18 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
                     _StateChip(
                       label: option.$2,
                       icon: option.$3,
-                      selected: _state == option.$1,
-                      onTap: () => setState(() => _state = option.$1),
+                      selected:
+                          option.$1.isEmpty
+                              ? _states.isEmpty
+                              : _states.contains(option.$1),
+                      onTap:
+                          () => setState(() {
+                            if (option.$1.isEmpty) {
+                              _states.clear();
+                            } else if (!_states.remove(option.$1)) {
+                              _states.add(option.$1);
+                            }
+                          }),
                     ),
                 ],
               ),
@@ -356,13 +433,13 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.brandPrimary.withValues(alpha: 0.06),
+                  color: AppPageColors.accentOf(context).withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.brandPrimary),
+                    Icon(Icons.info_outline_rounded, size: 18, color: AppPageColors.accentOf(context)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -399,20 +476,26 @@ class _FilteredDeckSheetState extends State<_FilteredDeckSheet> {
           child: SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: _saving ? null : _create,
+              onPressed: _saving ? null : _submit,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPrimary,
-                foregroundColor: Colors.white,
+                backgroundColor: AppPageColors.accentOf(context),
+                foregroundColor: AppPageColors.onAccentOf(context),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               child: _saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppPageColors.onAccentOf(context),
+                      ),
                     )
-                  : const Text('Create deck', style: TextStyle(fontWeight: FontWeight.w700)),
+                  : Text(
+                      widget.existing != null ? 'Save changes' : 'Create deck',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
             ),
           ),
         ),
@@ -442,7 +525,7 @@ class _StateChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.brandPrimary : AppPageColors.fieldBgOf(context),
+          color: selected ? AppPageColors.accentOf(context) : AppPageColors.fieldBgOf(context),
           borderRadius: BorderRadius.circular(10),
           border: !selected
               ? Border.all(color: AppPageColors.subtleBorderOf(context), width: 1)
@@ -454,7 +537,7 @@ class _StateChip extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: selected ? Colors.white : AppPageColors.subtitleOf(context),
+              color: selected ? AppPageColors.onAccentOf(context) : AppPageColors.subtitleOf(context),
             ),
             const SizedBox(width: 6),
             Text(
@@ -462,7 +545,7 @@ class _StateChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : AppPageColors.subtitleOf(context),
+                color: selected ? AppPageColors.onAccentOf(context) : AppPageColors.subtitleOf(context),
               ),
             ),
           ],

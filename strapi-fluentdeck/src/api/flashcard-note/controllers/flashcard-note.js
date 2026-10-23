@@ -21,6 +21,19 @@ module.exports = createCoreController('api::flashcard-note.flashcard-note', ({ s
     ctx.body = { data: [...builtins, ...custom] };
   },
 
+  /** Per-user card style (theme) choice for each built-in note type —
+   *  account-level, not device-local, so it follows the user across
+   *  devices/reinstalls/web the same way their other preferences do. */
+  async getNoteTypeStyles(ctx) {
+    const userId = await getAuthenticatedUserId(ctx, strapi);
+    if (!userId) return ctx.unauthorized('Authentication required');
+    const user = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { id: userId },
+    });
+    const styles = user?.note_type_styles;
+    ctx.body = { styles: styles && typeof styles === 'object' ? styles : {} };
+  },
+
   async createNote(ctx) {
     const userId = await getAuthenticatedUserId(ctx, strapi);
     if (!userId) return ctx.unauthorized('Authentication required');

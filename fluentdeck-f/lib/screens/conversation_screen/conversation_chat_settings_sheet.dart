@@ -138,7 +138,7 @@ class _ConversationChatSettingsSheetState
                         subtitle:
                             'Speak tutor replies out loud. Turn off to read only.',
                         value: _prefs.soundOn && _prefs.autoPlayVoice,
-                        enabled: !_saving,
+                        enabled: true,
                         onChanged: (value) {
                           _save(
                             _prefs.copyWith(
@@ -154,7 +154,7 @@ class _ConversationChatSettingsSheetState
                             'Open the mic after the tutor finishes speaking.',
                         value: _prefs.autoStartRecording ||
                             _prefs.autoConversation,
-                        enabled: !_saving,
+                        enabled: true,
                         onChanged: (value) {
                           // Hands-free was merged into this toggle; clear the legacy flag.
                           _save(
@@ -170,7 +170,7 @@ class _ConversationChatSettingsSheetState
                         subtitle:
                             'Show a text field to type instead of only using the mic.',
                         value: _prefs.typeMessagesEnabled,
-                        enabled: !_saving,
+                        enabled: true,
                         onChanged: (value) {
                           _save(
                             _prefs.copyWith(typeMessagesEnabled: value),

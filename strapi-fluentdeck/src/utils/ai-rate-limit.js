@@ -2,19 +2,85 @@
 
 const { getFeatureConfig, isPremiumUser } = require('./app-feature-config');
 const {
-  HARD_DEFAULT_FREE_DAILY,
-  HARD_DEFAULT_PREMIUM_DAILY,
-  getFreeDailyConversationTurns,
-  getPremiumDailyConversationTurns,
-  resolveDailyConversationLimit,
+  HARD_DEFAULT_FREE_DAILY_MINUTES,
+  getFreeDailyMinutes,
+  resolveDailyMinutes,
 } = require('./daily-conversation-limits');
 
-/** @deprecated prefer getFreeDailyConversationTurns() — kept for tests */
-const DEFAULT_FREE_DAILY = getFreeDailyConversationTurns(HARD_DEFAULT_FREE_DAILY);
-/** @deprecated prefer getPremiumDailyConversationTurns() — kept for tests */
-const DEFAULT_PREMIUM_DAILY = getPremiumDailyConversationTurns(
-  HARD_DEFAULT_PREMIUM_DAILY,
-);
+/**
+ * AI usage is metered as practice time (seconds), not request counts.
+ *
+ * Conversation calls (transcribe → tutor → tts) advance a per-user clock: each
+ * call is charged the real time since the previous one, so a spoken exchange
+ * costs about what it took (speaking, listening, thinking). Pauses longer than
+ * IDLE_GAP_SECONDS count as "away" and are not charged. Each call also has a
+ * floor (e.g. the length of the uploaded audio, or how long the tutor's reply
+ * takes to say) so rapid-fire requests can't run up AI cost for free; when a
+ * floor is bigger than the real gap the clock moves ahead, so the next gap
+ * isn't charged twice.
+ *
+ * One-off tools (word meaning, CEFR, translation, session review) charge only
+ * their flat floor and leave the clock alone — editing cards between them is
+ * not conversation time.
+ */
+const IDLE_GAP_SECONDS = 90;
+/** Rough speaking rate of the tutor voice, for the TTS floor. */
+const TTS_CHARS_PER_SECOND = 15;
+
+const USAGE_FLOORS = {
+  tutor: 2,
+  oneOff: 2,
+  evaluate: 5,
+  transcribeFallback: 3,
+};
+
+function envPositiveInt(name, fallback) {
+  const raw = process.env[name];
+  if (raw === undefined || raw === null || String(raw).trim() === '') {
+    return fallback;
+  }
+  const n = parseInt(String(raw).trim(), 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function idleGapSeconds() {
+  return envPositiveInt('AI_USAGE_IDLE_GAP_SECONDS', IDLE_GAP_SECONDS);
+}
+
+/** Seconds the tutor voice needs to say [text]. */
+function speechSecondsForText(text) {
+  const chars = String(text ?? '').trim().length;
+  if (!chars) return 1;
+  return Math.max(1, Math.ceil(chars / TTS_CHARS_PER_SECOND));
+}
+
+/**
+ * Pure clock step. Returns the seconds to charge and the new clock (ms).
+ * `clockMs` null → first call of a burst.
+ */
+function meterCall({ nowMs, clockMs, floorSeconds, advanceClock = true }) {
+  const floor = Math.max(0, Math.ceil(Number(floorSeconds) || 0));
+  if (!advanceClock) {
+    return { chargedSeconds: floor, clockMs: clockMs ?? null };
+  }
+  // First call, or back after a long pause: only the floor counts.
+  if (clockMs == null) {
+    return { chargedSeconds: floor, clockMs: nowMs };
+  }
+  const gapSeconds = (nowMs - clockMs) / 1000;
+  if (gapSeconds < 0) {
+    // An earlier floor already moved the clock past now.
+    return { chargedSeconds: floor, clockMs: clockMs + floor * 1000 };
+  }
+  if (gapSeconds > idleGapSeconds()) {
+    return { chargedSeconds: floor, clockMs: nowMs };
+  }
+  const chargedSeconds = Math.max(Math.round(gapSeconds), floor);
+  return {
+    chargedSeconds,
+    clockMs: Math.max(nowMs, clockMs + chargedSeconds * 1000),
+  };
+}
 
 function isProductionRuntime() {
   const nodeEnv = String(process.env.NODE_ENV ?? '').trim().toLowerCase();
@@ -52,6 +118,7 @@ function isDailyConversationLimitDisabled(strapi) {
 function unlimitedUsage({ isPremium = true } = {}) {
   return {
     allowed: true,
+    unit: 'seconds',
     usedToday: 0,
     dailyLimit: 0,
     isPremium,
@@ -68,50 +135,43 @@ function todayKey(now = new Date()) {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-/** Free daily pool (always spent first). */
+/** Free daily pool in seconds (always spent first). */
 function pickFreeDailyLimit(config) {
-  return resolveDailyConversationLimit({
-    isPremium: false,
-    cmsConfig: config || {},
-  });
+  return (
+    resolveDailyMinutes({ isPremium: false, cmsConfig: config || {} }) * 60
+  );
 }
 
 /**
- * Subscription-only daily pool (premium). Does not include the free pool.
- * Sources: stored subscription turns → product id → env/CMS premium default.
+ * Plan's total daily seconds. Sources: product id → env/CMS premium default.
  */
-function pickPremiumDailyLimit(
-  config,
-  { productId, dailyConversationTurns } = {},
-) {
-  const {
-    dailyTurnsForProductId,
-    clampDailyConversationTurns,
-  } = require('./subscription-plans');
-  if (dailyConversationTurns != null && Number(dailyConversationTurns) > 0) {
-    return clampDailyConversationTurns(dailyConversationTurns);
-  }
+function pickPlanDailySeconds(config, { productId } = {}) {
   if (productId) {
-    return dailyTurnsForProductId(productId);
+    const { dailyMinutesForProductId } = require('./subscription-plans');
+    return dailyMinutesForProductId(productId) * 60;
   }
-  return resolveDailyConversationLimit({
-    isPremium: true,
-    cmsConfig: config || {},
-  });
+  return resolveDailyMinutes({ isPremium: true, cmsConfig: config || {} }) * 60;
 }
 
 /**
- * Total daily cap.
- * Free users: free pool only.
- * Premium: free pool first, then subscription pool (free + premium).
+ * Subscription-only pool (seconds) on top of the free pool, so free + premium
+ * equals the plan's daily time.
  */
-function pickDailyLimit(config, { isPremium, productId, dailyConversationTurns } = {}) {
+function pickPremiumDailyLimit(config, { productId } = {}) {
+  return Math.max(
+    0,
+    pickPlanDailySeconds(config, { productId }) - pickFreeDailyLimit(config),
+  );
+}
+
+/**
+ * Total daily cap in seconds.
+ * Free users: free pool only. Premium: the plan's daily time.
+ */
+function pickDailyLimit(config, { isPremium, productId } = {}) {
   const freeDailyLimit = pickFreeDailyLimit(config);
   if (!isPremium) return freeDailyLimit;
-  return (
-    freeDailyLimit +
-    pickPremiumDailyLimit(config, { productId, dailyConversationTurns })
-  );
+  return freeDailyLimit + pickPremiumDailyLimit(config, { productId });
 }
 
 function buildUsageBreakdown({
@@ -122,7 +182,7 @@ function buildUsageBreakdown({
 }) {
   const freeUsedToday = Math.min(usedToday, freeDailyLimit);
   const premiumUsedToday = isPremium
-    ? Math.max(0, usedToday - freeDailyLimit)
+    ? Math.min(Math.max(0, usedToday - freeDailyLimit), premiumDailyLimit)
     : 0;
   const dailyLimit = isPremium
     ? freeDailyLimit + premiumDailyLimit
@@ -140,21 +200,24 @@ function buildUsageBreakdown({
   };
 }
 
-async function loadTurnCounters(strapi, userId) {
+async function loadTimeCounters(strapi, userId) {
   const user = await strapi.db.query('plugin::users-permissions.user').findOne({
     where: { id: userId },
-    select: ['ai_turns_date', 'ai_turns_count', 'special'],
+    select: ['ai_time_date', 'ai_time_seconds', 'ai_time_clock_at', 'special'],
   });
   const today = todayKey();
-  const storedDate = user?.ai_turns_date ?? user?.aiTurnsDate ?? '';
-  let usedToday = Number(user?.ai_turns_count ?? user?.aiTurnsCount ?? 0);
-  if (storedDate !== today) {
+  const storedDate = user?.ai_time_date ?? '';
+  let usedToday = Number(user?.ai_time_seconds ?? 0);
+  if (storedDate !== today || !Number.isFinite(usedToday)) {
     usedToday = 0;
   }
+  const clockRaw = user?.ai_time_clock_at;
+  const clockMs = clockRaw ? new Date(clockRaw).getTime() : null;
   return {
     user,
     today,
     usedToday,
+    clockMs: Number.isFinite(clockMs) ? clockMs : null,
     isSpecial: user?.special === true,
   };
 }
@@ -166,11 +229,7 @@ async function resolveUsagePools(strapi, userId, usedToday) {
   const sub = isPremium ? await getUserSubscription(strapi, userId) : null;
   const freeDailyLimit = pickFreeDailyLimit(config);
   const premiumDailyLimit = isPremium
-    ? pickPremiumDailyLimit(config, {
-        productId: sub?.productId,
-        dailyConversationTurns:
-          sub?.dailyConversationTurns ?? sub?.daily_conversation_turns,
-      })
+    ? pickPremiumDailyLimit(config, { productId: sub?.productId })
     : 0;
   const breakdown = buildUsageBreakdown({
     usedToday,
@@ -190,7 +249,7 @@ async function getConversationUsage(strapi, userId) {
     return unlimitedUsage({ isPremium: true });
   }
 
-  const { usedToday, isSpecial } = await loadTurnCounters(strapi, userId);
+  const { usedToday, isSpecial } = await loadTimeCounters(strapi, userId);
   if (isSpecial) {
     return unlimitedUsage({ isPremium: true });
   }
@@ -198,38 +257,56 @@ async function getConversationUsage(strapi, userId) {
   const pools = await resolveUsagePools(strapi, userId, usedToday);
   return {
     allowed: usedToday < pools.dailyLimit,
+    unit: 'seconds',
     usedToday,
     unlimited: false,
     ...pools,
   };
 }
 
-async function recordConversationTurn(strapi, userId) {
+/**
+ * Charges practice time for one successful AI call.
+ * `floorSeconds`: minimum charge (audio length, speech length, flat cost).
+ * `advanceClock`: true for conversation calls, false for one-off tools.
+ */
+async function recordConversationTime(
+  strapi,
+  userId,
+  { floorSeconds = USAGE_FLOORS.oneOff, advanceClock = false } = {},
+) {
   if (isDailyConversationLimitDisabled(strapi)) {
     return unlimitedUsage({ isPremium: true });
   }
 
-  const { today, usedToday: previous, isSpecial } = await loadTurnCounters(
-    strapi,
-    userId,
-  );
+  const { today, usedToday: previous, clockMs, isSpecial } =
+    await loadTimeCounters(strapi, userId);
   if (isSpecial) {
     return unlimitedUsage({ isPremium: true });
   }
 
-  const usedToday = previous + 1;
+  const step = meterCall({
+    nowMs: Date.now(),
+    clockMs,
+    floorSeconds,
+    advanceClock,
+  });
+  const usedToday = previous + step.chargedSeconds;
   const pools = await resolveUsagePools(strapi, userId, usedToday);
 
   await strapi.db.query('plugin::users-permissions.user').update({
     where: { id: userId },
     data: {
-      ai_turns_date: today,
-      ai_turns_count: usedToday,
+      ai_time_date: today,
+      ai_time_seconds: usedToday,
+      ...(advanceClock && step.clockMs != null
+        ? { ai_time_clock_at: new Date(step.clockMs).toISOString() }
+        : {}),
     },
   });
 
   return {
     allowed: usedToday < pools.dailyLimit,
+    unit: 'seconds',
     usedToday,
     unlimited: false,
     ...pools,
@@ -320,6 +397,33 @@ function clampHistory(history) {
   return history.slice(-MAX_AI_HISTORY_TURNS);
 }
 
+/**
+ * The app reads the session-opening greeting aloud right away. That TTS call
+ * must not spend a practice turn (the user has not engaged yet), so each
+ * opening grants one free TTS shortly after. Bounded by the opening limit.
+ * In-memory: after a restart the greeting is just charged as before.
+ */
+const OPENING_TTS_TTL_MS = 2 * 60 * 1000;
+/** @type {Map<number, number>} userId -> expiresAt */
+const openingTtsCredits = new Map();
+
+function grantOpeningTts(userId) {
+  const now = Date.now();
+  if (openingTtsCredits.size > 1000) {
+    for (const [id, expiresAt] of openingTtsCredits) {
+      if (expiresAt <= now) openingTtsCredits.delete(id);
+    }
+  }
+  openingTtsCredits.set(userId, now + OPENING_TTS_TTL_MS);
+}
+
+function consumeOpeningTts(userId) {
+  const expiresAt = openingTtsCredits.get(userId);
+  if (expiresAt == null) return false;
+  openingTtsCredits.delete(userId);
+  return expiresAt > Date.now();
+}
+
 function clampTtsText(text) {
   const trimmed = String(text ?? '').trim();
   if (trimmed.length <= MAX_TTS_CHARS) return trimmed;
@@ -332,10 +436,11 @@ async function ensureConversationAllowed(ctx, strapi, userId) {
     ctx.status = 429;
     ctx.body = {
       error: {
-        message: 'Daily conversation limit reached',
+        message: 'Daily practice time used up',
         status: 429,
       },
       limitReached: true,
+      unit: 'seconds',
       usedToday: usage.usedToday,
       dailyLimit: usage.dailyLimit,
       isPremium: usage.isPremium,
@@ -351,16 +456,21 @@ module.exports = {
   pickDailyLimit,
   pickFreeDailyLimit,
   pickPremiumDailyLimit,
+  pickPlanDailySeconds,
   buildUsageBreakdown,
-  DEFAULT_FREE_DAILY,
-  DEFAULT_PREMIUM_DAILY,
-  getFreeDailyConversationTurns,
-  getPremiumDailyConversationTurns,
+  meterCall,
+  speechSecondsForText,
+  USAGE_FLOORS,
+  IDLE_GAP_SECONDS,
+  HARD_DEFAULT_FREE_DAILY_MINUTES,
+  getFreeDailyMinutes,
   getConversationUsage,
-  recordConversationTurn,
+  recordConversationTime,
   validateSessionOpening,
   checkSessionOpeningAllowed,
   recordSessionOpening,
+  grantOpeningTts,
+  consumeOpeningTts,
   clampHistory,
   clampTtsText,
   ensureConversationAllowed,

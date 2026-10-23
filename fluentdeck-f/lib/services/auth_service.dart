@@ -4,12 +4,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:fluentdeck/clarity_user_sync.dart'
     if (dart.library.html) 'package:fluentdeck/clarity_user_sync_stub.dart';
+import 'package:fluentdeck/data/flashcard_offline_store.dart';
 import 'package:fluentdeck/services/analytics_service.dart';
 import 'package:fluentdeck/services/campaign_analytics.dart';
+import 'package:fluentdeck/services/conversation_limit_service.dart';
 import 'package:fluentdeck/services/english_level_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
+import 'package:fluentdeck/services/flashcard_sync_store.dart';
+import 'package:fluentdeck/services/my_notes_linked_decks_store.dart';
 import 'package:fluentdeck/services/push_notification_service.dart';
+import 'package:fluentdeck/services/speaking_scores_service.dart';
+import 'package:fluentdeck/services/subscription_service.dart';
 import 'package:fluentdeck/services/token_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:fluentdeck/utils/user_facing_api_error.dart';
 import 'package:fluentdeck/utils/api_exception.dart';
@@ -390,19 +397,45 @@ class AuthService {
     if (res['status'] == 'success') {
       await PushNotificationService.logout();
       await TokenStorage.clearAll();
+      _resetPerUserCaches();
+      FlashcardSyncService.instance.resetForSignOut();
       await AnalyticsService.instance.setUserId(null);
       clarityOnLogout();
     }
     return res;
   }
 
-  static Future<void> logout() async {
+  static void _resetPerUserCaches() {
     invalidateUserCache();
+    SubscriptionService.instance.reset();
+    ConversationLimitService.instance.reset();
+  }
+
+  static Future<void> logout() async {
+    _resetPerUserCaches();
     await sendAppInfo(clear: true);
     await PushNotificationService.logout();
     await TokenStorage.clearAll();
+    FlashcardSyncService.instance.resetForSignOut();
     await AnalyticsService.instance.setUserId(null);
     clarityOnLogout();
+  }
+
+  /// Survives logout (unlike [TokenStorage]) so we know whose data is cached.
+  static const _localDataOwnerKey = 'local_data_owner_user_id';
+
+  /// Offline decks/cards, the sync cursor, linked My Notes decks and speaking
+  /// scores are device-wide, not per user. When another account signs in,
+  /// drop them so it never sees the previous account's notes. The same user
+  /// signing back in keeps them (incl. offline reviews not yet pushed).
+  static Future<void> _clearLocalDataIfAccountChanged(int userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getInt(_localDataOwnerKey) == userId) return;
+    await FlashcardOfflineStore.instance.clearAll();
+    await FlashcardSyncStore.instance.clear();
+    await MyNotesLinkedDecksStore.instance.save(const []);
+    await SpeakingScoresService.instance.clearAll();
+    await prefs.setInt(_localDataOwnerKey, userId);
   }
 
   static Future<void> _logAuthAnalyticsLogin({
@@ -422,7 +455,7 @@ class AuthService {
   }
 
   static Future<void> _storeJwtAndUser(Map<String, dynamic> data) async {
-    invalidateUserCache();
+    _resetPerUserCaches();
     final jwt = data['jwt'];
     final userRaw = data['user'];
     if (jwt is! String || jwt.isEmpty || userRaw is! Map) {
@@ -433,8 +466,10 @@ class AuthService {
     if (userId == null) {
       throw StateError('Invalid auth user id');
     }
+    final id = userId is int ? userId : int.parse('$userId');
+    await _clearLocalDataIfAccountChanged(id);
     await TokenStorage.saveToken(jwt);
-    await TokenStorage.saveUserId(userId is int ? userId : int.parse('$userId'));
+    await TokenStorage.saveUserId(id);
     await TokenStorage.saveIsAdmin(user['is_admin'] == true);
     final accountType = user['account_type']?.toString();
     if (accountType == 'teacher') {

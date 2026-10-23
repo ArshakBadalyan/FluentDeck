@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 
 import '../../app_colors.dart';
@@ -12,7 +13,7 @@ Future<bool> showTypeToConfirmDialog(
   String keyword = 'DELETE',
 }) async {
   final controller = TextEditingController();
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showAppDialog<bool>(
     context: context,
     builder:
         (ctx) => StatefulBuilder(

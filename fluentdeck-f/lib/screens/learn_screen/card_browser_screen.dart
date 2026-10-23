@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
@@ -7,11 +8,11 @@ import 'package:fluentdeck/data/decks_help_content.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
+import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/utils/card_browser_utils.dart';
 import 'package:fluentdeck/utils/learning_language_utils.dart';
-import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/card_browser_options_menu.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/card_browser_bulk_actions.dart';
@@ -26,6 +27,7 @@ import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class CardBrowserScreen extends StatefulWidget {
   const CardBrowserScreen({
@@ -54,22 +56,27 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   bool _suppressSearchDebounce = false;
 
   int? _deckFilter;
-  String _stateFilter = 'all';
+  /// Multi-select filters; empty = any state / CEFR level / flag.
+  Set<String> _stateFilters = {};
   String _languageFilter = 'all';
-  String _cefrFilter = 'all';
+  Set<String> _cefrFilters = {};
   bool _syncLearningLanguage = true;
   String _practiceLanguage = 'en';
   bool? _markedFilter;
-  int? _flagFilter;
+  /// Flag numbers to show; 0 = "No flag".
+  Set<int> _flagFilters = {};
   CardBrowserSortField? _sortField;
   CardBrowserSortDir? _sortDir;
 
   bool _selectMode = false;
+  bool _reordering = false;
   final Set<int> _selected = {};
   final ScrollController _tableHScroll = ScrollController();
 
   double _colQuestion = 200;
-  double _colType = 80;
+  // Wide enough to show "Basic (type answer)"/"Basic (reversed)" without
+  // truncating on first render — still user-resizable from here.
+  double _colType = 130;
   double _colDue = 72;
   double _colDeck = 120;
 
@@ -82,7 +89,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   String get _orderScopeKey => CardBrowserOrderStore.scopeKey(
     deckId: _deckFilter,
-    stateFilter: _stateFilter,
+    stateFilter:
+        _stateFilters.isEmpty ? 'all' : (_stateFilters.toList()..sort()).join(','),
     languageCode: _effectiveLanguageCode,
     search: _searchCtrl.text,
     tag: _tagCtrl.text,
@@ -118,11 +126,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       content = SizedBox(width: fixedWidth, child: child);
     }
 
-    return Material(
-      elevation: 3,
-      color: AppPageColors.cardBgOf(context),
-      shadowColor: Colors.black.withValues(alpha: 0.12),
-      child: content,
+    return TooltipVisibility(
+      visible: false,
+      child: Material(
+        elevation: 3,
+        color: AppPageColors.cardBgOf(context),
+        shadowColor: Colors.black.withValues(alpha: 0.12),
+        child: content,
+      ),
     );
   }
 
@@ -149,6 +160,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       _sortDir = null;
     });
   }
+
+  void _onReorderStart(int _) => setState(() => _reordering = true);
+
+  void _onReorderEnd(int _) => setState(() => _reordering = false);
 
   /// ReorderableListView drag callback.
   void _onReorder(int oldIndex, int newIndex) {
@@ -243,11 +258,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       width: _dragColumnWidth,
       child: ReorderableDragStartListener(
         index: index,
-        child: Tooltip(
-          message: 'Drag to reorder',
+        // Not a Tooltip: its OverlayPortal breaks when the row is lifted into
+        // the drag proxy mid-hover (web: "_RenderLayoutBuilder was mutated").
+        child: Semantics(
+          label: 'Drag to reorder',
           child: Material(
             color: Colors.transparent,
             child: InkWell(
+              mouseCursor: SystemMouseCursors.grab,
               borderRadius: BorderRadius.circular(6),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
@@ -331,6 +349,15 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   bool get _fixedDeckScope =>
       widget.deckId != null && !widget.embedInShell;
 
+  /// Resolved once `_decks` has loaded; null until then or if not found.
+  String? get _fixedDeckName {
+    if (!_fixedDeckScope) return null;
+    for (final d in _decks) {
+      if (d.id == widget.deckId) return d.name;
+    }
+    return null;
+  }
+
   Future<void> _init() async {
     await _loadLanguagePrefs();
     unawaited(_loadDecks());
@@ -370,9 +397,6 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     ('none', 'No level'),
   ];
 
-  String? get _effectiveCefrLevel =>
-      _cefrFilter == 'all' ? null : _cefrFilter;
-
   Future<void> _load({bool showFullLoading = true}) async {
     if (showFullLoading) {
       setState(() {
@@ -387,11 +411,11 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
         deckId: _deckFilter,
         query: _searchCtrl.text,
         tag: _tagCtrl.text.trim().isEmpty ? null : _tagCtrl.text.trim(),
-        state: _stateFilter == 'all' ? null : _stateFilter,
+        states: _stateFilters,
         marked: _markedFilter,
-        flag: _flagFilter,
+        flags: _flagFilters,
         languageCode: _effectiveLanguageCode,
-        cefrLevel: _effectiveCefrLevel,
+        cefrLevels: _cefrFilters,
       );
       final storedOrder = await CardBrowserOrderStore.instance.load(_orderScopeKey);
       if (!mounted) return;
@@ -446,7 +470,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   }
 
   Future<void> _deleteCardNote(FlashcardModel card) async {
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -534,6 +558,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     }
     if (saved == true) await _load();
   }
+
+  Widget _addNoteFab({required VoidCallback onPressed}) => FloatingActionButton(
+    onPressed: onPressed,
+    tooltip: 'Add note',
+    backgroundColor: AppColors.brandPrimaryDeep,
+    foregroundColor: Colors.white,
+    child: const Icon(Icons.add),
+  );
 
   List<FlashcardModel> get _selectedCards =>
       _cards.where((c) => _selected.contains(c.id)).toList();
@@ -648,9 +680,9 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   CardBrowserOptionsState get _optionsState => CardBrowserOptionsState(
     markedFilter: _markedFilter == true,
-    suspendedFilter: _stateFilter == 'suspended',
+    suspendedFilter: _stateFilters.contains('suspended'),
     selectMode: _selectMode,
-    flagFilter: _flagFilter,
+    flagFilters: _flagFilters,
     sortLabel: _sortLabel,
     visibleCount: _visibleCards.length,
   );
@@ -662,13 +694,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   void _toggleSuspendedFilter() {
     setState(() {
-      _stateFilter = _stateFilter == 'suspended' ? 'all' : 'suspended';
+      _stateFilters = {..._stateFilters};
+      if (!_stateFilters.remove('suspended')) _stateFilters.add('suspended');
     });
     _load();
   }
 
-  Future<void> _applyFlagFilter(int? flag) async {
-    setState(() => _flagFilter = flag);
+  Future<void> _applyFlagFilter(Set<int> flags) async {
+    setState(() => _flagFilters = flags);
     await _load();
   }
 
@@ -698,10 +731,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
       // while the screen still looks and is titled like a single deck's
       // browser.
       if (!_fixedDeckScope) _deckFilter = null;
-      _stateFilter = 'all';
+      _stateFilters = {};
       _markedFilter = null;
-      _flagFilter = null;
-      _cefrFilter = 'all';
+      _flagFilters = {};
+      _cefrFilters = {};
       _suppressSearchDebounce = true;
       _searchCtrl.clear();
       _tagCtrl.clear();
@@ -740,14 +773,20 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     if (q.isNotEmpty) filter['q'] = q;
     if (tag.isNotEmpty) filter['tag'] = tag;
     if (_deckFilter != null) filter['sourceDeckId'] = _deckFilter;
-    if (_stateFilter != 'all') filter['state'] = _stateFilter;
+    if (_stateFilters.isNotEmpty) {
+      filter['state'] = _stateFilters.toList()..sort();
+    }
     if (_markedFilter != null) filter['marked'] = _markedFilter;
-    if (_flagFilter != null) {
-      filter['flag'] = _flagFilter == 0 ? 'none' : _flagFilter;
+    if (_flagFilters.isNotEmpty) {
+      filter['flag'] = [
+        for (final f in _flagFilters.toList()..sort()) f == 0 ? 'none' : f,
+      ];
     }
     final lang = _effectiveLanguageCode;
     if (lang != null) filter['languageCode'] = lang;
-    if (_cefrFilter != 'all') filter['cefrLevel'] = _cefrFilter;
+    if (_cefrFilters.isNotEmpty) {
+      filter['cefrLevel'] = _cefrFilters.toList()..sort();
+    }
     return filter;
   }
 
@@ -775,11 +814,22 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
         return 'Deck';
       case CardBrowserSortField.type:
         return 'Card type';
+      case CardBrowserSortField.state:
+        return 'State';
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // A tooltip opening under the pointer mid-drag (its OverlayPortal lays out
+    // via LayoutBuilder) throws "_RenderLayoutBuilder was mutated" on web.
+    return TooltipVisibility(
+      visible: !_reordering,
+      child: _buildScreen(context),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context) {
     final compactChrome =
         widget.embedInShell && MediaQuery.sizeOf(context).width < 560;
 
@@ -808,12 +858,30 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
         shadowColor: Colors.black.withValues(alpha: 0.35),
         scrolledUnderElevation: 8,
         surfaceTintColor: Colors.transparent,
-        title: const Text('Card browser'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Card browser'),
+            if (_fixedDeckName != null)
+              Text(
+                _fixedDeckName!,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.white.withValues(alpha: 0.75),
+                ),
+              ),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Add note',
-            onPressed: _addNote,
+            icon: const Icon(Icons.play_arrow),
+            tooltip: 'Start review',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ReviewSessionScreen(deckId: widget.deckId),
+              ),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
@@ -822,6 +890,18 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
           ),
         ],
       ),
+      // Replaces the old header "+" icon — matches the add-note FAB that
+      // used to live on the (now-removed) "View all cards" screen.
+      floatingActionButton: widget.embedInShell
+          ? _addNoteFab(onPressed: _addNote)
+          // Full-screen editor: the FAB grows into it (container transform).
+          : AppFabContainer<bool>(
+              fab: _addNoteFab(onPressed: () {}),
+              openBuilder: (_) => CardEditScreen(deckId: _deckFilter),
+              onClosed: (saved) {
+                if (saved == true) _load();
+              },
+            ),
       body: body,
     );
   }
@@ -1036,7 +1116,11 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 separatorBuilder: (_, __) => const SizedBox(width: 6),
                 itemBuilder: (context, index) {
                   final s = quickStates[index];
-                  final selected = _stateFilter == s && activeExtras == 0;
+                  final selected =
+                      activeExtras == 0 &&
+                      (s == 'all'
+                          ? _stateFilters.isEmpty
+                          : _stateFilters.contains(s));
                   return ChoiceChip(
                     label: Text(_stateFilterLabel(s)),
                     selected: selected,
@@ -1056,9 +1140,18 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                     ),
                     onSelected: (_) {
                       setState(() {
-                        _stateFilter = s;
+                        // With other filters active, a quick chip resets to
+                        // just that state; otherwise it toggles (multi-select).
+                        if (s == 'all') {
+                          _stateFilters = {};
+                        } else if (activeExtras > 0) {
+                          _stateFilters = {s};
+                        } else {
+                          _stateFilters = {..._stateFilters};
+                          if (!_stateFilters.remove(s)) _stateFilters.add(s);
+                        }
                         _markedFilter = null;
-                        _flagFilter = null;
+                        _flagFilters = {};
                       });
                       _load();
                     },
@@ -1080,21 +1173,23 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     // permanently showing "1 filter active" with a Clear button that doesn't
     // do anything the user would recognize as "clearing a filter."
     if (!_fixedDeckScope && _deckFilter != null) n++;
-    if (_stateFilter != 'all') n++;
+    if (_stateFilters.isNotEmpty) n++;
     if (_markedFilter == true) n++;
-    if (_flagFilter != null) n++;
+    if (_flagFilters.isNotEmpty) n++;
     if (_tagCtrl.text.trim().isNotEmpty) n++;
-    if (_cefrFilter != 'all') n++;
+    if (_cefrFilters.isNotEmpty) n++;
     if (!_syncLearningLanguage && _languageFilter != 'all') n++;
     return n;
   }
 
   int get _extraFilterCount {
     var n = 0;
-    if (!['all', 'new', 'learning', 'review'].contains(_stateFilter)) n++;
+    if (_stateFilters.any((s) => !['new', 'learning', 'review'].contains(s))) {
+      n++;
+    }
     if (_markedFilter == true) n++;
-    if (_flagFilter != null) n++;
-    if (_cefrFilter != 'all') n++;
+    if (_flagFilters.isNotEmpty) n++;
+    if (_cefrFilters.isNotEmpty) n++;
     if (!_syncLearningLanguage && _languageFilter != 'all') n++;
     return n;
   }
@@ -1112,12 +1207,12 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   Future<void> _showFiltersSheet() async {
     var deck = _deckFilter;
-    var state = _stateFilter;
+    final states = {..._stateFilters};
     var marked = _markedFilter == true;
-    var flag = _flagFilter;
+    final flags = {..._flagFilters};
     var tag = _tagCtrl.text;
     var language = _languageFilter;
-    var cefr = _cefrFilter;
+    final cefrs = {..._cefrFilters};
 
     final applied = await showFrostedBottomSheet<bool>(
       context: context,
@@ -1145,12 +1240,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               );
             }
 
+            // Multi-select: null = "Any flag" and 0 = "No flag" are exclusive.
             Widget flagChip({
               required String label,
               required int? value,
               Color? color,
             }) {
-              final selected = flag == value;
+              final selected =
+                  value == null ? flags.isEmpty : flags.contains(value);
               return FilterChip(
                 label: Text(label),
                 avatar: color == null ? null : Icon(Icons.flag_rounded, size: 16, color: color),
@@ -1158,7 +1255,19 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 showCheckmark: true,
                 selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
                 checkmarkColor: AppColors.brandPrimary,
-                onSelected: (_) => setSheetState(() => flag = value),
+                onSelected: (_) => setSheetState(() {
+                  if (value == null) {
+                    flags.clear();
+                  } else if (value == 0) {
+                    flags
+                      ..clear()
+                      ..add(0);
+                  } else if (!flags.remove(value)) {
+                    flags
+                      ..remove(0)
+                      ..add(value);
+                  }
+                }),
               );
             }
 
@@ -1229,14 +1338,31 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                             runSpacing: 8,
                             children:
                                 _cefrFilterOptions.map((option) {
-                                  final selected = cefr == option.$1;
+                                  final isAll = option.$1 == 'all';
+                                  final selected =
+                                      isAll
+                                          ? cefrs.isEmpty
+                                          : cefrs.contains(option.$1);
                                   return FilterChip(
                                     label: Text(option.$2),
                                     selected: selected,
                                     showCheckmark: true,
                                     selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
                                     checkmarkColor: AppColors.brandPrimary,
-                                    onSelected: (_) => setSheetState(() => cefr = option.$1),
+                                    // "All levels" and "No level" are exclusive.
+                                    onSelected: (_) => setSheetState(() {
+                                      if (isAll) {
+                                        cefrs.clear();
+                                      } else if (option.$1 == 'none') {
+                                        cefrs
+                                          ..clear()
+                                          ..add('none');
+                                      } else if (!cefrs.remove(option.$1)) {
+                                        cefrs
+                                          ..remove('none')
+                                          ..add(option.$1);
+                                      }
+                                    }),
                                   );
                                 }).toList(),
                           ),
@@ -1265,13 +1391,22 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                                   'suspended',
                                   'buried',
                                 ].map(
-                                  (s) => ChoiceChip(
+                                  (s) => FilterChip(
                                     label: Text(_stateFilterLabel(s)),
-                                    selected: state == s,
+                                    selected:
+                                        s == 'all'
+                                            ? states.isEmpty
+                                            : states.contains(s),
                                     showCheckmark: true,
                                     selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
                                     checkmarkColor: AppColors.brandPrimary,
-                                    onSelected: (_) => setSheetState(() => state = s),
+                                    onSelected: (_) => setSheetState(() {
+                                      if (s == 'all') {
+                                        states.clear();
+                                      } else if (!states.remove(s)) {
+                                        states.add(s);
+                                      }
+                                    }),
                                   ),
                                 ).toList(),
                           ),
@@ -1356,12 +1491,12 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     if (applied == true && mounted) {
       setState(() {
         _deckFilter = deck;
-        _stateFilter = state;
+        _stateFilters = states;
         _markedFilter = marked ? true : null;
-        _flagFilter = flag;
+        _flagFilters = flags;
         _tagCtrl.text = tag;
         _languageFilter = language;
-        _cefrFilter = cefr;
+        _cefrFilters = cefrs;
       });
       await _load();
     }
@@ -1445,7 +1580,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const CardBrowserSkeleton();
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const CardBrowserSkeleton(),
+    );
     }
     if (_error != null) {
       return Center(
@@ -1466,6 +1604,11 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     }
 
     if (_visibleCards.isEmpty) {
+      // A filter hiding every card isn't "no cards" — adding one here would
+      // just add another card the current filters hide too. Offer to clear
+      // the filters instead. A genuinely empty deck gets no action button:
+      // Add note lives in the app bar/toolbar already.
+      final filtered = _hasAnyFilters;
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -1475,15 +1618,23 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               Icon(Icons.search_off_rounded, size: 48, color: AppPageColors.subtitleOf(context)),
               const SizedBox(height: 12),
               Text(
-                'No cards match your filters',
+                filtered ? 'No cards match your filters' : 'No cards in this deck yet',
                 style: TextStyle(color: AppPageColors.subtitleOf(context), fontWeight: FontWeight.w500),
               ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: _addNote,
-                icon: const Icon(Icons.add),
-                label: const Text('Add note'),
-              ),
+              if (filtered) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _clearAllFilters,
+                  icon: const Icon(Icons.filter_alt_off_outlined),
+                  label: const Text('Clear filters'),
+                  // Neutral, not the default teal — this isn't the primary
+                  // action here, same muted look as an unselected filter chip.
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppPageColors.subtitleOf(context),
+                    side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -1511,6 +1662,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 buildDefaultDragHandles: false,
                 itemCount: _visibleCards.length,
                 onReorder: _onReorder,
+                onReorderStart: _onReorderStart,
+                onReorderEnd: _onReorderEnd,
                 proxyDecorator: (child, index, animation) {
                   return _reorderProxyDecorator(
                     child,
@@ -1572,6 +1725,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               buildDefaultDragHandles: false,
               itemCount: _visibleCards.length,
               onReorder: _onReorder,
+              onReorderStart: _onReorderStart,
+              onReorderEnd: _onReorderEnd,
               proxyDecorator: (child, index, animation) {
                 return _reorderProxyDecorator(
                   child,
@@ -1609,7 +1764,9 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     }
 
     // Measure the real slot (the shell may be narrower than the screen).
-    return LayoutBuilder(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.maxWidth - (tableInset * 2);
         if (contentWidth <= availableWidth) {
@@ -1640,6 +1797,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
           ),
         );
       },
+    ),
     );
   }
 
@@ -1718,9 +1876,19 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
             ),
           const SizedBox(width: 20),
           Expanded(child: headerCell('Question', CardBrowserSortField.front)),
-          headerCell('Type', CardBrowserSortField.type, width: 48),
-          headerCell('Due', CardBrowserSortField.due, width: 44),
-          headerCell('Deck', CardBrowserSortField.deck, width: 56),
+          headerCell('Type', CardBrowserSortField.type, width: 72),
+          headerCell('Due', CardBrowserSortField.due, width: 56),
+          // The deck is fixed for this whole screen when opened scoped to
+          // one deck (e.g. from that deck's "Browse cards") — repeating its
+          // name on every single row added nothing, so this slot shows the
+          // card's SM-2 state (New/Learning/Review/Suspended) instead,
+          // which "Due" doesn't always make visible on its own (it shows a
+          // countdown once a card is scheduled, not the state name). Deck
+          // name itself is shown once, in the app bar, instead of per row.
+          if (_fixedDeckScope)
+            headerCell('State', CardBrowserSortField.state, width: 72)
+          else
+            headerCell('Deck', CardBrowserSortField.deck, width: 56),
           const SizedBox(width: 32),
         ],
       ),
@@ -1782,15 +1950,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                         : null,
               ),
               Expanded(
-                child: Text(
-                  stripHtml(card.displayFront),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                ),
+                child: QuestionCell(card: card, fontSize: 13, fontWeight: FontWeight.w500),
               ),
               SizedBox(
-                width: 48,
+                width: 72,
                 child: Text(
                   cardTypeLabel(card.cardType),
                   maxLines: 1,
@@ -1803,9 +1966,9 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 child: CardDueLabel(card: card, width: 56),
               ),
               SizedBox(
-                width: 56,
+                width: _fixedDeckScope ? 72 : 56,
                 child: Text(
-                  _deckLabel(card),
+                  _fixedDeckScope ? cardStateLabel(card) : _deckLabel(card),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
@@ -1890,8 +2053,13 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
           if (showResize) _columnResizeHandle('type'),
           _sortableHeader('Due', CardBrowserSortField.due, width: dueWidth),
           if (showResize) _columnResizeHandle('due'),
-          _sortableHeader('Deck', CardBrowserSortField.deck, width: deckWidth),
-          if (showResize) _columnResizeHandle('deck'),
+          if (_fixedDeckScope) ...[
+            _sortableHeader('State', CardBrowserSortField.state, width: deckWidth),
+            if (showResize) _columnResizeHandle('deck'),
+          ] else ...[
+            _sortableHeader('Deck', CardBrowserSortField.deck, width: deckWidth),
+            if (showResize) _columnResizeHandle('deck'),
+          ],
           SizedBox(width: narrow ? 32 : 40),
         ],
       ),
@@ -1960,11 +2128,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               ),
               SizedBox(
                 width: qWidth,
-                child: Text(
-                  stripHtml(card.displayFront),
+                child: QuestionCell(
+                  card: card,
+                  fontSize: narrow ? 13 : 14,
                   maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: narrow ? 13 : 14),
                 ),
               ),
               if (!narrow) const SizedBox(width: 12),
@@ -1984,7 +2151,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               SizedBox(
                 width: deckWidth,
                 child: Text(
-                  _deckLabel(card),
+                  _fixedDeckScope ? cardStateLabel(card) : _deckLabel(card),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: narrow ? 11 : 12, color: AppPageColors.subtitleOf(context)),

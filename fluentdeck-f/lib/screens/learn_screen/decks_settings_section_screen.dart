@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:convert';
 
@@ -14,9 +15,11 @@ import 'package:fluentdeck/screens/learn_screen/decks_settings_section.dart';
 import 'package:fluentdeck/screens/learn_screen/note_types_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/shared_decks_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_settings_widgets.dart';
+import 'package:fluentdeck/services/deck_backup_service.dart';
 import 'package:fluentdeck/services/deck_notification_service.dart';
 import 'package:fluentdeck/services/flashcard_export_service.dart';
 import 'package:fluentdeck/services/flashcard_import_service.dart';
+import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_store.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
@@ -51,21 +54,52 @@ class DecksSettingsSectionScreen extends StatefulWidget {
   State<DecksSettingsSectionScreen> createState() => _DecksSettingsSectionScreenState();
 }
 
-class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen> {
+class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
+    with SingleTickerProviderStateMixin {
   late ReviewSettings _settings;
   String? _appVersion;
+  late final AnimationController _syncIconController;
+
+  // This screen is pushed on its own Navigator route with `widget.syncLog`
+  // and `widget.syncing` as a one-time snapshot from the Decks settings list
+  // screen underneath. That parent updates its own state when a sync
+  // finishes, but — since this route is already pushed on top of it — that
+  // never rebuilds this widget, so the snapshot above went stale: "Last
+  // sync" only caught up once you left this screen and came back (which
+  // re-pushes it with a fresh snapshot). Mirroring the sync service's own
+  // state locally keeps "Sync now" tapped from here up to date immediately.
+  late FlashcardSyncLog _syncLog;
+  late bool _syncing;
+
+  // Same one-time-snapshot problem as the sync log above: re-read the last
+  // backup time from the backup service so "Back up now" (or an automatic
+  // backup triggered from here) shows up without leaving the screen.
+  late String _lastBackupLabel;
+  bool _backingUp = false;
 
   @override
   void initState() {
     super.initState();
     _settings = widget.settings;
+    _syncLog = widget.syncLog;
+    _syncing = widget.syncing;
+    _lastBackupLabel = widget.lastBackupLabel;
+    if (widget.section == DecksSettingsSection.backups) {
+      _refreshLastBackup();
+    }
     if (widget.section == DecksSettingsSection.about) {
       _loadVersion();
     }
+    _syncIconController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    if (_syncing) _syncIconController.repeat();
   }
 
   @override
   void dispose() {
+    _syncIconController.dispose();
     super.dispose();
   }
 
@@ -74,6 +108,13 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.settings != widget.settings) {
       _settings = widget.settings;
+    }
+    if (widget.syncing != oldWidget.syncing) {
+      if (widget.syncing) {
+        _syncIconController.repeat();
+      } else {
+        _syncIconController.stop();
+      }
     }
   }
 
@@ -88,8 +129,82 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
     await widget.onSave(settings);
   }
 
+  Future<void> _refreshLastBackup() async {
+    final lastMs = await DeckBackupService.instance.getLastBackupMs();
+    if (!mounted) return;
+    setState(() {
+      _lastBackupLabel = DeckBackupService.instance.formatLastBackup(lastMs);
+    });
+  }
+
+  Future<void> _handleBackupNow() async {
+    if (_backingUp) return;
+    setState(() => _backingUp = true);
+    try {
+      await widget.onBackupNow();
+    } finally {
+      if (mounted) setState(() => _backingUp = false);
+      await _refreshLastBackup();
+    }
+  }
+
+  /// Saves an automatic-backup setting, then backs up right away if that
+  /// makes one due (e.g. just turned on with no backup yet).
+  Future<void> _saveAutoBackup(ReviewSettings settings) async {
+    await _save(settings);
+    if (await DeckBackupService.instance.runAutoBackupIfDue()) {
+      await _refreshLastBackup();
+    }
+  }
+
   String _timeLabel(int hour, int minute) {
     return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _setReminderEnabled(bool enabled) async {
+    if (enabled &&
+        !await DeckNotificationService.instance.requestPermission()) {
+      if (!mounted) return;
+      AppToast.showSnackBar(
+        context,
+        const SnackBar(
+          content: Text(
+            'Notifications are off for FluentDeck. Allow them in your device '
+            'settings to get the daily reminder.',
+          ),
+        ),
+      );
+      return;
+    }
+    await _save(_settings.copyWith(reviewReminderEnabled: enabled));
+  }
+
+  Future<void> _sendTestReminder() async {
+    final shown = await DeckNotificationService.instance.showTestReminder();
+    if (!mounted) return;
+    AppToast.showSnackBar(
+      context,
+      SnackBar(
+        content: Text(
+          shown
+              ? 'Test reminder sent. Check your notifications.'
+              : 'Notifications are off for FluentDeck. Allow them in your '
+                  'device settings to get the daily reminder.',
+        ),
+      ),
+    );
+  }
+
+  Widget _testReminderButton() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        onPressed: _sendTestReminder,
+        icon: const Icon(Icons.notifications_active_outlined, size: 18),
+        label: const Text('Send test reminder'),
+        style: TextButton.styleFrom(foregroundColor: AppColors.brandPrimary),
+      ),
+    );
   }
 
   Future<void> _pickReminderTime() async {
@@ -352,7 +467,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
   }
 
   Future<void> _resetSettings() async {
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -705,10 +820,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                       : 'Off',
               value: _settings.reviewReminderEnabled,
               enabled: !kIsWeb,
-              onChanged:
-                  kIsWeb
-                      ? null
-                      : (v) => _save(_settings.copyWith(reviewReminderEnabled: v)),
+              onChanged: kIsWeb ? null : _setReminderEnabled,
             ),
             if (_settings.reviewReminderEnabled && !kIsWeb) ...[
               const SizedBox(height: 8),
@@ -718,11 +830,32 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                 valueLabel: _timeLabel(_settings.reviewReminderHour, _settings.reviewReminderMinute),
                 onTap: _pickReminderTime,
               ),
+              const SizedBox(height: 4),
+              _testReminderButton(),
             ],
           ],
         ),
       ),
     ];
+  }
+
+  /// Runs the sync via the parent (which still owns the snackbar and keeps
+  /// the Decks settings list screen's own state current for when this
+  /// screen is popped), then re-reads the result from the sync service
+  /// directly so this screen's own "Last sync" updates right away too.
+  Future<void> _handleSyncNow() async {
+    setState(() => _syncing = true);
+    _syncIconController.repeat();
+    try {
+      await widget.onSyncNow();
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _syncing = FlashcardSyncService.instance.syncing;
+        _syncLog = FlashcardSyncService.instance.log;
+      });
+      if (!_syncing) _syncIconController.stop();
+    }
   }
 
   List<Widget> _sync() {
@@ -735,14 +868,14 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Last sync'),
-              subtitle: Text(widget.syncLog.lastSuccessLabel),
+              subtitle: Text(_syncLog.lastSuccessLabel),
             ),
-            if (widget.syncLog.lastError != null)
+            if (_syncLog.lastError != null)
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Last sync error'),
                 subtitle: Text(
-                  widget.syncLog.lastError!,
+                  _syncLog.lastError!,
                   style: TextStyle(
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.red.shade300
@@ -751,27 +884,31 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                   ),
                 ),
               ),
-            if (widget.syncLog.lastApplied > 0 || widget.syncLog.lastSkipped > 0)
+            if (_syncLog.lastApplied > 0 || _syncLog.lastSkipped > 0)
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Last upload'),
                 subtitle: Text(
-                  '${widget.syncLog.lastApplied} applied, ${widget.syncLog.lastSkipped} skipped (server wins on conflict)',
+                  '${_syncLog.lastApplied} applied, ${_syncLog.lastSkipped} skipped (server wins on conflict)',
                 ),
               ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Sync now'),
               subtitle: const Text('Upload pending reviews and pull latest decks'),
-              trailing:
-                  widget.syncing
-                      ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Icon(Icons.sync),
-              onTap: widget.syncing ? null : widget.onSyncNow,
+              // Only the icon triggers a sync — the row itself isn't tappable,
+              // so this ListTile is display-only and gets no onTap/ripple.
+              trailing: IconButton(
+                onPressed: _syncing ? null : _handleSyncNow,
+                tooltip: 'Sync now',
+                icon: RotationTransition(
+                  turns: _syncIconController,
+                  child: Icon(
+                    Icons.sync,
+                    color: _syncing ? AppPageColors.accentOf(context) : null,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -792,8 +929,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                 : 'Off',
         value: _settings.reviewReminderEnabled,
         enabled: !kIsWeb,
-        onChanged:
-            kIsWeb ? null : (v) => _save(_settings.copyWith(reviewReminderEnabled: v)),
+        onChanged: kIsWeb ? null : _setReminderEnabled,
       ),
       if (_settings.reviewReminderEnabled && !kIsWeb)
         ListTile(
@@ -806,6 +942,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
             ),
           ),
         ),
+      if (_settings.reviewReminderEnabled && !kIsWeb) _testReminderButton(),
     ];
   }
 
@@ -905,7 +1042,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                       ? 'Every ${_settings.autoBackupIntervalDays} day${_settings.autoBackupIntervalDays == 1 ? '' : 's'}'
                       : 'Off',
               value: _settings.autoBackupEnabled,
-              onChanged: (v) => _save(_settings.copyWith(autoBackupEnabled: v)),
+              onChanged: (v) => _saveAutoBackup(_settings.copyWith(autoBackupEnabled: v)),
             ),
             if (_settings.autoBackupEnabled)
               decksSettingsPickerTile(
@@ -969,7 +1106,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                     },
                   );
                   if (picked != null) {
-                    await _save(_settings.copyWith(autoBackupIntervalDays: picked));
+                    await _saveAutoBackup(_settings.copyWith(autoBackupIntervalDays: picked));
                   }
                 },
               ),
@@ -999,7 +1136,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      widget.lastBackupLabel,
+                      _backingUp ? 'Backing up…' : _lastBackupLabel,
                       style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
                     ),
                   ],
@@ -1018,8 +1155,8 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
               context: context,
               icon: Icons.backup_outlined,
               title: 'Back up now',
-              subtitle: 'Export full collection JSON',
-              onTap: widget.onBackupNow,
+              subtitle: _backingUp ? 'Backing up…' : 'Export full collection JSON',
+              onTap: _handleBackupNow,
             ),
             decksSettingsActionTile(
               context: context,

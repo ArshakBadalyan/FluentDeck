@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/screens/profile_screen/about_us/help_faq_page.dart';
@@ -74,7 +75,7 @@ class _ProfileAboutTabState extends State<ProfileAboutTab> {
 
   Future<void> _confirmResetAllTutorialTours() async {
     if (_hideScreenExplanation) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) {
         return AlertDialog(

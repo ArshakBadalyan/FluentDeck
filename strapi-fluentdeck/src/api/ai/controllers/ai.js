@@ -21,10 +21,14 @@ const {
 const { recordSpeakingTurnStats } = require("../../../utils/speaking-stats-utils");
 const {
   getConversationUsage,
-  recordConversationTurn,
+  recordConversationTime,
+  speechSecondsForText,
+  USAGE_FLOORS,
   validateSessionOpening,
   checkSessionOpeningAllowed,
   recordSessionOpening,
+  grantOpeningTts,
+  consumeOpeningTts,
   clampHistory,
   clampTtsText,
   ensureConversationAllowed,
@@ -48,6 +52,17 @@ async function getAuthenticatedUserId(ctx, strapi) {
     ctx,
   );
   return token?.id ?? null;
+}
+
+// Curated/fallback openers never hit /ai/tutor, so they get no opening TTS
+// credit; let the client flag them, bounded by the daily session-opening cap.
+async function isFreeOpeningTts(strapi, userId, sessionOpening) {
+  if (consumeOpeningTts(userId)) return true;
+  if (!sessionOpening) return false;
+  const check = await checkSessionOpeningAllowed(strapi, userId, { history: [] });
+  if (!check.allowed) return false;
+  await recordSessionOpening(strapi, userId);
+  return true;
 }
 
 module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
@@ -125,7 +140,12 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         text: transcription.text,
         language,
         segments: transcription.segments,
-        usage: await recordConversationTurn(strapi, userId),
+        // The recording is at least as long as the user spoke.
+        usage: await recordConversationTime(strapi, userId, {
+          floorSeconds:
+            transcription.durationSeconds ?? USAGE_FLOORS.transcribeFallback,
+          advanceClock: true,
+        }),
       };
     } catch (error) {
       strapi.log.error("[ai.transcribe]", error);
@@ -152,10 +172,11 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       ctx.status = 429;
       ctx.body = {
         error: {
-          message: "Daily conversation limit reached",
+          message: "Daily practice time used up",
           status: 429,
         },
         limitReached: true,
+        unit: "seconds",
         usedToday: usageBefore.usedToday,
         dailyLimit: usageBefore.dailyLimit,
         isPremium: usageBefore.isPremium,
@@ -307,12 +328,16 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
 
       if (openingSession) {
         await recordSessionOpening(strapi, userId);
+        grantOpeningTts(userId);
       }
 
-      // Session opening (first AI greeting) is free — count starts after the user engages.
+      // Session opening (first AI greeting) is free — time starts after the user engages.
       const usageAfter = openingSession
         ? usageBefore
-        : await recordConversationTurn(strapi, userId);
+        : await recordConversationTime(strapi, userId, {
+            floorSeconds: USAGE_FLOORS.tutor,
+            advanceClock: true,
+          });
 
       ctx.body = {
         ...result,
@@ -378,7 +403,9 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       });
       ctx.body = {
         ...result,
-        usage: await recordConversationTurn(strapi, userId),
+        usage: await recordConversationTime(strapi, userId, {
+          floorSeconds: USAGE_FLOORS.evaluate,
+        }),
       };
     } catch (error) {
       strapi.log.error("[ai.evaluateSession]", error);
@@ -407,6 +434,18 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       return ctx.badRequest("targetLanguage is required");
     }
 
+    if (withGlossary === true && !(await isPremiumUser(strapi, userId))) {
+      ctx.status = 402;
+      ctx.body = {
+        error: {
+          status: 402,
+          name: "PremiumRequired",
+          message: "Generating card translations is a Premium feature.",
+        },
+      };
+      return;
+    }
+
     try {
       if (withGlossary === true) {
         const result = await translateWithGlossary({
@@ -416,7 +455,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
         });
         ctx.body = {
           ...result,
-          usage: await recordConversationTurn(strapi, userId),
+          usage: await recordConversationTime(strapi, userId),
         };
         return;
       }
@@ -426,7 +465,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       });
       ctx.body = {
         translation,
-        usage: await recordConversationTurn(strapi, userId),
+        usage: await recordConversationTime(strapi, userId),
       };
     } catch (error) {
       strapi.log.error("[ai.translateMessage]", error);
@@ -472,7 +511,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       });
       ctx.body = {
         ...result,
-        usage: await recordConversationTurn(strapi, userId),
+        usage: await recordConversationTime(strapi, userId),
       };
     } catch (error) {
       strapi.log.error("[ai.wordMeaning]", error);
@@ -516,7 +555,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       });
       ctx.body = {
         ...result,
-        usage: await recordConversationTurn(strapi, userId),
+        usage: await recordConversationTime(strapi, userId),
       };
     } catch (error) {
       strapi.log.error("[ai.cefrLevel]", error);
@@ -533,7 +572,7 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     const usageBefore = await ensureConversationAllowed(ctx, strapi, userId);
     if (!usageBefore) return;
 
-    const { text } = ctx.request.body ?? {};
+    const { text, sessionOpening } = ctx.request.body ?? {};
     const safeText = clampTtsText(text);
     if (!safeText) {
       return ctx.badRequest("text is required");
@@ -551,7 +590,14 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       ctx.body = {
         audioBase64: audioBuffer.toString("base64"),
         contentType: "audio/mpeg",
-        usage: await recordConversationTurn(strapi, userId),
+        // Reading the session greeting aloud is free, like the greeting itself.
+        usage: (await isFreeOpeningTts(strapi, userId, sessionOpening === true))
+          ? usageBefore
+          : await recordConversationTime(strapi, userId, {
+              // Listening to the tutor is practice time too.
+              floorSeconds: speechSecondsForText(safeText),
+              advanceClock: true,
+            }),
       };
     } catch (error) {
       strapi.log.error("[ai.tts]", error);

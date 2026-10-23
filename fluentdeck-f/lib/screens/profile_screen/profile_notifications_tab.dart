@@ -22,7 +22,6 @@ class _ProfileNotificationsTabState extends State<ProfileNotificationsTab> {
   bool _subscribed = PushNotificationService.isSubscribed;
   bool _toggling = false;
   bool _loadingPrefs = true;
-  bool _savingReminder = false;
   SpeakingPreferences _speakingPrefs = const SpeakingPreferences();
 
   void _onSubscriptionChanged(OSPushSubscriptionChangedState state) {
@@ -49,13 +48,9 @@ class _ProfileNotificationsTabState extends State<ProfileNotificationsTab> {
   }
 
   Future<void> _saveReminderPrefs(SpeakingPreferences next) async {
-    setState(() {
-      _speakingPrefs = next;
-      _savingReminder = true;
-    });
+    setState(() => _speakingPrefs = next);
     final result = await SpeakingPreferencesService.instance.saveWithDetails(next);
     if (!mounted) return;
-    setState(() => _savingReminder = false);
     if (!result.ok) {
       await _loadReminderPrefs();
       AppToast.showSnackBar(context, 
@@ -185,7 +180,7 @@ class _ProfileNotificationsTabState extends State<ProfileNotificationsTab> {
                             title: 'Daily reminder',
                             subtitle: 'Send a push notification at your chosen time.',
                             value: _speakingPrefs.dailyReminderEnabled,
-                            enabled: !_savingReminder,
+                            enabled: true,
                             onChanged: (value) {
                               _saveReminderPrefs(
                                 _speakingPrefs.copyWith(
@@ -202,14 +197,9 @@ class _ProfileNotificationsTabState extends State<ProfileNotificationsTab> {
                               title: const Text('Reminder time'),
                               subtitle: Text(_speakingPrefs.dailyReminderTime),
                               trailing: const Icon(Icons.chevron_right),
-                              onTap: _savingReminder ? null : _pickReminderTime,
+                              onTap: _pickReminderTime,
                             ),
                           ],
-                          if (_savingReminder)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 8),
-                              child: LinearProgressIndicator(minHeight: 2),
-                            ),
                         ],
                       ),
             ),

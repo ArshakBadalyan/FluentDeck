@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/widgets/cached_strapi_image.dart';
@@ -25,6 +26,7 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
   Offset? _dragStart;
   Offset? _dragCurrent;
   int? _selectedId;
+  Size _lastSize = Size.zero;
 
   void _updateRegions(List<OcclusionRegion> regions) {
     widget.onChanged(regions);
@@ -49,10 +51,9 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
     setState(() => _selectedId = nextId);
   }
 
-  void _deleteSelected() {
-    if (_selectedId == null) return;
-    _updateRegions(widget.regions.where((r) => r.id != _selectedId).toList());
-    setState(() => _selectedId = null);
+  void _deleteRegion(int id) {
+    _updateRegions(widget.regions.where((r) => r.id != id).toList());
+    if (_selectedId == id) setState(() => _selectedId = null);
   }
 
   Rect _normalizeRect(Offset a, Offset b, Size size) {
@@ -66,6 +67,63 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
       right.clamp(0.0, 1.0),
       bottom.clamp(0.0, 1.0),
     );
+  }
+
+  Drag? _onDragStart(Offset position) {
+    final box = context.findRenderObject() as RenderBox;
+    final local = box.globalToLocal(position);
+    setState(() {
+      _dragStart = local;
+      _dragCurrent = local;
+    });
+    return _MaskDrag(this);
+  }
+
+  void _handleDragUpdate(Offset globalPosition) {
+    if (_dragStart == null) return;
+    final box = context.findRenderObject() as RenderBox;
+    setState(() => _dragCurrent = box.globalToLocal(globalPosition));
+  }
+
+  void _handleDragEnd() {
+    if (_dragStart == null || _dragCurrent == null) return;
+    final start = _dragStart!;
+    final current = _dragCurrent!;
+    final moved = (current - start).distance;
+    if (moved < 6) {
+      // Treated as a tap, not a drag — select a mask under it.
+      for (final region in widget.regions.reversed) {
+        final r = Rect.fromLTWH(
+          region.x * _lastSize.width,
+          region.y * _lastSize.height,
+          region.w * _lastSize.width,
+          region.h * _lastSize.height,
+        );
+        if (r.contains(current)) {
+          setState(() {
+            _selectedId = region.id;
+            _dragStart = null;
+            _dragCurrent = null;
+          });
+          return;
+        }
+      }
+      setState(() => _selectedId = null);
+    } else {
+      final rect = _normalizeRect(start, current, _lastSize);
+      _addRegion(rect, _lastSize);
+    }
+    setState(() {
+      _dragStart = null;
+      _dragCurrent = null;
+    });
+  }
+
+  void _handleDragCancel() {
+    setState(() {
+      _dragStart = null;
+      _dragCurrent = null;
+    });
   }
 
   @override
@@ -87,20 +145,9 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Text(
-              '${widget.regions.length} mask${widget.regions.length == 1 ? '' : 's'}',
-              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
-            ),
-            const Spacer(),
-            if (_selectedId != null)
-              TextButton.icon(
-                onPressed: _deleteSelected,
-                icon: const Icon(Icons.delete_outline, size: 18),
-                label: const Text('Delete mask'),
-              ),
-          ],
+        Text(
+          '${widget.regions.length} mask${widget.regions.length == 1 ? '' : 's'}',
+          style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
         ),
         const SizedBox(height: 8),
         AspectRatio(
@@ -108,36 +155,26 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final size = Size(constraints.maxWidth, constraints.maxHeight);
-              return GestureDetector(
-                onPanStart: (d) => setState(() {
-                  _dragStart = d.localPosition;
-                  _dragCurrent = d.localPosition;
-                }),
-                onPanUpdate: (d) => setState(() => _dragCurrent = d.localPosition),
-                onPanEnd: (_) {
-                  if (_dragStart != null && _dragCurrent != null) {
-                    final rect = _normalizeRect(_dragStart!, _dragCurrent!, size);
-                    _addRegion(rect, size);
-                  }
-                  setState(() {
-                    _dragStart = null;
-                    _dragCurrent = null;
-                  });
-                },
-                onTapUp: (d) {
-                  for (final region in widget.regions.reversed) {
-                    final r = Rect.fromLTWH(
-                      region.x * size.width,
-                      region.y * size.height,
-                      region.w * size.width,
-                      region.h * size.height,
-                    );
-                    if (r.contains(d.localPosition)) {
-                      setState(() => _selectedId = region.id);
-                      return;
-                    }
-                  }
-                  setState(() => _selectedId = null);
+              _lastSize = size;
+              // `Listener` (tried first) only *observes* pointer events —
+              // it doesn't stop the ancestor SingleChildScrollView's own
+              // drag recognizer from also claiming the gesture, so the page
+              // kept scrolling instead of a mask being drawn.
+              // ImmediateMultiDragGestureRecognizer actually competes in
+              // the gesture arena and — true to its name — accepts
+              // immediately on pointer-down rather than waiting to see if
+              // the movement looks more horizontal/vertical, so it wins
+              // against the scroll view's recognizer instead of losing the
+              // tie-break to it.
+              return RawGestureDetector(
+                behavior: HitTestBehavior.opaque,
+                gestures: {
+                  ImmediateMultiDragGestureRecognizer:
+                      GestureRecognizerFactoryWithHandlers<
+                          ImmediateMultiDragGestureRecognizer>(
+                    () => ImmediateMultiDragGestureRecognizer(),
+                    (instance) => instance.onStart = _onDragStart,
+                  ),
                 },
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
@@ -175,7 +212,10 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
                             ),
                             child: Center(
                               child: Text(
-                                '${region.id}',
+                                region.label.isNotEmpty ? region.label : '${region.id}',
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -207,7 +247,77 @@ class _ImageOcclusionEditorState extends State<ImageOcclusionEditor> {
           'Drag on the image to add a mask. Tap a mask to select it.',
           style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
         ),
+        // Label + delete for each mask lives here, outside the canvas —
+        // putting interactive buttons directly on the masks would compete
+        // with ImmediateMultiDragGestureRecognizer above (it claims a
+        // pointer-down immediately, before a nested button's own tap
+        // recognizer gets a chance to decide anything), so taps there could
+        // silently start a new mask-drag instead of registering as a tap.
+        // This also means every mask always has a working delete button
+        // regardless of canvas-selection state, instead of one shared
+        // button that only appears for whichever mask happens to be
+        // selected.
+        // Labels for each mask are edited in the "Mask labels" section
+        // below this widget (card_edit_screen.dart already has one editor
+        // per region there) — duplicating that here would mean two
+        // controllers independently fighting over the same `label` field.
+        // This row is just a tappable badge (highlights the mask on the
+        // canvas) plus its delete button.
+        if (widget.regions.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: widget.regions.map((region) {
+              final selected = region.id == _selectedId;
+              return InputChip(
+                avatar: CircleAvatar(
+                  backgroundColor: Colors.transparent,
+                  child: Text(
+                    '${region.id}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                label: Text(
+                  region.label.isNotEmpty ? region.label : 'Mask ${region.id}',
+                ),
+                selected: selected,
+                onPressed: () => setState(
+                  () => _selectedId = selected ? null : region.id,
+                ),
+                onDeleted: () => _deleteRegion(region.id),
+                deleteIconColor: AppColors.redWrong,
+              );
+            }).toList(),
+          ),
+        ],
       ],
     );
   }
 }
+
+/// Hands pointer-move/up/cancel for one in-progress drag back to the state
+/// that started it — required by [ImmediateMultiDragGestureRecognizer],
+/// which (unlike GestureDetector's onPan*) hands off an actual [Drag]
+/// object per gesture instead of just invoking callbacks.
+class _MaskDrag extends Drag {
+  _MaskDrag(this._state);
+
+  final _ImageOcclusionEditorState _state;
+
+  @override
+  void update(DragUpdateDetails details) {
+    _state._handleDragUpdate(details.globalPosition);
+  }
+
+  @override
+  void end(DragEndDetails details) {
+    _state._handleDragEnd();
+  }
+
+  @override
+  void cancel() {
+    _state._handleDragCancel();
+  }
+}
+

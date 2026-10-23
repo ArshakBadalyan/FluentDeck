@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -16,6 +17,9 @@ import UIKit
     defaults.set(true, forKey: "/google/firebase/debug_mode")
     defaults.synchronize()
     #endif
+    // Lets flutter_local_notifications show the daily review reminder while
+    // the app is open and route taps on it back to Dart.
+    UNUserNotificationCenter.current().delegate = self
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

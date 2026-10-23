@@ -1,7 +1,7 @@
 ---
 name: flutter-ui-design
 description: >-
-  Distinctive Flutter/Material 3 UI for FluentDeck screens and widgets. Use when
+  Distinctive Flutter/Material 2 UI for FluentDeck screens and widgets. Use when
   building or reshaping app UI, bottom sheets, flashcard views, review sessions,
   skeletons, themes, or polish in fluentdeck-f/. Extends frontend-design for
   this product's Lagoon teal brand and learning-app context.
@@ -31,7 +31,7 @@ All brand values live in `lib/config/brand_config.dart` (`BrandConfig`) and are 
 | `AppColors.primaryYellow` | `#FFC400` | Rewards only: streak, XP, badges |
 | Semantic | red `#E53935`, orange `#FF8F3D`, green `#2EE66B`, blue `#2196F3` | Again / Hard / Good·correct / New cards — never decorative |
 | Font | `BrandConfig.fontFamily` (Rubik) | All text via `AppTextTheme` |
-| Material | Material 3 | `ThemeData(useMaterial3: true)` |
+| Material | **Material 2** (m2.material.io/components) | `ThemeData(useMaterial3: false)`; brand teal is both `primary` and `secondary` |
 
 Always pull colors from `AppColors` / `AppPageColors` / `Theme.of(context).colorScheme` — never hardcode `Color(0x…)` brand values.
 
@@ -42,7 +42,7 @@ Always pull colors from `AppColors` / `AppPageColors` / `Theme.of(context).color
 3. **Spacing rhythm** — prefer 4/8/12/16/24 dp; match neighboring screens in the same tab flow.
 4. **Touch targets** — minimum 48dp; flashcard/review controls must work one-handed on mobile.
 5. **Loading & empty states** — use skeletons and actionable empty copy ("Add your first deck"), not decorative placeholders.
-6. **Motion** — subtle `AnimatedSwitcher` / `Hero` where it aids orientation; avoid gratuitous animation on study flows.
+6. **Motion** — Material 2 motion via `AppMotion` tokens, `AppPressScale` (tap feedback), `showAppDialog` (never raw `showDialog`), `AppFadeIn` / `AppStaggeredFadeIn`, and the `animations` package (shared axis, fade through, container transform). Study flows stay under 200 ms and never block input. Phases and rules: `docs/motion-and-material-plan.md`.
 7. **Accessibility** — semantic labels on icon buttons; respect `MediaQuery.disableAnimations`.
 
 ## Avoid generic AI UI patterns

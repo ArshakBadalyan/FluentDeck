@@ -1,14 +1,16 @@
 'use strict';
 
 /**
- * Marketing / fallback subscription plans (duration + display price).
+ * Subscription plans (duration + display price + daily practice time).
  * Real store prices still come from App Store / Play; these drive labels when
  * the store is unavailable and keep product metadata in one place (env).
  *
- * Suggested defaults (EUR) for an AI speaking / English tutor app:
- *   Monthly   €8.99   — easy entry
- *   Quarterly €22.99  — ~€7.66/mo (~15% off)
- *   Yearly    €59.99  — €5.00/mo (~44% off, best value)
+ * Launch pricing (EUR):
+ *   Monthly €9.99
+ *   Yearly  €59.99 — €5.00/mo (~50% off), 7-day free trial
+ *
+ * The trial itself is configured in App Store Connect / Play Console; the
+ * `trialDays` here only labels it in the app, so keep the two in sync.
  */
 
 const CURRENCY_SYMBOLS = {
@@ -64,13 +66,13 @@ function buildPlan({
   defaultPrice,
   defaultCurrency,
   defaultBadge,
-  defaultDailyTurns,
+  defaultTrialDays,
 }) {
-  const { getPremiumDailyConversationTurns, HARD_DEFAULT_PREMIUM_DAILY } =
-    require('./daily-conversation-limits');
-  const premiumDefault = getPremiumDailyConversationTurns(
-    HARD_DEFAULT_PREMIUM_DAILY,
-  );
+  const {
+    getPremiumDailyMinutes,
+    capDailyMinutes,
+    HARD_DEFAULT_PREMIUM_DAILY_MINUTES,
+  } = require('./daily-conversation-limits');
   const prefix = `SUBSCRIPTION_${key}`;
   const durationMonths = envPositiveInt(
     `${prefix}_DURATION_MONTHS`,
@@ -80,11 +82,16 @@ function buildPlan({
   const currency = envString(`${prefix}_CURRENCY`, defaultCurrency);
   const badgeRaw = envString(`${prefix}_BADGE`, defaultBadge ?? '');
   const badge = badgeRaw || null;
-  // Per-plan daily tutor turns (bar on each plan). Default 60 for all premium.
-  const dailyConversationTurns = envPositiveInt(
-    `${prefix}_DAILY_TURNS`,
-    defaultDailyTurns ?? premiumDefault,
+  // Daily AI practice time for this plan (fair-use cap).
+  const dailyMinutes = capDailyMinutes(
+    envPositiveInt(
+      `${prefix}_DAILY_MINUTES`,
+      getPremiumDailyMinutes(HARD_DEFAULT_PREMIUM_DAILY_MINUTES),
+    ),
   );
+  // 0 is a valid "no trial" value, so this can't use envPositiveInt.
+  const trialRaw = parseInt(envString(`${prefix}_TRIAL_DAYS`, String(defaultTrialDays ?? 0)), 10);
+  const trialDays = Number.isFinite(trialRaw) && trialRaw > 0 ? trialRaw : 0;
 
   return {
     key: key.toLowerCase(),
@@ -96,7 +103,8 @@ function buildPlan({
     currency: currency.toUpperCase(),
     fallbackPrice: formatPrice(priceAmount, currency),
     badge,
-    dailyConversationTurns,
+    dailyMinutes,
+    trialDays,
   };
 }
 
@@ -110,112 +118,62 @@ const DEFAULT_PLAN_SPECS = [
     defaultPrice: 9.99,
     defaultCurrency: 'EUR',
     defaultBadge: null,
-    defaultDailyTurns: 60,
-  },
-  {
-    key: 'QUARTERLY',
-    defaultProductId: 'fluentdeck_premium_quarterly',
-    defaultTitle: 'Quarterly',
-    defaultMonths: 3,
-    defaultPrice: 25.99,
-    defaultCurrency: 'EUR',
-    defaultBadge: 'Save 13%',
-    defaultDailyTurns: 60,
+    defaultTrialDays: 0,
   },
   {
     key: 'YEARLY',
     defaultProductId: 'fluentdeck_premium_yearly',
     defaultTitle: 'Yearly',
     defaultMonths: 12,
-    defaultPrice: 69.99,
+    defaultPrice: 59.99,
     defaultCurrency: 'EUR',
-    defaultBadge: 'Best value',
-    defaultDailyTurns: 60,
+    defaultBadge: 'Save 50%',
+    defaultTrialDays: 7,
   },
 ];
+
+/**
+ * Products no longer sold but still honoured: existing subscribers must keep
+ * verifying, restoring and renewing. Env: comma-separated
+ * SUBSCRIPTION_LEGACY_PRODUCT_IDS (replaces the default list).
+ */
+const DEFAULT_LEGACY_PRODUCT_IDS = ['fluentdeck_premium_quarterly'];
+
+function getLegacyProductIds() {
+  const raw = process.env.SUBSCRIPTION_LEGACY_PRODUCT_IDS;
+  if (raw === undefined || raw === null) return DEFAULT_LEGACY_PRODUCT_IDS;
+  return String(raw)
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
 
 function getSubscriptionPlans() {
   return DEFAULT_PLAN_SPECS.map((spec) => buildPlan(spec));
 }
 
-function getDailyTurnsSliderConfig() {
-  const { getPremiumDailyConversationTurns, HARD_DEFAULT_PREMIUM_DAILY } =
+/** Daily practice minutes for a store product ID (legacy/unknown → premium default). */
+function dailyMinutesForProductId(productId) {
+  const { getPremiumDailyMinutes, HARD_DEFAULT_PREMIUM_DAILY_MINUTES } =
     require('./daily-conversation-limits');
-  const defaultTurns = getPremiumDailyConversationTurns(
-    HARD_DEFAULT_PREMIUM_DAILY,
-  );
-  const min = envPositiveInt('SUBSCRIPTION_DAILY_TURNS_MIN', 20);
-  const max = envPositiveInt('SUBSCRIPTION_DAILY_TURNS_MAX', 120);
-  const def = envPositiveInt('SUBSCRIPTION_DAILY_TURNS_DEFAULT', defaultTurns);
-  const lo = Math.min(min, max);
-  const hi = Math.max(min, max);
-  return {
-    min: lo,
-    max: hi,
-    default: Math.min(hi, Math.max(lo, def)),
-  };
-}
-
-function clampDailyConversationTurns(raw) {
-  const cfg = getDailyTurnsSliderConfig();
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return cfg.default;
-  return Math.min(cfg.max, Math.max(cfg.min, Math.round(n)));
-}
-
-/** Scale a plan's base price (at 60 default turns) to the selected daily size. */
-function scalePlanPrice(plan, selectedDailyTurns) {
-  const cfg = getDailyTurnsSliderConfig();
-  const baseTurns = plan.dailyConversationTurns > 0
-    ? plan.dailyConversationTurns
-    : cfg.default;
-  const selected = clampDailyConversationTurns(selectedDailyTurns);
-  const amount = Number(plan.priceAmount) * (selected / baseTurns);
-  return {
-    priceAmount: Math.round(amount * 100) / 100,
-    fallbackPrice: formatPrice(amount, plan.currency),
-    dailyConversationTurns: selected,
-  };
-}
-
-function getSubscriptionPlansForDailyTurns(selectedDailyTurns) {
-  const selected = clampDailyConversationTurns(selectedDailyTurns);
-  return getSubscriptionPlans().map((plan) => {
-    const scaled = scalePlanPrice(plan, selected);
-    return {
-      ...plan,
-      ...scaled,
-      basePriceAmount: plan.priceAmount,
-      baseFallbackPrice: plan.fallbackPrice,
-      baseDailyConversationTurns: plan.dailyConversationTurns,
-    };
-  });
-}
-
-/** Daily tutor-turn cap for a store product ID (falls back to premium default 60). */
-function dailyTurnsForProductId(productId) {
-  const { getPremiumDailyConversationTurns, HARD_DEFAULT_PREMIUM_DAILY } =
-    require('./daily-conversation-limits');
-  const fallback = getPremiumDailyConversationTurns(HARD_DEFAULT_PREMIUM_DAILY);
+  const fallback = getPremiumDailyMinutes(HARD_DEFAULT_PREMIUM_DAILY_MINUTES);
   if (!productId) return fallback;
   const plan = getSubscriptionPlans().find((p) => p.productId === productId);
-  return plan?.dailyConversationTurns > 0
-    ? plan.dailyConversationTurns
-    : fallback;
+  return plan?.dailyMinutes > 0 ? plan.dailyMinutes : fallback;
 }
 
 function isAllowedSubscriptionProductId(productId) {
   if (!productId) return false;
-  return getSubscriptionPlans().some((plan) => plan.productId === productId);
+  return (
+    getSubscriptionPlans().some((plan) => plan.productId === productId) ||
+    getLegacyProductIds().includes(productId)
+  );
 }
 
 module.exports = {
   getSubscriptionPlans,
-  getSubscriptionPlansForDailyTurns,
-  getDailyTurnsSliderConfig,
-  clampDailyConversationTurns,
-  scalePlanPrice,
-  dailyTurnsForProductId,
+  getLegacyProductIds,
+  dailyMinutesForProductId,
   isAllowedSubscriptionProductId,
   formatPrice,
   periodSuffix,

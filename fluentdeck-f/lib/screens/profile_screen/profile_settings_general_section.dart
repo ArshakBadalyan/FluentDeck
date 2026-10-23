@@ -5,6 +5,7 @@ import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/services/theme_settings_store.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 /// Appearance and accessibility settings (stored locally, app-wide).
 class ProfileSettingsGeneralSection extends StatefulWidget {
@@ -51,13 +52,18 @@ class _ProfileSettingsGeneralSectionState
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Padding(
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
         child: LinearProgressIndicator(minHeight: 2),
-      );
+      ),
+    );
     }
 
-    return Column(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSettingsGroup(
@@ -135,6 +141,7 @@ class _ProfileSettingsGeneralSectionState
           ),
         ),
       ],
+    ),
     );
   }
 

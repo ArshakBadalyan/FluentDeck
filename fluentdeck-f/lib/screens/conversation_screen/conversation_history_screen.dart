@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fluentdeck/app_colors.dart';
@@ -9,6 +10,7 @@ import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class ConversationHistoryScreen extends StatefulWidget {
   const ConversationHistoryScreen({super.key});
@@ -39,7 +41,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
   }
 
   Future<void> _confirmClearAll() async {
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -72,7 +74,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
   }
 
   Future<bool> _confirmDeleteSession(ConversationSessionModel session) async {
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -109,7 +111,7 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: AppColors.brandPrimary,
+        backgroundColor: AppColors.brandPrimaryDeep,
         foregroundColor: Colors.white,
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.35),
@@ -145,7 +147,9 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
                   final date = DateFormat.yMMMd().add_jm().format(
                     session.startedAt.toLocal(),
                   );
-                  return Dismissible(
+                  return AppStaggeredFadeIn(
+                          index: index,
+                          child: Dismissible(
                     key: ValueKey('history-${session.id}'),
                     direction: DismissDirection.endToStart,
                     background: SwipeActionBackgrounds.delete(),
@@ -164,7 +168,8 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
                       ),
                       onTap: () => _continueSession(session),
                     ),
-                  );
+                  ),
+                        );
                 },
               ),
     );

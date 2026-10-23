@@ -5,13 +5,18 @@ import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 
 void showSpeakingPremiumSnackBar(BuildContext context) {
+  showPremiumUpgradeSnackBar(
+    context,
+    AppLocalizations.instance.t('speaking-premium.locked-message'),
+  );
+}
+
+void showPremiumUpgradeSnackBar(BuildContext context, String message) {
   AppToast.dismissAll();
   AppToast.showSnackBar(
     context,
     SnackBar(
-      content: Text(
-        AppLocalizations.instance.t('speaking-premium.locked-message'),
-      ),
+      content: Text(message),
       showCloseIcon: true,
       action: SnackBarAction(
         label: 'Upgrade',

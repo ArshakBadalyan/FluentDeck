@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
-InputDecoration authInput(String label) {
+InputDecoration authInput(BuildContext context, String label) {
   return InputDecoration(
     labelText: label,
-    labelStyle: const TextStyle(
-      color: Colors.grey,
+    labelStyle: TextStyle(
+      color: AppPageColors.subtitleOf(context),
       fontSize: 14,
     ),
-    enabledBorder: const UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.black),
+    enabledBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
     ),
-    focusedBorder: const UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.black),
+    focusedBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppPageColors.accentOf(context)),
     ),
   );
 }

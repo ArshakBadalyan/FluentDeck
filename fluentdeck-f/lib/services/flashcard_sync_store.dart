@@ -66,4 +66,9 @@ class FlashcardSyncStore {
       }),
     );
   }
+
+  Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+  }
 }

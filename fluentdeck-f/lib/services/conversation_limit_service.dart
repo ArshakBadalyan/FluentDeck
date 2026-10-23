@@ -3,6 +3,7 @@ import 'package:fluentdeck/services/app_feature_config_service.dart';
 import 'package:fluentdeck/services/auth_service.dart';
 import 'package:fluentdeck/services/subscription_service.dart';
 
+/// Daily AI practice time. All amounts are seconds (server `unit: 'seconds'`).
 class ConversationUsageStatus {
   final bool allowed;
   final int usedToday;
@@ -21,7 +22,7 @@ class ConversationUsageStatus {
     required this.dailyLimit,
     required this.isPremium,
     this.unlimited = false,
-    this.freeDailyLimit = 10,
+    this.freeDailyLimit = 300,
     this.premiumDailyLimit = 0,
     this.freeUsedToday = 0,
     this.premiumUsedToday = 0,
@@ -39,9 +40,9 @@ class ConversationUsageStatus {
   bool get hasMeter => !unlimited && dailyLimit > 0;
 
   factory ConversationUsageStatus.fromJson(Map<String, dynamic> json) {
-    final dailyLimit = (json['dailyLimit'] as num?)?.round() ?? 10;
+    final dailyLimit = (json['dailyLimit'] as num?)?.round() ?? 300;
     final unlimited = json['unlimited'] == true || dailyLimit <= 0;
-    final freeDailyLimit = (json['freeDailyLimit'] as num?)?.round() ?? 10;
+    final freeDailyLimit = (json['freeDailyLimit'] as num?)?.round() ?? 300;
     final premiumDailyLimit =
         (json['premiumDailyLimit'] as num?)?.round() ?? 0;
     final usedToday = (json['usedToday'] as num?)?.round() ?? 0;
@@ -71,6 +72,8 @@ class ConversationLimitService {
 
   ConversationUsageStatus? _cached;
 
+  void reset() => _cached = null;
+
   Future<bool> _isPremiumUser() async {
     final sub = await SubscriptionService.instance.fetchStatus();
     if (sub.isPremium) return true;
@@ -82,14 +85,14 @@ class ConversationLimitService {
     return false;
   }
 
-  int _defaultDailyLimit({required bool isPremium}) {
+  /// Plan time in seconds when the server can't be reached.
+  int _defaultPlanSeconds({required bool isPremium}) {
     final config = AppFeatureConfigService.instance.config;
-    final free = config.freeDailyConversationTurns;
-    if (!isPremium) return free;
-    final subTurns =
-        SubscriptionService.instance.cachedStatus.dailyConversationTurns ??
-        config.premiumDailyConversationTurns;
-    return free + subTurns;
+    if (!isPremium) return config.freeDailyMinutes * 60;
+    final minutes =
+        SubscriptionService.instance.cachedStatus.dailyMinutes ??
+        config.premiumDailyMinutes;
+    return minutes * 60;
   }
 
   Future<ConversationUsageStatus> getStatus({bool forceRefresh = false}) async {
@@ -108,16 +111,10 @@ class ConversationLimitService {
     }
 
     final isPremium = await _isPremiumUser();
-    final free = AppFeatureConfigService.instance.config.freeDailyConversationTurns;
-    final premiumQuota =
-        isPremium
-            ? (SubscriptionService.instance.cachedStatus.dailyConversationTurns ??
-                AppFeatureConfigService
-                    .instance
-                    .config
-                    .premiumDailyConversationTurns)
-            : 0;
-    final limit = _defaultDailyLimit(isPremium: isPremium);
+    final free =
+        AppFeatureConfigService.instance.config.freeDailyMinutes * 60;
+    final limit = _defaultPlanSeconds(isPremium: isPremium);
+    final premiumQuota = isPremium ? (limit - free).clamp(0, limit) : 0;
     _cached = ConversationUsageStatus(
       allowed: false,
       usedToday: 0,

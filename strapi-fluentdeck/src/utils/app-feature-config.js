@@ -11,10 +11,10 @@ const {
   computeIsPremiumFromSubscription,
 } = require('./subscription-utils');
 const {
-  getFreeDailyConversationTurns,
-  getPremiumDailyConversationTurns,
-  HARD_DEFAULT_FREE_DAILY,
-  HARD_DEFAULT_PREMIUM_DAILY,
+  getFreeDailyMinutes,
+  getPremiumDailyMinutes,
+  HARD_DEFAULT_FREE_DAILY_MINUTES,
+  HARD_DEFAULT_PREMIUM_DAILY_MINUTES,
 } = require('./daily-conversation-limits');
 const { getSubscriptionPlans } = require('./subscription-plans');
 
@@ -24,12 +24,8 @@ const DEFAULT_CONFIG = {
   freeMaxSavedWords: 20,
   freeMaxDecks: 3,
   freeMaxNewCardsPerDay: 10,
-  freeDailyConversationTurns: getFreeDailyConversationTurns(
-    HARD_DEFAULT_FREE_DAILY,
-  ),
-  premiumDailyConversationTurns: getPremiumDailyConversationTurns(
-    HARD_DEFAULT_PREMIUM_DAILY,
-  ),
+  freeDailyMinutes: getFreeDailyMinutes(HARD_DEFAULT_FREE_DAILY_MINUTES),
+  premiumDailyMinutes: getPremiumDailyMinutes(HARD_DEFAULT_PREMIUM_DAILY_MINUTES),
   freeRolePlayPerCategory: 2,
   freeTopicLevelGroups: ['intermediate'],
   freeGamesCount: 10,
@@ -37,10 +33,6 @@ const DEFAULT_CONFIG = {
   defaultEasyIntervalDays: _envScheduling.easyIntervalDays,
   hiddenSpeakingTabs: [],
   subscriptionPlans: getSubscriptionPlans(),
-  subscriptionDailyTurnsSlider: (() => {
-    const { getDailyTurnsSliderConfig } = require('./subscription-plans');
-    return getDailyTurnsSliderConfig();
-  })(),
 };
 
 async function getFeatureConfig(strapi) {
@@ -88,19 +80,19 @@ async function getFeatureConfig(strapi) {
       'free_max_new_cards_per_day',
       10,
     ),
-    // Env FREE_/PREMIUM_DAILY_CONVERSATION_TURNS wins over CMS when set.
-    freeDailyConversationTurns: getFreeDailyConversationTurns(
+    // Env FREE_/PREMIUM_DAILY_MINUTES wins over CMS when set.
+    freeDailyMinutes: getFreeDailyMinutes(
       pickInt(
-        'freeDailyConversationTurns',
-        'free_daily_conversation_turns',
-        HARD_DEFAULT_FREE_DAILY,
+        'freeDailyMinutes',
+        'free_daily_minutes',
+        HARD_DEFAULT_FREE_DAILY_MINUTES,
       ),
     ),
-    premiumDailyConversationTurns: getPremiumDailyConversationTurns(
+    premiumDailyMinutes: getPremiumDailyMinutes(
       pickInt(
-        'premiumDailyConversationTurns',
-        'premium_daily_conversation_turns',
-        HARD_DEFAULT_PREMIUM_DAILY,
+        'premiumDailyMinutes',
+        'premium_daily_minutes',
+        HARD_DEFAULT_PREMIUM_DAILY_MINUTES,
       ),
     ),
     freeRolePlayPerCategory: pickInt(
@@ -114,10 +106,6 @@ async function getFeatureConfig(strapi) {
     defaultEasyIntervalDays,
     // Always from env (with recommended defaults) — not stored in CMS.
     subscriptionPlans: getSubscriptionPlans(),
-    subscriptionDailyTurnsSlider: (() => {
-      const { getDailyTurnsSliderConfig } = require('./subscription-plans');
-      return getDailyTurnsSliderConfig();
-    })(),
   };
 }
 

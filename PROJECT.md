@@ -14,8 +14,9 @@
 4. [Flutter App](#flutter-app)
 5. [Strapi Backend](#strapi-backend)
 6. [API Reference](#api-reference)
-7. [Configuration](#configuration)
-8. [Development & Deployment](#development--deployment)
+7. [Decks & Flashcards Settings](#decks--flashcards-settings)
+8. [Configuration](#configuration)
+9. [Development & Deployment](#development--deployment)
 
 ---
 
@@ -61,6 +62,7 @@ FluentDeck/
 | Freemium limits | `strapi-fluentdeck/src/utils/app-feature-config.js` |
 | AI tutor | `strapi-fluentdeck/src/utils/ai-tutor.js` |
 | Flashcard SM-2 | `strapi-fluentdeck/src/utils/sm2.js` |
+| Decks settings behavior & known gaps | `docs/decks-settings-behavior.md` |
 | Permissions bootstrap | `strapi-fluentdeck/src/index.js` |
 | App startup | `fluentdeck-f/lib/main.dart` → `app_start.dart` → `english_main_screen.dart` |
 
@@ -212,7 +214,11 @@ Strapi · Firebase Analytics · OneSignal (mobile) · AdMob + UMP · Microsoft C
 
 ### Key Content Types
 
-**app-feature-config defaults:** 20 saved words, 3 decks, 10 new cards/day, 10 preview words, 1 placement retake/month, 10 daily conversation turns, B2/C1/C2 premium-only
+**app-feature-config defaults:** 20 saved words, 3 decks, 10 new cards/day, 10 preview words, 1 placement retake/month, 5 min/day AI practice time (premium: plan's daily time, default 4 h), B2/C1/C2 premium-only
+
+**Subscriptions:** Monthly €9.99 and Yearly €59.99 (7-day trial); Quarterly is legacy-only. AI usage is metered as practice time, not turns. Plans, time metering and the AI cost per hour are in `docs/subscription-and-ai-costs.md`. Pricing strategy, landing-page review, SEO and launch campaign: `docs/business-and-marketing-plan.md`.
+
+**UI:** Material 2 theme (`useMaterial3: false`) and Material motion. Phases and rules are in `docs/motion-and-material-plan.md`.
 
 **flashcard-deck:** name, hierarchy (`parentDeck`), filtered decks, deck options JSON
 
@@ -322,6 +328,120 @@ All paths prefixed `/api`. JWT required unless noted **Public**.
 | Feature limits | `app_feature_config_service` | `/app-feature-config-public` |
 | App updates | `mobile_app_update_gate` | `/mobile-app-policy-public` |
 | Study Hall | `study_hall_service` | `/study-hall/summary` |
+
+---
+
+## Decks & Flashcards Settings
+
+How these settings actually behave (audited 2026-10-23). Code paths and more
+detail: `docs/decks-settings-behavior.md`. ⚠️ = the setting does not do what
+its UI says; see **Open decisions** below.
+
+### 1. Auto-create flashcards
+
+Profile → Settings → Decks & Flashcards. Saved on the server (user field
+`auto_create_flashcards`), **on** by default.
+
+- **On:** saving a word creates a note plus a flashcard in a built-in deck.
+  Words saved from speaking go to **From speaking**; anything else goes to
+  **Saved words**. Both decks are created automatically. If the same word
+  already exists in that deck, no duplicate is made.
+- **Off:** the word is still saved to My Notes and the card is still created,
+  but it's **suspended**, so it never appears in reviews.
+- Turning it off also stops grammar corrections from speaking being saved
+  automatically.
+- The free plan has a separate cap on how many speaking notes can be saved
+  automatically.
+
+### 2. Daily rollover ⚠️ the setting does nothing
+
+"Start of next day" (default **4 AM**) says it affects daily limits and
+"today" statistics, but nothing reads it. The server counts "today" from
+**midnight server time** (for example, the free-plan limit on new cards per
+day). So studying at 1 AM counts toward the next day, whatever is set.
+
+Making it work means sending the rollover hour and the user's time zone to
+the server and using them there — or hiding the setting.
+
+### 3. New card position and session display (tested)
+
+**New card position** sets where new cards appear in a study session:
+
+| Setting | Order |
+|---|---|
+| After reviews | all due cards, then all new cards |
+| Before reviews | all new cards, then due cards |
+| Mixed (default) | alternating, starting with a due card; leftovers go at the end |
+
+The server orders the queue, and the app re-applies the same order. That
+second step matters offline.
+
+**Session display:**
+
+- **Learn ahead limit** (0–60 min, default 20) includes review and learning
+  cards that become due within that many minutes, never new cards.
+- **Show remaining due counts** shows "Card 3 of 12" in the review header.
+  ⚠️ Its description promises separate new/learning/review counts, which it
+  doesn't show. Either the description or the feature should change.
+
+**Two bugs fixed** in `fluentdeck-f/lib/utils/review_queue_order.dart`:
+
+- **"After reviews" did nothing offline.** Offline, the queue is built from
+  cached cards in no particular order, and this mode left it unchanged. It now
+  orders explicitly.
+- **Never-studied cards counted as review cards.** A card with no review data
+  yet was treated as due. It's now treated as new.
+
+**Tests:**
+
+- `fluentdeck-f/test/new_card_position_test.dart` (8 tests): every mode,
+  leftovers in Mixed, order kept within each group, applying it twice changes
+  nothing, and the labels.
+- `strapi-fluentdeck/tests/flashcard-review-queue.test.js`: before/after
+  ordering, and the learn-ahead window, which never includes new cards.
+- The new-card test caught the never-studied bug before it was fixed.
+
+### 4. Leeches ⚠️ the settings and the server don't match
+
+A leech is a card you keep forgetting. Every "Again" on a learned card adds a
+lapse; when lapses reach the threshold, the server suspends the card.
+
+- **The server uses each deck's own threshold** (default 8), set in the
+  deck's options sheet.
+- **The "Leech threshold" slider in settings** only controls when the
+  "Leech" badge appears on the card during review. It doesn't change when
+  cards get suspended.
+- **The "Leech auto-suspend" toggle** only hides the "card auto-suspended"
+  message. Cards are still suspended when it's off.
+
+Fix options: send the toggle and threshold to the server so they actually
+apply, or remove the duplicated global settings.
+
+### 5. Deck limit on the free plan
+
+- **Decks screen → Add:** for free users at the limit, **Create deck** and
+  **Filtered deck** look disabled, with a lock and "Premium · free plan deck
+  limit reached". Tapping either shows *"The free plan includes 1 custom
+  deck. Upgrade to Premium for unlimited decks."* with an **Upgrade** button
+  that opens the subscription tab.
+- **What counts:** every deck except the two built-in ones (Saved words, From
+  speaking). Filtered decks count too, matching how the server counts.
+- **Where the limit comes from:** `freeMaxDecks` in the server's feature
+  config (1 in the seed). The server already blocked extra decks
+  (`canCreateCustomDeck`); the app now shows it up front.
+- **Not gated in the app:** "Create filtered deck" inside the card browser
+  still relies on the server's refusal, which shows the same upgrade message.
+- `fluentdeck-f/test/deck_limit_test.dart` (6 tests): counting rules,
+  premium, and the message.
+
+### Open decisions
+
+1. **Daily rollover** — wire it to the server (rollover hour + time zone), or
+   hide the setting.
+2. **Show remaining due counts** — change the description, or show separate
+   new/learning/review counts.
+3. **Leeches** — make the global toggle/threshold apply on the server, or
+   remove them and keep only the per-deck threshold.
 
 ---
 

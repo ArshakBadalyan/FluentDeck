@@ -15,12 +15,14 @@ import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 import 'package:fluentdeck/widgets/cefr_level_chips.dart';
+import 'package:fluentdeck/widgets/cloze_field_editor.dart';
 import 'package:fluentdeck/widgets/html_field_editor.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
 import 'package:fluentdeck/widgets/image_occlusion_editor.dart';
 import 'package:fluentdeck/widgets/note_preview_sheet.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 /// Add / edit note screen.
 class CardEditScreen extends StatefulWidget {
@@ -455,7 +457,48 @@ class _CardEditScreenState extends State<CardEditScreen> {
       setState(() => _mediaCtrl.text = url);
     } catch (e) {
       if (!mounted) return;
-      AppToast.showSnackBar(context, 
+      AppToast.showSnackBar(context,
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  /// Image Occlusion's "Image URL" field had no upload path — pasting a
+  /// link from Google Photos/Drive "share" looked like it should work but
+  /// doesn't: those URLs open an HTML viewer page, not raw image bytes, so
+  /// the editor's image never loads and there's nothing to draw a mask on.
+  /// Uploading the file directly (same path `_pickMedia` already uses)
+  /// always produces a URL this editor can actually load.
+  Future<void> _pickOcclusionImage() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    final bytes = file.bytes;
+    if (bytes == null) {
+      if (!mounted) return;
+      AppToast.showSnackBar(context,
+        const SnackBar(content: Text('Could not read file')),
+      );
+      return;
+    }
+
+    try {
+      final url = await FlashcardService.instance.uploadMedia(bytes, file.name);
+      if (!mounted) return;
+      if (url == null || url.isEmpty) {
+        AppToast.showSnackBar(context,
+          const SnackBar(content: Text('Upload failed')),
+        );
+        return;
+      }
+      setState(() => _fieldCtrl('Image').text = url);
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showSnackBar(context,
         SnackBar(content: Text(e.toString())),
       );
     }
@@ -690,7 +733,10 @@ class _CardEditScreenState extends State<CardEditScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const ProfileSettingsCardSkeleton(rows: 4);
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const ProfileSettingsCardSkeleton(rows: 4),
+    );
     }
     if (_error != null) {
       return Center(
@@ -721,9 +767,12 @@ class _CardEditScreenState extends State<CardEditScreen> {
       );
     }
 
-    return SingleChildScrollView(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: form,
+    ),
     );
   }
 
@@ -759,6 +808,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
               label: 'Language',
               value: _languageCode,
               enabled: !_syncLearningLanguage,
+              fieldColor: AppPageColors.cardBgOf(context),
               options:
                   SpeakingPreferences.practiceLanguageOptions.entries
                       .map((e) => AppSelectOption(value: e.key, label: e.value))
@@ -918,6 +968,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
               .map((d) => AppSelectOption(value: d.id, label: d.name))
               .toList(),
       onChanged: (v) => setState(() => _selectedDeckId = v),
+      fieldColor: AppPageColors.cardBgOf(context),
     );
   }
 
@@ -934,6 +985,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
               .map((t) => AppSelectOption(value: t.id, label: t.name))
               .toList(),
       onChanged: _onNoteTypeChanged,
+      fieldColor: AppPageColors.cardBgOf(context),
     );
   }
 
@@ -941,7 +993,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
     if (_isImageOcclusion) {
       final imageUrl = _fieldCtrl('Image').text.trim();
       return [
-        _plainField('Image URL', _fieldCtrl('Image')),
+        _imageUrlField(),
         const SizedBox(height: 16),
         ImageOcclusionEditor(
           imageUrl: imageUrl,
@@ -961,12 +1013,15 @@ class _CardEditScreenState extends State<CardEditScreen> {
             final ctrl = _maskLabelCtrls[region.id]!;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
+              // Delete lives on the mask chips above (in the editor itself)
+              // — this row is just the label text, no second delete control
+              // needed next to it.
               child: TextField(
                 controller: ctrl,
                 decoration: InputDecoration(
                   labelText: 'Mask ${region.id}',
                   filled: true,
-                  fillColor: AppPageColors.fieldBgOf(context),
+                  fillColor: AppPageColors.cardBgOf(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
@@ -998,14 +1053,19 @@ class _CardEditScreenState extends State<CardEditScreen> {
     for (final field in type.fields) {
       final isClozeText = _isCloze && field.name == 'Text';
       widgets.add(
-        HtmlFieldEditor(
-          label: field.name,
-          controller: _fieldCtrl(field.name),
-          maxLines: isClozeText ? 5 : (field.name == 'Back' ? 5 : 3),
-          required: field.required,
-          hint: isClozeText ? 'Use {{c1::answer}} for cloze deletions' : null,
-          trailing: _fieldAiAction(field.name),
-        ),
+        isClozeText
+            ? ClozeFieldEditor(
+                controller: _fieldCtrl(field.name),
+                maxLines: 5,
+                required: field.required,
+              )
+            : HtmlFieldEditor(
+                label: field.name,
+                controller: _fieldCtrl(field.name),
+                maxLines: field.name == 'Back' ? 5 : 3,
+                required: field.required,
+                trailing: _fieldAiAction(field.name),
+              ),
       );
       widgets.add(const SizedBox(height: 16));
     }
@@ -1055,6 +1115,10 @@ class _CardEditScreenState extends State<CardEditScreen> {
 
   /// Translates the Front word into the user's translation language.
   Future<void> _translateWithAi() async {
+    if (!_isPremium) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
     final word = _plainFront();
     if (word.isEmpty) {
       _snack('Enter the Front (word or phrase) first');
@@ -1093,9 +1157,9 @@ class _CardEditScreenState extends State<CardEditScreen> {
         onPressed: _generateMeaningWithAi,
       );
     }
-    if (fieldName == 'Translation') {
+    if (fieldName == 'Translation' && !_checkingPremium) {
       return _aiButton(
-        label: 'Translate with AI',
+        label: _isPremium ? 'Translate with AI' : 'Translate · Premium',
         busyLabel: 'Translating…',
         icon: Icons.translate_rounded,
         busy: _translating,
@@ -1139,7 +1203,9 @@ class _CardEditScreenState extends State<CardEditScreen> {
     return InputDecoration(
       prefixIcon: prefixIcon,
       filled: true,
-      fillColor: AppPageColors.fieldBgOf(context),
+      // White (cardBgOf), not the page's pale field tint — fields on this
+      // sheet were barely distinguishable from the sheet's own background.
+      fillColor: AppPageColors.cardBgOf(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -1153,6 +1219,14 @@ class _CardEditScreenState extends State<CardEditScreen> {
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: AppPageColors.accentOf(context), width: 1.5),
       ),
+    );
+  }
+
+  /// Same border as the field next to it (theme default is near-white in dark mode).
+  ButtonStyle _pickButtonStyle() {
+    return OutlinedButton.styleFrom(
+      side: BorderSide(color: AppPageColors.subtleBorderOf(context), width: 1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     );
   }
 
@@ -1196,6 +1270,38 @@ class _CardEditScreenState extends State<CardEditScreen> {
               onPressed: _pickMedia,
               icon: const Icon(Icons.upload_file, size: 18),
               label: const Text('Pick'),
+              style: _pickButtonStyle(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _imageUrlField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Image URL', style: TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _fieldCtrl('Image'),
+                decoration: _filledDecoration(),
+                // The occlusion canvas below only re-reads this field when
+                // this widget rebuilds — without this it'd stay blank until
+                // some unrelated setState happened to fire.
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: _pickOcclusionImage,
+              icon: const Icon(Icons.upload_file, size: 18),
+              label: const Text('Pick'),
+              style: _pickButtonStyle(),
             ),
           ],
         ),

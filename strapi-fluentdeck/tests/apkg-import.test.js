@@ -3,31 +3,31 @@
 const assert = require('assert');
 const {
   extractCollectionSqlite,
-  mapAnkiModelToNoteType,
-  ankiCardToReviewState,
-  reviewStateToAnkiCard,
+  mapImportedModelToNoteType,
+  importedCardToReviewState,
+  reviewStateToImportedCard,
 } = require('../src/utils/flashcard-apkg');
 
-assert.strictEqual(mapAnkiModelToNoteType({ type: 1, name: 'Cloze' }), 'cloze');
+assert.strictEqual(mapImportedModelToNoteType({ type: 1, name: 'Cloze' }), 'cloze');
 assert.strictEqual(
-  mapAnkiModelToNoteType({ type: 0, name: 'Basic (optional reversed card)' }),
+  mapImportedModelToNoteType({ type: 0, name: 'Basic (optional reversed card)' }),
   'basic_optional_reversed',
 );
 assert.strictEqual(
-  mapAnkiModelToNoteType({ type: 0, name: 'Basic (type in the answer)' }),
+  mapImportedModelToNoteType({ type: 0, name: 'Basic (type in the answer)' }),
   'basic_type_answer',
 );
 
 const sqlite = Buffer.from('SQLite format 3\x00');
 assert.ok(extractCollectionSqlite(sqlite).equals(sqlite));
 
-const learning = ankiCardToReviewState(
+const learning = importedCardToReviewState(
   { queue: 1, due: 1_800_000_000, factor: 2500, reps: 2 },
   1_700_000_000,
 );
 assert.strictEqual(learning.state, 'learning');
 
-const review = reviewStateToAnkiCard(
+const review = reviewStateToImportedCard(
   {
     state: 'review',
     intervalDays: 10,

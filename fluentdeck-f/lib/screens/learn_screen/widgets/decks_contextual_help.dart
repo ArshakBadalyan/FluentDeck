@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_help_screen.dart';
@@ -30,7 +31,7 @@ class DecksContextualHelpButton extends StatelessWidget {
     if (await DecksHelpHintsStore.instance.hasSeen(hintKey)) return;
     if (!context.mounted) return;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder:
           (ctx) => AlertDialog(

@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
@@ -17,6 +18,7 @@ import '../../services/note_service.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../utils/learning_language_utils.dart';
 import '../../widgets/speaking_hub_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class SpeakingNotesTab extends StatefulWidget {
   const SpeakingNotesTab({super.key, required this.onStart});
@@ -536,7 +538,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   }
 
   Future<void> _confirmDeleteNote(UserNoteModel note) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete note?'),
@@ -684,7 +686,10 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   Widget _buildList() {
     if (_loading) {
-      return const AppListSkeleton();
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const AppListSkeleton(),
+    );
     }
     if (_error != null) {
       return Center(
@@ -717,7 +722,9 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
     final allSelected = _selectedIds.length == _notes.length;
 
-    return RefreshIndicator(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: RefreshIndicator(
       onRefresh: _load,
       color: AppColors.brandPrimary,
       child: ListView(
@@ -789,6 +796,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
           }),
         ],
       ),
+    ),
     );
   }
 

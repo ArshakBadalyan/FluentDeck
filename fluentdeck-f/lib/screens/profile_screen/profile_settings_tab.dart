@@ -7,6 +7,8 @@ import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'profile_notifications_tab.dart';
 import 'profile_settings_category_screen.dart';
 import 'profile_sound_tab.dart';
+import 'package:animations/animations.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 /// Scroll Profile → Settings to a section (`ai-speaking`, `decks`, `general`).
 class ProfileSettingsNavigation {
@@ -72,42 +74,41 @@ class ProfileSettingsTabState extends State<ProfileSettingsTab> {
     super.dispose();
   }
 
-  void _openCategory(String sectionId) {
-    if (!mounted) return;
-    final category = ProfileSettingsNavigation.categoryFor(sectionId);
+  /// Settings pages open "above" the list: Material shared axis Z.
+  void _pushSettingsPage(WidgetBuilder builder) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ProfileSettingsCategoryScreen(category: category),
+      AppSharedAxisRoute<void>(
+        transitionType: SharedAxisTransitionType.scaled,
+        page: Builder(builder: builder),
       ),
     );
   }
 
+  void _openCategory(String sectionId) {
+    if (!mounted) return;
+    final category = ProfileSettingsNavigation.categoryFor(sectionId);
+    _pushSettingsPage((_) => ProfileSettingsCategoryScreen(category: category));
+  }
+
   void _open(ProfileSettingsCategory category) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ProfileSettingsCategoryScreen(category: category),
-      ),
-    );
+    _pushSettingsPage((_) => ProfileSettingsCategoryScreen(category: category));
   }
 
   /// Notifications / Sound open as their own settings pages.
   void _openPage(String title, Widget page) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder:
-            (context) => Scaffold(
-              backgroundColor: AppPageColors.pageBgOf(context),
-              appBar: AppBar(
-                backgroundColor: AppColors.brandPrimaryDeep,
-                foregroundColor: Colors.white,
-                elevation: 4,
-                shadowColor: Colors.black.withValues(alpha: 0.35),
-                scrolledUnderElevation: 8,
-                surfaceTintColor: Colors.transparent,
-                title: Text(title),
-              ),
-              body: page,
-            ),
+    _pushSettingsPage(
+      (context) => Scaffold(
+        backgroundColor: AppPageColors.pageBgOf(context),
+        appBar: AppBar(
+          backgroundColor: AppColors.brandPrimaryDeep,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shadowColor: Colors.black.withValues(alpha: 0.35),
+          scrolledUnderElevation: 8,
+          surfaceTintColor: Colors.transparent,
+          title: Text(title),
+        ),
+        body: page,
       ),
     );
   }

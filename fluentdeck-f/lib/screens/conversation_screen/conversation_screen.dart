@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
@@ -10,6 +11,7 @@ import 'package:fluentdeck/models/speaking_session_context.dart';
 import 'package:fluentdeck/services/conversation_limit_service.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
 import 'package:fluentdeck/services/note_service.dart';
+import 'package:fluentdeck/services/daily_goal_tracker.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/services/speaking_scores_service.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
@@ -20,6 +22,7 @@ import 'package:fluentdeck/widgets/ai_daily_usage_bar.dart';
 
 import 'conversation_chat_settings_sheet.dart';
 import 'save_word_meaning_sheet.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class ConversationScreen extends StatefulWidget {
   const ConversationScreen({super.key, this.embedInShell = false});
@@ -51,6 +54,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   void initState() {
     super.initState();
     _service.onStateChanged = _onServiceUpdate;
+    DailyGoalTracker.instance.dailyGoalReached.addListener(_onDailyGoalReached);
     unawaited(_loadSpeakingPrefs());
     unawaited(_service.refreshSpeakingSettings());
     _loadUsage();
@@ -86,9 +90,23 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (_service.onStateChanged == _onServiceUpdate) {
       _service.onStateChanged = null;
     }
+    DailyGoalTracker.instance.dailyGoalReached.removeListener(_onDailyGoalReached);
+    _celebrationTimer?.cancel();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  bool _celebratingGoal = false;
+  Timer? _celebrationTimer;
+
+  void _onDailyGoalReached() {
+    if (!mounted) return;
+    setState(() => _celebratingGoal = true);
+    _celebrationTimer?.cancel();
+    _celebrationTimer = Timer(const Duration(milliseconds: 2800), () {
+      if (mounted) setState(() => _celebratingGoal = false);
+    });
   }
 
   void _onServiceUpdate() {
@@ -237,7 +255,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
         saved != null && saved.streakDays > 0
             ? '\n\n${saved.streakDays} day speaking streak!'
             : '';
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder:
           (dialogCtx) => AlertDialog(
@@ -268,7 +286,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   ),
                 ],
               ),
-      body: Column(
+      body: Stack(
+        children: [
+          Column(
         children: [
           if (_usage != null && _usage!.hasMeter) AiDailyUsageBar(usage: _usage!),
           if (statusLine != null || _service.canEvaluateSession)
@@ -337,7 +357,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 final turn = _service.turns[index];
                 final isPlayingAi =
                     _service.isPlayingTts && index == _service.ttsTurnIndex;
-                return _TurnBubble(
+                return AppFadeIn(
+                  // Only the newest turns animate in; history scrolled back
+                  // into view appears at rest.
+                  animate: index >= _service.turns.length - 2,
+                  child: _TurnBubble(
                   turnIndex: index,
                   turn: turn,
                   translationLanguage:
@@ -361,6 +385,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                           : () => _service.playAiText(turn.text, turnIndex: index),
                   isPlayingAi: isPlayingAi,
                   onSaveSelection: _saveChatSelection,
+                ),
                 );
               },
             ),
@@ -386,6 +411,35 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 (_service.isProcessing || _service.isRecording)
                     ? () => _service.cancelActiveOperation()
                     : null,
+          ),
+        ],
+      ),
+          // Daily goal reached: a card pops in with confetti, then fades.
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedSwitcher(
+                duration: AppMotion.duration(context, AppMotion.normal),
+                child: _celebratingGoal
+                    ? Center(
+                        key: const ValueKey('goal'),
+                        child: AppConfettiBurst(
+                          colors: const [
+                            AppColors.primaryYellow,
+                            AppColors.brandPrimary,
+                            AppColors.greenCorrect,
+                            AppColors.voice,
+                          ],
+                          child: _DailyGoalReachedCard(
+                            goal: SpeakingPreferencesService
+                                .instance
+                                .current
+                                .correctSentenceGoal,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('none')),
+              ),
+            ),
           ),
         ],
       ),
@@ -763,9 +817,12 @@ class _TurnBubbleState extends State<_TurnBubble> {
               padding: const EdgeInsets.only(left: 44, top: 4),
               child: TextButton.icon(
                 onPressed: widget.isPlayingAi ? null : widget.onPlayAi,
-                icon: Icon(
-                  widget.isPlayingAi ? Icons.volume_up : Icons.play_arrow_rounded,
-                  size: 18,
+                icon: AppFadeThroughSwitcher(
+                  child: Icon(
+                    widget.isPlayingAi ? Icons.volume_up : Icons.play_arrow_rounded,
+                    key: ValueKey(widget.isPlayingAi),
+                    size: 18,
+                  ),
                 ),
                 label: Text(widget.isPlayingAi ? 'Speaking…' : 'Play'),
                 style: TextButton.styleFrom(
@@ -777,7 +834,13 @@ class _TurnBubbleState extends State<_TurnBubble> {
               ),
             ),
           if (isUser && cardCorrections.isNotEmpty)
-            ...cardCorrections.map((c) => _CorrectionCard(correction: c)),
+            // Corrections arrive after the message; ease them in.
+            ...cardCorrections.indexed.map(
+              (e) => AppStaggeredFadeIn(
+                index: e.$1,
+                child: _CorrectionCard(correction: e.$2),
+              ),
+            ),
         ],
       ),
     );
@@ -987,10 +1050,20 @@ class _ProcessingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isProcessing || stage == ConversationProcessingStage.speaking) {
-      return const SizedBox.shrink();
-    }
+    final visible =
+        isProcessing && stage != ConversationProcessingStage.speaking;
+    // Slides open/closed instead of popping in and out.
+    return AnimatedSize(
+      duration: AppMotion.duration(context, AppMotion.enter),
+      curve: AppMotion.standardCurve,
+      alignment: Alignment.topCenter,
+      child: visible
+          ? _content(context)
+          : const SizedBox(width: double.infinity),
+    );
+  }
 
+  Widget _content(BuildContext context) {
     final label = switch (stage) {
       ConversationProcessingStage.transcribing => 'Listening…',
       ConversationProcessingStage.thinking => 'Thinking…',
@@ -1002,14 +1075,32 @@ class _ProcessingIndicator extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
+          // Thinking shows typing dots; listening keeps the spinner.
+          AppFadeThroughSwitcher(
+            child: stage == ConversationProcessingStage.thinking
+                ? AppTypingDots(
+                    key: const ValueKey('thinking'),
+                    color: AppPageColors.accentOf(context),
+                  )
+                : const SizedBox(
+                    key: ValueKey('working'),
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(label, style: TextStyle(color: AppPageColors.subtitleOf(context))),
+            child: AppFadeThroughSwitcher(
+              child: Align(
+                key: ValueKey(label),
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  label,
+                  style: TextStyle(color: AppPageColors.subtitleOf(context)),
+                ),
+              ),
+            ),
           ),
           if (onCancel != null)
             TextButton(onPressed: onCancel, child: const Text('Cancel')),
@@ -1043,7 +1134,10 @@ class _InputBar extends StatelessWidget {
   Widget _micButton({required double size}) {
     return GestureDetector(
       onTap: isProcessing ? null : onMicTap,
-      child: AnimatedContainer(
+      child: AppPulse(
+        active: isRecording,
+        color: AppColors.redWrong,
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: size,
         height: size,
@@ -1058,11 +1152,15 @@ class _InputBar extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(
-          isRecording ? Icons.stop : Icons.mic,
-          color: Colors.white,
-          size: size * 0.45,
+        child: AppFadeThroughSwitcher(
+          child: Icon(
+            isRecording ? Icons.stop : Icons.mic,
+            key: ValueKey(isRecording),
+            color: Colors.white,
+            size: size * 0.45,
+          ),
         ),
+      ),
       ),
     );
   }
@@ -1154,6 +1252,51 @@ class _InputBar extends StatelessWidget {
               _micButton(size: 72),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyGoalReachedCard extends StatelessWidget {
+  const _DailyGoalReachedCard({required this.goal});
+
+  final int goal;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.6, end: 1),
+      duration: AppMotion.duration(context, AppMotion.slow),
+      curve: AppMotion.spring,
+      builder: (context, scale, child) =>
+          Transform.scale(scale: scale, child: child),
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(16),
+        color: AppPageColors.cardBgOf(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.emoji_events_rounded,
+                size: 44,
+                color: AppColors.primaryYellow,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Daily goal reached!',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$goal correct sentences today',
+                style: TextStyle(color: AppPageColors.subtitleOf(context)),
+              ),
+            ],
+          ),
         ),
       ),
     );

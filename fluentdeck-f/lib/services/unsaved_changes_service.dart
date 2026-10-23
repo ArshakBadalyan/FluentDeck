@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
@@ -31,7 +32,7 @@ class UnsavedChangesService extends ChangeNotifier {
     Future<bool> Function()? onSave,
   }) async {
     // Tap outside = stay on the page (same as the old ×).
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder:

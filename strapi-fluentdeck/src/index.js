@@ -103,6 +103,7 @@ module.exports = {
       "api::flashcard-deck.flashcard-deck.ensureCardNote",
       "api::flashcard-deck.flashcard-deck.exportCardJson",
       "api::flashcard-note.flashcard-note.listNoteTypes",
+      "api::flashcard-note.flashcard-note.getNoteTypeStyles",
       "api::flashcard-note.flashcard-note.createNote",
       "api::flashcard-note.flashcard-note.getNote",
       "api::flashcard-note.flashcard-note.updateNote",

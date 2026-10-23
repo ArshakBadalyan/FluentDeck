@@ -102,6 +102,9 @@ module.exports = (plugin) => {
       "tutor_memory",
       "ai_turns_date",
       "ai_turns_count",
+      "ai_time_date",
+      "ai_time_seconds",
+      "ai_time_clock_at",
       "ai_session_opens_date",
       "ai_session_opens_count",
     ];
@@ -659,7 +662,7 @@ module.exports = (plugin) => {
     }
     if (body.daily_reminder_time != null) {
       const time = String(body.daily_reminder_time).trim();
-      if (!/^\d{2}:\d{2}$/.test(time)) {
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
         return ctx.badRequest("daily_reminder_time must be HH:MM");
       }
       data.daily_reminder_time = time;

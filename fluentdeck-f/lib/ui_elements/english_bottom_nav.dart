@@ -4,6 +4,7 @@ import 'package:fluentdeck/services/analytics_service.dart';
 import 'package:fluentdeck/services/click_tracking.dart';
 import 'package:fluentdeck/services/interaction_haptics.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 class EnglishBottomNav extends StatelessWidget {
@@ -70,10 +71,38 @@ class EnglishBottomNav extends StatelessWidget {
         items: [
           for (var i = 0; i < tabs.length; i++)
             BottomNavigationBarItem(
-              icon: tabs[i].iconBuilder(currentIndex == i),
+              icon: _NavIcon(
+                selected: currentIndex == i,
+                child: tabs[i].iconBuilder(currentIndex == i),
+              ),
               label: tabs[i].navLabel,
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// The selected tab's icon lifts and grows slightly; the previous one settles
+/// back (Material standard easing).
+class _NavIcon extends StatelessWidget {
+  const _NavIcon({required this.selected, required this.child});
+
+  final bool selected;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = AppMotion.duration(context, AppMotion.normal);
+    return AnimatedSlide(
+      offset: selected ? const Offset(0, -0.08) : Offset.zero,
+      duration: duration,
+      curve: AppMotion.standardCurve,
+      child: AnimatedScale(
+        scale: selected ? 1.15 : 1,
+        duration: duration,
+        curve: AppMotion.spring,
+        child: child,
       ),
     );
   }

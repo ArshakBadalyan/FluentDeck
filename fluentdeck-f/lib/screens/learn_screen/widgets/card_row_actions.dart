@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -79,7 +80,7 @@ class CardRowActions {
         completer.complete(null);
         return;
       }
-      completer.complete(await showDialog<T>(context: context, builder: builder));
+      completer.complete(await showAppDialog<T>(context: context, builder: builder));
     });
     return completer.future;
   }
@@ -253,7 +254,7 @@ class CardRowActions {
 
   Future<void> _showCardInfo() async {
     if (!context.mounted) return;
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
@@ -270,7 +271,7 @@ class CardRowActions {
     final rs = info.card.reviewState;
     final due = rs?.dueAt != null ? formatDueLabel(info.card) : '—';
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -381,6 +382,33 @@ class CardRowActions {
     if (picked == null || picked == current) return;
     if (!context.mounted) return;
 
+    // "Basic (optional reversed card)" only adds its second card when this
+    // flag is on — the simple type picker above has no other way to set
+    // it, so without asking here the type silently behaves exactly like
+    // plain Basic (one card) and looks like the change did nothing.
+    bool? createReverse;
+    if (picked == 'basic_optional_reversed') {
+      createReverse = await _showDialogAfterMenu<bool>(
+        (ctx) => AlertDialog(
+          title: const Text('Include the reverse card?'),
+          content: const Text(
+            'This type can also quiz back → front as a second card. Add it now, or leave this as a single card and turn it on later.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Just the one card'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Add reverse card'),
+            ),
+          ],
+        ),
+      );
+      if (createReverse == null || !context.mounted) return;
+    }
+
     final ok = await _showDialogAfterMenu<bool>(
       (ctx) => AlertDialog(
         title: const Text('Change note type?'),
@@ -398,6 +426,7 @@ class CardRowActions {
     await FlashcardService.instance.changeNoteType(
       noteId: noteId,
       noteType: picked,
+      createReverse: createReverse,
     );
     _showMessage('Note type updated');
     onChanged();
@@ -409,7 +438,7 @@ class CardRowActions {
     if (decks.isEmpty) throw Exception('No decks available');
 
     if (!context.mounted) return;
-    final targetId = await showDialog<int>(
+    final targetId = await showAppDialog<int>(
       context: context,
       builder:
           (ctx) => SimpleDialog(
@@ -483,7 +512,7 @@ class CardRowActions {
     final ctrl = TextEditingController(text: previousTags.join(', '));
 
     if (!context.mounted) return;
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -569,7 +598,7 @@ class CardRowActions {
   }
 
   Future<void> _resetProgress() async {
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -594,7 +623,7 @@ class CardRowActions {
   }
 
   Future<void> _deleteNote() async {
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(

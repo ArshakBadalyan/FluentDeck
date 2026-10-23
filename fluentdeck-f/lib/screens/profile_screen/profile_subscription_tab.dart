@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
@@ -11,6 +12,8 @@ import '../../services/subscription_service.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../ui_elements/primary_button.dart';
+import '../../utils/practice_time_format.dart';
+import '../../ui_elements/app_motion.dart';
 
 class ProfileSubscriptionTab extends StatefulWidget {
   const ProfileSubscriptionTab({super.key});
@@ -26,7 +29,6 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
   String? _selectedProductId = kYearlyProductId;
   SubscriptionStatus _status = SubscriptionStatus.none;
   ConversationUsageStatus? _usage;
-  late int _selectedDailyTurns;
   bool _loading = true;
   bool _purchasing = false;
   String? _error;
@@ -37,7 +39,6 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
   @override
   void initState() {
     super.initState();
-    _selectedDailyTurns = kDailyTurnsSliderConfig.defaultTurns;
     WidgetsBinding.instance.addObserver(this);
     _service.onPurchaseError = _onPurchaseError;
     _service.onStatusChanged = _onStatusChanged;
@@ -79,7 +80,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
       _error = null;
     });
 
-    // The two plans (with fallback pricing) always render — a store query
+    // The plans (with fallback pricing) always render — a store query
     // failure (products not yet live, no Play Services on this device, etc.)
     // should never blank out the whole tab, so each call is caught on its own.
     List<ProductDetails> products = const [];
@@ -103,26 +104,18 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
       // Optional meter — keep tab usable without usage.
     }
 
-    final slider = kDailyTurnsSliderConfig;
-    final initialDaily =
-        status.dailyConversationTurns ??
-        usage?.dailyLimit ??
-        slider.defaultTurns;
-    final clamped = initialDaily.clamp(slider.min, slider.max);
-
     if (!mounted) return;
     setState(() {
       _products = products;
       _status = status;
       _usage = usage;
-      _selectedProductId = status.productId ?? kYearlyProductId;
-      _selectedDailyTurns = clamped;
+      // Legacy (no longer sold) plans aren't listed — preselect Yearly then.
+      _selectedProductId =
+          kSubscriptionProductIds.contains(status.productId)
+              ? status.productId
+              : kYearlyProductId;
       _loading = false;
     });
-  }
-
-  void _onDailyTurnsChanged(int value) {
-    setState(() => _selectedDailyTurns = value);
   }
 
   Future<void> _subscribe() async {
@@ -136,17 +129,14 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
 
     setState(() => _purchasing = true);
     try {
-      await _service.purchase(
-        product,
-        dailyConversationTurns: _selectedDailyTurns,
-      );
+      await _service.purchase(product);
     } catch (_) {
       _onPurchaseError('Could not start the purchase. Please try again.');
     }
   }
 
   Future<void> _cancelSubscription() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
@@ -188,10 +178,15 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const AppListSkeleton(count: 3, itemHeight: 96);
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const AppListSkeleton(count: 3, itemHeight: 96),
+    );
     }
 
-    return AppPageBackground(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: AppPageBackground(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
         child: Column(
@@ -229,15 +224,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            _DailyTurnsPicker(
-              value: _selectedDailyTurns,
-              min: kDailyTurnsSliderConfig.min,
-              max: kDailyTurnsSliderConfig.max,
-              defaultTurns: kDailyTurnsSliderConfig.defaultTurns,
-              onChanged: _onDailyTurnsChanged,
-            ),
-            const SizedBox(height: 16),
-            for (final plan in plansForDailyTurns(_selectedDailyTurns))
+            for (final plan in kFluentDeckPlans)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _PlanCard(
@@ -246,22 +233,18 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
                   selected: _selectedProductId == plan.productId,
                   isCurrent: _status.isPremium && _status.productId == plan.productId,
                   badge: plan.badge,
-                  maxDailyTurns: kDailyTurnsSliderConfig.max,
-                  baselineDailyTurns: kDailyTurnsSliderConfig.defaultTurns,
-                  priceScale:
-                      _selectedDailyTurns /
-                      (kFluentDeckPlans
-                              .where((p) => p.productId == plan.productId)
-                              .firstOrNull
-                              ?.dailyConversationTurns ??
-                          60),
                   onTap: () => setState(() => _selectedProductId = plan.productId),
                 ),
               ),
             const SizedBox(height: 8),
             _FeatureList(
               isPremium: _status.isPremium,
-              premiumDailyTurns: _selectedDailyTurns,
+              premiumDailyMinutes:
+                  kFluentDeckPlans
+                      .where((p) => p.productId == _selectedProductId)
+                      .firstOrNull
+                      ?.dailyMinutes ??
+                  240,
             ),
             const SizedBox(height: 24),
             PrimaryButton(
@@ -293,6 +276,7 @@ class _ProfileSubscriptionTabState extends State<ProfileSubscriptionTab>
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -303,11 +287,6 @@ class _StatusHeroCard extends StatelessWidget {
 
   final SubscriptionStatus status;
   final ConversationUsageStatus? usage;
-
-  String _planLabel(String? productId) {
-    return kFluentDeckPlans.where((p) => p.productId == productId).firstOrNull?.title ??
-        'Premium';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -366,7 +345,7 @@ class _StatusHeroCard extends StatelessWidget {
                   children: [
                     Text(
                       isPremium
-                          ? 'Premium · ${_planLabel(status.productId)}'
+                          ? 'Premium · ${planTitleFor(status.productId)}'
                           : 'Free plan',
                       style: TextStyle(
                         fontSize: 17,
@@ -401,7 +380,7 @@ class _StatusHeroCard extends StatelessWidget {
           if (usage != null && usage!.hasMeter) ...[
             const SizedBox(height: 16),
             Text(
-              'Today · ${usage!.usedToday} / ${usage!.dailyLimit} conversations',
+              'Today · ${formatPracticeTime(usage!.usedToday)} of ${formatPracticeTime(usage!.dailyLimit)} AI practice',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -435,11 +414,11 @@ class _StatusHeroCard extends StatelessWidget {
 class _FeatureList extends StatelessWidget {
   const _FeatureList({
     required this.isPremium,
-    required this.premiumDailyTurns,
+    required this.premiumDailyMinutes,
   });
 
   final bool isPremium;
-  final int premiumDailyTurns;
+  final int premiumDailyMinutes;
 
   @override
   Widget build(BuildContext context) {
@@ -450,10 +429,10 @@ class _FeatureList extends StatelessWidget {
       ('AI-generated word meanings', Icons.auto_awesome_rounded),
       ('Advanced AI tutor levels (B2, C1, C2)', Icons.school_rounded),
       (
-        'Up to $premiumDailyTurns AI conversations / day',
+        'Up to ${formatPracticeMinutes(premiumDailyMinutes)} of AI conversation a day',
         Icons.record_voice_over_rounded,
       ),
-      ('Unlimited custom role-plays (3 free)', Icons.theater_comedy_rounded),
+      ('Unlimited custom role-plays (1 free)', Icons.theater_comedy_rounded),
       ('All speaking games (10 free)', Icons.sports_esports_rounded),
       ('Full access to speaking topics', Icons.forum_rounded),
       ('Unlimited saved words & decks', Icons.style_rounded),
@@ -485,80 +464,6 @@ class _FeatureList extends StatelessWidget {
   }
 }
 
-class _DailyTurnsPicker extends StatelessWidget {
-  const _DailyTurnsPicker({
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.defaultTurns,
-    required this.onChanged,
-  });
-
-  final int value;
-  final int min;
-  final int max;
-  final int defaultTurns;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final divisions = (max - min).clamp(1, 200);
-    return AppSectionCard(
-      title: 'Daily conversations',
-      icon: Icons.tune_rounded,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Drag the bar to set how many AI tutor turns you want each day. '
-            'Plan prices update with your choice (recommended: $defaultTurns).',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppPageColors.subtitleOf(context),
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Text(
-                '$value / day',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.brandPrimary,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '$min – $max',
-                style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
-              ),
-            ],
-          ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.brandPrimary,
-              inactiveTrackColor: AppColors.brandPrimary.withValues(alpha: 0.18),
-              thumbColor: AppColors.brandPrimary,
-              overlayColor: AppColors.brandPrimary.withValues(alpha: 0.12),
-              trackHeight: 6,
-            ),
-            child: Slider(
-              value: value.toDouble().clamp(min.toDouble(), max.toDouble()),
-              min: min.toDouble(),
-              max: max.toDouble(),
-              divisions: divisions,
-              label: '$value / day',
-              onChanged: (v) => onChanged(v.round()),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
     required this.plan,
@@ -566,9 +471,6 @@ class _PlanCard extends StatelessWidget {
     required this.selected,
     required this.onTap,
     required this.isCurrent,
-    required this.maxDailyTurns,
-    required this.baselineDailyTurns,
-    required this.priceScale,
     this.badge,
   });
 
@@ -576,20 +478,28 @@ class _PlanCard extends StatelessWidget {
   final ProductDetails? storeProduct;
   final bool selected;
   final bool isCurrent;
-  final int maxDailyTurns;
-  final int baselineDailyTurns;
-  final double priceScale;
   final VoidCallback onTap;
   final String? badge;
 
+  /// The store's real price when available — exactly what the user pays.
   String get _priceLabel {
     final product = storeProduct;
     if (product != null && product.rawPrice > 0) {
-      final scaled = product.rawPrice * priceScale.clamp(0.1, 10);
-      final currency = product.currencyCode;
-      return '${_formatMoney(scaled, currency)} ${plan.periodSuffix}';
+      return '${product.price} ${plan.periodSuffix}';
     }
     return '${plan.fallbackPrice} ${plan.periodSuffix}';
+  }
+
+  /// "≈ €5.00 / month" for multi-month plans.
+  String? get _perMonthLabel {
+    if (plan.durationMonths <= 1) return null;
+    final product = storeProduct;
+    if (product != null && product.rawPrice > 0) {
+      return '≈ ${_formatMoney(product.rawPrice / plan.durationMonths, product.currencyCode)} / month';
+    }
+    if (plan.priceAmount <= 0) return null;
+    final symbol = plan.fallbackPrice.trim().isNotEmpty ? plan.fallbackPrice.trim()[0] : '€';
+    return '≈ $symbol${(plan.priceAmount / plan.durationMonths).toStringAsFixed(2)} / month';
   }
 
   String _formatMoney(double amount, String currencyCode) {
@@ -600,21 +510,15 @@ class _PlanCard extends StatelessWidget {
     }
   }
 
-  /// Fill from baseline (default package size) → slider max, so default shows empty bar.
-  double get _capacity {
-    final max = maxDailyTurns <= 0 ? baselineDailyTurns : maxDailyTurns;
-    final baseline = baselineDailyTurns <= 0 ? 60 : baselineDailyTurns;
-    if (max <= baseline) return 1.0;
-    return ((plan.dailyConversationTurns - baseline) / (max - baseline))
-        .clamp(0.0, 1.0);
-  }
-
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-      child: Container(
+      // Selecting a plan eases the border, tint and radio into place.
+      child: AnimatedContainer(
+        duration: AppMotion.duration(context, AppMotion.normal),
+        curve: AppMotion.standardCurve,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: selected
@@ -633,11 +537,14 @@ class _PlanCard extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 2),
-              child: Icon(
+              child: AppFadeThroughSwitcher(
+                child: Icon(
+                  key: ValueKey(selected),
                 selected ? Icons.radio_button_checked : Icons.radio_button_off,
                 color: selected
                     ? AppColors.brandPrimary
                     : AppPageColors.subtitleOf(context),
+              ),
               ),
             ),
             const SizedBox(width: 12),
@@ -697,11 +604,38 @@ class _PlanCard extends StatelessWidget {
                     _priceLabel,
                     style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                   ),
-                  const SizedBox(height: 10),
+                  if (_perMonthLabel != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      _perMonthLabel!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppPageColors.subtitleOf(context),
+                      ),
+                    ),
+                  ],
+                  if (plan.trialDays > 0 && !isCurrent) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      '${plan.trialDays}-day free trial for new subscribers',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppPageColors.accentOf(context),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
                   Row(
                     children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 14,
+                        color: AppPageColors.subtitleOf(context),
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        '${plan.dailyConversationTurns} conversations / day',
+                        'Up to ${formatPracticeMinutes(plan.dailyMinutes)} of AI conversation a day',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -709,16 +643,6 @@ class _PlanCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: _capacity,
-                      minHeight: 6,
-                      backgroundColor: AppPageColors.subtleBorderOf(context),
-                      color: AppColors.brandPrimary,
-                    ),
                   ),
                 ],
               ),

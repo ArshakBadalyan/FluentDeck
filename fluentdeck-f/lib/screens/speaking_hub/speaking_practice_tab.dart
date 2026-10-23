@@ -11,6 +11,7 @@ import '../../services/speaking_preferences_service.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../widgets/speaking_hub_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class SpeakingPracticeTab extends StatefulWidget {
   const SpeakingPracticeTab({super.key, required this.onStart});
@@ -151,7 +152,10 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
 
   Widget _buildList() {
     if (_loading) {
-      return const AppListSkeleton();
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const AppListSkeleton(),
+    );
     }
     if (_error != null) {
       return Center(
@@ -180,7 +184,9 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
       );
     }
 
-    return RefreshIndicator(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: RefreshIndicator(
       onRefresh: _load,
       color: AppColors.brandPrimary,
       child: ListView.separated(
@@ -199,6 +205,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
           );
         },
       ),
+    ),
     );
   }
 

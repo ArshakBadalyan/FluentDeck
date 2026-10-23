@@ -1,10 +1,10 @@
 ---
 name: flutter-ui-design
 description: >-
-  Distinctive Flutter/Material 3 UI for FluentDeck screens and widgets. Use when
+  Distinctive Flutter/Material 2 UI for FluentDeck screens and widgets. Use when
   building or reshaping app UI, bottom sheets, flashcard views, review sessions,
   skeletons, themes, or polish in fluentdeck-f/. Extends frontend-design for
-  this product's purple brand and learning-app context.
+  this product's Lagoon teal brand and learning-app context.
 ---
 
 # Flutter UI Design (FluentDeck)
@@ -19,18 +19,21 @@ Before designing, state: screen purpose, primary user action, and what content d
 
 ## Brand tokens (use these, do not invent new palettes)
 
-From `app_colors.dart` and `app_theme.dart`:
+All brand values live in `lib/config/brand_config.dart` (`BrandConfig`) and are exposed through `AppColors` / `AppPageColors` / `AppTheme`. Change colors there, never inline.
 
 | Token | Value | Use |
 |-------|-------|-----|
-| Primary purple | `#8A2CFF` | CTAs, progress, brand accents |
-| Primary yellow | `#FFC400` | Highlights, streaks, rewards |
-| Green correct | `#2EE66B` | Success, correct answers |
-| Red wrong | `#E53935` | Errors, incorrect answers |
-| Font | Rubik | All text via `AppTextTheme` |
-| Material | Material 3 | `ThemeData(useMaterial3: true)` |
+| `AppColors.brandPrimary` | `#0D7C86` | CTAs, progress, selected tab, links |
+| `AppColors.brandPrimaryDeep` | `#0A6870` | App bar, headers, gradient end |
+| `AppColors.brandPrimaryOnDark` | `#2EC4CF` | Primary in dark theme (pair with `BrandConfig.onPrimaryDark` text) |
+| `AppColors.heroGradient` | primary → deep | Hero/banner cards with white text |
+| `AppColors.voice` / `voiceDeep` | `#FF7A59` / `#E2553A` | Speaking only: mic, voice waves (`voiceDeep` when it carries a white icon) |
+| `AppColors.primaryYellow` | `#FFC400` | Rewards only: streak, XP, badges |
+| Semantic | red `#E53935`, orange `#FF8F3D`, green `#2EE66B`, blue `#2196F3` | Again / Hard / Good·correct / New cards — never decorative |
+| Font | `BrandConfig.fontFamily` (Rubik) | All text via `AppTextTheme` |
+| Material | **Material 2** (m2.material.io/components) | `ThemeData(useMaterial3: false)`; brand teal is both `primary` and `secondary` |
 
-Always pull colors from `AppColors` / `Theme.of(context).colorScheme` — never hardcode one-off hex values unless extending the design system deliberately.
+Always pull colors from `AppColors` / `AppPageColors` / `Theme.of(context).colorScheme` — never hardcode `Color(0x…)` brand values.
 
 ## Flutter-specific rules
 
@@ -39,7 +42,7 @@ Always pull colors from `AppColors` / `Theme.of(context).colorScheme` — never 
 3. **Spacing rhythm** — prefer 4/8/12/16/24 dp; match neighboring screens in the same tab flow.
 4. **Touch targets** — minimum 48dp; flashcard/review controls must work one-handed on mobile.
 5. **Loading & empty states** — use skeletons and actionable empty copy ("Add your first deck"), not decorative placeholders.
-6. **Motion** — subtle `AnimatedSwitcher` / `Hero` where it aids orientation; avoid gratuitous animation on study flows.
+6. **Motion** — Material 2 motion via `AppMotion` tokens, `AppPressScale` (tap feedback), `showAppDialog` (never raw `showDialog`), `AppFadeIn` / `AppStaggeredFadeIn`, and the `animations` package (shared axis, fade through, container transform). Study flows stay under 200 ms and never block input. Phases and rules: `docs/motion-and-material-plan.md`.
 7. **Accessibility** — semantic labels on icon buttons; respect `MediaQuery.disableAnimations`.
 
 ## Avoid generic AI UI patterns
@@ -48,7 +51,7 @@ Do not default to:
 - Warm cream + terracotta serif (web trope)
 - Random gradient cards unrelated to content
 - Numbered section markers (01/02/03) unless the flow is truly sequential
-- Purple-on-purple low-contrast text
+- Teal-on-teal low-contrast text; using teal where a semantic color (green/blue) is expected
 - New fonts outside Rubik without explicit ask
 
 ## Process

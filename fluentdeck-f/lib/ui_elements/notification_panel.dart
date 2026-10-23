@@ -5,6 +5,7 @@ import 'package:fluentdeck/services/audio_service.dart';
 import 'package:fluentdeck/services/notifications_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/strapi_response.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class NotificationPanel extends StatefulWidget {
   final VoidCallback? onChanged;
@@ -189,7 +190,9 @@ class _NotificationPanelState extends State<NotificationPanel> {
                       itemBuilder: (context, index) {
                         final item = _items[index];
                         final read = item['read'] == true;
-                        return ListTile(
+                        return AppStaggeredFadeIn(
+                          index: index,
+                          child: ListTile(
                           dense: true,
                           tileColor: read
                               ? null
@@ -203,6 +206,7 @@ class _NotificationPanelState extends State<NotificationPanel> {
                           ),
                           subtitle: Text((item['text'] ?? '').toString()),
                           onTap: () => _onTap(item),
+                        ),
                         );
                       },
                     ),

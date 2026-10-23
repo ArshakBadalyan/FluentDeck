@@ -243,6 +243,65 @@ class BasicHtmlText extends StatelessWidget {
 /// Cloze helpers for Phase 4C editor validation.
 bool hasClozeDeletions(String text) => RegExp(r'\{\{c\d+::').hasMatch(text);
 
+final _clozeDeletionRe = RegExp(r'\{\{c(\d+)::([^}]+?)(?:::[^}]+)?\}\}');
+
+/// One `{{cN::word}}` found in a Cloze note's text — number + hidden word.
+class ClozeDeletion {
+  const ClozeDeletion({required this.number, required this.word});
+  final int number;
+  final String word;
+}
+
+List<ClozeDeletion> extractClozeDeletions(String text) => _clozeDeletionRe
+    .allMatches(text)
+    .map((m) => ClozeDeletion(number: int.parse(m.group(1)!), word: m.group(2) ?? ''))
+    .toList();
+
+/// Wraps the controller's current text selection in `{{cN::selected}}`,
+/// auto-picking the next deletion number — the "tap Hide" alternative to
+/// typing the `{{c1::...}}` syntax by hand. No-op on an empty/invalid
+/// selection or one that's only whitespace.
+void wrapClozeSelection(TextEditingController controller) {
+  final selection = controller.selection;
+  if (!selection.isValid || selection.isCollapsed) return;
+
+  final text = controller.text;
+  final selected = selection.textInside(text);
+  if (selected.trim().isEmpty) return;
+
+  final existing = extractClozeDeletions(text);
+  final nextNumber = existing.isEmpty
+      ? 1
+      : existing.map((d) => d.number).reduce((a, b) => a > b ? a : b) + 1;
+
+  final start = selection.start;
+  final end = selection.end;
+  final wrapped = '{{c$nextNumber::$selected}}';
+  final updated = text.replaceRange(start, end, wrapped);
+
+  controller.value = TextEditingValue(
+    text: updated,
+    selection: TextSelection.collapsed(offset: start + wrapped.length),
+  );
+}
+
+/// Removes one specific `{{cN::word}}` deletion, leaving the plain word in
+/// its place — the "x" on a deletion chip, undoing a Hide without having to
+/// hand-edit the braces back out.
+void removeClozeDeletion(TextEditingController controller, int number) {
+  final text = controller.text;
+  final match = _clozeDeletionRe.allMatches(text).firstWhere(
+        (m) => int.parse(m.group(1)!) == number,
+        orElse: () => throw StateError('deletion c$number not found'),
+      );
+  final word = match.group(2) ?? '';
+  final updated = text.replaceRange(match.start, match.end, word);
+  controller.value = TextEditingValue(
+    text: updated,
+    selection: TextSelection.collapsed(offset: match.start + word.length),
+  );
+}
+
 String renderClozePreviewFront(String text, {int activeIndex = 1}) {
   return text.replaceAllMapped(
     RegExp(r'\{\{c(\d+)::([^}]+?)(?:::[^}]+)?\}\}'),

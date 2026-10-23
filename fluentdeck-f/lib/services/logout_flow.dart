@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 
@@ -18,7 +19,7 @@ Future<void> runLogoutFlow(BuildContext context) async {
   final needsCredentials = user is Map && user['needs_logout_credentials'] == true;
 
   if (needsCredentials) {
-    final result = await showDialog<dynamic>(
+    final result = await showAppDialog<dynamic>(
       context: context,
       builder: (_) => const NicknameLogoutDialog(),
     );
@@ -30,7 +31,7 @@ Future<void> runLogoutFlow(BuildContext context) async {
     if (result != true) return;
     UnsavedChangesService().hasUnsavedChanges = false;
   } else {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(

@@ -70,7 +70,7 @@ final _groups = <_FaqGroup>[
       'What do Generate with AI and Translate with AI do?',
       'Generate with AI writes a short definition and example in the word\'s own '
           'language (Premium). Translate with AI translates the word into your '
-          'translation language, set in Settings → AI Speaking.',
+          'translation language, set in Settings → AI Speaking (Premium).',
     ),
   ]),
   _FaqGroup('Reviewing cards', Icons.replay_rounded, [
@@ -98,8 +98,9 @@ final _groups = <_FaqGroup>[
   _FaqGroup('Account & data', Icons.person_outline_rounded, [
     _Faq(
       'What does Premium add?',
-      'Unlimited saved words and AI tutor turns, Generate with AI, CEFR level '
-          'detection and all tutor voices. The free plan has daily and saved-word limits.',
+      'Up to 4 hours of AI conversation a day (free: 5 minutes), unlimited saved '
+          'words, Generate with AI, CEFR level detection and all tutor voices. '
+          'Monthly or Yearly — Yearly starts with a 7-day free trial.',
     ),
     _Faq(
       'How do I start over?',

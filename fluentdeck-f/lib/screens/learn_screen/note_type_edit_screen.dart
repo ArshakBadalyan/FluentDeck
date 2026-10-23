@@ -30,6 +30,8 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
   late String _selectedThemeId;
   bool _saving = false;
   String? _error;
+  /// Style-only taps save in order, so a slow earlier save can't win.
+  Future<void> _styleSaves = Future<void>.value();
 
   @override
   void initState() {
@@ -102,29 +104,32 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
     return null;
   }
 
-  Future<void> _save() async {
-    if (widget.styleOnly) {
-      setState(() {
-        _saving = true;
-        _error = null;
-      });
-      try {
-        await NoteTypeStyleStore.instance.save(
-          widget.existing!.id,
-          _selectedThemeId,
-        );
-        if (!mounted) return;
-        Navigator.pop(context, true);
-      } catch (e) {
-        if (!mounted) return;
-        setState(() {
-          _error = e.toString();
-          _saving = false;
-        });
-      }
-      return;
-    }
+  /// Built-in types save the card style as soon as it is picked; custom types
+  /// keep it in the draft until Save.
+  Future<void> _selectStyle(String themeId) async {
+    if (themeId == _selectedThemeId) return;
+    final previous = _selectedThemeId;
+    setState(() {
+      _selectedThemeId = themeId;
+      _error = null;
+    });
+    if (!widget.styleOnly) return;
 
+    final save = _styleSaves = _styleSaves
+        .catchError((_) {})
+        .then((_) => NoteTypeStyleStore.instance.save(widget.existing!.id, themeId));
+    try {
+      await save;
+    } catch (e) {
+      if (!mounted || _selectedThemeId != themeId) return;
+      setState(() {
+        _selectedThemeId = previous;
+        _error = e.toString();
+      });
+    }
+  }
+
+  Future<void> _save() async {
     final validation = _validate();
     if (validation != null) {
       setState(() => _error = validation);
@@ -184,21 +189,22 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
               : 'New note type',
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _saving ? null : _save,
-              style: TextButton.styleFrom(foregroundColor: AppColors.brandPrimary),
-              child:
-                  _saving
-                      ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Text('Save', style: TextStyle(fontWeight: FontWeight.w700)),
+          if (!widget.styleOnly)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                onPressed: _saving ? null : _save,
+                style: TextButton.styleFrom(foregroundColor: AppColors.brandPrimary),
+                child:
+                    _saving
+                        ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Text('Save', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
             ),
-          ),
         ],
       ),
       body: AppPageBackground(
@@ -300,6 +306,11 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
                   hintText: 'Field name',
                   border: InputBorder.none,
                   isDense: true,
+                  // The outer Container already paints the theme-aware
+                  // field background — without this, the TextField inherits
+                  // the app's global InputDecorationTheme (filled white in
+                  // light mode), painting a second, mismatched box on top.
+                  filled: false,
                 ),
               ),
             ),
@@ -330,7 +341,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
   Widget _themeSwatch(CardStylePreset preset) {
     final selected = preset.id == _selectedThemeId;
     return GestureDetector(
-      onTap: () => setState(() => _selectedThemeId = preset.id),
+      onTap: () => _selectStyle(preset.id),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         width: 96,

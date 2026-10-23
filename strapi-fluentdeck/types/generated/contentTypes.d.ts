@@ -500,6 +500,14 @@ export interface ApiAppFeatureConfigAppFeatureConfig
         number
       > &
       Schema.Attribute.DefaultTo<10>;
+    freeDailyMinutes: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<5>;
     freeGamesCount: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {
@@ -557,6 +565,14 @@ export interface ApiAppFeatureConfigAppFeatureConfig
         number
       > &
       Schema.Attribute.DefaultTo<60>;
+    premiumDailyMinutes: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<240>;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1866,6 +1882,17 @@ export interface PluginUsersPermissionsUser
       > &
       Schema.Attribute.DefaultTo<0>;
     ai_session_opens_date: Schema.Attribute.String & Schema.Attribute.Private;
+    ai_time_clock_at: Schema.Attribute.DateTime & Schema.Attribute.Private;
+    ai_time_date: Schema.Attribute.String & Schema.Attribute.Private;
+    ai_time_seconds: Schema.Attribute.Integer &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
     ai_turns_count: Schema.Attribute.Integer &
       Schema.Attribute.Private &
       Schema.Attribute.SetMinMax<
@@ -1950,6 +1977,7 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<true>;
     name: Schema.Attribute.String;
+    note_type_styles: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
     notifications: Schema.Attribute.Relation<
       'oneToMany',
       'api::notification.notification'

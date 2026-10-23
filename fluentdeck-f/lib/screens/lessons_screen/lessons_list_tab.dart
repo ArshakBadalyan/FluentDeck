@@ -6,6 +6,7 @@ import 'package:fluentdeck/services/english_level_service.dart';
 import 'package:fluentdeck/services/lesson_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class LessonsListTab extends StatefulWidget {
   const LessonsListTab({super.key});
@@ -66,7 +67,10 @@ class _LessonsListTabState extends State<LessonsListTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const LessonsListSkeleton();
+      return AppLoadingSwitcher(
+      loading: true,
+      child: const LessonsListSkeleton(),
+    );
     }
 
     if (_error != null) {
@@ -85,7 +89,9 @@ class _LessonsListTabState extends State<LessonsListTab> {
       );
     }
 
-    return Column(
+    return AppLoadingSwitcher(
+      loading: false,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
@@ -132,6 +138,7 @@ class _LessonsListTabState extends State<LessonsListTab> {
                   ),
         ),
       ],
+    ),
     );
   }
 }

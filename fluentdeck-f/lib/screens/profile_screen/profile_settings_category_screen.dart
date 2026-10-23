@@ -51,7 +51,6 @@ class ProfileSettingsCategoryScreen extends StatefulWidget {
 
 class _ProfileSettingsCategoryScreenState extends State<ProfileSettingsCategoryScreen> {
   bool _studyLoading = true;
-  bool _studySaving = false;
   bool _autoCreateFlashcards = true;
 
   @override
@@ -78,15 +77,10 @@ class _ProfileSettingsCategoryScreenState extends State<ProfileSettingsCategoryS
   }
 
   Future<void> _toggleAutoCreate(bool value) async {
-    setState(() {
-      _autoCreateFlashcards = value;
-      _studySaving = true;
-    });
+    setState(() => _autoCreateFlashcards = value);
 
     final ok = await NoteService.instance.updateAutoCreateFlashcards(value);
     if (!mounted) return;
-
-    setState(() => _studySaving = false);
 
     if (!ok) {
       setState(() => _autoCreateFlashcards = !value);
@@ -135,23 +129,13 @@ class _ProfileSettingsCategoryScreenState extends State<ProfileSettingsCategoryS
                           padding: EdgeInsets.symmetric(vertical: 12),
                           child: LinearProgressIndicator(minHeight: 2),
                         )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            AppToggleRow(
-                              title: 'Auto-create flashcards',
-                              subtitle:
-                                  'Add a card to Saved words or From speaking when you save a word.',
-                              value: _autoCreateFlashcards,
-                              enabled: !_studySaving,
-                              onChanged: _toggleAutoCreate,
-                            ),
-                            if (_studySaving)
-                              const Padding(
-                                padding: EdgeInsets.only(top: 8),
-                                child: LinearProgressIndicator(minHeight: 2),
-                              ),
-                          ],
+                      : AppToggleRow(
+                          title: 'Auto-create flashcards',
+                          subtitle:
+                              'Add a card to Saved words or From speaking when you save a word.',
+                          value: _autoCreateFlashcards,
+                          enabled: true,
+                          onChanged: _toggleAutoCreate,
                         ),
                 ),
                 AppSettingsGroup(
