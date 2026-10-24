@@ -704,6 +704,7 @@ function startGame(root) {
     face(to.cx < from.cx ? -1 : 1);
     cycle(['run-1', 'run-2', 'run-3', 'run-4'], 85);
     await walkTo(to.cx, 520);
+    cycle(['run-1'], 0); // stop the legs (and their footsteps) once hidden
     actor.classList.add('gone');
     hiding = next;
     firstHide = false;
