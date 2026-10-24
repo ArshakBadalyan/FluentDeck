@@ -490,7 +490,7 @@ class _PlanCard extends StatelessWidget {
     return '${plan.fallbackPrice} ${plan.periodSuffix}';
   }
 
-  /// "≈ €5.00 / month" for multi-month plans.
+  /// "≈ $6.67 / month" for multi-month plans.
   String? get _perMonthLabel {
     if (plan.durationMonths <= 1) return null;
     final product = storeProduct;
@@ -498,7 +498,7 @@ class _PlanCard extends StatelessWidget {
       return '≈ ${_formatMoney(product.rawPrice / plan.durationMonths, product.currencyCode)} / month';
     }
     if (plan.priceAmount <= 0) return null;
-    final symbol = plan.fallbackPrice.trim().isNotEmpty ? plan.fallbackPrice.trim()[0] : '€';
+    final symbol = plan.fallbackPrice.trim().isNotEmpty ? plan.fallbackPrice.trim()[0] : '\$';
     return '≈ $symbol${(plan.priceAmount / plan.durationMonths).toStringAsFixed(2)} / month';
   }
 

@@ -9,6 +9,7 @@ import 'package:fluentdeck/services/lesson_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/services/conversation_start_ad.dart';
 
 class LessonDetailScreen extends StatefulWidget {
   const LessonDetailScreen({super.key, required this.lessonId});
@@ -50,8 +51,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     );
   }
 
-  void _startSpeaking(ExerciseModel exercise) {
+  Future<void> _startSpeaking(ExerciseModel exercise) async {
     final lesson = _lesson;
+    await ConversationStartAd.instance.showIfNeeded();
+    if (!mounted) return;
     ConversationService.instance.startSession(
       SpeakingSessionContext(
         mode: SpeakingMode.lesson,

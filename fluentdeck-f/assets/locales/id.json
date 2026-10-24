@@ -1,0 +1,1165 @@
+{
+  "top-bar": {
+    "questions": "pertanyaan",
+    "today-goal": "Tujuan Hari Ini",
+    "notifications": "Pemberitahuan",
+    "explain-one-part-hint": "Putar ulang tips layar untuk halaman ini"
+  },
+  "messages": {
+    "slow-connection": "Sepertinya koneksi internet kamu lambat. Mohon bersabar ya.",
+    "stable-connection": "Koneksi internet kamu sudah stabil sekarang, mari lanjutkan",
+    "no-connection-title": "Tidak Ada Koneksi",
+    "no-connection-text": "Kamu memiliki masalah koneksi internet, kita harus menunggu sampai koneksi stabil."
+  },
+  "app-update": {
+    "force-title": "Perbarui diperlukan 📲✨",
+    "force-body": "Versi ini tidak bisa terhubung dengan baik lagi — kita butuh kamu di versi terbaru. Tap Update dan kamu akan mendapatkan versi terbaru FluentDeck: lebih cepat dan lebih baik dari sebelumnya! 🚀",
+    "soft-title": "Pembaruan tersedia",
+    "soft-default-body": "Ada hal baru yang menunggu — fitur, penyesuaian, dan vibes baik. Perbarui saat kamu bisa dan terus tingkatkan bahasa Inggrismu. 🔥✨",
+    "update-action": "Perbarui",
+    "later-action": "Nanti"
+  },
+  "buttons": {
+    "skip": "Lewati",
+    "send": "Jawab",
+    "next": "Berikutnya",
+    "description": "solusi",
+    "wrong-answer": "jawaban salah",
+    "save": "simpan",
+    "start": "Mulai",
+    "close": "Tutup",
+    "ok": "Oke",
+    "retry": "Coba Lagi"
+  },
+  "inputs": {
+    "E-mail-address": "Alamat E-mail",
+    "name": "Nama Depan",
+    "surname": "Nama Belakang",
+    "nickname": "Panggilan",
+    "date-of-birth": "Tanggal Lahir",
+    "country": "Negara",
+    "your-country": "Negara mana yang kamu tinggali?",
+    "city": "Kota",
+    "your-city": "Kota mana yang kamu tinggali?",
+    "educational-institution": "Institusi Pendidikan",
+    "your-educational-institution": "Nama sekolah kamu apa?",
+    "class/course": "Kelas",
+    "your-class/course": "Kelas kamu (contoh: 7a atau 7.1)",
+    "class-error": "Silakan isi dulu nama sekolah kamu",
+    "E-mail": "E-mail",
+    "E-mail-optional": "E-mail (untuk pemulihan kata sandi)",
+    "E-mail-nickname": "E-mail atau Nickname",
+    "your-email": "Email kamu",
+    "paste-email": "Tempel kode dari email",
+    "password": "Kata sandi",
+    "enter-password": "Masukkan kata sandi",
+    "enter-password-again": "Masukkan kata sandi sekali lagi",
+    "confirm-password": "konfirmasi kata sandi",
+    "new-password": "Kata sandi baru",
+    "confirm-new-password": "Konfirmasi kata sandi baru",
+    "enter-the-keyword": "Masukkan kata kunci",
+    "enter-the-result": "Masukkan hasil"
+  },
+  "popups": {
+    "leave-page-popup": {
+      "first-title": "Kamu yakin mau",
+      "second-title": "tinggalkan halaman ini ?",
+      "first-text": "Jika kamu meninggalkan halaman ini, perubahan",
+      "second-text": "yang kamu lakukan akan hilang",
+      "save": "Simpan",
+      "leave": "Tinggalkan",
+      "save-failed": "Gagal menyimpan perubahan. Silakan coba lagi."
+    },
+    "delete-page-popup": {
+      "first-title": "Kamu yakin mau",
+      "second-title": "menghapus akun kamu ?",
+      "first-text": "Jika kamu menghapus akunmu sekarang",
+      "second-text": "kamu tidak akan bisa membatalkan tindakan ini, semua datamu akan dihapus selamanya.",
+      "delete": "Hapus",
+      "cancel": "Batal"
+    },
+    "success-message-popup": {
+      "title": "Siap",
+      "got-it": "Paham"
+    }
+  },
+  "over": {
+    "points": "poin",
+    "week": "minggu",
+    "month": "bulan",
+    "next": "selanjutnya",
+    "prev": "sebelumnya",
+    "loading": "Memuat",
+    "search": "cari",
+    "class": "Kelas",
+    "no-search-results": "Maaf, tidak ada hasil pencarian untuk permintaanmu. Silakan ubah permintaanmu atau pilih dari daftar di bawah."
+  },
+  "home": {
+    "welcome": "Selamat datang",
+    "play-game": "Mainkan game",
+    "improve-your-skills": "tingkatkan keterampilanmu",
+    "be-the-first": "Jadi yang pertama di Dunia",
+    "start-playing": "Mulai bermain"
+  },
+  "onboarding": {
+    "skip": "Lewati",
+    "next": "Lanjut",
+    "get-started": "Mulai",
+    "language": "Bahasa aplikasi",
+    "pages": {
+      "speak": {
+        "title": "Bicara dengan tutor AI",
+        "body": "Bicara keras atau ketik. Tutor kamu menjawab dengan suara alami, menegakkan kesalahanmu dengan lembut, dan mengingat apa yang kamu bicarakan.",
+        "chips": {
+          "voice-or-text": "Suara atau teks",
+          "gentle-corrections": "Koreksi lembut",
+          "remembers-you": "Mengingat kamu"
+        }
+      },
+      "practice": {
+        "title": "Praktek apa yang kamu butuhkan",
+        "body": "Pilih topik, mainkan peran dalam situasi nyata seperti wawancara kerja atau perjalanan, mainkan permainan berbicara, atau buat permainan peran sendiri.",
+        "chips": {
+          "topics": "Topik",
+          "role-plays": "Permainan peran",
+          "games": "Permainan berbicara",
+          "languages": "16 bahasa"
+        }
+      },
+      "flashcards": {
+        "title": "Kesalahanmu menjadi kartu flash",
+        "body": "Koreksi dan kata baru bisa disimpan otomatis ke catatanmu. Ulangi mereka dalam dek yang membawa setiap kartu kembali tepat sebelum kamu lupa, atau impor dek Anki kamu.",
+        "chips": {
+          "auto-saved": "Disimpan untuk kamu",
+          "spaced-repetition": "Pemeriksaan cerdas",
+          "anki-import": "Impor Anki"
+        }
+      },
+      "progress": {
+        "title": "Lihat kemajuanmu",
+        "body": "Tetapkan tujuan harian, jaga raihanmu tetap berlanjut dan lihat level (A1–C2)mu tumbuh dalam setiap bahasa yang kamu praktekkan.",
+        "chips": {
+          "daily-goal": "Tujuan harian",
+          "streak": "Streak",
+          "cefr-level": "Level kamu"
+        }
+      },
+      "plan": {
+        "title": "Mulai gratis",
+        "body": "Semua yang kamu butuhkan untuk memulai gratis. Upgrade kapan saja untuk lebih banyak percakapan.",
+        "free-title": "Gratis",
+        "free-body": "{time} percakapan AI per hari, plus kartu flash dan deck.",
+        "premium-title": "Premium",
+        "premium-body": "Hingga {time} percakapan AI per hari, tanpa iklan, dan semua konten percakapan."
+      }
+    }
+  },
+  "login-register": {
+    "sign-in": "Masuk",
+    "sign-up": "Sign Up",
+    "registration": "Pendaftaran",
+    "only-nickname": "Hanya nama pengguna",
+    "remember-me": "Ingat aku",
+    "forgot-password": "Lupa Kata Sandi ?",
+    "sign-in-using": "Masuk menggunakan",
+    "sign-up-using": "Daftar menggunakan",
+    "google": "Google",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "apple": "Apple",
+    "apple-unavailable": "Sign in with Apple tidak tersedia di perangkat ini.",
+    "apple-auth-failed": "Sign in dengan Apple gagal. Silakan coba lagi.",
+    "apple-web-unavailable": "Sign in dengan Apple hanya tersedia di aplikasi iOS atau Android.",
+    "google-auth-failed": "Sign in dengan Google gagal. Silakan coba lagi.",
+    "google-web-unavailable": "Sign in dengan Google hanya tersedia di aplikasi iOS atau Android.",
+    "dont-have-account": "Belum punya akun?",
+    "already-have-account": "Sudah punya akun?",
+    "user-cancelled-login": "Pengguna membatalkan login atau tidak memberikan izin penuh.",
+    "user-cancelled-register": "Pengguna membatalkan pendaftaran atau tidak memberikan izin penuh.",
+    "account-type-student": "Siswa",
+    "account-type-teacher": "Guru",
+    "email-invalid": "Masukkan alamat email yang valid.",
+    "school-email": "Email sekolah",
+    "school-email-hint": "Gunakan alamat email resmi sekolahmu (bukan Gmail, Outlook, dll).",
+    "school-email-checking": "Memeriksa email sekolah…",
+    "school-email-valid": "Email sekolah dikenali.",
+    "school-email-invalid": "Masukkan email sekolah yang valid.",
+    "school-email-public": "Penyedia email pribadi tidak diizinkan. Gunakan alamat email sekolahmu.",
+    "school-email-unknown": "Domain ini belum terhubung dengan sekolah.",
+    "school-email-pick-school": "Pilih sekolahmu",
+    "school-email-pick-school-required": "Silakan pilih sekolahmu untuk melanjutkan.",
+    "teacher-invite-code": "Kode undangan guru",
+    "teacher-invite-code-hint": "Tanyakan ke sekolahmu untuk kode guru tahunan (satu kode per sekolah per tahun)."
+  },
+  "teacher": {
+    "badge": "Guru",
+    "approval": {
+      "pending-title": "Menunggu persetujuan",
+      "pending-body": "Sekolahmu atau administrator platform harus menyetujui akun guru kamu sebelum kamu bisa membuat kelas atau melihat kemajuan siswa. Kamu masih bisa masuk dan memeriksa layar ini."
+    },
+    "nav": {
+      "classes": "Kelas"
+    },
+    "home": {
+      "school-label": "Sekolah"
+    },
+    "classes": {
+      "create-title": "Buat kelas",
+      "create-cta": "Buat kelas",
+      "name-label": "Nama kelas",
+      "grade-label": "Tingkat (opsional)",
+      "empty-title": "Belum ada kelas",
+      "empty-body": "Buat kelas dan bagikan kode undangan dengan siswamu.",
+      "list-subtitle": "{count} siswa",
+      "list-subtitle-grade": "Tingkat {grade} · {count} siswa",
+      "detail-title": "Kelas",
+      "invite-code-label": "Kode undangan",
+      "invite-hint": "Siswa masukkan kode ini di Profil → Gabung kelas.",
+      "code-copied": "Kode undangan tercopy",
+      "students-title": "Siswa ({count})",
+      "no-students": "Belum ada siswa yang bergabung. Bagikan kode undangan.",
+      "regenerate-code": "Buat kode baru",
+      "archive-title": "Arsipkan kelas?",
+      "archive-body": "Siswa tidak bisa lagi bergabung. Kamu bisa membuat kelas baru kapan saja.",
+      "archive-confirm": "Arsipkan kelas",
+      "actions": {
+        "cancel": "Batal",
+        "save": "Buat"
+      },
+      "pending-join-title": "Permintaan bergabung ({count})",
+      "leave-pending-title": "Permintaan keluar ({count})",
+      "accept-join": "Terima",
+      "reject-join": "Tolak",
+      "accept-leave": "Setujui keluar",
+      "deny-leave": "Tolak keluar",
+      "join-accepted": "Siswa terima.",
+      "join-rejected": "Permintaan gabung ditolak.",
+      "leave-approved": "Siswa dihapus dari kelas.",
+      "leave-denied": "Permintaan keluar ditolak.",
+      "remove-member": "Hapus",
+      "remove-member-title": "Hapus anggota?",
+      "remove-member-body": "Siswa ini akan dihapus dari kelas.",
+      "member-removed": "Anggota dihapus.",
+      "tab-overview": "Ringkasan",
+      "tab-roster": "Siswa",
+      "tab-analytics": "Progres",
+      "tab-work": "Tugas",
+      "tab-reports": "Laporan",
+      "pending-badge": "{count} menunggu",
+      "search-label": "Cari berdasarkan judul",
+      "title-filter-label": "Filter berdasarkan judul",
+      "title-filter-all": "Semua kelas",
+      "title-filter-clear": "Bersihkan",
+      "title-filter-selected": "{count} dipilih",
+      "title-filter-done": "Selesai",
+      "sort-label": "Urutkan berdasarkan",
+      "sort-name": "Nama",
+      "sort-grade": "Kelas",
+      "sort-students": "Siswa",
+      "filter-empty": "Tidak ada kelas yang cocok dengan filter Anda."
+    },
+    "analytics": {
+      "load-error": "Gagal memuat analitik kelas.",
+      "range-week": "7 hari",
+      "range-month": "30 hari",
+      "students": "Siswa dalam kelas",
+      "assignments": "Tugas aktif",
+      "total-answers": "Jawaban tugas (periode)",
+      "avg-per-day": "Rata-rata jawaban per hari",
+      "activity-title": "Aktivitas tugas harian",
+      "no-assignments-hint": "Belum ada tugas — kemajuan akan muncul di sini setelah Anda memberikan tugas.",
+      "assignments-progress-title": "Pencapaian tugas",
+      "assignments-progress-empty": "Belum ada tugas di kelas ini.",
+      "assignment-progress-subtitle": "{studentsDone}/{studentsTotal} siswa selesai · {exercisesDone}/{exercisesTotal} latihan selesai",
+      "weak-topics-title": "Topik yang membutuhkan perhatian",
+      "weak-topics-empty": "Tidak ada topik lemah dalam periode ini.",
+      "weak-subtitle": "{done} dari {total} siswa menyelesaikan"
+    },
+    "assignments": {
+      "section-title": "Tugas",
+      "create-title": "Tugas baru",
+      "create-cta": "Tugaskan topik",
+      "title-label": "Judul",
+      "title-required": "Judul diperlukan.",
+      "topic-label": "Topik (kategori)",
+      "topics-label": "Topik (kategori)",
+      "topics-add": "Tambahkan topik",
+      "topics-empty-hint": "Belum ada topik yang dipilih.",
+      "topics-loading": "Memuat topik…",
+      "topics-picker-title": "Pilih topik",
+      "topics-required": "Silakan pilih setidaknya satu topik.",
+      "type-label": "Jenis",
+      "type-homework": "Tugas rumah",
+      "type-classwork": "Tugas kelas",
+      "enforcement-label": "Mode",
+      "enforcement-info": "Informasional (tidak terkunci)",
+      "enforcement-lock": "Diberlakukan (terkunci sampai selesai)",
+      "due-label": "Tanggal batas",
+      "created": "Tugas dibuat.",
+      "empty": "Belum ada tugas.",
+      "no-topics-in-class": "Belum ada topik dalam rentang kelas ini.",
+      "topics-section-other": "Topik lainnya",
+      "no-classes-hint": "Buat kelas terlebih dahulu untuk memberikan tugas.",
+      "progress-subtitle": "{percent}% latihan ({done}/{total})",
+      "student-progress-subtitle": "{percent}% siswa selesai ({done}/{total})",
+      "exercise-progress-subtitle": "{percent}% latihan ({done}/{total})",
+      "overdue": "Terlambat",
+      "scope-label": "Apa yang akan diberikan",
+      "scope-whole": "Seluruh topik",
+      "scope-exercises": "Latihan yang dipilih",
+      "exercises-label": "Latihan",
+      "exercises-loading": "Memuat latihan…",
+      "exercises-empty": "Tidak ada latihan dalam topik ini.",
+      "exercises-select-hint": "Pilih setidaknya satu latihan.",
+      "exercises-selected-count": "{count} dipilih",
+      "target-whole": "Seluruh topik",
+      "target-exercises": "{count} latihan",
+      "detail-title": "Detail tugas",
+      "targets-title": "Topik & latihan",
+      "updated": "Tugas diperbarui.",
+      "archived": "Tugas disimpan di arsip.",
+      "archive-title": "Simpan tugas di arsip?",
+      "archive-body": "Siswa tidak akan melihat tugas ini lagi. Riwayat progres tetap disimpan.",
+      "archive-confirm": "Simpan di arsip",
+      "load-error": "Tidak dapat memuat tugas.",
+      "save": "Simpan",
+      "topic-required": "Silakan pilih topik."
+    },
+    "reports": {
+      "section-title": "Laporan",
+      "weekly-toggle": "Laporan email mingguan",
+      "weekly-hint": "Setiap Senin pagi ke email sekolah kamu.",
+      "send-now": "Kirim laporan sekarang",
+      "sent": "Laporan dikirim ke email kamu."
+    },
+    "roster": {
+      "sort-label": "Urutkan berdasarkan",
+      "sort-last-active": "Terakhir aktif",
+      "sort-points": "Poin",
+      "sort-username": "Nama",
+      "row-subtitle": "{points} poin · Terakhir aktif {lastActive}",
+      "last-active-days": "{days}d lalu",
+      "inactive-badge": "Tidak aktif",
+      "empty-title": "Belum ada siswa",
+      "empty-body": "Bagikan kode undanganmu agar siswa bisa bergabung di kelas ini.",
+      "copy-code-cta": "Salin kode undangan",
+      "search-label": "Cari siswa",
+      "assignment-filter-label": "Saring berdasarkan tugas",
+      "assignment-filter-all": "Semua siswa",
+      "completion-all": "Semua",
+      "completion-incomplete": "Belum selesai",
+      "completion-complete": "Selesai",
+      "filter-empty": "Tidak ada siswa yang cocok dengan filtermu.",
+      "assignment-done": "Selesai",
+      "assignment-open": "Buka",
+      "snapshot-error": "Tidak dapat memuat snapshot siswa.",
+      "snapshot-points": "Poin pengalaman",
+      "snapshot-topics": "Topik yang diselesaikan",
+      "snapshot-today": "Aktivitas hari ini",
+      "snapshot-today-breakdown": "{correct} benar · {wrong} salah · {skipped} dilewati",
+      "snapshot-goal": "Target harian",
+      "snapshot-goal-progress": "{done} / {goal} benar hari ini",
+      "goal-met": "Target tercapai",
+      "goal-not-met": "Belum",
+      "snapshot-week-title": "7 hari terakhir",
+      "assignments-section": "Tugas yang diberikan",
+      "assignments-select": "Pilih tugas",
+      "assignments-none": "Belum ada tugas dalam kelas ini.",
+      "assignments-progress": "{done} / {total} soal dijawab",
+      "answer-correct": "Benar",
+      "answer-wrong": "Salah",
+      "answer-skipped": "Dilewati",
+      "answer-unanswered": "Belum dijawab",
+      "student-answer": "Jawaban siswa",
+      "solution-before-answer": "Melihat solusi sebelum menjawab",
+      "correct-answer": "Jawaban benar",
+      "class-task-stats-title": "Progres tugas kelas",
+      "class-tasks-assignments": "Tugas yang diselesaikan",
+      "class-tasks-assignments-hint": "Selesai vs total yang diberikan di kelas ini",
+      "class-tasks-exercises": "Latihan kelas",
+      "class-tasks-exercises-hint": "{correct} benar · {wrong} salah · {open} belum dijawab",
+      "class-tasks-correct": "Benar",
+      "class-tasks-wrong": "Salah",
+      "class-tasks-solution-peeks": "Melihat solusi awal",
+      "class-tasks-solution-peeks-hint": "Jumlah kali siswa membuka solusi sebelum menjawab latihan yang diberikan",
+      "assignments-dropdown-solution-peeks-count": "{count} melihat solusi awal",
+      "assignments-solution-peeks": "{count} melihat solusi awal pada tugas ini"
+    }
+  },
+  "student": {
+    "join-class": {
+      "section-title": "Kelas-kelasku",
+      "title": "Gabung kelas",
+      "code-label": "Kode undangan",
+      "submit": "Gabung kelas",
+      "success": "Kamu telah bergabung dengan kelas.",
+      "pending": "Permintaan terkirim — menunggu persetujuan guru.",
+      "already-member": "Kamu sudah bergabung di kelas ini.",
+      "leave-pending": "Permintaan keluar terkirim — menunggu persetujuan guru.",
+      "status-pending-join": "Menunggu persetujuan",
+      "status-active": "Anggota aktif",
+      "status-leave-pending": "Keluar menunggu",
+      "none": "Kamu belum bergabung di kelas mana pun.",
+      "teacher": "Guru: {name}",
+      "leave": "Permintaan untuk keluar",
+      "leave-confirm-title": "Apakah kamu yakin ingin keluar?",
+      "leave-confirm-body": "Guru harus menyetujui permintaanmu sebelum kamu bisa keluar dari kelas."
+    },
+    "assignments": {
+      "banner-title": "Diberikan oleh guru",
+      "overdue": "telat",
+      "locked-hint": "Beberapa topik masih terkunci sampai kamu menyelesaikan tugas yang diberikan.",
+      "topic-locked": "Selesaikan tugas yang diberikan untuk topik ini terlebih dahulu.",
+      "progress-exercises": "{done}/{total} latihan selesai",
+      "modal-title": "Tugas yang diberikan",
+      "modal-empty": "Tidak ada tugas terbuka.",
+      "icon-tooltip": "Tugas dari guru",
+      "assigned-chip": "Diberikan",
+      "view-all": "Lihat semua tugas",
+      "banner-summary": "{count} terbuka — tugas dari guru",
+      "practice-tab": "Tugas dari guru",
+      "practice-empty-title": "Tidak ada tugas dari guru",
+      "practice-empty-body": "Ketika guru memberikan tugas, tugas tersebut akan muncul di sini.",
+      "practice-intro": "Lihat dan kerjakan tugas yang diberikan oleh guru.",
+      "class-tab-all": "Semua",
+      "class-filter-empty": "Belum ada tugas untuk kelas ini.",
+      "filter-label": "Tampilkan",
+      "filter-all": "Semua",
+      "filter-completed": "Selesai",
+      "filter-not-completed": "Belum selesai",
+      "filter-in-progress": "Dalam proses",
+      "filter-has-wrong": "Ada jawaban yang salah",
+      "sort-label": "Urutkan berdasarkan",
+      "sort-last-added": "Terakhir ditambahkan",
+      "sort-title-asc": "Judul (A–Z)",
+      "sort-not-completed-first": "Belum selesai terlebih dahulu",
+      "sort-scores": "Paling benar",
+      "sort-fails": "Paling salah",
+      "sort-due-soonest": "Tanggal jatuh tempo terdekat",
+      "sort-overdue-first": "Terlambat terlebih dahulu",
+      "sort-progress": "Progres (tertinggi terlebih dahulu)",
+      "filter-sort-empty": "Tidak ada tugas yang cocok dengan filter ini.",
+      "start-topic": "Mulai topik",
+      "start": "Mulai",
+      "due-label": "Due",
+      "complete-back": "Kembali ke Tugas Guru",
+      "continue-task": "Lanjutkan tugas",
+      "flow-progress": "Sedang mengerjakan tugas",
+      "flow-loading": "Memuat latihan berikutnya…",
+      "status-summary": "{correct} benar · {wrong} salah",
+      "status-correct": "Benar",
+      "status-wrong": "Salah",
+      "status-skipped": "Melewatkan",
+      "status-open": "Belum dijawab",
+      "complete-title": "Tugas selesai!",
+      "complete-total": "Total latihan",
+      "complete-correct": "Benar",
+      "complete-wrong": "Salah",
+      "tab-unlocked": "Tugas guru sekarang tersedia di bawah Praktek.",
+      "open-tab": "Buka"
+    }
+  },
+  "forgot-password": {
+    "forgot-password": "Lupa Kata Sandi ?",
+    "send-email": "Kirim email",
+    "back-to-start": "Kembali ke halaman awal"
+  },
+  "reset-password": {
+    "reset-password": "Atur Ulang Kata Sandi",
+    "error-msg": "Password dan konfirmasi password harus cocok",
+    "back-to-login": "Kembali ke login"
+  },
+  "activity": {
+    "Activity": "Aktivitas",
+    "tabs": {
+      "My Status": "Status Saya",
+      "Top List": "Daftar Teratas",
+      "My Answers": "Jawaban Saya",
+      "Progress": "Progres"
+    },
+    "my-status": {
+      "set-everyday-goal": "Atur tujuan harian",
+      "daily-goal-placeholder": "Pilih tujuan harian",
+      "daily-goal-card-hint": "Pilih angka yang terasa mungkin — kamu bisa mengubahnya kapan saja.",
+      "last-quiz": "Quiz Terakhir",
+      "experience-points": "Poin Pengalaman",
+      "last-update": "Terakhir diperbarui:",
+      "past-categories": "Kategori lalu",
+      "categories-were-answered": "Kategori telah dijawab",
+      "you-are-in": "Kamu berada di FluentDeck",
+      "welcome-app": "Selamat datang di FluentDeck! 👋",
+      "no-goal": "Tidak ada tujuan",
+      "today-activity": "Aktivitas hari ini",
+      "wrong": "Salah",
+      "skipped": "Lewati",
+      "correct": "Benar",
+      "check-progress": "Periksa Progres",
+      "goal-set": "Tujuanmu sehari-hari sudah ditetapkan",
+      "goal-cleared": "Tujuanmu sehari-hari sudah tercapai."
+    },
+    "top-list": {
+      "lists": [
+        {
+          "title": "Di Kelasmu",
+          "fieldName": "kelas"
+        },
+        {
+          "title": "Di Sekolahmu",
+          "fieldName": "sekolah"
+        },
+        {
+          "title": "Di Kotamu",
+          "fieldName": "kota"
+        },
+        {
+          "title": "Di Negaramu",
+          "fieldName": "negara"
+        },
+        {
+          "title": "Di Dunia",
+          "fieldName": "dunia"
+        }
+      ],
+      "place": "tempat",
+      "please": "Silakan",
+      "update": "perbarui",
+      "your": "milikmu",
+      "from": "dari",
+      "people": "orang",
+      "back-to-the-top-list": "Kembali ke Daftar Teratas",
+      "there-is-no-any-user": "Tidak ada pengguna dengan username ini"
+    },
+    "my-answers": {
+      "summary": "Ringkasan",
+      "questions-passed": "pertanyaan yang dilewati",
+      "of": "dari",
+      "correct-answers": "jawaban benar",
+      "wrong-answers": "jawaban salah",
+      "skipped-answers": "jawaban dilewati"
+    },
+    "progress": {
+      "you-have-registered": "Kamu telah mendaftar di"
+    }
+  },
+  "topics": {
+    "topics": "Topik",
+    "previous": "Sebelumnya",
+    "next": "Berikutnya",
+    "classes": "kelas",
+    "grades": {
+      "1-2": "Kelas 1-2",
+      "2-3": "Kelas 2-3",
+      "3-4": "Kelas 3-4",
+      "4-5": "Kelas 4-5",
+      "5-6": "Kelas 5-6",
+      "6-7": "Kelas 6-7",
+      "7-8": "Kelas 7-8",
+      "8-9": "Kelas 8-9",
+      "9-10": "Kelas 9-10",
+      "10-11": "Kelas 10-11",
+      "11-12": "Kelas 11-12"
+    }
+  },
+  "question": {
+    "question": "pertanyaan",
+    "continue": "Lanjut",
+    "point": "poin",
+    "start-practice": "Mulai Praktek",
+    "back-to-categories": "Kembali ke kategori",
+    "train-topic-in-remix": "Latihan topik ini di Themen-Mix",
+    "right-answered": "benar dijawab",
+    "check-skipped": "Periksa yang dilewati",
+    "single-skipped-text": "Kamu sudah melewati sebagian besar topik tapi kamu melewati 1 pertanyaan. Kamu bisa periksa lagi atau tinggalkan dulu.",
+    "leave-for-now": "Tinggalkan dulu",
+    "your-score-on-this-topic": "Skor kamu di topik ini",
+    "will-be-update": "Kamu sudah menyelesaikan topik ini. Prestasi kamu akan diperbarui segera.",
+    "skipped-first-text": "Kamu sudah melewati sebagian besar topik tapi kamu melewati",
+    "skipped-second-text": "pertanyaan. Kamu bisa periksa lagi atau tinggalkan dulu.",
+    "exercise-solution": "Penyelesaian latihan",
+    "step-of": "Langkah {current} dari {total}",
+    "next-mc-step": "Langkah selanjutnya",
+    "tap-to-continue": "Tap mana aja untuk lanjut",
+    "back-step": "Kembali",
+    "wrong-answer-title": "Salah",
+    "wrong-answer-hint": "Jangan putus asa — kamu pasti bisa di yang berikutnya.",
+    "second-answer-wrong-retry": "Hasil itu belum benar. Kamu punya satu kesempatan lagi.",
+    "lesson-material": "Materi belajar",
+    "wrong-solution-coach-1": "Coba lihat solusi latihan ini!",
+    "wrong-solution-coach-2": "Buka solusi — lihat bagaimana caranya.",
+    "wrong-solution-coach-3": "Tap satu kali untuk solusi.",
+    "wrong-solution-coach-4": "Solusi yang sudah diselesaikan menunjukkan cara kerjanya.",
+    "wrong-solution-coach-5": "Solusi bisa membantu kamu maju.",
+    "wrong-solution-coach-6": "Cek metode dengan cepat?",
+    "wrong-solution-coach-7": "Coba solusi latihan ini.",
+    "wrong-solution-coach-8": "Cek cepat bisa membantu.",
+    "wrong-solution-coach-9": "Setiap langkah ada di sana.",
+    "wrong-solution-coach-10": "Ambil langkah-langkah di sini.",
+    "no-solution": "Maaf, kita belum punya solusi sekarang.",
+    "multiselect-hint": "Ada lebih dari satu jawaban yang benar. Pilih semua yang berlaku.",
+    "whiteboard-button": "Whiteboard",
+    "report-flag-tooltip": "Laporkan masalah",
+    "report-title": "Laporkan Masalah",
+    "report-option-unreadable": "Soal atau pilihan jawaban tidak dapat dibaca.",
+    "report-option-no-correct": "Tidak ada jawaban yang benar.",
+    "report-option-marked-wrong": "Jawaban yang benar ditandai sebagai salah.",
+    "report-option-topic-mismatch": "Soal tidak sesuai dengan topik.",
+    "report-option-several-correct": "Beberapa jawaban benar.",
+    "report-option-other": "Lainnya.",
+    "report-details-hint": "contoh: Ada typo…",
+    "report-submit": "KIRIM",
+    "report-cancel": "BATAL",
+    "report-sent": "Terima kasih. Laporan Anda telah terkirim.",
+    "report-send-error": "Tidak dapat mengirim laporan Anda. Silakan coba lagi nanti.",
+    "report-validation": "Pilih setidaknya satu opsi atau tambahkan catatan pendek.",
+    "report-sending": "Mengirim…",
+    "lightbox-choose-answer": "Pilih jawaban ini",
+    "lightbox-selected": "Terpilih"
+  },
+  "practice": {
+    "practice": "Praktek",
+    "player-vs-machine": "Player VS Mesin",
+    "player-vs-friend": "Player VS Teman",
+    "play-with-friends": "Player VS Player",
+    "can-practice-with-friends": "Kamu bisa berlatih dengan siswa\nyang memiliki rating serupa",
+    "practice-with-friends-questions": "Jumlah pertanyaan: 10-30",
+    "try-again": "Coba lagi",
+    "practice-with-friends-load": "Kami sedang mencari lawanmu \nTunggu sebentar ya",
+    "your-score": "Skormu:",
+    "machine-score": "Skor mesin:",
+    "nickname-score": "Skor {nickname}:",
+    "friend-score": "Skor teman:",
+    "friend-think": "sedang berpikir sekarang...",
+    "answered-all-text": "Kamu sudah menjawab semua pertanyaan",
+    "opponent-default": "Lawan",
+    "mode-scores": {
+      "10": "+10, +5, -2",
+      "20": "+20, +10, -4",
+      "30": "+30, +15, -6"
+    },
+    "questions-count": "{count} pertanyaan",
+    "your-answer": "Jawabanmu",
+    "popup-go-topic": {
+      "Oops": "Oops!",
+      "first-text": "Kamu perlu menjawab setidaknya",
+      "second-text": "pertanyaan untuk bermain melawan mesin. Silakan lanjutkan belajarmu di halaman Topics ya."
+    },
+    "no-players-popup": {
+      "title": "Tidak Ada Player yang Tersedia",
+      "text": "Maaf, tidak ada Player yang tersedia saat ini 🤷‍♀️. Coba lagi nanti ya.",
+      "go-to-practice": "Pergi ke halaman praktik",
+      "try-again": "Coba Lagi"
+    },
+    "left-by-rival-popup": {
+      "title": "Oops!",
+      "text": "Lawanmu meninggalkan permainan. Kamu menang!"
+    },
+    "leave-page-popup": {
+      "first-text": "Progresmu akan hilang dan kamu akan kehilangan",
+      "stay": "Tetap"
+    },
+    "finish-game-popup": {
+      "save-btn-text": "Permainan Baru",
+      "leave-btn-text": "Statusku",
+      "win": {
+        "title": "Kamu menang",
+        "text": "Kamu mendapatkan {points} poin"
+      },
+      "draw": {
+        "title": "Kamu bermain seri",
+        "text": "Kamu mendapatkan {points} poin"
+      },
+      "lose": {
+        "title": "Kamu kalah",
+        "text": "Kamu kehilangan {points} poin"
+      }
+    },
+    "result-win": "Menang",
+    "result-draw": "Seri",
+    "result-lose": "Kalah",
+    "remix": {
+      "tab-label": "Topik campur",
+      "session-title": "Topik campur",
+      "pick-intro-title": "Pilih topik yang ingin kamu latih",
+      "pick-intro-subtitle": "Hanya topik yang sudah kamu selesaikan di Topik yang terdaftar di bawah ini. Pilih satu atau lebih, lalu tekan Lanjutkan.",
+      "search-hint": "Cari topik yang sudah diselesaikan…",
+      "empty-class": "Tidak ada topik yang sudah diselesaikan di kelas ini.",
+      "none-completed": "Selesaikan setidaknya satu topik di Themen untuk melatih di sini.",
+      "no-classes": "Kelas tidak dapat dimuat.",
+      "load-error": "Terjadi kesalahan saat memuat. Tarik untuk memperbarui atau coba lagi.",
+      "exercises-count": "Jumlah latihan: {count}",
+      "selected-count-singular": "{n} topik",
+      "selected-count-plural": "{n} topik",
+      "continue-step": "Lanjutkan",
+      "step2-title": "Topik yang dipilih",
+      "remove-topic": "Hapus topik",
+      "search-empty": "Tidak ada topik yang cocok dengan pencarianmu.",
+      "class-unknown": "Kelas {id}",
+      "start": "Mulai latihan",
+      "load-questions-error": "Tidak dapat memuat latihan. Periksa koneksi atau pilihan topikmu.",
+      "summary-score-label": "Skormu untuk putaran ini",
+      "summary-correct-wrong": "Benar: {correct} · Salah: {wrong}",
+      "summary-skipped": "Melewatkan: {count}",
+      "summary-session-size": "Latihan dalam putaran ini: {total}",
+      "done": "Selesai"
+    }
+  },
+  "push-prompt": {
+    "invite-title-20": "20 tugas – kerja bagus! 💪",
+    "invite-body-20": "Ingin pengingat santai saat ada hal baru atau tujuan harianmu menunggumu? Kita akan menunjukkan popup sistem berikutnya – kamu yang menentukan!",
+    "invite-title-200": "200 selesai – kamu luar biasa! 🚀",
+    "invite-body-200": "Itu banyak repitisi! Jika kamu mau, kita akan mengirim motivasi dan berita secara berkala melalui push. Opsional total. ✨",
+    "yes-activate": "Ya, ayo kita lakukan!",
+    "not-now": "Mungkin nanti",
+    "opened-settings-hint": "Keren! Di pengaturan, aktifkan pemberitahuan untuk FluentDeck dan kamu siap.",
+    "native-denied-hint": "Tidak masalah – kamu bisa mengaktifkan push kapan saja di Profile → Pemberitahuan. 😊",
+    "banner-title": "Aktifkan push?",
+    "banner-subtitle": "Dapatkan tips dan pengingat ramah – satu ketuk, lalu dialog sistem.",
+    "banner-cta": "Aktifkan sekarang",
+    "thank-you": "Terima kasih! 🎉 Kamu sudah masuk – kita hanya akan menghubungimu saat ada yang berharga."
+  },
+  "screen-tutorial": {
+    "sheet": {
+      "this-page-title": "Halaman ini",
+      "this-page-subtitle": "Hanya area di layar yang kamu gunakan. Untuk navigasi, kontrol header, dan daftar lengkap — buka Profile → Tentang → Tampilkan tips.",
+      "all-tips-title": "Tips layar",
+      "all-tips-subtitle": "Semua yang kita jelaskan, termasuk navigasi bawah dan header ungu.",
+      "no-page-tips": "Tidak ada tips cepat yang terdaftar untuk area ini."
+    },
+    "common": {
+      "skip": "Lewati",
+      "next": "Lanjut",
+      "done": "Selesai",
+      "back": "Kembali",
+      "step_counter": "Langkah {current} dari {total}",
+      "accessibility_coach": "Layar panduan aksesibilitas"
+    },
+    "shared_app_chrome": {
+      "bottom_nav": {
+        "title": "Bagian utama",
+        "body": "Gunakan bar di bawah untuk beralih antara Aktivitas, Topik, Latihan, dan Profil. Tab yang kamu pilih akan tetap terpilih sampai kamu memilih ikon lain."
+      },
+      "sub_tabs": {
+        "title": "Strip tab atas",
+        "body": "Di bawah header ungu, tab-tab ini mengubah apa yang kamu lihat di layar ini—status vs. leaderboard, tingkat kelas, mode latihan, atau area profil—tanpa meninggalkan bagian utama."
+      },
+      "today_goal": {
+        "title": "Target hari ini di header",
+        "body": "Baris di bawah judul layar menunjukkan target pertanyaan harianmu dan bagaimana hal itu sesuai dengan tujuan akunmu."
+      },
+      "notifications": {
+        "title": "Drawer notifikasi",
+        "body": "Tekan lonceng untuk membuka panel samping dengan notifikasi dan pembaruan terbaru."
+      }
+    },
+    "shared_practice": {
+      "sub_tabs": {
+        "title": "Mode latihan",
+        "body": "Beralih antara Remix (topik campuran), versus mesin, atau versus teman. Setiap tab menggunakan header yang sama tetapi tindakan yang berbeda di bawahnya."
+      }
+    },
+    "shared_profile": {
+      "main_nav": {
+        "title": "Profil di bar bawah",
+        "body": "Buka Profil dari navigasi bawah untuk mengelola akun, pemberitahuan, keamanan, dan informasi aplikasi."
+      },
+      "sub_tabs": {
+        "title": "Bagian profil",
+        "body": "Tab ini membagi pengaturan yang panjang menjadi Akun, Notifikasi, Keamanan, Tentang, Bagikan, dan Suara agar kamu bisa langsung melompat ke yang dibutuhkan."
+      }
+    },
+    "activity_status": {
+      "s1_title": "Statistik aktivitas lebih lanjut",
+      "s1_body": "Top List, My Answers, dan Progress: peringkat, analisis jawaban, dan grafik untuk perkembangan dan kinerja kamu.",
+      "s2_title": "Tujuan harian",
+      "s2_body": "Setel jumlah minimum latihan yang harus diselesaikan setiap hari—bantu kamu tetap konsisten."
+    },
+    "activity_top_list": {
+      "complete_title": "Leaderboards",
+      "complete_body": "Periksa posisi kamu di negara, kota, sekolah, atau kelas—taps row yang terhighlight.",
+      "incomplete_title": "Profil belum lengkap",
+      "incomplete_body": "{field} masih kosong. Buka Profil → Akun, isi negara, kota, sekolah, dan kelas (apa pun yang masih kosong), lalu simpan—setelah itu kamu bisa buka setiap daftar di sini untuk melihat peringkat kamu."
+    },
+    "activity_answers": {
+      "s4_title": "Ringkasan jawaban",
+      "s4_body": "Setiap gauge menunjukkan total, kebenaran, dilewati, atau kesalahan yang dikumpulkan dari riwayat latihan kamu."
+    },
+    "activity_progress": {
+      "s3_title": "Minggu vs bulan",
+      "s3_body": "Tukar periode di atas, lalu geser panah ke belakang untuk melihat kembali minggu atau bulan lalu.",
+      "s4_title": "Grafik aktivitas",
+      "s4_body": "Batang menunjukkan intensitas belajar kamu setiap hari. Tap spike untuk melihat detailnya pada hari tersebut."
+    },
+    "topics_browse": {
+      "s2_title": "Kelas kamu",
+      "s2_body": "Pilih tab kelas di bawah header ungu untuk melihat topik untuk tingkat tersebut.",
+      "s3_title": "Cari",
+      "s3_body": "Gunakan pencarian untuk mencari topik berdasarkan nama.",
+      "s5_title": "Baris topik",
+      "s5_body": "Temukan setiap topik dengan memeriksa latihan contoh. Cek “Lesson” jika tersedia."
+    },
+    "learning_exercise": {
+      "s1_title": "Latihan (pertanyaan)",
+      "s1_body": "Baca bagian awal di sini—kadang pertanyaan memiliki bagian tambahan; gunakan titik-titik atau swipe saat bagian tambahan muncul.",
+      "s2_title": "Jawaban",
+      "s2_body": "Tap pilihan (atau beberapa jika ada kotak centang) dan gunakan tombol Kirim kuning di bawah untuk mengirim. Setelah mengirim, warna menunjukkan pilihan yang benar, salah, atau dikecualikan.",
+      "s3_title": "Penyelesaian langkah demi langkah",
+      "s3_body": "Ketika kamu bingung atau setelah menjawab salah, tap “Penyelesaian latihan”—ia membuka bantuan langkah demi langkah dalam lembar."
+    },
+    "practice_remix_intro": {
+      "s1_title": "Campuran topik (Remix)",
+      "s1_body": "Di sini kamu menggabungkan latihan dari topik yang sudah kamu selesaikan di Themen.",
+      "s2_title": "Buka pemilih terlebih dahulu",
+      "s2_body": "Selesaikan setidaknya dua topik di bawah Topik terlebih dahulu. Lalu tab ini menampilkan pencarian, daftar yang dikelompokkan berdasarkan kelas, dan Lanjutkan untuk membangun campuranmu."
+    },
+    "practice_remix": {
+      "s3_title": "Cari topik lama",
+      "s3_body": "Ketik untuk memfilter kelas yang sudah kamu selesaikan sehingga kamu bisa menggabungkannya menjadi putaran campuran.",
+      "s4_title": "Lanjutkan",
+      "s4_body": "Setelah memilih setidaknya satu topik, tap Lanjutkan untuk meninjau pilihanmu dan menetapkan berapa banyak latihan yang kamu inginkan.",
+      "s5_title": "Topik berdasarkan kelas",
+      "s5_body": "Daftar mengelompokkan topik di bawah judul kelas—scroll melalui bagian untuk mencampur area dari kelas lain atau track."
+    },
+    "practice_remix_configure": {
+      "s1_title": "Jumlah latihan",
+      "s1_body": "Geser slider untuk memilih berapa banyak latihan yang harus dimasukkan dalam putaran remix ini. Tap Mulai latihan saat kamu siap."
+    },
+    "practice_vs_machine": {
+      "s3_title": "Pilih durasi putaran",
+      "s3_body": "Setiap baris memulai duel AI dengan 10, 20, atau 30 pertanyaan. Skor ringkasan muncul saat ronde berakhir."
+    },
+    "practice_vs_player": {
+      "s3_title": "Mulai duel teman",
+      "s3_body": "Tekan Mulai, pilih berapa banyak pertanyaan untuk sinkronkan, dan MatcheApp akan memasangkanmu untuk sesi versus gaya langsung."
+    },
+    "profile_account": {
+      "s3_title": "Formulir akun",
+      "s3_body": "Gulir untuk memperbarui email, nama, sekolah, kelas, dan bahasa. Simpan menerapkan semuanya sekaligus; tindakan destruktif berada di bagian bawah."
+    },
+    "profile_notifications": {
+      "s3_title": "Master switch notifikasi",
+      "s3_body": "Flip toggle untuk mendaftar atau tidak menerima OneSignal notifikasi. Teks status di bawah mencerminkan status langganan nyata."
+    },
+    "profile_security": {
+      "s3_title": "Alur kata sandi",
+      "s3_body": "Masukkan dan konfirmasikan kata sandi baru, lalu tekan Simpan. Ikon visibilitas membantu memverifikasi pengetikan di keyboard kecil."
+    },
+    "profile_about": {
+      "s3_title": "Daftar tentang",
+      "s3_body": "Buka informasi hukum, lisensi, catatan rilis, atau ulasan toko dari baris-baris ini.",
+      "s4_title": "Tip layar",
+      "s4_body": "Gunakan “Tampilkan tip” untuk daftar tip lengkap. Admin juga melihat “Reset semua tip layar” di layar ini untuk memutar ulang setiap tur panduan dari awal."
+    },
+    "profile_share": {
+      "s3_title": "Slot email orang tua",
+      "s3_body": "Tambahkan hingga empat alamat penjaga agar laporan dapat dibagikan dengan bertanggung jawab. Masuk yang disimpan ditampilkan pertama; bidang kosong menerima email baru."
+    },
+    "profile_sound": {
+      "s3_title": "Suara & volume",
+      "s3_body": "Nyalakan atau matikan efek untuk suara umpan balik dan geser slider untuk mengatur kebisingan. Sampel pendek memainkan saat suara kembali dari diam."
+    },
+    "segments": {
+      "activity_answers": "Ringkasan statistik jawaban",
+      "activity_progress_chart": "Grafik kemajuan",
+      "activity_progress_period": "Minggu / bulan",
+      "activity_top_list": "Daftar leaderboard & kartu",
+      "chrome_bottom_nav": "Navigasi bawah",
+      "chrome_notifications": "Kolong notifikasi",
+      "chrome_search": "Pencarian topik",
+      "chrome_sub_tabs": "Tab di bawah header ungu",
+      "chrome_today_goal": "Baris tujuan hari ini di header",
+      "practice_machine_list": "Putaran melawan mesin",
+      "practice_player_start": "Main dengan teman — Mulai",
+      "practice_remix_continue": "Remix — Lanjutkan",
+      "practice_remix_exercise_count": "Remix — jumlah latihan (slider)",
+      "practice_remix_search": "Pencarian topik remix",
+      "practice_remix_class_topics": "Topik remix per kelas (daftar)",
+      "profile_about_list": "Baris tentang & legal",
+      "profile_about_replay_hint": "Ulangi / reset tur (teks)",
+      "profile_account_form": "Bidang formulir akun",
+      "profile_notifications_toggle": "Penggeser notifikasi push",
+      "profile_security_fields": "Bidang kata sandi & simpan",
+      "profile_share_emails": "Email laporan / orangtua",
+      "profile_sound_mixer": "Slider suara & volume",
+      "topics_class_tabs": "Tab tingkat kelas",
+      "topics_list": "Daftar Kartu Topik",
+      "topics_search": "Cari Topik"
+    }
+  },
+  "profile": {
+    "profile": "Profil",
+    "tabs": [
+      "Akun",
+      "Pemberitahuan",
+      "Keamanan",
+      "Tentang Kami",
+      "Kirim Laporan",
+      "Suara"
+    ],
+    "classes-tab": "Kelas Saya",
+    "notifications": {
+      "title": "Pemberitahuan Push",
+      "description": "Terima pengingat dan pembaruan tentang tujuan dan kemajuan harian kamu.",
+      "push-label": "Pemberitahuan Push",
+      "status-on": "Kamu menerima pemberitahuan push",
+      "status-off": "Pemberitahuan push dinonaktifkan"
+    },
+    "account": {
+      "logout-warning": "Peringatan Logout",
+      "logout-text": "Silakan berikan email dan kata sandi kamu untuk bisa masuk kembali nanti. Jika tidak, akun dan semua data terkait akan dihapus segera setelah logout. Tindakan ini tidak bisa dibatalkan",
+      "log-out": "Keluar",
+      "delete": "Hapus akun",
+      "save-and-logout": "Simpan dan keluar",
+      "delete-account": "Hapus akun",
+      "delete-error": "Kesalahan saat menghapus",
+      "language": "Bahasa",
+      "app-language-title": "Bahasa aplikasi",
+      "app-language-hint": "Menu dan tombol. Bahasa yang kamu latih diatur di pengaturan berbicara AI.",
+      "language-de": "Jerman",
+      "language-en": "Inggris"
+    },
+    "security": {
+      "popup-text": "Kata sandi telah diubah",
+      "password-min-length": "Kata sandi harus minimal 6 karakter",
+      "change-error": "Kesalahan saat mengubah kata sandi"
+    },
+    "about-us": {
+      "replay-intro-this-tab": "Tampilkan tips untuk tab ini lagi",
+      "reset-intro-tours": "Reset semua tips layar",
+      "reset-intro-title": "Reset semua tips?",
+      "reset-intro-body": "Ketika kamu membuka setiap layar utama lagi, kami akan menampilkan pengantar untuk layar tersebut lagi.",
+      "reset-intro-confirm": "Reset",
+      "terms-of-services": "Syarat dan ketentuan",
+      "privacy": "Privasi",
+      "privacy-settings": "Pengaturan Privasi",
+      "imprint": "Imprint",
+      "software-licenses": "Lisensi perangkat lunak",
+      "release-notes": "Catatan rilis",
+      "write-review": "Nilai aplikasi",
+      "app-review-title": "Bagaimana kamu suka FluentDeck?",
+      "app-review-subtitle": "Tap bintang untuk memilih penilaian.",
+      "app-review-feedback-hint": "Apa yang bisa kami perbaiki? Silakan bagikan detail di sini …",
+      "app-review-open-store": "Lanjut di toko",
+      "app-review-submit": "Kirim umpan balik",
+      "app-review-cancel": "Batal",
+      "app-review-thanks-feedback": "Terima kasih atas umpan balikmu!",
+      "app-review-send-error": "Tidak dapat mengirim. Periksa koneksi internetmu dan coba lagi.",
+      "app-review-open-store-failed": "Tidak dapat membuka toko.",
+      "explain-one-part": "Jelaskan satu bagian…",
+      "show-tips": "Tampilkan tips…",
+      "explain-one-part-title": "Pilih apa yang akan dijelaskan",
+      "explain-one-part-subtitle": "Kami menyoroti kontrol tersebut di layar. Pilihan sesuai dengan tab yang kamu gunakan sekarang."
+    },
+    "send-reports": {
+      "introduction-text": "Bagikan keberhasilanmu dengan orangtua, guru, dan temanmu melalui email.",
+      "saved-email": "Email tersimpan:",
+      "parent-email": "Masukkan email orangtua",
+      "not-saved-email": "Kamu belum menyimpan email orangtua apa pun",
+      "add-four-email-text": "Kamu bisa menambahkan tidak lebih dari 4 email, tetapi kamu bisa mengedit salah satu email yang sudah ada atau menghapusnya.",
+      "enter-new-email": "Masukkan E-mail baru",
+      "leave-popup-title": "Kamu yakin mau <br> hapus E-mail ini ?",
+      "leave-popup-text": "Jika kamu tutup pop-up ini, E-mail tidak akan dihapus",
+      "email-can-not-be-empty": "E-mail tidak boleh kosong",
+      "saved-successfully": "Kamu berhasil menyimpan",
+      "success-text": "Kamu berhasil memperbarui E-mail orangtua",
+      "remove-success-text": "Kamu berhasil menghapus E-mail orangtua",
+      "successfully-updated": "Berhasil diperbarui",
+      "no": "Tidak",
+      "yes": "Ya"
+    },
+    "sound": {
+      "sound": "Suara",
+      "sound-volume": "Volume Suara"
+    }
+  },
+  "notification": {
+    "there-arnt-notification": "Belum ada notifikasi",
+    "welcome-app": "Selamat datang di FluentDeck",
+    "play-more-games": "Mainkan lebih banyak game, tingkatkan keterampilanmu & jadi yang pertama di Dunia!",
+    "mark-all-read": "Tandai semua sebagai sudah dibaca",
+    "open-classes-hint": "Buka Kelas untuk melihat permintaan bergabung atau keluar",
+    "open-profile-hint": "Buka Profil → Kelas Saya untuk melihat status kelasmu"
+  },
+  "common": {
+    "more-options": "Lebih banyak pilihan",
+    "me": "Saya",
+    "no-questions-available": "Tidak ada pertanyaan tersedia",
+    "fill-all-fields": "Mohon isi semua field",
+    "app-name-left": "Fluent",
+    "app-name-right": "Deck",
+    "version-prefix": "v"
+  },
+  "admin": {
+    "confirm-delete": "Tap lagi untuk konfirmasi",
+    "generate": "Generate",
+    "review": "Review",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "delete": "Delete",
+    "done": "Selesai",
+    "submit": "Submit",
+    "remove": "Remove",
+    "add-exercise": "Tambahkan Latihan",
+    "number-of-questions-label": "Jumlah pertanyaan:",
+    "topic-name-label": "Nama topik",
+    "exercise-example-label": "Contoh latihan {index}",
+    "correct-answer-label": "Jawaban benar",
+    "wrong-answers-label": "Jawaban salah",
+    "second-answer-label": "Jawaban kedua",
+    "multistep-follow-correct": "Langkah lanjutan {step} (benar)",
+    "multistep-follow-wrong": "Langkah lanjutan {step} (jawaban salah)",
+    "multistep-prompt-header": "Mode: multistep multiple choice. Cocokkan jumlah pilihan salah pada setiap langkah dengan template di bawah. Buat rangkaian lengkap langkah untuk setiap latihan baru.",
+    "multistep-stem-logic-line": "Alur: untuk langkah lanjutan n, baris yang terlihat bagi siswa adalah jawaban benar dari langkah sebelumnya (langkah utama benar → langkah 1, langkah 1 benar → langkah 2, …). Pilihan pada setiap langkah harus merupakan langkah yang masuk akal selanjutnya dari hasil benar sebelumnya.",
+    "multistep-api-field-map": "Nama bidang API yang model harus keluarkan untuk setiap latihan baru: langkah utama: latihan, jawabanBenar, jawabanSalah (array dari jawabanSalah). Langkah lanjutan 1: jawaban_1, jawabanSalah_1. Langkah lanjutan 2: jawaban_2, jawabanSalah_2. Langkah lanjutan 3: jawaban_3, jawabanSalah_3. Langkah lanjutan 4: jawaban_4, jawabanSalah_4. Jangan gunakan jawabanBenar1 atau jawabanSalah1 — gunakan jawaban_1 dan jawabanSalah_1. Setelah semua langkah: jawabanKedua = hasil akhir hanya jika topiknya membutuhkannya (jika tidak, biarkan kosong).",
+    "multistep-wrong-counts-line": "Template jumlah pilihan salah per langkah (latihan baru Anda harus menggunakan jumlah yang sama): {detail}",
+    "multistep-second-answer-final": "Jawaban kedua (hanya jika topiknya membutuhkannya: hasil akhir setelah langkah terakhir; biarkan kosong jika tidak)",
+    "generate-lesson": "Materi belajar",
+    "lesson-generated-title": "Materi belajar disimpan",
+    "lesson-generated-body": "Materi telah dibuat dan disimpan untuk topik ini. Kamu bisa memeriksa di Strapi atau membukanya di aplikasi.",
+    "lesson-generated-error-title": "Pembuatan gagal",
+    "lesson-generated-error-body": "Materi belajar tidak dapat dibuat. Periksa koneksi, hak admin, dan konfigurasi OpenAI, lalu coba lagi.",
+    "open-in-strapi": "Buka di Strapi",
+    "statistics": {
+      "tab-label": "Statistik",
+      "title": "Statistik aplikasi",
+      "period": "{range_summary} · {granularity} · {start} — {end}",
+      "registrations-chart": "Pendaftaran ({suffix})",
+      "answered-chart": "Latihan yang dijawab ({suffix}), benar atau salah — tidak termasuk yang dilewati",
+      "solved-chart": "Jawaban benar saja ({suffix})",
+      "load-error": "Gagal memuat statistik. Periksa hak akses admin atau coba lagi.",
+      "retry": "Coba lagi",
+      "no-data": "Tidak ada data untuk rentang ini.",
+      "range-label": "Rentang",
+      "range": {
+        "last-30": "30 hari terakhir",
+        "current-month": "Bulan ini",
+        "last-month": "Bulan lalu",
+        "custom": "Kustom"
+      },
+      "custom-start": "Dari",
+      "custom-end": "Sampai",
+      "custom-hint": "Tanggal ditafsirkan dalam zona waktu default server (profil admin atau Europe/Berlin). Rentang kustom yang sangat panjang dipotong tergantung pada langkah X-axis.",
+      "granularity-label": "Sumbu X",
+      "granularity": {
+        "day": "Harian",
+        "week": "Mingguan",
+        "month": "Bulanan",
+        "chart-day": "harian",
+        "chart-week": "mingguan",
+        "chart-month": "bulanan",
+        "period-day": "bucket harian",
+        "period-week": "bucket mingguan (mulai Senin)",
+        "period-month": "bucket bulanan"
+      }
+    }
+  },
+  "search": {
+    "keywords": [
+      "bilangan rasional",
+      "perkalian",
+      "bilangan desimal",
+      "persen",
+      "rasional",
+      "pembagian",
+      "penambahan",
+      "pengurangan",
+      "metode tertulis",
+      "bandingkan",
+      "dengan sisa",
+      "tanpa sisa",
+      "tugas komutatif",
+      "uang",
+      "waktu",
+      "pembulatan",
+      "konversi satuan",
+      "satu digit",
+      "tanda kurung",
+      "Eksponen",
+      "dengan x",
+      "Binomial",
+      "Linear",
+      "Akar",
+      "Kuadrat"
+    ]
+  },
+  "privacy-content": {
+    "summary": "Kebijakan privasi ini menjelaskan bagaimana FluentDeck mengumpulkan, menggunakan, dan membagikan data pribadi.",
+    "intro-title": "Pendahuluan",
+    "intro-text": "Kami, tim FluentDeck, sangat serius dalam melindungi data pribadi Anda dan mengikuti hukum perlindungan data dengan ketat. Kebijakan privasi ini memberi tahu Anda tentang jenis, jangkauan, dan tujuan pengumpulan dan penggunaan data pribadi dalam aplikasi seluler kami, FluentDeck.",
+    "collection-title": "Pengumpulan dan pemrosesan data pribadi",
+    "collection-text": "Menggunakan aplikasi kami biasanya mungkin tanpa memberikan data pribadi. Untuk beberapa fungsi, seperti otentikasi, diperlukan username. Informasi pribadi tambahan dapat disediakan secara sukarela oleh pengguna. Kami hanya menyimpan dan memproses data ini untuk tujuan yang disubmit.",
+    "cookies-title": "Kuki",
+    "cookies-text": "FluentDeck tidak menggunakan kuki atau teknologi serupa untuk mengumpulkan data pribadi.",
+    "third-party-title": "Penggunaan layanan pihak ketiga",
+    "third-party-text": "Aplikasi kami menggunakan berbagai layanan pihak ketiga untuk meningkatkan fungsi dan memaksimalkan pengalaman pengguna:",
+    "third-party-bullet-1": "Microsoft Clarity untuk analitik dan perilaku pengguna",
+    "third-party-bullet-2": "Google Analytics untuk analitik dan perilaku pengguna",
+    "third-party-bullet-3": "Google Places API untuk informasi lokasi",
+    "third-party-note": "Mohon dicatat bahwa layanan ini memiliki kebijakan privasi mereka sendiri yang independen dari kami.",
+    "deletion-title": "Penghapusan data",
+    "deletion-text": "Kamu yang mau ngapus data kamu dari aplikasi kita bisa minta ini lewat formulir kontak di situs kita.",
+    "security-title": "Keamanan",
+    "security-text": "Kami implementasikan langkah-langkah teknis dan organisasi untuk melindungi data kamu dari manipulasi, kehilangan, dan akses tanpa izin.",
+    "changes-title": "Perubahan kebijakan privasi",
+    "changes-text": "Kami berhak untuk memperbarui kebijakan privasi ini untuk selalu mematuhi peraturan hukum yang berlaku.",
+    "contact-title": "Kontak",
+    "contact-email": "support@fluentdeck.app",
+    "contact-website": "https://fluentdeck.app",
+    "date": "Tanggal kebijakan privasi: 20.04.2026"
+  },
+  "errors": {
+    "network": "Periksa koneksi internet kamu dan coba lagi.",
+    "unexpected": "Ada yang salah. Coba lagi, ya.",
+    "unauthorized": "Mohon login lagi untuk lanjut.",
+    "server": "Server sedang tidak tersedia. Coba lagi nanti.",
+    "request-failed": "Kami gagal menyelesaikan permintaan ini. Coba lagi, ya."
+  },
+  "speaking-activity": {
+    "error-generic": "Gagal memuat aktivitas berbicara. Coba lagi, ya.",
+    "session-history": {
+      "title": "Riwayat sesi",
+      "empty": "Selesaikan sesi berbicara dan tap Akhiri & nilai untuk melihat riwayat di sini.",
+      "view-all": "Lihat semua ({count})"
+    },
+    "saved-phrases": {
+      "title": "Frasa yang disimpan",
+      "empty": "Simpan kata-kata dari percakapan untuk melihatnya di sini.",
+      "view-all": "Lihat semua ({count})"
+    },
+    "review-log": {
+      "title": "Lihat log",
+      "view-all": "Lihat semua ({count})"
+    },
+    "session-detail": {
+      "title": "Detail sesi",
+      "score": "Skor sesi",
+      "mode": "Mode",
+      "completed": "Selesai",
+      "duration": "Durasi",
+      "duration-minutes": "{minutes} menit",
+      "turns": "Putaran",
+      "summary": "Ringkasan",
+      "feedback": "Umpan balik tutor",
+      "transcript-hint": "Transkrip putaran lengkap disimpan di Speak → Riwayat di perangkat ini."
+    },
+    "streak": {
+      "day": "streak hari",
+      "days": "streak hari"
+    }
+  },
+  "speaking-premium": {
+    "locked-message": "Item ini tersedia dengan Premium. Upgrade untuk membuka semua peran, topik, dan game.",
+    "badge": "Premium"
+  },
+  "versions": [
+    {
+      "v": "2.0.9",
+      "date": "2026-10-15",
+      "changes": [
+        "Tampilan baru: Desain biru laut, ikon aplikasi baru dan animasi loading baru.",
+        "AI tutor ngobrol, role-play, topik, dan permainan bicara.",
+        "Simpan kalimat dari percakapan kamu dan lihat lagi nanti.",
+        "Flashcards dengan review ulang jarak waktu cerdas."
+      ]
+    }
+  ]
+}

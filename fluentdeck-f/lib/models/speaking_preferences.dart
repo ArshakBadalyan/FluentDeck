@@ -64,8 +64,17 @@ class SpeakingPreferences {
     'ja': 'Japanese',
     'ru': 'Russian',
     'hi': 'Hindi',
+    // Added with the app's interface languages (docs/app-languages.md).
+    'tr': 'Turkish',
+    'ko': 'Korean',
+    'ar': 'Arabic',
+    'vi': 'Vietnamese',
+    'id': 'Indonesian',
+    // Practice + tutor language only — not an app (interface) language yet.
+    'hy': 'Armenian',
   };
 
+  /// The tutor can reply in any practice language.
   static const responseLanguageOptions = {
     'en': 'English',
     'es': 'Spanish',
@@ -77,6 +86,13 @@ class SpeakingPreferences {
     'zh': 'Mandarin Chinese',
     'ja': 'Japanese',
     'ru': 'Russian',
+    // Added with the app's interface languages (docs/app-languages.md).
+    'tr': 'Turkish',
+    'ko': 'Korean',
+    'ar': 'Arabic',
+    'vi': 'Vietnamese',
+    'id': 'Indonesian',
+    'hy': 'Armenian',
   };
 
   static const translationLanguageOptions = {
@@ -96,6 +112,8 @@ class SpeakingPreferences {
     'ko': 'Korean',
     'tr': 'Turkish',
     'uk': 'Ukrainian',
+    'vi': 'Vietnamese',
+    'id': 'Indonesian',
   };
 
   bool get usesResponseSwitching => responseLanguage != practiceLanguage;

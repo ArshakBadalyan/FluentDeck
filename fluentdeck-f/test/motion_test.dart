@@ -44,6 +44,7 @@ Future<BuildContext> _context(WidgetTester tester, {bool reduceMotion = false}) 
 void main() {
   phase2to4Tests();
   remainingPhaseTests();
+  goalRingTests();
   group('Material 2 theme', () {
     test('light and dark themes are Material 2 with brand toggles', () {
       for (final theme in [AppTheme.light, AppTheme.dark]) {
@@ -497,6 +498,54 @@ void remainingPhaseTests() {
       service.applySpeakingStats({'other': 1});
       service.applySpeakingStats('junk');
       expect(service.dailyGoalReached.value, start);
+    });
+  });
+}
+
+
+void goalRingTests() {
+  group('daily goal ring', () {
+    double targetOf(WidgetTester tester) {
+      final paint = tester.widget<CustomPaint>(
+        find.descendant(
+          of: find.byType(DualArcProgressRing),
+          matching: find.byType(CustomPaint),
+        ),
+      );
+      return (paint.painter as dynamic).targetFraction as double;
+    }
+
+    Widget ring(double target, {bool reduce = false}) => _app(
+      DualArcProgressRing(
+        targetFraction: target,
+        progressFraction: 0.1,
+        targetColor: Colors.blue,
+        progressColor: Colors.orange,
+        animationCurve: Curves.linear,
+      ),
+      reduceMotion: reduce,
+    );
+
+    testWidgets('fills in from empty, then sweeps to a new goal (no jump)', (tester) async {
+      await tester.pumpWidget(ring(0.4));
+      expect(targetOf(tester), 0);
+      await tester.pumpAndSettle();
+      expect(targetOf(tester), closeTo(0.4, 1e-9));
+
+      await tester.pumpWidget(ring(0.8));
+      await tester.pump(const Duration(milliseconds: 210)); // half of 420 ms
+      expect(targetOf(tester), closeTo(0.6, 0.02)); // mid-sweep
+      await tester.pumpAndSettle();
+      expect(targetOf(tester), closeTo(0.8, 1e-9));
+    });
+
+    testWidgets('reduced motion jumps straight to the value', (tester) async {
+      await tester.pumpWidget(ring(0.4, reduce: true));
+      await tester.pump();
+      expect(targetOf(tester), closeTo(0.4, 1e-9));
+      await tester.pumpWidget(ring(0.9, reduce: true));
+      await tester.pump();
+      expect(targetOf(tester), closeTo(0.9, 1e-9));
     });
   });
 }

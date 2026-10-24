@@ -27,6 +27,12 @@ const LANGUAGE_RUBRIC_NOTES = {
   zh: `Chinese-specific: also weigh grammar (word order, aspect markers such as 了/过/着, measure-word usage), vocabulary range and precision, and contextual/pragmatic appropriateness. Do NOT assess tone accuracy or pronunciation — you only have a text transcript, and tones cannot be judged from text alone; ignore this dimension entirely rather than guessing.`,
   en: `English-specific: also weigh tense/aspect accuracy, article and preposition usage, vocabulary precision, and register appropriate to a spoken conversational context (not written-formal).`,
   es: `Spanish-specific: also weigh verb conjugation accuracy (including subjunctive where the context calls for it), ser/estar distinction, gender and number agreement, vocabulary range, and tú/usted register appropriate to context.`,
+  tr: `Turkish-specific: also weigh vowel harmony and suffix order in agglutinated words, case endings, verb tense/aspect/mood suffixes, SOV word order, and sen/siz register appropriate to context.`,
+  ko: `Korean-specific: also weigh particle accuracy (은/는, 이/가, 을/를 etc.), verb endings and speech level (해요체 vs. 합니다체 vs. 반말) appropriate to context, honorifics, and SOV word order.`,
+  ar: `Arabic-specific: also weigh verb conjugation (person, gender, number), gender and number agreement, definiteness, and whether Modern Standard Arabic or a dialect is used consistently. Do not penalise a consistent dialect.`,
+  vi: `Vietnamese-specific: also weigh word order, classifier usage, tense/aspect markers (đã, đang, sẽ), pronoun choice appropriate to the relationship, and vocabulary range. Do NOT assess tones or pronunciation — you only have a transcript.`,
+  id: `Indonesian-specific: also weigh affix usage (me-, ber-, di-, -kan, -i), word order, time/aspect markers (sudah, sedang, akan), and formal vs. casual register appropriate to context.`,
+  hy: `Armenian-specific (Eastern Armenian unless the learner clearly uses Western): also weigh case endings, verb conjugation for person/number/tense, the definite article -ը/-ն, word order, and formal/informal (դուք/դու) register appropriate to context.`,
   it: `Italian-specific: also weigh verb conjugation and mood (including congiuntivo at higher levels), gender/number agreement, preposition usage, vocabulary range, and register appropriate to context.`,
 };
 

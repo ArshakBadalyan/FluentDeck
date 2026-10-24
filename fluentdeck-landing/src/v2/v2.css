@@ -1,0 +1,135 @@
+/* Landing v2: React Bits islands, in the v1 palette (src/styles.css). */
+@import '../react-bits/RotatingText.css';
+@import '../react-bits/ShinyText.css';
+@import '../react-bits/SpotlightCard.css';
+@import '../react-bits/Aurora.css';
+@import '../react-bits/CardSwap.css';
+
+/* Hero aurora sits behind the content, fading into the page. */
+.aurora-bg {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.55;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
+}
+
+/* Headline: the rotating language sits on its own line on a teal block. */
+.lang-rotator { display: inline-flex; vertical-align: bottom; }
+.lang-rotator .text-rotate-highlight { border-radius: 0.18em; }
+.rotator-split { overflow: hidden; padding-bottom: 0.06em; }
+
+/* "Inside the app" heading: coral language over a teal underline. */
+.lang-inline { display: inline-flex; vertical-align: bottom; }
+.lang-inline-text {
+  color: #ff7a59;
+  padding-bottom: 0.04em;
+  background: linear-gradient(90deg, var(--teal-on-dark), #7ee6ec) left bottom / 100% 0.12em no-repeat;
+}
+
+/* Languages: "I speak [X] → I want to speak [Y]". */
+.lang-pair-host { margin-top: 32px; }
+.lang-pair {
+  display: inline-flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: center;
+  padding: 18px 26px; border-radius: var(--radius);
+  background: var(--card); border: 1px solid var(--border);
+}
+.lang-pair-side { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 9.5ch; }
+.lang-pair-label { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.lang-pair-word { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; color: var(--text); }
+.lang-pair-word.is-target { color: var(--teal-on-dark); }
+.lang-pair-arrow { color: #ff7a59; flex: none; }
+.lang-pair-static { color: var(--muted); }
+@media (max-width: 520px) {
+  .lang-pair { flex-direction: column; align-items: stretch; gap: 10px; width: min(100%, 340px); }
+  .lang-pair-side { align-items: center; }
+  .lang-pair-arrow { transform: rotate(90deg); align-self: center; }
+}
+
+/* Reserve: the rotating word's slot is as wide as its longest option. */
+.reserve { display: inline-grid; vertical-align: bottom; justify-items: start; }
+.reserve > * { grid-area: 1 / 1; }
+.reserve-sizer { visibility: hidden; white-space: nowrap; height: 0; overflow: hidden; }
+.reserve-highlight { padding: 0 0.28em; }
+/* A highlight block fills the whole slot, so it keeps one size as words change
+   (overrides RotatingText's fit-to-word width animation). */
+.reserve-live { display: flex; min-width: 0; justify-self: stretch; }
+.reserve-live .text-rotate-highlight { box-sizing: border-box; width: 100% !important; }
+
+/* Magnet keeps the button inline in the CTA row. */
+.magnet-host { display: inline-flex; }
+
+/* Spotlight cards take over the feature-card look. */
+.feature[data-island='spotlight'] { padding: 0; background: none; border: 0; }
+.feature-spot {
+  height: 100%;
+  padding: 28px;
+  border-radius: var(--radius);
+  --spotlight-card-surface: var(--card);
+  --spotlight-card-border: rgba(255, 255, 255, 0.08);
+  --spotlight-card-shadow: none;
+}
+
+/* "See it in action" */
+.in-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.swap-host { display: flex; justify-content: center; min-height: 680px; }
+/* The front card drops down when it swaps; clip it at the host's bottom edge
+   so it never slides over the next section. */
+.swap-host { overflow-x: visible; overflow-y: clip; }
+.swap-hint { color: var(--muted); font-size: 0.9rem; }
+.screen-card { display: flex; flex-direction: column; overflow: hidden; }
+.screen-card-head { padding: 10px 16px; font-weight: 600; font-size: 0.95rem; color: var(--text); }
+.screen-card img { flex: 1; width: 100%; min-height: 0; object-fit: cover; object-position: top; }
+.swap-fallback { list-style: none; margin: 0; padding: 0; width: min(100%, 300px); }
+.swap-fallback img { border-radius: 28px; }
+
+@media (max-width: 960px) {
+  .in-action-grid { grid-template-columns: 1fr; }
+  .swap-host { min-height: 540px; }
+}
+
+/* More screens: Bounce Cards fan (desktop); phones keep the .shots row. */
+.screens-fan:not(.shots) { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }
+.screens-fan .bounce-cards { max-width: 100%; }
+.screens-fan .bounce-cards__card { aspect-ratio: 585 / 1266; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45); }
+.fan-captions { margin: 8px 0 0; color: var(--muted); font-size: 0.95rem; text-align: center; }
+
+/* "Try it" flip card. */
+.try-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; }
+.flip-host { display: flex; justify-content: center; }
+.flip-static { padding: 24px; border-radius: 24px; background: var(--card); border: 1px solid var(--border); }
+.flash-face { display: flex; flex-direction: column; justify-content: center; gap: 12px; height: 100%; padding: 26px 28px; text-align: left; }
+.flash-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal-on-dark); }
+.flash-label.is-answer { color: #ff7a59; }
+.flash-text { margin: 0; font-size: 1.45rem; font-weight: 700; line-height: 1.3; }
+.flash-text mark { background: none; color: var(--teal-on-dark); }
+.flash-hint { color: var(--muted); font-size: 0.9rem; }
+@media (max-width: 960px) {
+  .try-grid { grid-template-columns: 1fr; gap: 28px; }
+}
+
+/* Languages marquee. */
+.lang-loop { margin-top: 36px; }
+.lang-loop .lang-chips { margin-top: 0; }
+.loop-lang {
+  display: inline-flex; align-items: center; height: 40px; padding: 0 16px; font-size: 1rem; border-radius: 999px;
+  background: var(--card); border: 1px solid var(--border); font-weight: 600; white-space: nowrap;
+}
+
+/* Premium Yearly with the edge glow: the glow card takes over the plan's box. */
+.plan.plan-glow { padding: 0; background: none; border: 0; box-shadow: none; }
+.plan.plan-glow .badge { z-index: 2; }
+.plan-glow-card { height: 100%; }
+.plan-glow-body { display: flex; flex-direction: column; height: 100%; padding: 30px; }
+.plan-glow-body ul { flex: 1; }
+
+/* Final call to action: waves behind, star round the button. */
+.cta-waves { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%); }
+.cta-waves > * { pointer-events: auto; }
+.star-host { display: inline-flex; margin-top: 12px; }
+.star-cta.btn { margin-top: 0; }

@@ -581,11 +581,14 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
     try {
       const { findUserById } = require("../../../utils/document-service");
       const user = await findUserById(strapi, userId, {
-        fields: ["tutor_voice"],
+        fields: ["tutor_voice", "response_language"],
       });
+      // The tutor speaks its reply language; the TTS service is picked per
+      // language (Kokoro where it can, OpenAI otherwise).
       const audioBuffer = await synthesizeSpeech(
         safeText,
-        user?.tutor_voice
+        user?.tutor_voice,
+        user?.response_language || "en",
       );
       ctx.body = {
         audioBase64: audioBuffer.toString("base64"),

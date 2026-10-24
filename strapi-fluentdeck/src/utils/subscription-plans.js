@@ -5,9 +5,9 @@
  * Real store prices still come from App Store / Play; these drive labels when
  * the store is unavailable and keep product metadata in one place (env).
  *
- * Launch pricing (EUR):
- *   Monthly €9.99
- *   Yearly  €59.99 — €5.00/mo (~50% off), 7-day free trial
+ * Launch pricing (USD):
+ *   Monthly $9.99
+ *   Yearly  $79.99 — $6.67/mo (~33% off), 7-day free trial
  *
  * The trial itself is configured in App Store Connect / Play Console; the
  * `trialDays` here only labels it in the app, so keep the two in sync.
@@ -52,7 +52,7 @@ function periodSuffix(months) {
 }
 
 function formatPrice(amount, currency) {
-  const code = String(currency || 'EUR').toUpperCase();
+  const code = String(currency || 'USD').toUpperCase();
   const symbol = CURRENCY_SYMBOLS[code] || `${code} `;
   const fixed = Number(amount).toFixed(2);
   return `${symbol}${fixed}`;
@@ -116,7 +116,7 @@ const DEFAULT_PLAN_SPECS = [
     defaultTitle: 'Monthly',
     defaultMonths: 1,
     defaultPrice: 9.99,
-    defaultCurrency: 'EUR',
+    defaultCurrency: 'USD',
     defaultBadge: null,
     defaultTrialDays: 0,
   },
@@ -125,9 +125,9 @@ const DEFAULT_PLAN_SPECS = [
     defaultProductId: 'fluentdeck_premium_yearly',
     defaultTitle: 'Yearly',
     defaultMonths: 12,
-    defaultPrice: 59.99,
-    defaultCurrency: 'EUR',
-    defaultBadge: 'Save 50%',
+    defaultPrice: 79.99,
+    defaultCurrency: 'USD',
+    defaultBadge: 'Save 33%',
     defaultTrialDays: 7,
   },
 ];

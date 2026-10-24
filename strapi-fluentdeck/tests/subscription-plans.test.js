@@ -22,12 +22,12 @@ test('only Monthly and Yearly are sold', () => {
   const plans = getSubscriptionPlans();
   assert.deepEqual(plans.map((p) => p.key), ['monthly', 'yearly']);
   const [monthly, yearly] = plans;
-  assert.equal(monthly.fallbackPrice, '€9.99');
+  assert.equal(monthly.fallbackPrice, '$9.99');
   assert.equal(monthly.periodSuffix, '/ month');
   assert.equal(monthly.trialDays, 0);
-  assert.equal(yearly.fallbackPrice, '€59.99');
+  assert.equal(yearly.fallbackPrice, '$79.99');
   assert.equal(yearly.periodSuffix, '/ year');
-  assert.equal(yearly.badge, 'Save 50%');
+  assert.equal(yearly.badge, 'Save 33%');
   assert.equal(yearly.trialDays, 7);
 });
 
@@ -55,8 +55,8 @@ test('env overrides price', () => {
   process.env.SUBSCRIPTION_MONTHLY_PRICE = '7.49';
   process.env.SUBSCRIPTION_YEARLY_PRICE = '49.99';
   const plans = getSubscriptionPlans();
-  assert.equal(plans[0].fallbackPrice, '€7.49');
-  assert.equal(plans[1].fallbackPrice, '€49.99');
+  assert.equal(plans[0].fallbackPrice, '$7.49');
+  assert.equal(plans[1].fallbackPrice, '$49.99');
 });
 
 test('old quarterly subscribers are still accepted, but not sold', () => {

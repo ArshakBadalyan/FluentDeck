@@ -589,7 +589,58 @@ class _StreakGaugeIcon extends StatefulWidget {
   State<_StreakGaugeIcon> createState() => _StreakGaugeIconState();
 }
 
-class _StreakGaugeIconState extends State<_StreakGaugeIcon> {
+class _StreakGaugeIconState extends State<_StreakGaugeIcon>
+    with SingleTickerProviderStateMixin {
+  /// Swell-and-settle when the ring is touched and released.
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 380),
+  );
+
+  /// While true the centre shows the goal being set instead of the flame.
+  bool _adjusting = false;
+
+  /// A tap jumps the goal, so the arc sweeps there with a little spring;
+  /// dragging updates constantly, so the arc follows the finger closely.
+  bool _dragging = false;
+  Timer? _settleTimer;
+
+  @override
+  void dispose() {
+    _settleTimer?.cancel();
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  void _startPulse() {
+    if (MediaQuery.disableAnimationsOf(context)) return;
+    _pulse.forward(from: 0);
+  }
+
+  void _onDown(Offset localPosition) {
+    _settleTimer?.cancel();
+    setState(() {
+      _adjusting = true;
+      _dragging = false;
+    });
+    _startPulse();
+    _handleDrag(localPosition);
+  }
+
+  void _onMove(Offset localPosition) {
+    if (!_dragging) setState(() => _dragging = true);
+    _handleDrag(localPosition);
+  }
+
+  void _onUp() {
+    _startPulse();
+    _settleTimer?.cancel();
+    // Show the chosen number for a moment, then fade back to the flame.
+    _settleTimer = Timer(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _adjusting = false);
+    });
+  }
+
   void _handleDrag(Offset localPosition) {
     const center = Offset(_goalGaugeSize / 2, _goalGaugeSize / 2);
     final dx = localPosition.dx - center.dx;
@@ -609,6 +660,7 @@ class _StreakGaugeIconState extends State<_StreakGaugeIcon> {
     final reached = widget.today >= safeGoal;
     final targetFraction = (safeGoal / _goalGaugeMax).clamp(0.0, 1.0);
     final progressFraction = (widget.today / _goalGaugeMax).clamp(0.0, 1.0);
+    final flameColor = reached ? AppColors.greenCorrect : Colors.orange;
 
     // A plain GestureDetector's pan recognizer competes with the ancestor
     // ListView's vertical-scroll recognizer in the same gesture arena —
@@ -617,22 +669,62 @@ class _StreakGaugeIconState extends State<_StreakGaugeIcon> {
     // Listener bypasses the arena entirely (raw pointer events always reach
     // it), which is what actually makes dragging reliable here.
     return Listener(
-      onPointerDown: (event) => _handleDrag(event.localPosition),
-      onPointerMove: (event) => _handleDrag(event.localPosition),
-      child: DualArcProgressRing(
-        targetFraction: targetFraction,
-        progressFraction: progressFraction,
-        size: _goalGaugeSize,
-        strokeWidth: 14,
-        trackColor: Colors.white.withValues(alpha: 0.15),
-        targetColor: const Color(0xFF2196F3),
-        progressColor: reached ? AppColors.greenCorrect : Colors.orange.shade300,
-        center: Padding(
-          padding: const EdgeInsets.all(13),
-          child: Icon(
-            Icons.local_fire_department_rounded,
-            size: 34,
-            color: reached ? AppColors.greenCorrect : Colors.orange,
+      onPointerDown: (event) => _onDown(event.localPosition),
+      onPointerMove: (event) => _onMove(event.localPosition),
+      onPointerUp: (_) => _onUp(),
+      onPointerCancel: (_) => _onUp(),
+      child: AnimatedBuilder(
+        animation: _pulse,
+        builder: (context, child) {
+          // 0 → 1 → 0 hump: the ring swells 8% and settles back.
+          final swell = sin(pi * _pulse.value);
+          return Transform.scale(scale: 1 + 0.08 * swell, child: child);
+        },
+        child: DualArcProgressRing(
+          targetFraction: targetFraction,
+          progressFraction: progressFraction,
+          size: _goalGaugeSize,
+          strokeWidth: 14,
+          trackColor: Colors.white.withValues(alpha: 0.15),
+          targetColor: const Color(0xFF2196F3),
+          progressColor: reached ? AppColors.greenCorrect : Colors.orange.shade300,
+          animationDuration: _dragging
+              ? const Duration(milliseconds: 120)
+              : const Duration(milliseconds: 600),
+          animationCurve: _dragging ? AppMotion.decelerateCurve : Curves.easeOutBack,
+          center: Padding(
+            padding: const EdgeInsets.all(13),
+            child: AppFadeThroughSwitcher(
+              child: _adjusting
+                  ? FittedBox(
+                      key: const ValueKey('goal'),
+                      child: Text(
+                        '$safeGoal',
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                  : AnimatedBuilder(
+                      key: const ValueKey('flame'),
+                      animation: _pulse,
+                      builder: (context, child) => Transform.scale(
+                        scale: 1 + 0.25 * sin(pi * _pulse.value),
+                        child: child,
+                      ),
+                      child: TweenAnimationBuilder<Color?>(
+                        tween: ColorTween(end: flameColor),
+                        duration: AppMotion.duration(context, AppMotion.slow),
+                        builder: (context, color, _) => Icon(
+                          Icons.local_fire_department_rounded,
+                          size: 34,
+                          color: color,
+                        ),
+                      ),
+                    ),
+            ),
           ),
         ),
       ),

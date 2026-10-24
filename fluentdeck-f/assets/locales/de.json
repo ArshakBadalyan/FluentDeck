@@ -22,13 +22,14 @@
   "buttons": {
     "skip": "überspringen",
     "send": "abgeben",
-    "description": "Erklärung",
     "next": "nächstes",
+    "description": "Erklärung",
     "wrong-answer": "falsche Antwort",
     "save": "speichern",
     "start": "Start",
     "close": "Schließen",
-    "ok": "OK"
+    "ok": "OK",
+    "retry": "Nochmal"
   },
   "inputs": {
     "E-mail-address": "E-Mail Adresse",
@@ -104,53 +105,53 @@
     "skip": "Überspringen",
     "next": "Weiter",
     "get-started": "Jetzt loslegen",
-    "welcome": {
-      "title": "Willkommen bei FluentDeck!",
-      "description": "Sprich mit einem KI-Tutor, wiederhole mit smarten Karteikarten und verfolge deinen Fortschritt – alles in einer App.",
-      "bullet-1": "Tausende Aufgaben für Klasse 1 bis 12",
-      "bullet-2": "Top-Listen und Duelle mit deinen Mitschüler:innen",
-      "bullet-3": "Lösungen und Erklärungen zu jeder Aufgabe"
-    },
-    "school": {
-      "title": "Deine Schule finden",
-      "description": "Trag deine Schule ein, damit wir dir später Mitschüler:innen vorschlagen können und du in der Top-Liste deiner Schule erscheinst.",
-      "placeholder": "Name deiner Schule",
-      "hint": "Optional. Du kannst die Schule später im Profil ändern.",
-      "confirmation": "Nach der Anmeldung verbinden wir dein Konto automatisch mit „{school}“.",
-      "save-failed": "Wir konnten deine Schule nicht automatisch speichern. Du kannst sie später im Profil ergänzen."
-    },
-    "class": {
-      "title": "In welcher Klasse bist du?",
-      "description": "So zeigen wir dir gleich passende Aufgaben für deine Klassenstufe.",
-      "hint": "Optional. Du kannst deine Klasse jederzeit im Profil ändern.",
-      "grade-format": "{n}. Klasse"
-    },
-    "themes": {
-      "title": "Probiere ein Thema aus",
-      "description": "Tipp ein Thema an und löse {n} kurze Aufgaben.",
-      "pick-class": "Wähle zuerst deine Klasse aus.",
-      "loading": "Themen werden geladen…",
-      "empty": "Für deine Klassenstufe sind noch keine Themen verfügbar.",
-      "error": "Themen konnten nicht geladen werden. Versuche es später nochmal."
-    },
-    "exercise": {
-      "progress": "Aufgabe {current} von {total}",
-      "submit": "Prüfen",
-      "next": "Weiter",
-      "loading": "Aufgabe wird geladen…",
-      "no-questions": "Für dieses Thema sind noch keine Aufgaben verfügbar.",
-      "load-error": "Aufgabe konnte nicht geladen werden.",
-      "feedback-correct": "Richtig!",
-      "feedback-wrong": "Knapp daneben — die richtige Antwort ist markiert.",
-      "complete-title": "Toll gemacht!",
-      "complete-description": "Registriere dich kostenlos, um deinen Fortschritt zu speichern und mit deinen Freunden weiter zu üben.",
-      "register-cta": "Jetzt registrieren"
-    },
-    "apply-dialog": {
-      "title": "Daten aus dem Onboarding übernehmen?",
-      "description": "Wir haben gemerkt, dass dein Profil noch ein paar Lücken hat. Möchtest du folgende Angaben aus dem Onboarding übernehmen?",
-      "apply": "Übernehmen",
-      "skip": "Nein, danke"
+    "language": "App-Sprache",
+    "pages": {
+      "speak": {
+        "title": "Sprich mit einem AI-Tutor",
+        "body": "Sprich laut oder tippe. Dein Tutor antwortet mit einer natürlichen Stimme, korrigiert dich sanft und merkt sich, was du besprichst.",
+        "chips": {
+          "voice-or-text": "Stimme oder Text",
+          "gentle-corrections": "Sanfte Korrekturen",
+          "remembers-you": "Merkt sich dich"
+        }
+      },
+      "practice": {
+        "title": "Übe, was du brauchst",
+        "body": "Wähle ein Thema, spiele echte Situationen wie ein Jobgespräch oder eine Reise nach, spiele Sprechspiele oder erstelle deine eigenen Rollenspiele.",
+        "chips": {
+          "topics": "Themen",
+          "role-plays": "Rollenspiele",
+          "games": "Sprechspiele",
+          "languages": "16 Sprachen"
+        }
+      },
+      "flashcards": {
+        "title": "Deine Fehler werden Karteikarten",
+        "body": "Korrekturen und neue Wörter können automatisch in deine Notizen gespeichert werden. Überprüfe sie in Stapeln, die jede Karte genau dann zurückbringen, bevor du sie vergisst, oder importiere deine Anki-Stapel.",
+        "chips": {
+          "auto-saved": "Für dich gespeichert",
+          "spaced-repetition": "Intelligente Wiederholungen",
+          "anki-import": "Anki-Import"
+        }
+      },
+      "progress": {
+        "title": "Sieh deinen Fortschritt",
+        "body": "Setze ein tägliches Ziel, behalte deine Streak bei und beobachte, wie dein Level (A1–C2) in jeder Sprache, die du übst, wächst.",
+        "chips": {
+          "daily-goal": "Täglicher Ziel",
+          "streak": "Tagesstreak",
+          "cefr-level": "Dein Level"
+        }
+      },
+      "plan": {
+        "title": "Kostenlos starten",
+        "body": "Alles, was du zum Start brauchst, ist kostenlos. Upgrade jederzeit für mehr Konversation.",
+        "free-title": "Kostenlos",
+        "free-body": "{time} AI-Gespräch pro Tag, plus Karteikarten und Stapel.",
+        "premium-title": "Premium",
+        "premium-body": "Bis zu {time} AI-Gespräch pro Tag, ohne Werbung und alle Sprech-Inhalte."
+      }
     }
   },
   "login-register": {
@@ -911,6 +912,8 @@
       "delete-account": "Account löschen",
       "delete-error": "Fehler beim Löschen",
       "language": "Sprache",
+      "app-language-title": "App-Sprache",
+      "app-language-hint": "Menüs und Schaltflächen. Die Sprache, die du übst, stellst du in den KI-Sprech-Einstellungen ein.",
       "language-de": "Deutsch",
       "language-en": "Englisch"
     },
@@ -1075,10 +1078,7 @@
       "Exponenten",
       "mit x",
       "binomische",
-      "lineare",
-      "Wurzel",
-      "quadratische",
-      "Bruch"
+      "lineare"
     ]
   },
   "privacy-content": {

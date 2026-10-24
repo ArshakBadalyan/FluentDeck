@@ -29,6 +29,8 @@ import 'services/auth_service.dart';
 import 'clarity_wrap.dart' if (dart.library.html) 'clarity_wrap_stub.dart';
 import 'firebase_options.dart';
 import 'services/clarity_route_observer.dart';
+import 'config/app_language.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 List<String> _adMobTestDeviceIds() {
   // Never tag devices as "test" in release: AdMob would return only test ads
@@ -131,6 +133,12 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         scrollBehavior: const AppScrollBehavior(),
         locale: AppLocalizations.instance.locale,
+        // Flutter's own strings (pickers, copy/paste menu) and right-to-left
+        // layout for Arabic follow the app language.
+        supportedLocales: [
+          for (final o in AppLanguage.options) Locale(o.code),
+        ],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
         home: const AppStart(),
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,

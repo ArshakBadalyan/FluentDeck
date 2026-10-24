@@ -16,12 +16,13 @@ class AppLocalizations extends ChangeNotifier {
 
   static const String _defaultLanguage = 'en';
 
-  final Map<String, dynamic> _deMap = {};
+  /// English is the source and the fallback for any key a translation lacks.
   final Map<String, dynamic> _enMap = {};
   final Map<String, dynamic> _activeMap = {};
 
   String _activeLanguage = _defaultLanguage;
   bool _isLoaded = false;
+  Set<String> _available = {_defaultLanguage};
 
   String get language => _activeLanguage;
   Locale get locale => Locale(_activeLanguage);
@@ -29,42 +30,59 @@ class AppLocalizations extends ChangeNotifier {
   bool get isEnglish => _activeLanguage == 'en';
   bool get isGerman => _activeLanguage == 'de';
 
-  Future<void> load() async {
-    final deLoaded = await _safeLoadLocale('de');
-    final enLoaded = await _safeLoadLocale('en');
+  /// Languages that ship a locale file, in picker order.
+  List<AppLanguageOption> get availableOptions => [
+    for (final o in AppLanguage.options)
+      if (_available.contains(o.code)) o,
+  ];
 
-    _deMap
-      ..clear()
-      ..addAll(deLoaded);
+  Future<void> load() async {
+    _available = await _shippedLanguages();
     _enMap
       ..clear()
-      ..addAll(enLoaded);
-
-    final initialLanguage = await AppLanguage.resolveCurrent();
-    _applyLanguage(initialLanguage);
-
+      ..addAll(await _safeLoadLocale(_defaultLanguage));
+    await _applyLanguage(
+      await AppLanguage.resolveCurrent(available: _available),
+    );
     _isLoaded = true;
   }
 
   Future<void> setLanguage(String language) async {
     await AppLanguage.setOverride(language);
-    _applyLanguage(language);
+    await _applyLanguage(language);
     notifyListeners();
   }
 
-  void _applyLanguage(String language) {
-    _activeLanguage = AppLanguage.supportedLanguages.contains(language)
-        ? language
-        : _defaultLanguage;
-    final source = _activeLanguage == 'en' ? _enMap : _deMap;
+  /// Only the active language is parsed; switching loads the new one.
+  Future<void> _applyLanguage(String language) async {
+    _activeLanguage = _available.contains(language) ? language : _defaultLanguage;
+    final source =
+        _activeLanguage == _defaultLanguage
+            ? _enMap
+            : await _safeLoadLocale(_activeLanguage);
     _activeMap
       ..clear()
       ..addAll(source);
   }
 
+  /// Locale files bundled with the app (pubspec lists `assets/locales/`).
+  Future<Set<String>> _shippedLanguages() async {
+    try {
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final codes = {
+        for (final path in manifest.listAssets())
+          if (path.startsWith('assets/locales/') && path.endsWith('.json'))
+            path.substring('assets/locales/'.length, path.length - '.json'.length),
+      };
+      return {_defaultLanguage, ...codes.intersection(AppLanguage.supportedLanguages)};
+    } catch (_) {
+      return {_defaultLanguage};
+    }
+  }
+
   String t(String key, {Map<String, dynamic>? vars, String? fallback}) {
     final fromActive = _lookupString(_activeMap, key);
-    final fromDefault = _lookupString(_deMap, key);
+    final fromDefault = _lookupString(_enMap, key);
     final raw = fromActive ?? fromDefault ?? fallback ?? key;
     return _interpolate(raw, vars);
   }
@@ -72,7 +90,7 @@ class AppLocalizations extends ChangeNotifier {
   dynamic value(String key) {
     final fromActive = _lookupAny(_activeMap, key);
     if (fromActive != null) return fromActive;
-    return _lookupAny(_deMap, key);
+    return _lookupAny(_enMap, key);
   }
 
   Future<Map<String, dynamic>> _safeLoadLocale(String language) async {

@@ -51,13 +51,13 @@ class PlanInfo {
   final double priceAmount;
 }
 
-/// Launch defaults (EUR). Overridden by Strapi env via app-feature-config.
+/// Launch defaults (USD). Overridden by Strapi env via app-feature-config.
 const List<PlanInfo> kDefaultFluentDeckPlans = [
   PlanInfo(
     productId: kMonthlyProductId,
     title: 'Monthly',
     periodSuffix: '/ month',
-    fallbackPrice: '€9.99',
+    fallbackPrice: '\$9.99',
     durationMonths: 1,
     dailyMinutes: 240,
     priceAmount: 9.99,
@@ -66,12 +66,12 @@ const List<PlanInfo> kDefaultFluentDeckPlans = [
     productId: kYearlyProductId,
     title: 'Yearly',
     periodSuffix: '/ year',
-    fallbackPrice: '€59.99',
-    badge: 'Save 50%',
+    fallbackPrice: '\$79.99',
+    badge: 'Save 33%',
     durationMonths: 12,
     dailyMinutes: 240,
     trialDays: 7,
-    priceAmount: 59.99,
+    priceAmount: 79.99,
   ),
 ];
 

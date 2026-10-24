@@ -152,7 +152,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
           barrierDismissible: true,
           builder: (_) => const AccountInfoSaveDialog(),
         );
-        AudioService().play('formSubmit');
+        AudioService().play('save');
       }
       return true;
     }

@@ -78,7 +78,7 @@ class _ProfileSecurityTabState extends State<ProfileSecurityTab> {
     setState(() => _saving = false);
 
     if (res['status'] == 'success') {
-      AudioService().play('formSubmit');
+      AudioService().play('save');
 
       passwordCtrl.clear();
       confirmCtrl.clear();
@@ -149,7 +149,7 @@ class _ProfileSecurityTabState extends State<ProfileSecurityTab> {
         ),
       );
     }
-    AudioService().play('formSubmit');
+    AudioService().play('save');
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const AuthScreen()),
       (_) => false,

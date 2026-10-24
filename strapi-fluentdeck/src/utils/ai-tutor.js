@@ -6,6 +6,31 @@ const TUTOR_MODEL = process.env.AI_TUTOR_MODEL || "gpt-4o-mini";
 const TTS_MODEL = process.env.AI_TTS_MODEL || "tts-1";
 const TTS_VOICE = process.env.AI_TTS_VOICE || "nova";
 const WHISPER_MODEL = process.env.AI_WHISPER_MODEL || "whisper-1";
+const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
+
+/**
+ * Speech-to-text provider. Groq's Whisper (whisper-large-v3-turbo, ~$0.04 per
+ * audio hour vs $0.36 for OpenAI whisper-1) is used whenever GROQ_API_KEY is
+ * set; AI_STT_PROVIDER=openai forces OpenAI. Both speak the OpenAI API and
+ * return verbose_json segments + duration, which hallucination checks and
+ * practice-time metering rely on. See docs/subscription-and-ai-costs.md.
+ */
+function resolveSttConfig(env = process.env) {
+  const forced = String(env.AI_STT_PROVIDER ?? "").trim().toLowerCase();
+  if (forced !== "openai" && env.GROQ_API_KEY) {
+    return {
+      provider: "groq",
+      apiKey: env.GROQ_API_KEY,
+      baseURL: GROQ_BASE_URL,
+      model: env.AI_GROQ_WHISPER_MODEL || "whisper-large-v3-turbo",
+    };
+  }
+  return {
+    provider: "openai",
+    apiKey: env.OPENAI_API_KEY,
+    model: env.AI_WHISPER_MODEL || WHISPER_MODEL,
+  };
+}
 
 /** OpenAI TTS voices selectable in Settings > AI tutor voice. */
 const TUTOR_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"];
@@ -30,6 +55,8 @@ const LANGUAGE_LABELS = {
   ko: "Korean",
   tr: "Turkish",
   uk: "Ukrainian",
+  vi: "Vietnamese",
+  id: "Indonesian",
   none: "None",
 };
 
@@ -480,16 +507,38 @@ function looksLikeWhisperHallucination(text, segments = []) {
   return false;
 }
 
-async function transcribeAudio(filePath, originalName, language = 'en') {
-  const { whisperLanguageCode } = require('./practice-languages');
-  const openai = getOpenAIClient();
+async function requestTranscription(config, filePath, originalName, language) {
+  if (!config.apiKey) {
+    throw new Error(`${config.provider} speech-to-text is not configured`);
+  }
+  const client = new OpenAI({
+    apiKey: config.apiKey,
+    ...(config.baseURL ? { baseURL: config.baseURL } : {}),
+  });
+  // A fresh stream per attempt: a failed request may have consumed the last one.
   const file = await toFile(fs.createReadStream(filePath), originalName || "audio.m4a");
-  const result = await openai.audio.transcriptions.create({
-    model: WHISPER_MODEL,
+  return client.audio.transcriptions.create({
+    model: config.model,
     file,
-    language: whisperLanguageCode(language),
+    language,
     response_format: 'verbose_json',
   });
+}
+
+async function transcribeAudio(filePath, originalName, language = 'en') {
+  const { whisperLanguageCode } = require('./practice-languages');
+  const whisperLanguage = whisperLanguageCode(language);
+  const config = resolveSttConfig();
+  let result;
+  try {
+    result = await requestTranscription(config, filePath, originalName, whisperLanguage);
+  } catch (err) {
+    // Groq outage / rate limit: don't fail the user's turn — fall back to OpenAI.
+    const fallback = resolveSttConfig({ ...process.env, AI_STT_PROVIDER: 'openai' });
+    if (config.provider !== 'groq' || !fallback.apiKey) throw err;
+    console.warn(`[ai.transcribe] Groq failed (${err?.status ?? ''} ${err?.message ?? err}); using OpenAI`);
+    result = await requestTranscription(fallback, filePath, originalName, whisperLanguage);
+  }
 
   const segments = Array.isArray(result.segments) ? result.segments : [];
   const segmentText = segments
@@ -692,20 +741,95 @@ async function translateWithGlossary({ text, targetLanguage, word }) {
   };
 }
 
-async function synthesizeSpeech(text, voicePreference) {
-  const voice = resolveTutorVoice(voicePreference);
+/**
+ * Kokoro-82M (open-weight TTS, ~$0.6–1 per 1M characters hosted, vs $15 for
+ * OpenAI tts-1) speaks only these languages. Value = Kokoro's voice prefix.
+ * Every other language — and any Kokoro error — uses OpenAI tts-1.
+ * See docs/subscription-and-ai-costs.md.
+ */
+const KOKORO_LANGUAGES = { en: "a", es: "e", fr: "f", it: "i", pt: "p", ja: "j", zh: "z", hi: "h" };
+
+/** Kokoro voice per language prefix and gender (French has a female voice only). */
+const KOKORO_VOICES = {
+  a: { f: "af_heart", m: "am_michael" },
+  e: { f: "ef_dora", m: "em_alex" },
+  f: { f: "ff_siwis", m: "ff_siwis" },
+  i: { f: "if_sara", m: "im_nicola" },
+  p: { f: "pf_dora", m: "pm_alex" },
+  j: { f: "jf_alpha", m: "jm_kumo" },
+  z: { f: "zf_xiaobei", m: "zm_yunjian" },
+  h: { f: "hf_alpha", m: "hm_omega" },
+};
+
+/** The user's tutor voice (OpenAI names) → male/female for Kokoro. */
+const MALE_TUTOR_VOICES = new Set(["onyx", "echo", "fable"]);
+
+/**
+ * Which TTS service speaks [language]. Kokoro when TTS_PROVIDER=kokoro,
+ * KOKORO_BASE_URL is set (any OpenAI-compatible /audio/speech server, e.g.
+ * self-hosted Kokoro-FastAPI or a hosted Kokoro) and Kokoro has the language.
+ */
+function resolveTtsRoute({ language = "en", voicePreference, env = process.env } = {}) {
+  const openaiRoute = {
+    provider: "openai",
+    model: env.AI_TTS_MODEL || TTS_MODEL,
+    voice: resolveTutorVoice(voicePreference),
+  };
+  const prefix = KOKORO_LANGUAGES[String(language || "en").trim().toLowerCase()];
+  if (
+    String(env.TTS_PROVIDER ?? "").trim().toLowerCase() !== "kokoro" ||
+    !env.KOKORO_BASE_URL ||
+    !prefix
+  ) {
+    return openaiRoute;
+  }
+  const gender = MALE_TUTOR_VOICES.has(resolveTutorVoice(voicePreference)) ? "m" : "f";
+  return {
+    provider: "kokoro",
+    baseURL: env.KOKORO_BASE_URL,
+    apiKey: env.KOKORO_API_KEY || "not-needed",
+    model: env.KOKORO_MODEL || "kokoro",
+    voice: KOKORO_VOICES[prefix][gender],
+    fallback: openaiRoute,
+  };
+}
+
+async function requestSpeech(route, text) {
+  const client =
+    route.provider === "kokoro"
+      ? new OpenAI({ apiKey: route.apiKey, baseURL: route.baseURL })
+      : getOpenAIClient();
+  const response = await client.audio.speech.create({
+    model: route.model,
+    voice: route.voice,
+    input: text,
+    response_format: "mp3",
+  });
+  return Buffer.from(await response.arrayBuffer());
+}
+
+/** MP3 of [text] in the tutor's reply [language], cached per text + voice + model. */
+async function synthesizeSpeech(text, voicePreference, language = "en") {
   const { readCachedAudio, writeCachedAudio } = require('./tts-cache');
-  const cached = readCachedAudio(text, voice, TTS_MODEL);
+  let route = resolveTtsRoute({ language, voicePreference });
+  // Kokoro entries are cached under their own model name; OpenAI keeps the
+  // historical key (model + voice), so existing cached audio stays valid.
+  const cacheModel = (r) => (r.provider === "kokoro" ? `kokoro:${r.model}` : r.model);
+  const cached = readCachedAudio(text, route.voice, cacheModel(route));
   if (cached) return cached;
 
-  const openai = getOpenAIClient();
-  const response = await openai.audio.speech.create({
-    model: TTS_MODEL,
-    voice,
-    input: text,
-  });
-  const buffer = Buffer.from(await response.arrayBuffer());
-  writeCachedAudio(text, voice, TTS_MODEL, buffer);
+  let buffer;
+  try {
+    buffer = await requestSpeech(route, text);
+  } catch (err) {
+    if (!route.fallback) throw err;
+    console.warn(`[ai.tts] Kokoro failed (${err?.status ?? ""} ${err?.message ?? err}); using OpenAI`);
+    route = route.fallback;
+    const fallbackCached = readCachedAudio(text, route.voice, cacheModel(route));
+    if (fallbackCached) return fallbackCached;
+    buffer = await requestSpeech(route, text);
+  }
+  writeCachedAudio(text, route.voice, cacheModel(route), buffer);
   return buffer;
 }
 
@@ -850,6 +974,9 @@ Evaluate the learner's spoken English in this session.`;
 }
 
 module.exports = {
+  resolveTtsRoute,
+  KOKORO_LANGUAGES,
+  resolveSttConfig,
   transcribeAudio,
   looksLikeWhisperHallucination,
   getTutorReply,

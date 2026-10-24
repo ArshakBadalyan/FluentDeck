@@ -17,6 +17,7 @@ const {
   HARD_DEFAULT_PREMIUM_DAILY_MINUTES,
 } = require('./daily-conversation-limits');
 const { getSubscriptionPlans } = require('./subscription-plans');
+const { getAdConfig } = require('./ad-regions');
 
 const _envScheduling = getEnvSchedulingDefaults();
 
@@ -33,6 +34,7 @@ const DEFAULT_CONFIG = {
   defaultEasyIntervalDays: _envScheduling.easyIntervalDays,
   hiddenSpeakingTabs: [],
   subscriptionPlans: getSubscriptionPlans(),
+  ads: getAdConfig(),
 };
 
 async function getFeatureConfig(strapi) {
@@ -106,6 +108,8 @@ async function getFeatureConfig(strapi) {
     defaultEasyIntervalDays,
     // Always from env (with recommended defaults) — not stored in CMS.
     subscriptionPlans: getSubscriptionPlans(),
+    // Always from env — ad strategy by region (ad-regions.js).
+    ads: getAdConfig(),
   };
 }
 

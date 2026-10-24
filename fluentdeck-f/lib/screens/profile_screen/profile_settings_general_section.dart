@@ -67,19 +67,21 @@ class _ProfileSettingsGeneralSectionState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSettingsGroup(
-          title: 'App language',
+          title: context.tr('profile.account.app-language-title'),
+          subtitle: context.tr('profile.account.app-language-hint'),
           child: AppSelectField<String>(
             label: context.tr('profile.account.language'),
             value: _selectedLanguage,
             options: [
-              AppSelectOption(
-                value: 'en',
-                label: context.tr('profile.account.language-en'),
-              ),
-              AppSelectOption(
-                value: 'de',
-                label: context.tr('profile.account.language-de'),
-              ),
+              // Native names, so anyone can find their language from any UI
+              // language; only languages that ship a translation are listed.
+              for (final option in AppLocalizations.instance.availableOptions)
+                AppSelectOption(
+                  value: option.code,
+                  label: option.code == 'en'
+                      ? option.nativeName
+                      : '${option.nativeName}  ·  ${option.englishName}',
+                ),
             ],
             onChanged: _changeLanguage,
           ),

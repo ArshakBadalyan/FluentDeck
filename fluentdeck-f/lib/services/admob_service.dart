@@ -38,12 +38,26 @@ class AdIds {
       defaultTargetPlatform == TargetPlatform.iOS
           ? interstitialIdIos
           : interstitialId;
+
+  /// Separate unit for the conversation-start ad, so AdMob reports its
+  /// earnings on their own. Falls back to the shared interstitial unit.
+  static String get conversationStartInterstitial {
+    final key = defaultTargetPlatform == TargetPlatform.iOS
+        ? 'ADMOB_CONVERSATION_INTERSTITIAL_ID_IOS'
+        : 'ADMOB_CONVERSATION_INTERSTITIAL_ID_ANDROID';
+    final value = dotenv.env[key];
+    return value == null || value.isEmpty ? interstitial : value;
+  }
 }
 
 const _maxRetryDelay = Duration(minutes: 2);
 const _initialRetryDelay = Duration(seconds: 10);
 
 class InterstitialAdManager {
+  InterstitialAdManager({String Function()? adUnitId})
+    : _adUnitId = adUnitId ?? (() => AdIds.interstitial);
+
+  final String Function() _adUnitId;
   InterstitialAd? _ad;
   bool _isLoaded = false;
   int _retryAttempt = 0;
@@ -58,7 +72,7 @@ class InterstitialAdManager {
       return;
     }
     InterstitialAd.load(
-      adUnitId: AdIds.interstitial,
+      adUnitId: _adUnitId(),
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -110,8 +124,11 @@ class InterstitialAdManager {
             existing?.onAdDismissedFullScreenContent?.call(ad);
             onDismissed();
           },
-          onAdFailedToShowFullScreenContent:
-              existing?.onAdFailedToShowFullScreenContent,
+          // Whoever waits for the ad to finish must hear about failures too.
+          onAdFailedToShowFullScreenContent: (ad, error) {
+            existing?.onAdFailedToShowFullScreenContent?.call(ad, error);
+            onDismissed();
+          },
         );
       }
       _ad!.show();

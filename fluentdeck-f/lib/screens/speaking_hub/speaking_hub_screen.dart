@@ -14,6 +14,7 @@ import 'speaking_notes_tab.dart';
 import 'speaking_practice_tab.dart';
 import 'speaking_role_play_tab.dart';
 import 'speaking_topics_tab.dart';
+import 'package:fluentdeck/services/conversation_start_ad.dart';
 
 /// Same purple as [MainAppBar] background.
 const Color _speakSessionBarColor = AppColors.brandPrimaryDeep;
@@ -49,9 +50,27 @@ class SpeakingHubScreen extends StatefulWidget {
 class SpeakingHubScreenState extends State<SpeakingHubScreen> {
   bool _inSession = false;
 
+  /// True while a start is waiting on the conversation-start ad, so a second
+  /// tap can't start twice.
+  bool _starting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Free users outside high-value ad countries: have the ad ready for "Start".
+    ConversationStartAd.instance.preload();
+  }
+
   /// Archives the active chat (if any), starts a fresh free conversation, and opens it.
   Future<void> startNewFreeChat() async {
-    await ConversationService.instance.archiveAndStartNew();
+    if (_starting) return;
+    _starting = true;
+    try {
+      await ConversationService.instance.archiveAndStartNew();
+      await ConversationStartAd.instance.showIfNeeded();
+    } finally {
+      _starting = false;
+    }
     if (!mounted) return;
     ConversationService.instance.startSession(SpeakingSessionContext.freeChat());
     if (widget.tabController.index != 0) {
@@ -61,7 +80,17 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
     widget.onSessionActiveChanged?.call(true);
   }
 
-  void _startSession(SpeakingSessionContext context) {
+  Future<void> _startSession(SpeakingSessionContext context) async {
+    if (_starting) return;
+    _starting = true;
+    try {
+      // The ad finishes before the session opens, so the tutor's greeting
+      // doesn't play behind it.
+      await ConversationStartAd.instance.showIfNeeded();
+    } finally {
+      _starting = false;
+    }
+    if (!mounted) return;
     ConversationService.instance.startSession(context);
     setState(() => _inSession = true);
     widget.onSessionActiveChanged?.call(true);

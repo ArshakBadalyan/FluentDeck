@@ -131,7 +131,7 @@
     },
     "practice_language": {
       "type": "enumeration",
-      "enum": ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ru", "hi"],
+      "enum": ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ru", "hi", "tr", "ko", "ar", "vi", "id", "hy"],
       "default": "en"
     },
     "sync_learning_language": {
@@ -152,12 +152,12 @@
     },
     "response_language": {
       "type": "enumeration",
-      "enum": ["en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"],
+      "enum": ["en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru", "tr", "ko", "ar", "vi", "id", "hy"],
       "default": "en"
     },
     "translation_language": {
       "type": "enumeration",
-      "enum": ["none", "en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru", "ar", "hy", "ko", "tr", "uk"],
+      "enum": ["none", "en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru", "ar", "hy", "ko", "tr", "uk", "vi", "id"],
       "default": "none"
     },
     "show_translations": {

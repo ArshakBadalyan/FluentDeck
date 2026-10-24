@@ -105,53 +105,53 @@
     "skip": "Skip",
     "next": "Next",
     "get-started": "Get started",
-    "welcome": {
-      "title": "Welcome to FluentDeck!",
-      "description": "Talk with an AI tutor, review smart flashcards and track your progress – all in one app.",
-      "bullet-1": "Thousands of exercises for grades 1 to 12",
-      "bullet-2": "Top lists and duels with your classmates",
-      "bullet-3": "Solutions and explanations for every exercise"
-    },
-    "school": {
-      "title": "Find your school",
-      "description": "Add your school so we can suggest classmates later and you'll appear in your school's leaderboard.",
-      "placeholder": "Your school's name",
-      "hint": "Optional. You can change the school later in your profile.",
-      "confirmation": "We'll automatically link your account to \"{school}\" after sign-up.",
-      "save-failed": "We couldn't automatically save your school. You can add it later in your profile."
-    },
-    "class": {
-      "title": "Which grade are you in?",
-      "description": "We'll show you exercises that match your level right from the start.",
-      "hint": "Optional. You can change your class anytime in your profile.",
-      "grade-format": "Grade {n}"
-    },
-    "themes": {
-      "title": "Try out a topic",
-      "description": "Tap a topic and solve {n} quick exercises.",
-      "pick-class": "Pick your grade first.",
-      "loading": "Loading topics…",
-      "empty": "There are no topics available for your grade yet.",
-      "error": "Topics couldn't be loaded. Please try again later."
-    },
-    "exercise": {
-      "progress": "Exercise {current} of {total}",
-      "submit": "Check",
-      "next": "Next",
-      "loading": "Loading exercise…",
-      "no-questions": "There are no exercises for this topic yet.",
-      "load-error": "Couldn't load the exercise.",
-      "feedback-correct": "Correct!",
-      "feedback-wrong": "Almost — the correct answer is highlighted.",
-      "complete-title": "Great job!",
-      "complete-description": "Sign up free to save your progress and keep practicing together with your friends.",
-      "register-cta": "Sign up now"
-    },
-    "apply-dialog": {
-      "title": "Apply your onboarding info?",
-      "description": "We noticed your profile is still missing a few details. Want to use what you entered during onboarding?",
-      "apply": "Apply",
-      "skip": "No, thanks"
+    "language": "App language",
+    "pages": {
+      "speak": {
+        "title": "Speak with an AI tutor",
+        "body": "Talk out loud or type. Your tutor answers in a natural voice, gently corrects your mistakes and remembers what you talk about.",
+        "chips": {
+          "voice-or-text": "Voice or text",
+          "gentle-corrections": "Gentle corrections",
+          "remembers-you": "Remembers you"
+        }
+      },
+      "practice": {
+        "title": "Practice what you need",
+        "body": "Pick a topic, act out real situations like a job interview or a trip, play speaking games, or create your own role-play.",
+        "chips": {
+          "topics": "Topics",
+          "role-plays": "Role-plays",
+          "games": "Speaking games",
+          "languages": "16 languages"
+        }
+      },
+      "flashcards": {
+        "title": "Your mistakes become flashcards",
+        "body": "Corrections and new words can be saved to your notes automatically. Review them in decks that bring each card back right before you'd forget it, or import your Anki decks.",
+        "chips": {
+          "auto-saved": "Saved for you",
+          "spaced-repetition": "Smart reviews",
+          "anki-import": "Anki import"
+        }
+      },
+      "progress": {
+        "title": "See your progress",
+        "body": "Set a daily goal, keep your streak going and watch your level (A1–C2) grow in every language you practice.",
+        "chips": {
+          "daily-goal": "Daily goal",
+          "streak": "Streak",
+          "cefr-level": "Your level"
+        }
+      },
+      "plan": {
+        "title": "Start for free",
+        "body": "Everything you need to start is free. Upgrade any time for more conversation.",
+        "free-title": "Free",
+        "free-body": "{time} of AI conversation a day, plus flashcards and decks.",
+        "premium-title": "Premium",
+        "premium-body": "Up to {time} of AI conversation a day, no ads, and all speaking content."
+      }
     }
   },
   "login-register": {
@@ -912,6 +912,8 @@
       "delete-account": "Delete account",
       "delete-error": "Error while deleting",
       "language": "Language",
+      "app-language-title": "App language",
+      "app-language-hint": "Menus and buttons. The language you practise is set in AI speaking settings.",
       "language-de": "German",
       "language-en": "English"
     },

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluentdeck/clarity_user_sync.dart'
     if (dart.library.html) 'package:fluentdeck/clarity_user_sync_stub.dart';
 import 'package:fluentdeck/english_main_screen.dart';
+import 'package:fluentdeck/screens/auth/auth_screen.dart';
 import 'package:fluentdeck/screens/onboarding/english_onboarding_screen.dart';
 import 'package:fluentdeck/services/analytics_service.dart';
 import 'package:fluentdeck/services/auth_service.dart';
@@ -17,6 +18,7 @@ import 'package:fluentdeck/services/token_storage.dart';
 import 'package:fluentdeck/services/mobile_app_update_gate.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/utils/web_entry.dart';
 import 'package:fluentdeck/widgets/mobile_force_update_screen.dart';
 import 'package:fluentdeck/widgets/mobile_soft_update_host.dart';
 
@@ -69,9 +71,7 @@ class _AppStartState extends State<AppStart> {
       final valid = await AuthService.validateStoredSession();
       if (!valid) {
         await AuthService.logout();
-        final prefs = await SharedPreferences.getInstance();
-        final seen = prefs.getBool(kEnglishOnboardingSeenPrefsKey) ?? false;
-        next = seen ? const EnglishOnboardingScreen(startAtAuth: true) : const EnglishOnboardingScreen();
+        next = await _signedOutScreen();
         _go(softOffer == null ? next : MobileSoftUpdateHost(offer: softOffer, child: next));
         return;
       }
@@ -85,9 +85,7 @@ class _AppStartState extends State<AppStart> {
       await _initPushNotifications();
       next = const EnglishMainScreen();
     } else {
-      final prefs = await SharedPreferences.getInstance();
-      final seen = prefs.getBool(kEnglishOnboardingSeenPrefsKey) ?? false;
-      next = seen ? const EnglishOnboardingScreen(startAtAuth: true) : const EnglishOnboardingScreen();
+      next = await _signedOutScreen();
     }
 
     Widget wrapOffer(Widget w) {
@@ -96,6 +94,23 @@ class _AppStartState extends State<AppStart> {
     }
 
     _go(wrapOffer(next));
+  }
+
+  /// Signed-out start: the intro the first time on mobile, else sign-in.
+  /// On web the landing page already introduced the app, so it goes straight
+  /// to sign-up / sign-in (`/app/?auth=signup|signin`, default sign-in).
+  Future<Widget> _signedOutScreen() async {
+    if (WebEntry.skipsIntro) {
+      return EnglishOnboardingScreen(
+        startAtAuth: true,
+        authMode: WebEntry.authModeFromUrl() ?? AuthMode.login,
+      );
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final seen = prefs.getBool(kEnglishOnboardingSeenPrefsKey) ?? false;
+    return seen
+        ? const EnglishOnboardingScreen(startAtAuth: true)
+        : const EnglishOnboardingScreen();
   }
 
   Future<void> _initPushNotifications() async {

@@ -1989,7 +1989,24 @@ export interface PluginUsersPermissionsUser
         minLength: 6;
       }>;
     practice_language: Schema.Attribute.Enumeration<
-      ['en', 'es', 'fr', 'de', 'it', 'pt', 'zh', 'ja', 'ru', 'hi']
+      [
+        'en',
+        'es',
+        'fr',
+        'de',
+        'it',
+        'pt',
+        'zh',
+        'ja',
+        'ru',
+        'hi',
+        'tr',
+        'ko',
+        'ar',
+        'vi',
+        'id',
+        'hy',
+      ]
     > &
       Schema.Attribute.DefaultTo<'en'>;
     provider: Schema.Attribute.String;
@@ -1998,7 +2015,24 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.DefaultTo<false>;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
     response_language: Schema.Attribute.Enumeration<
-      ['en', 'es', 'fr', 'de', 'it', 'hi', 'pt', 'zh', 'ja', 'ru']
+      [
+        'en',
+        'es',
+        'fr',
+        'de',
+        'it',
+        'hi',
+        'pt',
+        'zh',
+        'ja',
+        'ru',
+        'tr',
+        'ko',
+        'ar',
+        'vi',
+        'id',
+        'hy',
+      ]
     > &
       Schema.Attribute.DefaultTo<'en'>;
     role: Schema.Attribute.Relation<
@@ -2039,6 +2073,8 @@ export interface PluginUsersPermissionsUser
         'ko',
         'tr',
         'uk',
+        'vi',
+        'id',
       ]
     > &
       Schema.Attribute.DefaultTo<'none'>;

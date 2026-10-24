@@ -356,6 +356,8 @@ class DualArcProgressRing extends StatelessWidget {
     this.strokeWidth = 5,
     this.trackColor,
     this.center,
+    this.animationDuration = AppMotion.slow,
+    this.animationCurve = AppMotion.standardCurve,
   });
 
   /// 0..1 — where the target/goal marker sits on the ring.
@@ -370,28 +372,83 @@ class DualArcProgressRing extends StatelessWidget {
   final Color? trackColor;
   final Widget? center;
 
+  /// How the arcs (and their colors) sweep to new values. The ring fills in
+  /// from empty when it first appears; later changes sweep from where the
+  /// arcs currently are, so rapid updates (dragging) stay continuous.
+  final Duration animationDuration;
+  final Curve animationCurve;
+
   @override
   Widget build(BuildContext context) {
+    final end = _RingValues(
+      target: targetFraction,
+      progress: progressFraction,
+      targetColor: targetColor,
+      progressColor: progressColor,
+    );
     return SizedBox(
       width: size,
       height: size,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          CustomPaint(
-            size: Size.square(size),
-            painter: _DualArcPainter(
-              targetFraction: targetFraction,
-              progressFraction: progressFraction,
-              targetColor: targetColor,
-              progressColor: progressColor,
-              strokeWidth: strokeWidth,
-              trackColor: trackColor ?? AppPageColors.subtleBorderOf(context),
+          TweenAnimationBuilder<_RingValues>(
+            tween: _RingTween(
+              begin: _RingValues(
+                target: 0,
+                progress: 0,
+                targetColor: targetColor,
+                progressColor: progressColor,
+              ),
+              end: end,
+            ),
+            duration: AppMotion.duration(context, animationDuration),
+            curve: animationCurve,
+            builder: (context, v, _) => CustomPaint(
+              size: Size.square(size),
+              painter: _DualArcPainter(
+                targetFraction: v.target,
+                progressFraction: v.progress,
+                targetColor: v.targetColor,
+                progressColor: v.progressColor,
+                strokeWidth: strokeWidth,
+                trackColor: trackColor ?? AppPageColors.subtleBorderOf(context),
+              ),
             ),
           ),
           if (center != null) center!,
         ],
       ),
+    );
+  }
+}
+
+class _RingValues {
+  const _RingValues({
+    required this.target,
+    required this.progress,
+    required this.targetColor,
+    required this.progressColor,
+  });
+
+  final double target;
+  final double progress;
+  final Color targetColor;
+  final Color progressColor;
+}
+
+class _RingTween extends Tween<_RingValues> {
+  _RingTween({super.begin, super.end});
+
+  @override
+  _RingValues lerp(double t) {
+    final a = begin!;
+    final b = end!;
+    return _RingValues(
+      target: a.target + (b.target - a.target) * t,
+      progress: a.progress + (b.progress - a.progress) * t,
+      targetColor: Color.lerp(a.targetColor, b.targetColor, t)!,
+      progressColor: Color.lerp(a.progressColor, b.progressColor, t)!,
     );
   }
 }

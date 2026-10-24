@@ -58,10 +58,10 @@ void main() {
       ]);
       expect(kDefaultSubscriptionProductIds, isNot(contains(kLegacyQuarterlyProductId)));
       final yearly = kDefaultFluentDeckPlans.last;
-      expect(yearly.fallbackPrice, '€59.99');
+      expect(yearly.fallbackPrice, '\$79.99');
       expect(yearly.trialDays, 7);
-      expect(yearly.badge, 'Save 50%');
-      expect(kDefaultFluentDeckPlans.first.fallbackPrice, '€9.99');
+      expect(yearly.badge, 'Save 33%');
+      expect(kDefaultFluentDeckPlans.first.fallbackPrice, '\$9.99');
       expect(kDefaultFluentDeckPlans.every((p) => p.dailyMinutes == 240), isTrue);
     });
 
@@ -80,7 +80,7 @@ void main() {
             'productId': kYearlyProductId,
             'title': 'Yearly',
             'durationMonths': 12,
-            'fallbackPrice': '€59.99',
+            'fallbackPrice': '\$79.99',
             'dailyMinutes': 360,
             'trialDays': 7,
           },
@@ -211,9 +211,9 @@ void main() {
       expect(find.text('Quarterly'), findsNothing);
       expect(find.byType(Slider), findsNothing);
       expect(find.text('Daily conversations'), findsNothing);
-      expect(find.text('€9.99 / month'), findsOneWidget);
-      expect(find.text('€59.99 / year'), findsOneWidget);
-      expect(find.text('≈ €5.00 / month'), findsOneWidget);
+      expect(find.text('\$9.99 / month'), findsOneWidget);
+      expect(find.text('\$79.99 / year'), findsOneWidget);
+      expect(find.text('≈ \$6.67 / month'), findsOneWidget);
       expect(find.text('7-day free trial for new subscribers'), findsOneWidget);
       expect(
         find.text('Up to 4 h of AI conversation a day'),

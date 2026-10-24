@@ -778,9 +778,12 @@ module.exports = (plugin) => {
     };
   };
 
-  const SPEAKING_RESPONSE_LANGS = ["en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru"];
-  const SPEAKING_TRANSLATION_LANGS = ["none", "en", "es", "fr", "de", "it", "hi", "pt", "zh", "ja", "ru", "ar", "hy", "ko", "tr", "uk"];
-  const PRACTICE_LANGUAGE_CODES = ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ru", "hi"];
+  // One list for the app, tutor and validation (src/utils/practice-languages.js).
+  const {
+    PRACTICE_LANGUAGE_CODES,
+    RESPONSE_LANGUAGE_CODES: SPEAKING_RESPONSE_LANGS,
+    TRANSLATION_LANGUAGE_CODES: SPEAKING_TRANSLATION_LANGS,
+  } = require("../../utils/practice-languages");
   const TUTOR_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"];
   const FREE_TUTOR_VOICES = ["nova", "onyx"];
   const ENGLISH_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];

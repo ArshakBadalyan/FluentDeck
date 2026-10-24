@@ -216,9 +216,13 @@ Strapi · Firebase Analytics · OneSignal (mobile) · AdMob + UMP · Microsoft C
 
 **app-feature-config defaults:** 20 saved words, 3 decks, 10 new cards/day, 10 preview words, 1 placement retake/month, 5 min/day AI practice time (premium: plan's daily time, default 4 h), B2/C1/C2 premium-only
 
-**Subscriptions:** Monthly €9.99 and Yearly €59.99 (7-day trial); Quarterly is legacy-only. AI usage is metered as practice time, not turns. Plans, time metering and the AI cost per hour are in `docs/subscription-and-ai-costs.md`. Pricing strategy, landing-page review, SEO and launch campaign: `docs/business-and-marketing-plan.md`.
+**Subscriptions:** Monthly $9.99 and Yearly $79.99 (7-day trial); Quarterly is legacy-only. AI usage is metered as practice time, not turns. Plans, time metering and the AI cost per hour are in `docs/subscription-and-ai-costs.md`. Pricing strategy, landing-page review, SEO and launch campaign: `docs/business-and-marketing-plan.md`. Ads by region, Groq speech-to-text, Kokoro voice, and TTS prices / self-hosting options: `docs/ads-and-ai-cost-switches.md`.
+
+**Marketing site:** `fluentdeck-landing/` is a static Vite site, run separately (`npm run dev`), with real app screenshots in `public/media/`. It replaces the old single-file `landing/index.html`.
 
 **UI:** Material 2 theme (`useMaterial3: false`) and Material motion. Phases and rules are in `docs/motion-and-material-plan.md`.
+
+**App languages:** 11 interface languages (Armenian planned later) (Settings → General), strings in `fluentdeck-f/assets/locales/`, translated with `strapi-fluentdeck/scripts/translate-app-locales.js` (local Qwen or OpenAI). See `docs/app-languages.md`.
 
 **flashcard-deck:** name, hierarchy (`parentDeck`), filtered decks, deck options JSON
 

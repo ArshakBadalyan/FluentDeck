@@ -8,6 +8,7 @@ AI-powered English learning — Flutter app + Strapi 5 API.
 |------|------|
 | `fluentdeck-f/` | Flutter app (iOS, Android, Web) |
 | `strapi-fluentdeck/` | Strapi 5.49 backend, Node 20 |
+| `fluentdeck-landing/` | Marketing site (Vite, static); see its README |
 
 Full architecture: `PROJECT.md`. Agent skills: `docs/AGENT-SKILLS.md`.
 

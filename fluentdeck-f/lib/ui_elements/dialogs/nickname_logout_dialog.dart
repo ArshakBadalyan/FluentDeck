@@ -73,7 +73,7 @@ class _NicknameLogoutDialogState extends State<NicknameLogoutDialog> {
     setState(() => _busy = false);
 
     if (res['status'] == 'success') {
-      AudioService().play('formSubmit');
+      AudioService().play('save');
       if (!mounted) return;
       Navigator.of(context).pop(true);
       return;
@@ -117,7 +117,7 @@ class _NicknameLogoutDialogState extends State<NicknameLogoutDialog> {
     }
     await AuthService.logout();
     if (!mounted) return;
-    AudioService().play('formSubmit');
+    AudioService().play('save');
     Navigator.of(context).pop('deleted');
   }
 

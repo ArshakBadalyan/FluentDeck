@@ -17,7 +17,10 @@
     "test:browse-filter": "node --test tests/flashcard-browse-filter.test.js",
     "test:apkg-import": "node --test tests/flashcard-apkg-import.test.js",
     "test:daily-reminder": "node --test tests/daily-reminder.test.js",
-    "test": "yarn test:apkg && yarn test:queue && yarn test:speaking-premium && yarn test:ai-rate-limit && yarn test:language-levels && yarn test:flashcard-import && yarn test:browse-filter && yarn test:apkg-import && yarn test:daily-reminder",
+    "test:app-locales": "node --test tests/translate-app-locales.test.js tests/speaking-languages.test.js",
+    "test:ads-stt": "node --test tests/ads-and-stt.test.js tests/tts-provider.test.js",
+    "translate:app-locales": "node scripts/translate-app-locales.js",
+    "test": "yarn test:apkg && yarn test:queue && yarn test:speaking-premium && yarn test:ai-rate-limit && yarn test:language-levels && yarn test:flashcard-import && yarn test:browse-filter && yarn test:apkg-import && yarn test:daily-reminder && yarn test:app-locales && yarn test:ads-stt",
     "test:language-levels": "node --test tests/language-level-analytics.test.js tests/speaking-proficiency-assessment.test.js"
   },
   "dependencies": {

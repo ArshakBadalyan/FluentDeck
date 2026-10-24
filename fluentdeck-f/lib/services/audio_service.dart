@@ -26,7 +26,8 @@ class AudioService {
     'win': 'audios/win.wav',
     'wrong': 'audios/wrong.wav',
     'tabChange': 'audios/nav_tap.wav',
-    'formSubmit': 'audios/formSubmit.wav',
+    // Save buttons: soft G5→C6 chime, same family as signIn / settingsPreview.
+    'save': 'audios/save.wav',
     'signIn': 'audios/sign_in.wav',
     'settingsPreview': 'audios/settings_preview.wav',
     'goalUpdate': 'audios/goalUpdate.mp3',

@@ -69,10 +69,13 @@ class PrimaryButton extends StatelessWidget {
             ? () {
                 final id = analyticsId;
                 if (id != null && id.isNotEmpty) {
-                  ClickTracker.recordNamedTap();
-                  unawaited(
-                    AnalyticsService.instance.logTap(targetId: id),
-                  );
+                  // Analytics must never stop the button from working.
+                  try {
+                    ClickTracker.recordNamedTap();
+                    unawaited(
+                      AnalyticsService.instance.logTap(targetId: id),
+                    );
+                  } catch (_) {}
                 }
                 onPressed?.call();
               }

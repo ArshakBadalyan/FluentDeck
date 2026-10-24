@@ -1,3 +1,49 @@
+/// Ad strategy by region, from the server (strapi-fluentdeck/src/utils/ad-regions.js).
+/// Outside [highValueCountries], free users see an interstitial when starting
+/// a conversation and never get ad-earned minutes.
+class AdConfig {
+  const AdConfig({
+    this.highValueCountries = defaultHighValueCountries,
+    this.conversationStartAdEnabled = true,
+    this.conversationStartAdCooldownMinutes = 5,
+    this.rewardedMinutesEnabled = false,
+  });
+
+  /// Same defaults as the server, used until the config loads.
+  static const defaultHighValueCountries = {
+    'US', 'CA', 'GB', 'IE', 'AU', 'NZ', 'DE', 'AT', 'CH', 'NL', 'BE', 'LU',
+    'FR', 'IT', 'ES', 'DK', 'SE', 'NO', 'FI', 'IS', 'JP', 'KR', 'SG', 'HK',
+    'IL', 'AE',
+  };
+
+  final Set<String> highValueCountries;
+  final bool conversationStartAdEnabled;
+  final int conversationStartAdCooldownMinutes;
+
+  /// Rewarded "+minutes" ads — not built yet; high-value countries only.
+  final bool rewardedMinutesEnabled;
+
+  bool isHighValue(String? countryCode) =>
+      countryCode != null &&
+      highValueCountries.contains(countryCode.trim().toUpperCase());
+
+  factory AdConfig.fromJson(Object? raw) {
+    if (raw is! Map) return const AdConfig();
+    final start = raw['conversationStartAd'];
+    final rewarded = raw['rewardedMinutes'];
+    final countries = raw['highValueCountries'];
+    final cooldown = start is Map ? (start['cooldownMinutes'] as num?)?.round() : null;
+    return AdConfig(
+      highValueCountries: countries is List
+          ? {for (final c in countries) c.toString().toUpperCase()}
+          : defaultHighValueCountries,
+      conversationStartAdEnabled: start is Map ? start['enabled'] != false : true,
+      conversationStartAdCooldownMinutes: cooldown != null && cooldown > 0 ? cooldown : 5,
+      rewardedMinutesEnabled: rewarded is Map && rewarded['enabled'] == true,
+    );
+  }
+}
+
 class SubscriptionPlanConfig {
   const SubscriptionPlanConfig({
     required this.productId,
@@ -32,7 +78,7 @@ class SubscriptionPlanConfig {
       title: json['title']?.toString() ?? 'Premium',
       durationMonths: months > 0 ? months : 1,
       periodSuffix: json['periodSuffix']?.toString() ?? _suffixFor(months),
-      fallbackPrice: json['fallbackPrice']?.toString() ?? '€0.00',
+      fallbackPrice: json['fallbackPrice']?.toString() ?? '\$0.00',
       badge: json['badge']?.toString(),
       dailyMinutes: daily > 0 ? daily : 240,
       trialDays: trial > 0 ? trial : 0,
@@ -63,6 +109,7 @@ class AppFeatureConfigModel {
   final double defaultEasyIntervalDays;
   final List<String> hiddenSpeakingTabs;
   final List<SubscriptionPlanConfig> subscriptionPlans;
+  final AdConfig ads;
 
   const AppFeatureConfigModel({
     this.freeMaxSavedWords = 20,
@@ -80,6 +127,7 @@ class AppFeatureConfigModel {
     this.defaultEasyIntervalDays = 5,
     this.hiddenSpeakingTabs = const [],
     this.subscriptionPlans = const [],
+    this.ads = const AdConfig(),
   });
 
   factory AppFeatureConfigModel.fromJson(Map<String, dynamic> json) {
@@ -112,6 +160,7 @@ class AppFeatureConfigModel {
           (json['defaultEasyIntervalDays'] as num?)?.toDouble() ?? 5,
       hiddenSpeakingTabs: _parseHiddenTabs(json['hiddenSpeakingTabs']),
       subscriptionPlans: _parsePlans(plans),
+      ads: AdConfig.fromJson(json['ads']),
     );
   }
 
