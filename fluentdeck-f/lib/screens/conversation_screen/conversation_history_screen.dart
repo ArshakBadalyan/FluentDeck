@@ -43,23 +43,22 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
   Future<void> _confirmClearAll() async {
     final ok = await showAppDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Clear all history?'),
-            content: const Text(
-              'This removes every saved conversation from this device.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Clear all'),
-              ),
-            ],
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear all history?'),
+        content: const Text(
+          'This removes every saved conversation from this device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
           ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Clear all'),
+          ),
+        ],
+      ),
     );
     if (ok != true) return;
     await ConversationService.instance.clearAllHistoryAndReset();
@@ -76,22 +75,21 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
   Future<bool> _confirmDeleteSession(ConversationSessionModel session) async {
     final ok = await showAppDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Delete conversation?'),
-            content: const Text('This removes it from your saved history.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Delete'),
-              ),
-            ],
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete conversation?'),
+        content: const Text('This removes it from your saved history.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
           ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
     return ok == true;
   }
@@ -127,29 +125,28 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
             ),
         ],
       ),
-      body:
-          _loading
-              ? const AppListSkeleton(itemHeight: 76)
-              : _sessions.isEmpty
-              ? Center(
-                child: Text(
-                  'No saved conversations yet.\nChat on the Speak tab — history is saved after each exchange.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppPageColors.subtitleOf(context)),
-                ),
-              )
-              : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: _sessions.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final session = _sessions[index];
-                  final date = DateFormat.yMMMd().add_jm().format(
-                    session.startedAt.toLocal(),
-                  );
-                  return AppStaggeredFadeIn(
-                          index: index,
-                          child: Dismissible(
+      body: _loading
+          ? const AppListSkeleton(itemHeight: 76)
+          : _sessions.isEmpty
+          ? Center(
+              child: Text(
+                'No saved conversations yet.\nChat on the Speak tab — history is saved after each exchange.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppPageColors.subtitleOf(context)),
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _sessions.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final session = _sessions[index];
+                final date = DateFormat.yMMMd().add_jm().format(
+                  session.startedAt.toLocal(),
+                );
+                return AppStaggeredFadeIn(
+                  index: index,
+                  child: Dismissible(
                     key: ValueKey('history-${session.id}'),
                     direction: DismissDirection.endToStart,
                     background: SwipeActionBackgrounds.delete(),
@@ -169,9 +166,9 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
                       onTap: () => _continueSession(session),
                     ),
                   ),
-                        );
-                },
-              ),
+                );
+              },
+            ),
     );
   }
 

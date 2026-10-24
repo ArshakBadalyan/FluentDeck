@@ -67,7 +67,8 @@ class _ConversationChatSettingsSheetState
       );
       if (!mounted) return;
       setState(() => _prefs = restored);
-      AppToast.showSnackBar(context, 
+      AppToast.showSnackBar(
+        context,
         SnackBar(
           content: Text(result.errorMessage ?? 'Could not update settings'),
         ),
@@ -122,7 +123,10 @@ class _ConversationChatSettingsSheetState
             const SizedBox(height: 4),
             Text(
               'Applies to this conversation and saves to your account.',
-              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+              style: TextStyle(
+                fontSize: 13,
+                color: AppPageColors.subtitleOf(context),
+              ),
             ),
             const SizedBox(height: 12),
             if (_loading)
@@ -138,9 +142,9 @@ class _ConversationChatSettingsSheetState
                       ValueListenableBuilder<bool>(
                         valueListenable: RioPreferences.instance.showRio,
                         builder: (context, show, _) => AppToggleRow(
-                          title: 'Show Rio',
+                          title: 'Show tutor',
                           subtitle:
-                              'Rio the otter talks with you. Turn off for the plain chat (this device).',
+                              'Your tutor (Rio the otter) talks with you. Turn off for the plain chat (this device).',
                           value: show,
                           enabled: true,
                           onChanged: RioPreferences.instance.setShowRio,
@@ -165,7 +169,8 @@ class _ConversationChatSettingsSheetState
                         title: 'Auto-start recording',
                         subtitle:
                             'Open the mic after the tutor finishes speaking.',
-                        value: _prefs.autoStartRecording ||
+                        value:
+                            _prefs.autoStartRecording ||
                             _prefs.autoConversation,
                         enabled: true,
                         onChanged: (value) {
@@ -185,9 +190,7 @@ class _ConversationChatSettingsSheetState
                         value: _prefs.typeMessagesEnabled,
                         enabled: true,
                         onChanged: (value) {
-                          _save(
-                            _prefs.copyWith(typeMessagesEnabled: value),
-                          );
+                          _save(_prefs.copyWith(typeMessagesEnabled: value));
                         },
                       ),
                     ],

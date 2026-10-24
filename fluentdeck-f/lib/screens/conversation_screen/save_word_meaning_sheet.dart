@@ -25,9 +25,11 @@ class SaveWordMeaningResult {
   });
 
   final String phrase;
+
   /// Short dictionary-style definition (flashcard back).
   final String meaning;
   final String? example;
+
   /// Phrase translated into the user's translation language.
   final String? translation;
   final String? languageCode;
@@ -47,11 +49,10 @@ Future<SaveWordMeaningResult?> showSaveWordMeaningSheet({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder:
-        (ctx) => _SaveWordMeaningSheet(
-          selectedText: selectedText,
-          sourceSentence: sourceSentence,
-        ),
+    builder: (ctx) => _SaveWordMeaningSheet(
+      selectedText: selectedText,
+      sourceSentence: sourceSentence,
+    ),
   );
 }
 
@@ -123,7 +124,9 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
   }
 
   Future<void> _loadPremiumStatus() async {
-    final status = await SubscriptionService.instance.fetchStatus(forceRefresh: true);
+    final status = await SubscriptionService.instance.fetchStatus(
+      forceRefresh: true,
+    );
     if (!mounted) return;
     setState(() {
       _isPremium = status.isPremium;
@@ -159,7 +162,9 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
         _translationController.text = result.translation;
       }
     } else {
-      setState(() => _error = result.message ?? 'Could not generate a meaning.');
+      setState(
+        () => _error = result.message ?? 'Could not generate a meaning.',
+      );
     }
   }
 
@@ -250,10 +255,9 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
         phrase: phrase,
         meaning: _meaningController.text.trim(),
         example: _exampleController.text.trim(),
-        translation:
-            _translationController.text.trim().isEmpty
-                ? null
-                : _translationController.text.trim(),
+        translation: _translationController.text.trim().isEmpty
+            ? null
+            : _translationController.text.trim(),
         languageCode: _languageCode,
         cefrLevel: _cefrLevel,
         topic: _topicController.text.trim(),
@@ -274,7 +278,11 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
     padding: const EdgeInsets.only(bottom: 4),
     child: Text(
       text,
-      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppPageColors.subtitleOf(context)),
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: AppPageColors.subtitleOf(context),
+      ),
     ),
   );
 
@@ -286,7 +294,10 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
     style: const TextStyle(fontSize: 14, height: 1.35),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(fontSize: 14, color: AppPageColors.subtitleOf(context)),
+      hintStyle: TextStyle(
+        fontSize: 14,
+        color: AppPageColors.subtitleOf(context),
+      ),
       isDense: true,
       filled: true,
       fillColor: AppPageColors.fieldBgOf(context),
@@ -318,207 +329,244 @@ class _SaveWordMeaningSheetState extends State<_SaveWordMeaningSheet> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppPageColors.subtleBorderOf(context),
-                    borderRadius: BorderRadius.circular(2),
+                  Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppPageColors.subtleBorderOf(context),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                Text(
-                  'Save to deck',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Saved to your From speaking deck',
-                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Word or phrase',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppPageColors.subtitleOf(context),
+                  Text(
+                    'Save to deck',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                _field(_phraseController, 'e.g. break the ice'),
-                const SizedBox(height: 16),
-                Text(
-                  'Language',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppPageColors.subtitleOf(context),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Saved to your From speaking deck',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppPageColors.subtitleOf(context),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                AppSelectField<String>(
-                  label: 'Word language',
-                  value: _languageCode,
-                  enabled: !_syncLearningLanguage,
-                  options:
-                      SpeakingPreferences.practiceLanguageOptions.entries
-                          .map((e) => AppSelectOption(value: e.key, label: e.value))
-                          .toList(),
-                  onChanged:
-                      _syncLearningLanguage
-                          ? null
-                          : (value) => setState(() => _languageCode = value),
-                ),
-                if (_syncLearningLanguage)
-                  const SyncedLearningLanguageHint(
-                    padding: EdgeInsets.only(top: 4, bottom: 8),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Word or phrase',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppPageColors.subtitleOf(context),
+                    ),
                   ),
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'CEFR level (optional)',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppPageColors.subtitleOf(context),
+                  const SizedBox(height: 4),
+                  _field(_phraseController, 'e.g. break the ice'),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Language',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppPageColors.subtitleOf(context),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  AppSelectField<String>(
+                    label: 'Word language',
+                    value: _languageCode,
+                    enabled: !_syncLearningLanguage,
+                    options: SpeakingPreferences.practiceLanguageOptions.entries
+                        .map(
+                          (e) => AppSelectOption(value: e.key, label: e.value),
+                        )
+                        .toList(),
+                    onChanged: _syncLearningLanguage
+                        ? null
+                        : (value) => setState(() => _languageCode = value),
+                  ),
+                  if (_syncLearningLanguage)
+                    const SyncedLearningLanguageHint(
+                      padding: EdgeInsets.only(top: 4, bottom: 8),
+                    ),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'CEFR level (optional)',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppPageColors.subtitleOf(context),
+                          ),
                         ),
                       ),
-                    ),
-                    if (!_checkingPremium)
-                      TextButton.icon(
-                        onPressed:
-                            _detectingLevel
-                                ? null
-                                : (_isPremium
+                      if (!_checkingPremium)
+                        TextButton.icon(
+                          onPressed: _detectingLevel
+                              ? null
+                              : (_isPremium
                                     ? _detectCefrWithAi
-                                    : () => showSpeakingPremiumSnackBar(context)),
-                        icon:
-                            _detectingLevel
-                                ? const SizedBox(
+                                    : () =>
+                                          showSpeakingPremiumSnackBar(context)),
+                          icon: _detectingLevel
+                              ? const SizedBox(
                                   width: 14,
                                   height: 14,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
-                                : Icon(
+                              : Icon(
                                   _isPremium
                                       ? Icons.auto_awesome_rounded
                                       : Icons.lock_outline_rounded,
                                   size: 16,
                                 ),
-                        label: Text(
-                          _detectingLevel
-                              ? 'Analyzing…'
-                              : (_isPremium ? 'Detect with AI' : 'Premium'),
+                          label: Text(
+                            _detectingLevel
+                                ? 'Analyzing…'
+                                : (_isPremium ? 'Detect with AI' : 'Premium'),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.brandPrimary,
+                            visualDensity: VisualDensity.compact,
+                          ),
                         ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.brandPrimary,
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                CefrLevelChips(
-                  selectedLevel: _cefrLevel,
-                  allowDeselect: true,
-                  onLevelSelected: (level) => setState(() => _cefrLevel = level),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Topic (optional)',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppPageColors.subtitleOf(context),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                _field(_topicController, 'e.g. Travel, Business'),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(child: _label('Meaning')),
-                    if (!_checkingPremium && _isPremium)
-                      TextButton.icon(
-                        onPressed: _generating ? null : _generateWithAi,
-                        icon:
-                            _generating
-                                ? const SizedBox(
+                  const SizedBox(height: 6),
+                  CefrLevelChips(
+                    selectedLevel: _cefrLevel,
+                    allowDeselect: true,
+                    onLevelSelected: (level) =>
+                        setState(() => _cefrLevel = level),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Topic (optional)',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppPageColors.subtitleOf(context),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _field(_topicController, 'e.g. Travel, Business'),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(child: _label('Meaning')),
+                      if (!_checkingPremium && _isPremium)
+                        TextButton.icon(
+                          onPressed: _generating ? null : _generateWithAi,
+                          icon: _generating
+                              ? const SizedBox(
                                   width: 14,
                                   height: 14,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
-                                : const Icon(Icons.auto_awesome_rounded, size: 16),
-                        label: Text(_generating ? 'Generating…' : 'Generate with AI'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.brandPrimary,
-                          visualDensity: VisualDensity.compact,
-                          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              : const Icon(
+                                  Icons.auto_awesome_rounded,
+                                  size: 16,
+                                ),
+                          label: Text(
+                            _generating ? 'Generating…' : 'Generate with AI',
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.brandPrimary,
+                            visualDensity: VisualDensity.compact,
+                            textStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  Text(
+                    _showTranslation
+                        ? 'AI fills the translation, definition and example.'
+                        : 'AI fills the definition and example for the flashcard back.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppPageColors.subtitleOf(context),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _fieldLabel('Definition (${_languageName(_languageCode)})'),
+                  _field(_meaningController, 'Short dictionary-style gloss'),
+                  const SizedBox(height: 10),
+                  _fieldLabel(
+                    'Example sentence (${_languageName(_languageCode)})',
+                  ),
+                  _field(
+                    _exampleController,
+                    'A short sentence using the phrase',
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: _label(
+                          _showTranslation
+                              ? 'Translation (${_languageName(_translationLanguage)})'
+                              : 'Translation',
                         ),
                       ),
-                  ],
-                ),
-                Text(
-                  _showTranslation
-                      ? 'AI fills the translation, definition and example.'
-                      : 'AI fills the definition and example for the flashcard back.',
-                  style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
-                ),
-                const SizedBox(height: 10),
-                _fieldLabel('Definition (${_languageName(_languageCode)})'),
-                _field(_meaningController, 'Short dictionary-style gloss'),
-                const SizedBox(height: 10),
-                _fieldLabel('Example sentence (${_languageName(_languageCode)})'),
-                _field(_exampleController, 'A short sentence using the phrase'),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: _label(
-                        _showTranslation
-                            ? 'Translation (${_languageName(_translationLanguage)})'
-                            : 'Translation',
-                      ),
-                    ),
-                    if (!_checkingPremium)
-                    TextButton.icon(
-                      onPressed: _translating ? null : _translateWithAi,
-                      icon:
-                          _translating
+                      if (!_checkingPremium)
+                        TextButton.icon(
+                          onPressed: _translating ? null : _translateWithAi,
+                          icon: _translating
                               ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
                               : const Icon(Icons.translate_rounded, size: 16),
-                      label: Text(
-                        _translating
-                            ? 'Translating…'
-                            : (_isPremium ? 'Translate with AI' : 'Translate · Premium'),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.brandPrimary,
-                        visualDensity: VisualDensity.compact,
-                        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                          label: Text(
+                            _translating
+                                ? 'Translating…'
+                                : (_isPremium
+                                      ? 'Translate with AI'
+                                      : 'Translate · Premium'),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.brandPrimary,
+                            visualDensity: VisualDensity.compact,
+                            textStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  _field(
+                    _translationController,
+                    'Translation of the word or phrase',
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.redAccent,
                       ),
                     ),
                   ],
-                ),
-                _field(_translationController, 'Translation of the word or phrase'),
-                if (_error != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _error!,
-                    style: const TextStyle(fontSize: 12, color: Colors.redAccent),
-                  ),
-                ],
                 ],
               ),
             ),

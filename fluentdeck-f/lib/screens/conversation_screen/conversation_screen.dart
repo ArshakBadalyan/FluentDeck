@@ -125,10 +125,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     _scrollToBottom();
   }
 
-  /// Rio view: Rio big on screen with the latest exchange; the full chat is one tap away.
-  bool _showTranscript = false;
-  bool get _rioView =>
-      RioPreferences.instance.showRio.value && !_showTranscript;
+  /// Tutor view: the tutor character (Rio by default) big on screen with the latest exchange.
+  bool get _rioView => RioPreferences.instance.showRio.value;
 
   void _onRioPrefChanged() {
     if (mounted) setState(() {});
@@ -209,18 +207,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 ),
               ),
             ),
-            Positioned(
-              top: 4,
-              right: 8,
-              child: IconButton(
-                tooltip: 'Show full chat',
-                onPressed: () => setState(() => _showTranscript = true),
-                icon: Icon(
-                  Icons.forum_outlined,
-                  color: AppPageColors.subtitleOf(context),
-                ),
-              ),
-            ),
             Align(
               alignment: Alignment.bottomCenter,
               child: ConstrainedBox(
@@ -244,27 +230,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 
   Widget _buildTranscript() {
-    final list = ListView.builder(
+    return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       itemCount: _service.turns.length,
       itemBuilder: (context, index) => _turnBubble(index),
-    );
-    if (!RioPreferences.instance.showRio.value) return list;
-    // Full chat opened from the Rio view: one tap back to Rio.
-    return Stack(
-      children: [
-        list,
-        Positioned(
-          top: 8,
-          right: 12,
-          child: FilledButton.tonalIcon(
-            onPressed: () => setState(() => _showTranscript = false),
-            icon: const Icon(Icons.pets_rounded, size: 18),
-            label: const Text('Rio'),
-          ),
-        ),
-      ],
     );
   }
 
@@ -560,7 +530,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     ),
                   ],
                 ),
-              // Chat settings → "Show Rio": Rio view (default) or the plain chat.
+              // Chat settings → "Show tutor": tutor view (default) or the plain chat.
               Expanded(child: _rioView ? _buildRioView() : _buildTranscript()),
               _ProcessingIndicator(
                 isProcessing: _service.isProcessing,
@@ -760,7 +730,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                 : MainAxisAlignment.start,
             children: [
               if (!isUser)
-                // Rio's face as the tutor's avatar (the plain icon with Show Rio off).
+                // Rio's face as the tutor's avatar (the plain icon with Show tutor off).
                 ValueListenableBuilder<bool>(
                   valueListenable: RioPreferences.instance.showRio,
                   builder: (context, show, _) => show

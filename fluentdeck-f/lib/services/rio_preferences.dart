@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// "Show Rio" on the conversation screen. A display choice, so it is kept on
-/// this device only (not in the account's speaking preferences). On by default.
+/// "Show tutor" on the conversation screen: the tutor character (Rio by
+/// default) or the plain chat. A display choice, so it is kept on this device
+/// only (not in the account's speaking preferences). On by default.
 class RioPreferences {
   RioPreferences._();
   static final RioPreferences instance = RioPreferences._();
