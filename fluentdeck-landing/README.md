@@ -20,7 +20,7 @@ The landing page is served at `/` and the Riovox **Flutter web app** at `/app/`,
 | "Start speaking free", "Start free", plan buttons | `/app/?auth=signup`: the app's **sign-up** form |
 | "Sign in" (header) | `/app/?auth=signin`: the app's **sign-in** form |
 
-On the web, the app skips its intro screens, because the landing page has already explained the app, and opens that form directly. After signing up or in, the user is in the web app. `robots.txt` keeps search engines out of `/app/`, and the app shell is `noindex`.
+Opened from these buttons, the app skips its intro screens, because the landing page has already explained the app, and opens that form directly. Opened any other way (for example `/app/` on its own, or `flutter run -d chrome`), it shows the intro the first time, like the mobile app. After signing up or in, the user is in the web app. `robots.txt` keeps search engines out of `/app/`, and the app shell is `noindex`.
 
 ```bash
 npm run build:all   # landing → dist/, Flutter web (--base-href /app/) → dist/app/
