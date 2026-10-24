@@ -10,7 +10,8 @@ enum TutorScene {
   listening,
   exploring,
   hiking,
-  cave;
+  cave,
+  fishing;
 
   String get asset => 'assets/tutor/scene-$name.webp';
 }
@@ -35,7 +36,8 @@ class SceneBackdrop extends StatelessWidget {
 
   final TutorScene scene;
 
-  /// The card colour on the picture's side (what the fade blends into).
+  /// Kept for callers; the picture now fades to transparent, so the card's
+  /// own background shows through.
   final Color color;
   final Widget child;
   final bool onLeft;
@@ -51,12 +53,12 @@ class SceneBackdrop extends StatelessWidget {
         Positioned.fill(
           child: LayoutBuilder(
             builder: (context, c) {
-              final imageWidth = (c.maxWidth * widthFactor).clamp(
-                0.0,
-                maxImageWidth,
-              );
+              // Whole pixels: fractional edges left a hairline seam on the web.
+              final imageWidth = (c.maxWidth * widthFactor)
+                  .clamp(0.0, maxImageWidth)
+                  .roundToDouble();
               // Fade only the picture's inner edge (first 30% of it).
-              final fade = imageWidth * 0.3;
+              final fade = (imageWidth * 0.3).roundToDouble();
               return Stack(
                 children: [
                   Positioned(
@@ -65,32 +67,21 @@ class SceneBackdrop extends StatelessWidget {
                     width: imageWidth,
                     left: onLeft ? 0 : null,
                     right: onLeft ? null : 0,
-                    child: Image.asset(
-                      scene.asset,
-                      fit: BoxFit.cover,
-                      filterQuality: FilterQuality.medium,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
-                  Positioned(
-                    top: 0,
-                    bottom: 0,
-                    width: fade,
-                    left: onLeft ? imageWidth - fade : null,
-                    right: onLeft ? null : imageWidth - fade,
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: onLeft
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            end: onLeft
-                                ? Alignment.centerLeft
-                                : Alignment.centerRight,
-                            colors: [color, color.withValues(alpha: 0)],
-                          ),
-                        ),
+                    // The picture itself fades out at its inner edge, so the card's own
+                    // background (even a gradient) shows through: no colour seam.
+                    child: ShaderMask(
+                      blendMode: BlendMode.dstIn,
+                      shaderCallback: (rect) => LinearGradient(
+                        begin: onLeft ? Alignment.centerRight : Alignment.centerLeft,
+                        end: onLeft ? Alignment.centerLeft : Alignment.centerRight,
+                        colors: const [Color(0x00000000), Color(0xFF000000)],
+                        stops: [0, fade / imageWidth],
+                      ).createShader(rect),
+                      child: Image.asset(
+                        scene.asset,
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.medium,
+                        excludeFromSemantics: true,
                       ),
                     ),
                   ),

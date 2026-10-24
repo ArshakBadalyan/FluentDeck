@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
 
 import '../../models/speaking_session_context.dart';
 import '../../widgets/speaking_hub_widgets.dart';
@@ -20,10 +19,19 @@ class SpeakingChatTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.chat_bubble_outline,
-                  size: 72,
-                  color: AppColors.brandPrimary.withValues(alpha: 0.65),
+                // The tutor otter's cozy study (character sheet "Worldview & Setting").
+                Flexible(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420, maxHeight: 340),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.asset(
+                        'assets/tutor/worldview.webp',
+                        fit: BoxFit.cover,
+                        semanticLabel: 'Rio the otter tutor at a desk with books and a laptop',
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 const Text(

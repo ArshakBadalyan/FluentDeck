@@ -3,6 +3,7 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/services/achievement_service.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/widgets/tutor_scene.dart';
 
 /// Progress summary shown at the top of the Account tab (Phase 3).
 class ProfileStatsHeader extends StatelessWidget {
@@ -39,6 +40,7 @@ class ProfileStatsHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
           AppHeroCard(
+            scene: TutorScene.fishing,
             value: '$streak',
             label: _nameLabel,
             subtitle:
