@@ -252,12 +252,13 @@ export default function FlipCard({
           style={axis === 'x' ? { scaleY: spread, opacity: shade } : { scaleX: spread, opacity: shade }}
         />
       ) : null}
+      {/* React 18 drops boolean `inert`; an empty string sets the attribute. */}
       <motion.div className="flip-card__rotor" style={reduce ? undefined : rotorStyle}>
-        <div className="flip-card__face flip-card__face--front" aria-hidden={shown} inert={shown}>
+        <div className="flip-card__face flip-card__face--front" aria-hidden={shown} inert={shown ? '' : undefined}>
           {front}
           {glare ? <span className="flip-card__glare" aria-hidden="true" /> : null}
         </div>
-        <div className="flip-card__face flip-card__face--back" aria-hidden={!shown} inert={!shown}>
+        <div className="flip-card__face flip-card__face--back" aria-hidden={!shown} inert={!shown ? '' : undefined}>
           {back}
           {glare ? <span className="flip-card__glare" aria-hidden="true" /> : null}
         </div>
