@@ -125,6 +125,8 @@ flutter:
     - assets/audios/
     # Rio the otter (conversation screen); frames shared with fluentdeck-landing/public/media/otter.
     - assets/rio/
+    # English tutor otter scenes (card art), from the character sheet's "In Action".
+    - assets/tutor/
   fonts:
     - family: Rubik
       fonts:

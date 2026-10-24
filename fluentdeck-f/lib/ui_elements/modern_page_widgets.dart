@@ -7,6 +7,7 @@ import 'package:fluentdeck/config/brand_config.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'app_motion.dart';
+import 'package:fluentdeck/widgets/tutor_scene.dart';
 
 /// Shared visual language for Activity, Decks, and Profile screens.
 class AppPageColors {
@@ -535,6 +536,8 @@ class AppHeroCard extends StatelessWidget {
     this.badge,
     this.action,
     this.onIconTap,
+    this.scene,
+    this.sceneOnLeft = false,
   });
 
   final String value;
@@ -545,12 +548,27 @@ class AppHeroCard extends StatelessWidget {
   final Widget? action;
   final VoidCallback? onIconTap;
 
+  /// Optional tutor scene on one side of the card (the card colour fades over it).
+  final TutorScene? scene;
+  final bool sceneOnLeft;
+
+  Widget _withScene(Widget content) {
+    final s = scene;
+    if (s == null) return content;
+    return SceneBackdrop(
+      scene: s,
+      onLeft: sceneOnLeft,
+      color: sceneOnLeft ? AppColors.heroGradient.first : AppColors.heroGradient.last,
+      child: content,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppFadeIn(
       child: Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -566,6 +584,8 @@ class AppHeroCard extends StatelessWidget {
           ),
         ],
       ),
+      child: _withScene(Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Row(
         children: [
           Expanded(
@@ -617,6 +637,7 @@ class AppHeroCard extends StatelessWidget {
           ),
         ],
       ),
+    )),
     ),
     );
   }

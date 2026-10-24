@@ -25,6 +25,7 @@ import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/activity_preview_list.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:fluentdeck/widgets/tutor_scene.dart';
 
 class EnglishActivityScreen extends StatefulWidget {
   const EnglishActivityScreen({super.key});
@@ -505,7 +506,7 @@ class _StreakHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -521,7 +522,12 @@ class _StreakHero extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: SceneBackdrop(
+        scene: TutorScene.encouraging,
+        color: AppColors.heroGradient.last,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          child: Row(
         children: [
           Expanded(
             child: Column(
@@ -560,6 +566,8 @@ class _StreakHero extends StatelessWidget {
           ),
           _StreakGaugeIcon(goal: goal, today: today, onGoalChanged: onGoalChanged),
         ],
+      ),
+        ),
       ),
     );
   }

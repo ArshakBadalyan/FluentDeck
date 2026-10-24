@@ -31,6 +31,7 @@ import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/widgets/rio.dart';
+import 'package:fluentdeck/widgets/tutor_scene.dart';
 
 class _DeckRow {
   const _DeckRow({required this.deck, required this.depth});
@@ -1103,6 +1104,7 @@ class _StatsCard extends StatelessWidget {
         : 'Tap Study now to begin your session';
 
     return AppHeroCard(
+      scene: TutorScene.reading,
       value: '${stats.dueNow}',
       label: stats.dueNow == 1 ? 'card due' : 'cards due',
       subtitle: subtitle,

@@ -10,6 +10,7 @@ import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dar
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:fluentdeck/widgets/tutor_scene.dart';
 
 /// Deck overview — opened by tapping deck name or count buttons.
 class DeckOverviewScreen extends StatefulWidget {
@@ -259,8 +260,13 @@ class _DeckHeroCard extends StatelessWidget {
           borderRadius: BorderRadius.all(Radius.circular(18)),
           color: AppColors.brandPrimaryDeep,
         ),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-        child: Column(
+        clipBehavior: Clip.antiAlias,
+        child: SceneBackdrop(
+          scene: TutorScene.listening,
+          color: AppColors.brandPrimaryDeep,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -305,6 +311,8 @@ class _DeckHeroCard extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+          ),
         ),
       ),
     );

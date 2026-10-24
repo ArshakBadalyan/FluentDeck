@@ -7,6 +7,7 @@ import 'package:fluentdeck/services/language_levels_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:fluentdeck/widgets/tutor_scene.dart';
 
 /// Activity tab: current learning language, AI tutor level, analytics estimate, history.
 class LanguageLevelsActivityTab extends StatefulWidget {
@@ -215,7 +216,7 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -231,7 +232,12 @@ class _HeroCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
+      child: SceneBackdrop(
+        scene: TutorScene.exploring,
+        color: AppColors.heroGradient.last,
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -279,6 +285,8 @@ class _HeroCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
