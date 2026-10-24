@@ -119,10 +119,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   void _onServiceUpdate() {
     if (!mounted) return;
-    setState(() {
-      if (_service.turns.isEmpty)
-        _started = false; // a new conversation starts with the button again
-    });
+    setState(() {});
     unawaited(_loadSpeakingPrefs());
     unawaited(_loadUsage());
     _scrollToBottom();
@@ -132,18 +129,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
   bool _showTranscript = false;
   bool get _rioView =>
       RioPreferences.instance.showRio.value && !_showTranscript;
-  bool get _hasUserTurn => _service.turns.any((t) => t.isUser);
-
-  /// Set by "Start a conversation": from then on the normal input bar shows
-  /// (mic, text field, send), even before the learner's first message lands.
-  bool _started = false;
-  bool get _showStartButton =>
-      _rioView && !_started && !_hasUserTurn && !_service.isRecording;
-
-  Future<void> _onStartConversation() async {
-    setState(() => _started = true);
-    await _onMicTap();
-  }
 
   void _onRioPrefChanged() {
     if (mounted) setState(() {});
@@ -584,27 +569,20 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     ? () => _service.cancelActiveOperation()
                     : null,
               ),
-              if (_showStartButton)
-                _StartConversationButton(
-                  onPressed: _service.isProcessing
-                      ? null
-                      : _onStartConversation,
-                )
-              else
-                _InputBar(
-                  isRecording: _service.isRecording,
-                  isProcessing: _service.isProcessing,
-                  recordingDurationLabel: _service.isRecording
-                      ? _service.recordingDurationLabel
-                      : null,
-                  textController: _textController,
-                  onMicTap: _onMicTap,
-                  onSendText: _onSendText,
-                  typeMessagesEnabled: _service.typeMessagesEnabled,
-                  onCancel: (_service.isProcessing || _service.isRecording)
-                      ? () => _service.cancelActiveOperation()
-                      : null,
-                ),
+              _InputBar(
+                isRecording: _service.isRecording,
+                isProcessing: _service.isProcessing,
+                recordingDurationLabel: _service.isRecording
+                    ? _service.recordingDurationLabel
+                    : null,
+                textController: _textController,
+                onMicTap: _onMicTap,
+                onSendText: _onSendText,
+                typeMessagesEnabled: _service.typeMessagesEnabled,
+                onCancel: (_service.isProcessing || _service.isRecording)
+                    ? () => _service.cancelActiveOperation()
+                    : null,
+              ),
             ],
           ),
           // Daily goal reached: a card pops in with confetti, then fades.
@@ -1365,42 +1343,6 @@ class _RioAvatar extends StatelessWidget {
           RioPose.happy.asset,
           fit: BoxFit.cover,
           alignment: Alignment.topCenter,
-        ),
-      ),
-    );
-  }
-}
-
-/// Rio view, before the learner has said anything: one big button to start talking.
-class _StartConversationButton extends StatelessWidget {
-  const _StartConversationButton({required this.onPressed});
-
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: FilledButton.icon(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.voiceDeep,
-              foregroundColor: Colors.white,
-              shape: const StadiumBorder(),
-              textStyle: const TextStyle(
-                fontFamily: 'Rubik',
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            onPressed: onPressed,
-            icon: const Icon(Icons.mic_rounded),
-            label: const Text('Start a conversation'),
-          ),
         ),
       ),
     );
