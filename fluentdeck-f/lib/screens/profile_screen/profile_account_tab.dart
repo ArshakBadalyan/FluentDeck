@@ -218,7 +218,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                   ),
                 if (_achievementSnapshot != null) const SizedBox(height: 16),
                 AppSectionCard(
-                  title: 'FluentDeck Premium',
+                  title: 'Riovox Premium',
                   icon: Icons.workspace_premium_outlined,
                   subtitleWidget: Text.rich(
                     TextSpan(

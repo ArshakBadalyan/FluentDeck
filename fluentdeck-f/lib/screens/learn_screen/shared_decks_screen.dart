@@ -7,7 +7,7 @@ import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/services/flashcard_import_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
-/// Entry point for finding decks from outside the app: FluentDeck's own
+/// Entry point for finding decks from outside the app: Riovox's own
 /// shared-decks web page, or importing a deck package file you already have.
 class SharedDecksScreen extends StatelessWidget {
   const SharedDecksScreen({
@@ -71,7 +71,7 @@ class SharedDecksScreen extends StatelessWidget {
               icon: Icons.public_rounded,
               subtitle:
                   hasWebUrl
-                      ? 'Find community decks on the FluentDeck website, then import the file here.'
+                      ? 'Find community decks on the Riovox website, then import the file here.'
                       : 'Coming soon — we\'re building a place to discover community decks.',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -111,7 +111,7 @@ test('prompt protects placeholders and brand names', () => {
   const prompt = systemPrompt('ar');
   assert.match(prompt, /Arabic/);
   assert.match(prompt, /\{placeholder\}/);
-  assert.match(prompt, /FluentDeck/);
+  assert.match(prompt, /Riovox/);
 });
 
 test('script languages = app languages (AppLanguage.options minus English)', () => {

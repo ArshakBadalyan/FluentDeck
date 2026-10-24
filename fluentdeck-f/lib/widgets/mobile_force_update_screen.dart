@@ -25,7 +25,7 @@ class MobileForceUpdateScreen extends StatelessWidget {
     );
     final body = loc.t(
       'app-update.force-body',
-      fallback: 'Please update FluentDeck to continue.',
+      fallback: 'Please update Riovox to continue.',
     );
     final action = loc.t(
       'app-update.update-action',

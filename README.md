@@ -1,4 +1,4 @@
-# FluentDeck
+# Riovox
 
 AI-powered English language-learning platform — practice speaking with an AI tutor, study vocabulary, use Anki-style flashcards, and track progress.
 

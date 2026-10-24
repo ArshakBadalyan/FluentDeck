@@ -1,4 +1,4 @@
-# FluentDeck — Project Documentation
+# Riovox — Project Documentation
 
 > Temporary reference doc for when Cursor history is lost. Safe to delete later.
 
@@ -22,7 +22,7 @@
 
 ## Overview
 
-**FluentDeck** is an AI-powered English language-learning platform. Users practice speaking with an AI tutor, study vocabulary, use Anki-style flashcards, complete structured lessons, and track progress.
+**Riovox** is an AI-powered English language-learning platform. Users practice speaking with an AI tutor, study vocabulary, use Anki-style flashcards, complete structured lessons, and track progress.
 
 | Component | Path | Stack |
 |-----------|------|-------|
@@ -34,7 +34,7 @@ Evolved from legacy **MatheApp** (`fluentdeck-f`). Internal Dart package is now 
 ### Monorepo Structure
 
 ```
-FluentDeck/
+Riovox/
 ├── fluentdeck-f/          # Flutter app (iOS, Android, Web)
 ├── strapi-fluentdeck/     # Strapi backend (22 API modules)
 └── PROJECT.md             # This file

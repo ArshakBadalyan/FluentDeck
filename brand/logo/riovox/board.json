@@ -1,0 +1,29 @@
+{
+  "brand": "Riovox",
+  "tagline": "Speak any language without the fear",
+  "brief": "An AI speaking-practice app for 16 languages (any language to any language), with flashcard decks built from your mistakes. For people who freeze when they have to speak. It should feel calm, friendly and confident, never like school. The mascot is Rio, a sea otter.",
+  "adjectives": ["calm", "friendly", "confident", "playful"],
+  "criteria": "Success: owns the otter (no owls, globes or flags), reads at 16 px, works in one colour, and the name hides a face (ri-ovo-x).",
+  "industry": "consumer-app",
+  "nav": ["How it works", "Languages", "Pricing"],
+  "brand_color": "#0D7C86",
+  "greyscale": false,
+  "designer": "Riovox",
+  "round": 1,
+  "concepts": [
+    {"name": "Rio bubble", "symbol": "kit/a-rio-bubble/svg/riovox-symbol.svg", "lockup": "kit/a-rio-bubble/svg/riovox-horizontal.svg",
+     "symbol_on_tile": "kit/a-rio-bubble/svg/riovox-symbol.svg", "lockup_on_dark": "kit/a-rio-bubble/svg/riovox-horizontal-on-dark.svg", "tile_color": "#0D7C86",
+     "idea": "Rio's head is a speech bubble; the coral tail is its voice.",
+     "rationale": ["The clearest 'talking otter'", "Strongest at favicon size", "Coral = the app's speaking colour"]},
+    {"name": "Rio floating", "symbol": "kit/b-rio-floating/svg/riovox-symbol.svg", "lockup": "kit/b-rio-floating/svg/riovox-horizontal.svg",
+     "symbol_on_tile": "kit/b-rio-floating/svg/riovox-symbol.svg", "lockup_on_dark": "kit/b-rio-floating/svg/riovox-horizontal-on-dark.svg", "tile_color": "#F3F7F7",
+     "idea": "Rio floats on its back holding a flashcard, like real sea otters.",
+     "rationale": ["Otter + deck + river (rio) in one picture", "Calm, the opposite of speaking anxiety", "No language app has anything like it"]},
+    {"name": "Rio in the river", "symbol": "kit/c-rio-river/svg/riovox-symbol.svg", "lockup": "kit/c-rio-river/svg/riovox-horizontal.svg",
+     "symbol_on_tile": "kit/c-rio-river/svg/riovox-symbol.svg", "lockup_on_dark": "kit/c-rio-river/svg/riovox-horizontal-on-dark.svg", "tile_color": "#F3F7F7",
+     "idea": "Rio rises out of the river; the ripples spread like a voice.",
+     "rationale": ["Bold, friendly face for the app icon", "Ripples say 'voice' without a microphone"]}
+  ],
+  "recommendation": "Rio floating as the main logo and app icon, with its head-on-water cut for tiny sizes. It tells the whole story and is the most ownable.",
+  "next_steps": ["Pick one direction", "Replace the app and website icons", "Trademark search for Riovox and the mark"]
+}

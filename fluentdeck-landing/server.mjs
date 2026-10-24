@@ -10,8 +10,8 @@ const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), 'dist');
 const PORT = Number(process.env.PORT) || 8080;
 
 const TYPES = {
-  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript',
-  '.css': 'text/css', '.json': 'application/json', '.wasm': 'application/wasm',
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.wasm': 'application/wasm',
   '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml',
   '.otf': 'font/otf', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.wav': 'audio/wav',
@@ -50,5 +50,5 @@ http
     fs.createReadStream(file).pipe(res);
   })
   .listen(PORT, () => {
-    console.log(`FluentDeck site on http://localhost:${PORT}  (app at /app/)`);
+    console.log(`Riovox site on http://localhost:${PORT}  (app at /app/)`);
   });

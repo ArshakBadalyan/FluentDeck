@@ -1,6 +1,6 @@
 // Landing page: static, SEO-readable HTML with React Bits components
 // mounted as small "islands" on top of it.
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useLayoutEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '../main.js'; // v1 behaviour: store badges, mobile menu, reveals, chat demo
@@ -121,10 +121,11 @@ islands('count').forEach((el) =>
   mount(el, () => <CountUp to={Number(el.dataset.to)} duration={1.6} startWhen={!reduceMotion} />),
 );
 
-// Main button pulls gently toward the cursor (desktop pointers only).
+// Main button pulls gently toward the cursor (desktop pointers only). The
+// offset is capped below the row gap so it never touches the store badges.
 islands('magnet').forEach((el) =>
   mount(el, (html) => (
-    <Magnet padding={80} magnetStrength={4} disabled={reduceMotion || !wide}>
+    <Magnet padding={50} magnetStrength={4} maxOffset={6} disabled={reduceMotion || !wide}>
       <span dangerouslySetInnerHTML={{ __html: html }} />
     </Magnet>
   )),
@@ -182,6 +183,16 @@ islands('screens').forEach((el) => {
   ));
 });
 
+/**
+ * Drops the plain row layout only once the fan is ready to show. Dropping it
+ * earlier lets the static screenshots stack full-size while the chunk loads,
+ * and the page briefly grows by thousands of pixels.
+ */
+function FanLayout({ el, children }) {
+  useLayoutEffect(() => el.classList.remove('shots'), [el]);
+  return children;
+}
+
 // More app screens: a fan of real screens on desktop. Phones keep the plain
 // scrolling row, which is lighter and easier to read at that size.
 if (wide) {
@@ -189,7 +200,7 @@ if (wide) {
     const shots = [...el.querySelectorAll('img')].map((img) => ({ src: img.getAttribute('src'), alt: img.alt }));
     const captions = [...el.querySelectorAll('figcaption')].map((c) => c.textContent);
     mountNear(el, () => (
-      <>
+      <FanLayout el={el}>
         <BounceCards
           images={shots}
           containerWidth={980}
@@ -205,8 +216,8 @@ if (wide) {
           enableHover={!reduceMotion}
         />
         <p className="fan-captions">{captions.join(' · ')}</p>
-      </>
-    ), () => el.classList.remove('shots'));
+      </FanLayout>
+    ));
   });
 }
 
@@ -334,4 +345,9 @@ if (wide && !reduceMotion) {
         />
     )),
   );
+}
+
+// THROWAWAY SPIKE: end-of-page otter, only with ?otter in the URL.
+if (new URLSearchParams(location.search).has('otter')) {
+  import('../spikes/otter.js').then((m) => m.default());
 }

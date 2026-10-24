@@ -65,7 +65,7 @@ class _ProfileAboutTabState extends State<ProfileAboutTab> {
 
   Future<void> _contactSupport() async {
     final email = context.tr('privacy-content.contact-email');
-    await launchUrl(Uri.parse('mailto:$email?subject=FluentDeck%20help'));
+    await launchUrl(Uri.parse('mailto:$email?subject=Riovox%20help'));
   }
 
   Future<void> _openExplainOnePartSheet() =>

@@ -2,7 +2,7 @@
   "name": "fluentdeck-landing",
   "private": true,
   "version": "1.0.0",
-  "description": "FluentDeck marketing site: AI English speaking practice.",
+  "description": "Riovox marketing site: AI English speaking practice.",
   "type": "module",
   "scripts": {
     "dev": "vite",

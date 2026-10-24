@@ -60,7 +60,7 @@ def og_image():
     brand = ImageFont.truetype(os.path.join(FONTS, 'Rubik-Medium.ttf'), 34)
     d = ImageDraw.Draw(og)
     d.rounded_rectangle((70, 70, 118, 118), radius=12, fill=(13, 124, 134))
-    d.text((134, 74), 'FluentDeck', font=brand, fill=(243, 244, 246))
+    d.text((134, 74), 'Riovox', font=brand, fill=(243, 244, 246))
     y = 190
     for line in ('Speak English', 'without the fear'):
         d.text((70, y), line, font=big, fill=(243, 244, 246))

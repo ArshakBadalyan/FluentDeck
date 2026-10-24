@@ -139,7 +139,7 @@ class SubscriptionStatus {
   }
 }
 
-/// Wraps `in_app_purchase` for the FluentDeck Premium subscriptions and
+/// Wraps `in_app_purchase` for the Riovox Premium subscriptions and
 /// verifies completed purchases against the backend (which calls Apple/Google
 /// server-side — the app never trusts a local purchase result on its own).
 class SubscriptionService {

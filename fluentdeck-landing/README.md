@@ -1,6 +1,6 @@
-# FluentDeck landing page
+# Riovox landing page
 
-The marketing website for FluentDeck: AI English speaking practice. It's a static site built with [Vite](https://vitejs.dev/), separate from the app (`../fluentdeck-f`) and the API (`../strapi-fluentdeck`).
+The marketing website for Riovox: AI English speaking practice. It's a static site built with [Vite](https://vitejs.dev/), separate from the app (`../fluentdeck-f`) and the API (`../strapi-fluentdeck`).
 
 ```bash
 npm install
@@ -13,7 +13,7 @@ Deploy `dist/` to any static host: Netlify, Vercel, Cloudflare Pages, S3 or ngin
 
 ## One domain: landing page + web app
 
-The landing page is served at `/` and the FluentDeck **Flutter web app** at `/app/`, on the same domain and the same server.
+The landing page is served at `/` and the Riovox **Flutter web app** at `/app/`, on the same domain and the same server.
 
 | Link on the page | Opens |
 |---|---|
@@ -55,7 +55,7 @@ To add translated pages later, add one page per language (for example `es/index.
 ## Media: real app screens
 
 `public/media/` holds:
-- `app/onboarding-{light,dark}-{1..5}.webp`: real FluentDeck onboarding screens;
+- `app/onboarding-{light,dark}-{1..5}.webp`: real Riovox onboarding screens;
 - `onboarding-tour-{light,dark}.webp` and `.gif`: an animated tour through those screens;
 - `og-image.png`: the 1200×630 social-share image.
 

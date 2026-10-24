@@ -1,4 +1,4 @@
-/* FluentDeck landing — brand tokens mirror fluentdeck-f/lib/config/brand_config.dart */
+/* Riovox landing — brand tokens mirror fluentdeck-f/lib/config/brand_config.dart */
 :root {
   --bg: #071214;
   --bg-raised: #0c1c1f;
@@ -24,7 +24,7 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: clip; } /* glows and the otter may reach past the edge; never scroll sideways */
 body {
   margin: 0;
   background: var(--bg);
@@ -69,6 +69,7 @@ p { margin: 0 0 1em; }
 .header-row { display: flex; align-items: center; gap: 24px; min-height: 68px; }
 .logo { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 700; font-size: 1.15rem; }
 .logo img { border-radius: 8px; }
+.logo .logo-word { border-radius: 0; }
 .main-nav { display: flex; gap: 22px; margin-left: auto; }
 .main-nav a { color: var(--muted); text-decoration: none; font-weight: 500; }
 .main-nav a:hover { color: var(--text); }
@@ -179,7 +180,7 @@ p { margin: 0 0 1em; }
 .plans { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
 .plan { position: relative; display: flex; flex-direction: column; padding: 30px; }
 .plan ul { list-style: none; padding: 0; margin: 18px 0 26px; display: grid; gap: 10px; color: var(--muted); flex: 1; }
-.plan li::before { content: '✓'; color: var(--teal-on-dark); font-weight: 700; margin-right: 10px; }
+.plan li::before { content: '\2713'; color: var(--teal-on-dark); font-weight: 700; margin-right: 10px; }
 .price { margin: 0; color: var(--muted); }
 .price span { font-size: 2.4rem; font-weight: 800; color: var(--text); }
 .per-month { margin: 6px 0 0; color: var(--muted); }

@@ -2,7 +2,7 @@
 name: ai-tutor
 description: >-
   AI speaking tutor prompts, OpenAI integration, corrections, tutor memory, TTS,
-  and training-mode vocabulary in FluentDeck. Use when editing tutor behavior,
+  and training-mode vocabulary in Riovox. Use when editing tutor behavior,
   system prompts, REPLY/CORRECTIONS_JSON format, speaking sessions, or /ai/* endpoints.
 ---
 

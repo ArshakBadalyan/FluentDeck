@@ -1,5 +1,5 @@
 /**
- * Admin customization for FluentDeck.
+ * Admin customization for Riovox.
  *
  * Post-login deep-link redirect fix
  * --------------------------------

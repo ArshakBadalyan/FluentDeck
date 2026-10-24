@@ -6,7 +6,7 @@ description: >-
   handlers, bootstrap permissions, schema.json changes, or Flutter API integration.
 ---
 
-# Strapi API (FluentDeck)
+# Strapi API (Riovox)
 
 Strapi **5.49**, Node 20, PostgreSQL. Package name `fluentdeck-api`.
 

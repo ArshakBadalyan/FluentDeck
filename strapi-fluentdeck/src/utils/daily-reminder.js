@@ -69,7 +69,7 @@ async function sendDailyReminders(strapi, { now = new Date(), windowMinutes = 5 
     try {
       await sendPushToUser(user.id, {
         headings: { en: "Time to practice" },
-        contents: { en: "Your daily FluentDeck session is waiting." },
+        contents: { en: "Your daily Riovox session is waiting." },
         data: { type: "daily_reminder" },
       });
       await strapi.db.query("plugin::users-permissions.user").update({

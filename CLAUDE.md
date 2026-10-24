@@ -1,4 +1,4 @@
-# FluentDeck
+# Riovox
 
 AI-powered English learning — Flutter app + Strapi 5 API.
 

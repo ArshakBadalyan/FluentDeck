@@ -1,7 +1,7 @@
 ---
 name: feature-ideation
 description: >-
-  Propose, evaluate, and spec new FluentDeck features and design directions
+  Propose, evaluate, and spec new Riovox features and design directions
   (including brand color / visual identity changes) grounded in the existing
   app. Use when the user asks "what should I build next", wants feature ideas,
   a feature spec, a redesign direction, or a color/palette recommendation for
@@ -9,7 +9,7 @@ description: >-
   strapi-api, ai-tutor, and flashcard-sm2 for implementation.
 ---
 
-# Feature Ideation (FluentDeck)
+# Feature Ideation (Riovox)
 
 Generate ideas that fit **this** app, not generic language-app ideas. Every proposal must name what it builds on in the codebase and what it costs.
 
@@ -20,7 +20,7 @@ Read before proposing:
 - `PROJECT.md` — architecture, existing features, freemium limits.
 - `fluentdeck-f/lib/app_colors.dart`, `app_theme.dart`, and `AppPageColors` in `ui_elements/modern_page_widgets.dart` — current design tokens.
 - `fluentdeck-f/lib/screens/` — the tab the idea lives in (learn, speaking_hub, activity, profile).
-- `landing/index.html` — brand as marketed.
+- `fluentdeck-landing/index.html` — brand as marketed.
 
 Existing building blocks to reuse: SM-2 decks + review queue, AI speaking tutor with corrections and tutor memory, saved phrases, speaking games/topics, achievements, daily goal + streak, language-level snapshots, notes import, Isar offline sync, AdMob + subscription tiers.
 
@@ -36,7 +36,7 @@ Each idea must answer:
 | Effort: S (≤1 day), M (≤1 week), L | Honest scoping |
 | Backend changes? (Strapi endpoints, content-types, OpenAI calls) | OpenAI only via Strapi |
 
-Reject ideas that duplicate competitors without a FluentDeck twist, need a new state-management approach, or call OpenAI from the client.
+Reject ideas that duplicate competitors without a Riovox twist, need a new state-management approach, or call OpenAI from the client.
 
 ## 3. Output format
 

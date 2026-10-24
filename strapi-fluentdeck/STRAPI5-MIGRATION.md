@@ -1,13 +1,13 @@
 # Strapi 5 migration
 
-FluentDeck API runs **Strapi 5.49.0** (upgraded from 4.26.x).
+Riovox API runs **Strapi 5.49.0** (upgraded from 4.26.x).
 
 ## Completed
 
 - `@strapi/upgrade` codemods (entity service → document service, React 18, i18n core)
 - `src/extensions/users-permissions/strapi-server.js` — auth/user controllers wrapped for Strapi 5 factory pattern
 - `src/utils/document-service.js` — helpers for numeric id → `documentId` lookups
-- FluentDeck-critical utils migrated off `__TODO__` placeholders
+- Riovox-critical utils migrated off `__TODO__` placeholders
 - `src/index.js` bootstrap — permissions linked via `role` FK (Strapi 5 schema)
 - `config/plugins.js` — S3 credentials under `s3Options`
 - `npm run build` and `npm run develop` succeed on Node 20

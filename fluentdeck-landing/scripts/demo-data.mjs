@@ -1,4 +1,4 @@
-// Seeds a realistic demo learner on a LOCAL FluentDeck API, for capturing
+// Seeds a realistic demo learner on a LOCAL Riovox API, for capturing
 // landing-page screenshots / GIFs from the real app (see README "Real app
 // captures"). Never point this at production.
 //

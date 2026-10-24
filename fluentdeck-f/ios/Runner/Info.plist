@@ -7,7 +7,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>FluentDeck</string>
+		<string>Riovox</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>FluentDeck</string>
+		<string>Riovox</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -244,7 +244,7 @@
 			<true/>
 		</dict>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>FluentDeck uses location only to help select country, city, or school more easily in profile fields.</string>
+		<string>Riovox uses location only to help select country, city, or school more easily in profile fields.</string>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
 		<key>UIApplicationSceneManifest</key>

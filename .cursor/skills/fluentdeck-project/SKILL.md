@@ -1,13 +1,13 @@
 ---
 name: fluentdeck-project
 description: >-
-  FluentDeck monorepo conventions for Flutter app and Strapi 5
+  Riovox monorepo conventions for Flutter app and Strapi 5
   backend. Use when editing fluentdeck-f/, strapi-fluentdeck/, adding screens,
   API endpoints, flashcards, SM-2 scheduling, AI tutor, freemium limits, or
   navigating this codebase.
 ---
 
-# FluentDeck Project
+# Riovox Project
 
 AI-powered English learning: Flutter app + Strapi 5 API.
 

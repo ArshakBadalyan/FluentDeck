@@ -14,7 +14,7 @@ import 'package:fluentdeck/utils/practice_time_format.dart';
 const String kEnglishOnboardingSeenPrefsKey = 'english_onboarding_seen';
 const String kEnglishLevelPrefsKey = 'english_level';
 
-/// First-run intro (before sign-in): what FluentDeck does and how to use it —
+/// First-run intro (before sign-in): what Riovox does and how to use it —
 /// speak with the AI tutor, what to practise, mistakes → flashcards, progress,
 /// and what's free. Text lives under `onboarding.*` in assets/locales.
 class EnglishOnboardingScreen extends StatefulWidget {

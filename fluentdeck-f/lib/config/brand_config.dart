@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Single source of truth for FluentDeck's brand identity.
+/// Single source of truth for Riovox's brand identity.
 ///
 /// Change colors here — `AppColors`, `AppPageColors` and `AppTheme` read from
 /// this file, so a rebrand is an edit to this file only. Keep `landing/index.html`
@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 /// - [textPrimary] on [pageBg]         15.08:1
 abstract final class BrandConfig {
   // ── Identity ────────────────────────────────────────────────────────────
-  static const String appName = 'FluentDeck';
+  static const String appName = 'Riovox';
   static const String fontFamily = 'Rubik';
 
   // ── Brand ───────────────────────────────────────────────────────────────

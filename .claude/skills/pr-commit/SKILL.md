@@ -1,7 +1,7 @@
 ---
 name: pr-commit
 description: >-
-  Git commits, pull requests, and GitHub workflow for FluentDeck. Use when the
+  Git commits, pull requests, and GitHub workflow for Riovox. Use when the
   user asks to commit, create a PR, write commit messages, or follow team git
   conventions. Only commit when explicitly requested.
 ---

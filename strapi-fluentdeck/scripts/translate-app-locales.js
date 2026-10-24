@@ -137,11 +137,11 @@ function chunk(list, size) {
 function systemPrompt(lang) {
   const { name, style } = LANGUAGES[lang];
   return [
-    `You translate the interface of FluentDeck, a mobile app for practising speaking a language with an AI tutor and learning words with flashcards, from English into ${name} (${style}).`,
+    `You translate the interface of Riovox, a mobile app for practising speaking a language with an AI tutor and learning words with flashcards, from English into ${name} (${style}).`,
     "Return JSON: {\"translations\": {\"<key>\": \"<translation>\"}} with exactly the keys you were given.",
     "Rules:",
     "- Keep every {placeholder} exactly as written (same name, same braces); move it where the grammar needs it.",
-    "- Keep brand and product names unchanged: FluentDeck, Premium, Anki, Google, Apple, AI.",
+    "- Keep brand and product names unchanged: Riovox, Premium, Anki, Google, Apple, AI.",
     "- Keep CEFR levels (A1–C2), numbers, emoji, URLs and markdown/HTML tags unchanged.",
     "- Short UI labels stay short (buttons, tabs). Use the terms native mobile apps use (e.g. Settings, Log out).",
     "- Sentence case where the language uses it. No explanations, no quotes around values.",

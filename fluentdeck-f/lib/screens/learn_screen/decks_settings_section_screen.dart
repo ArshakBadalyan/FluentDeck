@@ -169,7 +169,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         context,
         const SnackBar(
           content: Text(
-            'Notifications are off for FluentDeck. Allow them in your device '
+            'Notifications are off for Riovox. Allow them in your device '
             'settings to get the daily reminder.',
           ),
         ),
@@ -188,7 +188,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         content: Text(
           shown
               ? 'Test reminder sent. Check your notifications.'
-              : 'Notifications are off for FluentDeck. Allow them in your '
+              : 'Notifications are off for Riovox. Allow them in your '
                   'device settings to get the daily reminder.',
         ),
       ),

@@ -1599,7 +1599,7 @@ class AppSheetActionTile extends StatelessWidget {
   }
 }
 
-/// Centered form dialog matching FluentDeck sheet styling.
+/// Centered form dialog matching Riovox sheet styling.
 Future<String?> showAppPromptDialog(
   BuildContext context, {
   required String title,

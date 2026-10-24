@@ -2,7 +2,7 @@
 name: flashcard-sm2
 description: >-
   Flashcard decks, Anki-style SM-2 scheduling, review queue, and deck options in
-  FluentDeck. Use when changing review intervals, learning steps, Again/Hard/Good/Easy
+  Riovox. Use when changing review intervals, learning steps, Again/Hard/Good/Easy
   logic, card-review-state, deck scheduling defaults, sm2_preview, review sessions,
   or flashcard sync/import.
 ---

@@ -15,7 +15,7 @@ import './CardSwap.css';
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 const THEMES = {
-  // FluentDeck brand: deep lagoon-teal tiles on the page's near-black ground.
+  // Riovox brand: deep lagoon-teal tiles on the page's near-black ground.
   fluentdeck: {
     '--swap-tile': 'linear-gradient(180deg, #13343a 0%, #0c2226 100%)',
     '--swap-tile-edge': 'rgba(46, 196, 207, 0.18)',
@@ -48,7 +48,7 @@ const THEMES = {
   }
 };
 
-// FluentDeck passes its own items (real app screens); no demo images.
+// Riovox passes its own items (real app screens); no demo images.
 const DEFAULT_ITEMS = [];
 
 const PERSPECTIVE = 900;
