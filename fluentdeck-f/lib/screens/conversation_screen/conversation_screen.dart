@@ -240,7 +240,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   RioMood get _rioMood {
     if (_celebratingGoal) return RioMood.cheering;
-    if (_service.isPlayingTts) return RioMood.speaking;
+    // Mouth moves only while the voice is really audible; fetching it = thinking.
+    if (_service.isTtsAudible) return RioMood.speaking;
+    if (_service.isPlayingTts) return RioMood.thinking;
     if (_service.isRecording) return RioMood.listening;
     if (_service.isProcessing) return RioMood.thinking;
     return RioMood.idle;

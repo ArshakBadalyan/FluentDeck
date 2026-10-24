@@ -22,17 +22,12 @@ import 'conversation_history_service.dart';
 import 'daily_goal_tracker.dart';
 import 'speaking_preferences_service.dart';
 import 'tts_cache_service.dart';
-enum ConversationProcessingStage {
-  idle,
-  transcribing,
-  thinking,
-  speaking,
-}
+
+enum ConversationProcessingStage { idle, transcribing, thinking, speaking }
 
 class ConversationService {
   ConversationService._();
   static final ConversationService instance = ConversationService._();
-
 
   final AudioRecorder _recorder = AudioRecorder();
   final AudioPlayer _ttsPlayer = AudioPlayer();
@@ -43,20 +38,33 @@ class ConversationService {
   ConversationProcessingStage stage = ConversationProcessingStage.idle;
   String? errorMessage;
   int? activeHistorySessionId;
-  ConversationTrainingSession trainingSession = const ConversationTrainingSession(
-    sourceKey: '',
-    sourceLabel: '',
-    words: [],
-  );
+  ConversationTrainingSession trainingSession =
+      const ConversationTrainingSession(
+        sourceKey: '',
+        sourceLabel: '',
+        words: [],
+      );
   SpeakingSessionContext sessionContext = SpeakingSessionContext.freeChat();
   bool isEvaluatingSession = false;
   bool isPlayingTts = false;
+
+  /// True only while tutor audio is actually coming out of the speaker
+  /// ([isPlayingTts] also covers fetching the voice). Drives Rio's mouth.
+  bool isTtsAudible = false;
+
+  void _setTtsAudible(bool value) {
+    if (isTtsAudible == value) return;
+    isTtsAudible = value;
+    _notify();
+  }
+
   int? ttsTurnIndex;
   bool autoPlayVoiceEnabled = true;
   bool autoConversationEnabled = false;
   bool soundOnEnabled = true;
   bool typeMessagesEnabled = false;
   bool autoStartRecordingEnabled = false;
+
   /// Seconds to wait after tutor audio (or text) before auto-opening the mic.
   int autoStartRecordingDelaySeconds = 2;
   String practiceLanguage = 'en';
@@ -89,7 +97,9 @@ class ConversationService {
   void _notify() => onStateChanged?.call();
 
   Future<void> refreshSpeakingSettings() async {
-    final prefs = await SpeakingPreferencesService.instance.load(forceRefresh: true);
+    final prefs = await SpeakingPreferencesService.instance.load(
+      forceRefresh: true,
+    );
     autoPlayVoiceEnabled = prefs.autoPlayVoice;
     autoConversationEnabled = prefs.autoConversation;
     soundOnEnabled = prefs.soundOn;
@@ -155,6 +165,7 @@ class ConversationService {
       await _ttsPlayer.stop();
     } catch (_) {}
     isPlayingTts = false;
+    isTtsAudible = false;
     ttsTurnIndex = null;
     isProcessing = false;
     stage = ConversationProcessingStage.idle;
@@ -169,7 +180,9 @@ class ConversationService {
       return;
     }
     if (!_chatActive || text.trim().isEmpty) return;
-    final index = turns.lastIndexWhere((turn) => !turn.isUser && turn.text == text);
+    final index = turns.lastIndexWhere(
+      (turn) => !turn.isUser && turn.text == text,
+    );
     if (index >= 0) {
       await speakAiTurns([index]);
     }
@@ -188,7 +201,8 @@ class ConversationService {
     if (!_chatActive || turnIndices.isEmpty) return;
 
     final sessionEpoch = _chatSessionEpoch;
-    final audioEnabled = soundOnEnabled && (!isAutomatic || autoPlayVoiceEnabled);
+    final audioEnabled =
+        soundOnEnabled && (!isAutomatic || autoPlayVoiceEnabled);
 
     if (audioEnabled) {
       for (final index in turnIndices) {
@@ -209,7 +223,8 @@ class ConversationService {
 
     // Give the user a beat to read (no audio) or finish listening (after TTS).
     await _delayBeforeAutoMic(sessionEpoch);
-    if (sessionEpoch != _chatSessionEpoch || !_chatActive || isRecording) return;
+    if (sessionEpoch != _chatSessionEpoch || !_chatActive || isRecording)
+      return;
 
     await startRecording();
   }
@@ -253,12 +268,14 @@ class ConversationService {
           await _ttsPlayer.stop();
         } catch (_) {}
         isPlayingTts = false;
+        isTtsAudible = false;
         ttsTurnIndex = null;
         stage = ConversationProcessingStage.idle;
         _notify();
         return;
       }
       isPlayingTts = false;
+      isTtsAudible = false;
       ttsTurnIndex = null;
       stage = ConversationProcessingStage.idle;
       _notify();
@@ -382,10 +399,7 @@ class ConversationService {
     );
   }
 
-  void startSession(
-    SpeakingSessionContext context, {
-    String? openingMessage,
-  }) {
+  void startSession(SpeakingSessionContext context, {String? openingMessage}) {
     _chatSessionEpoch++;
     _chatActive = true;
     activeHistorySessionId = null;
@@ -409,8 +423,9 @@ class ConversationService {
     await _bootstrapSessionOpening();
   }
 
-  String get _effectiveResponseLanguage =>
-      responseLanguage.trim().isNotEmpty ? responseLanguage.trim() : practiceLanguage;
+  String get _effectiveResponseLanguage => responseLanguage.trim().isNotEmpty
+      ? responseLanguage.trim()
+      : practiceLanguage;
 
   Future<void> _bootstrapSessionOpening({
     String? openingMessageOverride,
@@ -460,8 +475,7 @@ class ConversationService {
       unawaited(
         speakAiTurns(
           [aiTurnIndex],
-          startMicAfter:
-              autoStartRecordingEnabled || autoConversationEnabled,
+          startMicAfter: autoStartRecordingEnabled || autoConversationEnabled,
           isAutomatic: true,
         ),
       );
@@ -513,7 +527,9 @@ class ConversationService {
     }
     DailyGoalTracker.instance.applySpeakingStats(data['speakingStats']);
 
-    final translation = _sanitizeTranslation(_optionalString(data['translation']));
+    final translation = _sanitizeTranslation(
+      _optionalString(data['translation']),
+    );
 
     return (
       reply: _sanitizeTutorReply(data['reply']?.toString() ?? ''),
@@ -535,10 +551,9 @@ class ConversationService {
     if (curated == null || curated.isEmpty) {
       curated = context.openingMessage?.trim();
     }
-    final opener =
-        curated != null && curated.isNotEmpty && responseLang == 'en'
-            ? curated
-            : _defaultOpening(context);
+    final opener = curated != null && curated.isNotEmpty && responseLang == 'en'
+        ? curated
+        : _defaultOpening(context);
 
     if (opener.isEmpty) return;
 
@@ -583,7 +598,10 @@ class ConversationService {
     }
   }
 
-  String _localizedRolePlayOpening(SpeakingSessionContext context, String lang) {
+  String _localizedRolePlayOpening(
+    SpeakingSessionContext context,
+    String lang,
+  ) {
     final tutorRole = context.tutorRole ?? 'your partner';
     if (lang == 'de') {
       return 'Willkommen bei ${context.title}! Ich spiele ${tutorRole}. '
@@ -633,7 +651,8 @@ class ConversationService {
   static const _chatGreetingsByLevel = {
     'A1': "Hi! I'm your AI tutor. How can I help you today?",
     'A2': "Hi! I'm your AI tutor. How can I help you today?",
-    'B1': "Hi there! I'm your AI tutor. What would you like to talk about today?",
+    'B1':
+        "Hi there! I'm your AI tutor. What would you like to talk about today?",
     'B2': "Hello! I'm your AI tutor. What would you like to dive into today?",
     'C1':
         "Hello! I'm your AI tutor, here to help you sharpen your fluency. What's on your mind today?",
@@ -654,8 +673,7 @@ class ConversationService {
 
   String _chatGreetingForLevel(String? level, String lang) {
     if (lang == 'de') {
-      return _chatGreetingsByLevelDe[level] ??
-          _chatGreetingsByLevelDe['A1']!;
+      return _chatGreetingsByLevelDe[level] ?? _chatGreetingsByLevelDe['A1']!;
     }
     return _chatGreetingsByLevel[level] ??
         SpeakingSessionContext.defaultChatGreeting;
@@ -669,15 +687,14 @@ class ConversationService {
     _notify();
 
     try {
-      final history =
-          turns
-              .map(
-                (turn) => {
-                  'role': turn.isUser ? 'user' : 'assistant',
-                  'text': turn.text,
-                },
-              )
-              .toList();
+      final history = turns
+          .map(
+            (turn) => {
+              'role': turn.isUser ? 'user' : 'assistant',
+              'text': turn.text,
+            },
+          )
+          .toList();
 
       final data = await ApiService.post('ai/evaluate-session', {
         'history': history,
@@ -1006,14 +1023,7 @@ class ConversationService {
     }
     // Extremely short filler tokens (do not reject "yes"/"hi"/etc.).
     if (normalized.length <= 1) return true;
-    const fillers = <String>{
-      'you',
-      'thank you',
-      'thanks',
-      'um',
-      'uh',
-      'hmm',
-    };
+    const fillers = <String>{'you', 'thank you', 'thanks', 'um', 'uh', 'hmm'};
     if (fillers.contains(normalized)) return true;
     return false;
   }
@@ -1051,7 +1061,9 @@ class ConversationService {
           message = error['message']?.toString();
         }
       }
-      throw Exception(message ?? 'Transcription failed (${response.statusCode})');
+      throw Exception(
+        message ?? 'Transcription failed (${response.statusCode})',
+      );
     }
 
     if (body is Map) {
@@ -1116,22 +1128,19 @@ class ConversationService {
     })
   >
   _fetchTutorReply(String message) async {
-    final historyTurns =
-        turns.length > 1 ? turns.sublist(0, turns.length - 1) : <ConversationTurnModel>[];
-    final history =
-        historyTurns
-            .map(
-              (turn) => {
-                'role': turn.isUser ? 'user' : 'assistant',
-                'text': turn.text,
-              },
-            )
-            .toList();
+    final historyTurns = turns.length > 1
+        ? turns.sublist(0, turns.length - 1)
+        : <ConversationTurnModel>[];
+    final history = historyTurns
+        .map(
+          (turn) => {
+            'role': turn.isUser ? 'user' : 'assistant',
+            'text': turn.text,
+          },
+        )
+        .toList();
 
-    final body = <String, dynamic>{
-      'message': message,
-      'history': history,
-    };
+    final body = <String, dynamic>{'message': message, 'history': history};
     if (trainingSession.isActive) {
       body['trainingSession'] = trainingSession.toJson();
     }
@@ -1187,18 +1196,21 @@ class ConversationService {
       }
     }
 
-    final noteLimitMessage =
-        data['noteLimitReached'] == true
-            ? (data['noteMessage']?.toString() ??
-                'Free auto-save limit reached (10 notes). Upgrade for unlimited deck notes.')
-            : null;
+    final noteLimitMessage = data['noteLimitReached'] == true
+        ? (data['noteMessage']?.toString() ??
+              'Free auto-save limit reached (10 notes). Upgrade for unlimited deck notes.')
+        : null;
 
-    final translation = _sanitizeTranslation(_optionalString(data['translation']));
+    final translation = _sanitizeTranslation(
+      _optionalString(data['translation']),
+    );
 
     return (
       reply: _sanitizeTutorReply(data['reply']?.toString() ?? ''),
       translation: translation,
-      corrections: data['corrections'] is List ? data['corrections'] as List : [],
+      corrections: data['corrections'] is List
+          ? data['corrections'] as List
+          : [],
       trainingSession: ConversationTrainingSession.fromJson(
         data['trainingSession'] is Map
             ? Map<String, dynamic>.from(data['trainingSession'] as Map)
@@ -1219,8 +1231,17 @@ class ConversationService {
   /// Strips internal LLM format if the server ever returns it unparsed.
   String _sanitizeTutorReply(String reply) {
     return reply
-        .replaceAll(RegExp(r'\s*NOTE_ACTION_JSON:[\s\S]*', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\s*CORRECTIONS_JSON:\s*\[[\s\S]*\]\s*$', caseSensitive: false), '')
+        .replaceAll(
+          RegExp(r'\s*NOTE_ACTION_JSON:[\s\S]*', caseSensitive: false),
+          '',
+        )
+        .replaceAll(
+          RegExp(
+            r'\s*CORRECTIONS_JSON:\s*\[[\s\S]*\]\s*$',
+            caseSensitive: false,
+          ),
+          '',
+        )
         .replaceAll(RegExp(r'\s*TRANSLATION:[^\n]*', caseSensitive: false), '')
         .replaceFirst(RegExp(r'^REPLY:\s*', caseSensitive: false), '')
         .trim();
@@ -1228,7 +1249,10 @@ class ConversationService {
 
   String? _sanitizeTranslation(String? translation) {
     if (translation == null || translation.isEmpty) return null;
-    if (RegExp(r'NOTE_ACTION_JSON', caseSensitive: false).hasMatch(translation)) {
+    if (RegExp(
+      r'NOTE_ACTION_JSON',
+      caseSensitive: false,
+    ).hasMatch(translation)) {
       return null;
     }
     return translation;
@@ -1236,7 +1260,8 @@ class ConversationService {
 
   Future<String?> fetchMessageTranslation(String text) async {
     await refreshSpeakingSettings();
-    final lang = SpeakingPreferencesService.instance.current.translationLanguage;
+    final lang =
+        SpeakingPreferencesService.instance.current.translationLanguage;
     if (lang == 'none' || text.trim().isEmpty) return null;
 
     final data = await ApiService.post('ai/translate-message', {
@@ -1246,7 +1271,9 @@ class ConversationService {
     if (data is Map && data['error'] != null) return null;
     if (data is! Map) return null;
 
-    final translation = _sanitizeTranslation(_optionalString(data['translation']));
+    final translation = _sanitizeTranslation(
+      _optionalString(data['translation']),
+    );
 
     return translation;
   }
@@ -1270,7 +1297,9 @@ class ConversationService {
     required int sessionEpoch,
     bool sessionOpening = false,
   }) async {
-    if (text.trim().isEmpty || sessionEpoch != _chatSessionEpoch || !_chatActive) {
+    if (text.trim().isEmpty ||
+        sessionEpoch != _chatSessionEpoch ||
+        !_chatActive) {
       return;
     }
 
@@ -1335,6 +1364,7 @@ class ConversationService {
       _ttsPlayer.onPlayerStateChanged.listen((state) {
         if (state == PlayerState.playing) {
           seenPlaying = true;
+          _setTtsAudible(true);
           return;
         }
         // Ignore a stale "stopped" from the previous stop() before this play().
@@ -1349,6 +1379,7 @@ class ConversationService {
       await _ttsPlayer.play(source);
       if (_ttsPlayer.state == PlayerState.playing) {
         seenPlaying = true;
+        _setTtsAudible(true);
       }
 
       if (_ttsPlayer.state == PlayerState.completed) {
@@ -1362,11 +1393,11 @@ class ConversationService {
           Future<void>.delayed(const Duration(milliseconds: 150)),
         ]);
       }
-
     } finally {
       for (final sub in subs) {
         await sub.cancel();
       }
+      _setTtsAudible(false);
     }
   }
 
