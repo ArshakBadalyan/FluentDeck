@@ -254,7 +254,7 @@ const sound = (() => {
     ask.className = 'otter-ask';
     ask.setAttribute('role', 'dialog');
     ask.setAttribute('aria-label', 'Otter sounds');
-    ask.innerHTML = `${img('face-happy')}<div><strong>Let Ollie talk? 🔊</strong>Turn on the otter's voice and sounds.
+    ask.innerHTML = `${img('face-happy')}<div><strong>Let Rio talk? 🔊</strong>Turn on Rio's voice and sounds.
       <div class="row"><button class="yes" type="button">Turn on</button><button class="no" type="button">No thanks</button></div></div>`;
     document.body.append(ask);
     setTimeout(() => ask.classList.add('show'), 2500);
