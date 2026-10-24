@@ -61,6 +61,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     unawaited(_loadSpeakingPrefs());
     unawaited(_service.refreshSpeakingSettings());
     unawaited(RioPreferences.instance.load());
+    RioPreferences.instance.showRio.addListener(_onRioPrefChanged);
     _loadUsage();
   }
 
@@ -97,6 +98,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     DailyGoalTracker.instance.dailyGoalReached.removeListener(
       _onDailyGoalReached,
     );
+    RioPreferences.instance.showRio.removeListener(_onRioPrefChanged);
     _celebrationTimer?.cancel();
     _textController.dispose();
     _scrollController.dispose();
@@ -121,6 +123,150 @@ class _ConversationScreenState extends State<ConversationScreen> {
     unawaited(_loadSpeakingPrefs());
     unawaited(_loadUsage());
     _scrollToBottom();
+  }
+
+  /// Rio view: Rio big on screen with the latest exchange; the full chat is one tap away.
+  bool _showTranscript = false;
+  bool get _rioView =>
+      RioPreferences.instance.showRio.value && !_showTranscript;
+  bool get _hasUserTurn => _service.turns.any((t) => t.isUser);
+
+  void _onRioPrefChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Widget _turnBubble(int index) {
+    final turn = _service.turns[index];
+    final isPlayingAi = _service.isPlayingTts && index == _service.ttsTurnIndex;
+    return AppFadeIn(
+      // Only the newest turns animate in; history scrolled back
+      // into view appears at rest.
+      animate: index >= _service.turns.length - 2,
+      child: _TurnBubble(
+        turnIndex: index,
+        turn: turn,
+        translationLanguage: _hasTranslationHelper
+            ? _translationLanguage
+            : null,
+        translationHelperLabel: _hasTranslationHelper
+            ? _translationHelperLabel
+            : null,
+        onTranslateTurn: _hasTranslationHelper ? _translateTurn : null,
+        vocabularyHighlights: turn.isUser
+            ? const []
+            : _service.sessionContext.suggestedVocabulary,
+        // No Play button when AI voice is off — playback is muted then.
+        // The settings sheet shows one merged "AI voice" switch backed by
+        // two prefs (soundOn + autoPlayVoice); check both so accounts with
+        // mismatched legacy values don't show Play after turning it off.
+        onPlayAi:
+            turn.isUser ||
+                !(_service.soundOnEnabled && _service.autoPlayVoiceEnabled)
+            ? null
+            : () => _service.playAiText(turn.text, turnIndex: index),
+        isPlayingAi: isPlayingAi,
+        onSaveSelection: _saveChatSelection,
+      ),
+    );
+  }
+
+  /// Rio big, the tutor's latest reply floating over it (with the learner's
+  /// message and correction just before it), like a video call with Rio.
+  Widget _buildRioView() {
+    final turns = _service.turns;
+    final lastAi = turns.lastIndexWhere((t) => !t.isUser);
+    var from = lastAi < 0 ? turns.length : lastAi;
+    if (from > 0 && turns[from - 1].isUser) from -= 1;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return LayoutBuilder(
+      builder: (context, c) {
+        final rioSize = (c.maxHeight * 0.6).clamp(160.0, 340.0);
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.45),
+                    radius: 0.9,
+                    colors: [
+                      AppColors.brandPrimary.withValues(
+                        alpha: dark ? 0.22 : 0.12,
+                      ),
+                      AppPageColors.pageBgOf(context),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: RioStage(
+                  mood: _rioMood,
+                  onTap: _onRioTap,
+                  size: rioSize,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 4,
+              right: 8,
+              child: IconButton(
+                tooltip: 'Show full chat',
+                onPressed: () => setState(() => _showTranscript = true),
+                icon: Icon(
+                  Icons.forum_outlined,
+                  color: AppPageColors.subtitleOf(context),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: c.maxHeight * 0.55),
+                child: SingleChildScrollView(
+                  reverse: true,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = from; i < turns.length; i++) _turnBubble(i),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTranscript() {
+    final list = ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      itemCount: _service.turns.length,
+      itemBuilder: (context, index) => _turnBubble(index),
+    );
+    if (!RioPreferences.instance.showRio.value) return list;
+    // Full chat opened from the Rio view: one tap back to Rio.
+    return Stack(
+      children: [
+        list,
+        Positioned(
+          top: 8,
+          right: 12,
+          child: FilledButton.tonalIcon(
+            onPressed: () => setState(() => _showTranscript = false),
+            icon: const Icon(Icons.pets_rounded, size: 18),
+            label: const Text('Rio'),
+          ),
+        ),
+      ],
+    );
   }
 
   RioMood get _rioMood {
@@ -415,61 +561,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     ),
                   ],
                 ),
-              // Rio talks with the learner; Chat settings → "Show Rio" turns it off.
-              ValueListenableBuilder<bool>(
-                valueListenable: RioPreferences.instance.showRio,
-                builder: (context, show, _) => show
-                    ? RioStage(mood: _rioMood, onTap: _onRioTap)
-                    : const SizedBox.shrink(),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  itemCount: _service.turns.length,
-                  itemBuilder: (context, index) {
-                    final turn = _service.turns[index];
-                    final isPlayingAi =
-                        _service.isPlayingTts && index == _service.ttsTurnIndex;
-                    return AppFadeIn(
-                      // Only the newest turns animate in; history scrolled back
-                      // into view appears at rest.
-                      animate: index >= _service.turns.length - 2,
-                      child: _TurnBubble(
-                        turnIndex: index,
-                        turn: turn,
-                        translationLanguage: _hasTranslationHelper
-                            ? _translationLanguage
-                            : null,
-                        translationHelperLabel: _hasTranslationHelper
-                            ? _translationHelperLabel
-                            : null,
-                        onTranslateTurn: _hasTranslationHelper
-                            ? _translateTurn
-                            : null,
-                        vocabularyHighlights: turn.isUser
-                            ? const []
-                            : _service.sessionContext.suggestedVocabulary,
-                        // No Play button when AI voice is off — playback is muted then.
-                        // The settings sheet shows one merged "AI voice" switch backed by
-                        // two prefs (soundOn + autoPlayVoice); check both so accounts with
-                        // mismatched legacy values don't show Play after turning it off.
-                        onPlayAi:
-                            turn.isUser ||
-                                !(_service.soundOnEnabled &&
-                                    _service.autoPlayVoiceEnabled)
-                            ? null
-                            : () => _service.playAiText(
-                                turn.text,
-                                turnIndex: index,
-                              ),
-                        isPlayingAi: isPlayingAi,
-                        onSaveSelection: _saveChatSelection,
-                      ),
-                    );
-                  },
-                ),
-              ),
+              // Chat settings → "Show Rio": Rio view (default) or the plain chat.
+              Expanded(child: _rioView ? _buildRioView() : _buildTranscript()),
               _ProcessingIndicator(
                 isProcessing: _service.isProcessing,
                 stage: _service.stage,
@@ -477,20 +570,25 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     ? () => _service.cancelActiveOperation()
                     : null,
               ),
-              _InputBar(
-                isRecording: _service.isRecording,
-                isProcessing: _service.isProcessing,
-                recordingDurationLabel: _service.isRecording
-                    ? _service.recordingDurationLabel
-                    : null,
-                textController: _textController,
-                onMicTap: _onMicTap,
-                onSendText: _onSendText,
-                typeMessagesEnabled: _service.typeMessagesEnabled,
-                onCancel: (_service.isProcessing || _service.isRecording)
-                    ? () => _service.cancelActiveOperation()
-                    : null,
-              ),
+              if (_rioView && !_hasUserTurn && !_service.isRecording)
+                _StartConversationButton(
+                  onPressed: _service.isProcessing ? null : _onMicTap,
+                )
+              else
+                _InputBar(
+                  isRecording: _service.isRecording,
+                  isProcessing: _service.isProcessing,
+                  recordingDurationLabel: _service.isRecording
+                      ? _service.recordingDurationLabel
+                      : null,
+                  textController: _textController,
+                  onMicTap: _onMicTap,
+                  onSendText: _onSendText,
+                  typeMessagesEnabled: _service.typeMessagesEnabled,
+                  onCancel: (_service.isProcessing || _service.isRecording)
+                      ? () => _service.cancelActiveOperation()
+                      : null,
+                ),
             ],
           ),
           // Daily goal reached: a card pops in with confetti, then fades.
@@ -668,10 +766,20 @@ class _TurnBubbleState extends State<_TurnBubble> {
                 : MainAxisAlignment.start,
             children: [
               if (!isUser)
-                const CircleAvatar(
-                  radius: 14,
-                  backgroundColor: AppColors.brandPrimary,
-                  child: Icon(Icons.school, size: 16, color: Colors.white),
+                // Rio's face as the tutor's avatar (the plain icon with Show Rio off).
+                ValueListenableBuilder<bool>(
+                  valueListenable: RioPreferences.instance.showRio,
+                  builder: (context, show, _) => show
+                      ? const _RioAvatar()
+                      : const CircleAvatar(
+                          radius: 14,
+                          backgroundColor: AppColors.brandPrimary,
+                          child: Icon(
+                            Icons.school,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               if (!isUser) const SizedBox(width: 8),
               Flexible(
@@ -1215,6 +1323,69 @@ class _ProcessingIndicator extends StatelessWidget {
           if (onCancel != null)
             TextButton(onPressed: onCancel, child: const Text('Cancel')),
         ],
+      ),
+    );
+  }
+}
+
+/// Rio's head in a small circle: the tutor's avatar next to its messages.
+class _RioAvatar extends StatelessWidget {
+  const _RioAvatar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.brandPrimary.withValues(alpha: 0.18),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Transform.scale(
+        scale: 2.1,
+        alignment: const Alignment(0, -0.62), // zoom in on the face
+        child: Image.asset(
+          RioPose.happy.asset,
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+        ),
+      ),
+    );
+  }
+}
+
+/// Rio view, before the learner has said anything: one big button to start talking.
+class _StartConversationButton extends StatelessWidget {
+  const _StartConversationButton({required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.voiceDeep,
+              foregroundColor: Colors.white,
+              shape: const StadiumBorder(),
+              textStyle: const TextStyle(
+                fontFamily: 'Rubik',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onPressed: onPressed,
+            icon: const Icon(Icons.mic_rounded),
+            label: const Text('Start a conversation'),
+          ),
+        ),
       ),
     );
   }

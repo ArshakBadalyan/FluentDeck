@@ -13,12 +13,16 @@ enum RioMood { idle, speaking, listening, thinking, cheering }
 /// tutor speaks, listens while the learner records, hops when it starts
 /// talking or cheers. Still (no animation) with reduce-motion on.
 class RioStage extends StatefulWidget {
-  const RioStage({super.key, required this.mood, this.onTap});
+  const RioStage({super.key, required this.mood, this.onTap, this.size});
 
   final RioMood mood;
 
   /// Tapping Rio (e.g. replay the last tutor reply).
   final VoidCallback? onTap;
+
+  /// Null: the compact strip with a status line. Set: Rio alone, this tall
+  /// (the conversation screen's Rio view).
+  final double? size;
 
   @override
   State<RioStage> createState() => _RioStageState();
@@ -138,8 +142,52 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
     RioMood.cheering => 'You did it! 🎉',
   };
 
+  Widget _animatedRio({required double width, required double height}) {
+    return GestureDetector(
+      onTap: _onTap,
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_breath, _hop]),
+        builder: (context, child) {
+          final b = Curves.easeInOut.transform(_breath.value);
+          final hopY = -12 * (height / 112).clamp(1.0, 1.6) * math.sin(math.pi * _hop.value);
+          return Transform.translate(
+            offset: Offset(0, hopY),
+            child: Transform(
+              alignment: Alignment.bottomCenter,
+              transform: Matrix4.diagonal3Values(
+                1 + 0.02 * b,
+                1 - 0.015 * b,
+                1,
+              ),
+              child: child,
+            ),
+          );
+        },
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: Image.asset(
+            _frame,
+            fit: BoxFit.contain,
+            alignment: Alignment.bottomCenter,
+            gaplessPlayback: true, // no blank flash between mouth frames
+            excludeFromSemantics: true,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = widget.size;
+    if (size != null) {
+      return Semantics(
+        label: 'Rio the otter. $_line',
+        button: widget.onTap != null,
+        child: _animatedRio(width: size * 0.8, height: size),
+      );
+    }
     final accent = AppPageColors.accentOf(context);
     return Semantics(
       label: 'Rio the otter. $_line',
@@ -162,40 +210,7 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
         child: Row(
           children: [
             const SizedBox(width: 8),
-            GestureDetector(
-              onTap: _onTap,
-              child: AnimatedBuilder(
-                animation: Listenable.merge([_breath, _hop]),
-                builder: (context, child) {
-                  final b = Curves.easeInOut.transform(_breath.value);
-                  final hopY = -12 * math.sin(math.pi * _hop.value);
-                  return Transform.translate(
-                    offset: Offset(0, hopY),
-                    child: Transform(
-                      alignment: Alignment.bottomCenter,
-                      transform: Matrix4.diagonal3Values(
-                        1 + 0.02 * b,
-                        1 - 0.015 * b,
-                        1,
-                      ),
-                      child: child,
-                    ),
-                  );
-                },
-                child: SizedBox(
-                  width: 92,
-                  height: 112,
-                  child: Image.asset(
-                    _frame,
-                    fit: BoxFit.contain,
-                    alignment: Alignment.bottomCenter,
-                    gaplessPlayback:
-                        true, // no blank flash between mouth frames
-                    excludeFromSemantics: true,
-                  ),
-                ),
-              ),
-            ),
+            _animatedRio(width: 92, height: 112),
             const SizedBox(width: 6),
             Expanded(
               child: Align(
