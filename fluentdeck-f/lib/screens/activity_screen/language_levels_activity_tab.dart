@@ -233,7 +233,7 @@ class _HeroCard extends StatelessWidget {
         ],
       ),
       child: SceneBackdrop(
-        scene: TutorScene.exploring,
+        scene: TutorScene.hiking,
         color: AppColors.heroGradient.last,
         child: Padding(
           padding: const EdgeInsets.all(22),

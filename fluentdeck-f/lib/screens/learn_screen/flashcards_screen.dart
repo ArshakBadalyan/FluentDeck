@@ -1104,7 +1104,7 @@ class _StatsCard extends StatelessWidget {
         : 'Tap Study now to begin your session';
 
     return AppHeroCard(
-      scene: TutorScene.reading,
+      scene: TutorScene.online,
       value: '${stats.dueNow}',
       label: stats.dueNow == 1 ? 'card due' : 'cards due',
       subtitle: subtitle,

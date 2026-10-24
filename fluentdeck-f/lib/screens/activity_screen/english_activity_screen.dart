@@ -523,7 +523,7 @@ class _StreakHero extends StatelessWidget {
         ],
       ),
       child: SceneBackdrop(
-        scene: TutorScene.encouraging,
+        scene: TutorScene.cave,
         color: AppColors.heroGradient.last,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),

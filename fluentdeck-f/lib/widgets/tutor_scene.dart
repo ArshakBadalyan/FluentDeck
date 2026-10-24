@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// The English tutor otter's "In Action" scenes (assets/tutor/), from the
-/// character sheet. Used as card art via [SceneBackdrop].
+/// The otter's "In Action" scenes (assets/tutor/), from the character sheets
+/// (English tutor and adventurer). Used as card art via [SceneBackdrop].
 enum TutorScene {
   teaching,
   reading,
   online,
   encouraging,
   listening,
-  exploring;
+  exploring,
+  hiking,
+  cave;
 
   String get asset => 'assets/tutor/scene-$name.webp';
 }
@@ -17,6 +19,9 @@ enum TutorScene {
 /// fading over the picture's inner edge (so text on the other side stays
 /// readable). Put it directly inside the card's clipped decoration, with the
 /// card's padding inside [child].
+///
+/// The picture is capped at [maxImageWidth]: the scenes are small, and on a
+/// wide (web) card they would otherwise be stretched and look blurry.
 class SceneBackdrop extends StatelessWidget {
   const SceneBackdrop({
     super.key,
@@ -25,6 +30,7 @@ class SceneBackdrop extends StatelessWidget {
     required this.child,
     this.onLeft = false,
     this.widthFactor = 0.55,
+    this.maxImageWidth = 300,
   });
 
   final TutorScene scene;
@@ -34,52 +40,63 @@ class SceneBackdrop extends StatelessWidget {
   final Widget child;
   final bool onLeft;
 
-  /// How much of the card's width the picture covers.
+  /// How much of the card's width the picture covers (up to [maxImageWidth]).
   final double widthFactor;
+  final double maxImageWidth;
 
   @override
   Widget build(BuildContext context) {
-    final start =
-        1 - widthFactor; // where the picture begins, from the text side
     return Stack(
       children: [
         Positioned.fill(
-          child: Align(
-            alignment: onLeft ? Alignment.centerLeft : Alignment.centerRight,
-            child: FractionallySizedBox(
-              widthFactor: widthFactor,
-              heightFactor: 1,
-              child: Image.asset(
-                scene.asset,
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-                excludeFromSemantics: true,
-              ),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: onLeft ? Alignment.centerRight : Alignment.centerLeft,
-                  end: onLeft ? Alignment.centerLeft : Alignment.centerRight,
-                  colors: [
-                    color,
-                    color,
-                    color.withValues(alpha: 0.55),
-                    color.withValues(alpha: 0),
-                  ],
-                  stops: [
-                    0,
-                    start - 0.02,
-                    start + 0.18,
-                    (start + 0.42).clamp(0.0, 1.0),
-                  ],
-                ),
-              ),
-            ),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final imageWidth = (c.maxWidth * widthFactor).clamp(
+                0.0,
+                maxImageWidth,
+              );
+              // Fade only the picture's inner edge (first 30% of it).
+              final fade = imageWidth * 0.3;
+              return Stack(
+                children: [
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    width: imageWidth,
+                    left: onLeft ? 0 : null,
+                    right: onLeft ? null : 0,
+                    child: Image.asset(
+                      scene.asset,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.medium,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    width: fade,
+                    left: onLeft ? imageWidth - fade : null,
+                    right: onLeft ? null : imageWidth - fade,
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: onLeft
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            end: onLeft
+                                ? Alignment.centerLeft
+                                : Alignment.centerRight,
+                            colors: [color, color.withValues(alpha: 0)],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
         child,
