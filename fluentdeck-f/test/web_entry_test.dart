@@ -18,6 +18,19 @@ void main() {
     expect(mode('https://fluentdeck.app/app/?auth=nope'), isNull);
   });
 
+  test('web skips the intro only when opened from a landing page button', () {
+    bool skips(String url) =>
+        WebEntry.skipsIntroFor(Uri.parse(url), isWeb: true);
+    expect(skips('https://fluentdeck.app/app/?auth=signup'), isTrue);
+    expect(skips('https://fluentdeck.app/app/?auth=signin'), isTrue);
+    expect(skips('https://fluentdeck.app/app/'), isFalse); // direct launch: intro first
+    expect(skips('http://localhost:63162/'), isFalse); // flutter run -d chrome
+    expect(
+      WebEntry.skipsIntroFor(Uri.parse('https://x/app/?auth=signup'), isWeb: false),
+      isFalse,
+    );
+  });
+
   test('the intro is only skipped on web (tests run as mobile)', () {
     expect(WebEntry.skipsIntro, isFalse);
     expect(WebEntry.authModeFromUrl(), isNull);
