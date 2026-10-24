@@ -1,0 +1,28 @@
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// "Show Rio" on the conversation screen. A display choice, so it is kept on
+/// this device only (not in the account's speaking preferences). On by default.
+class RioPreferences {
+  RioPreferences._();
+  static final RioPreferences instance = RioPreferences._();
+
+  static const _key = 'show_rio';
+
+  /// Listen to this to rebuild when the switch changes.
+  final ValueNotifier<bool> showRio = ValueNotifier<bool>(true);
+  bool _loaded = false;
+
+  Future<void> load() async {
+    if (_loaded) return;
+    _loaded = true;
+    final prefs = await SharedPreferences.getInstance();
+    showRio.value = prefs.getBool(_key) ?? true;
+  }
+
+  Future<void> setShowRio(bool value) async {
+    showRio.value = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, value);
+  }
+}

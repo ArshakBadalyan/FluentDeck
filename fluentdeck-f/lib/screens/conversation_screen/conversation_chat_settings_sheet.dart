@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/speaking_preferences.dart';
 import '../../services/conversation_service.dart';
+import '../../services/rio_preferences.dart';
 import '../../services/speaking_preferences_service.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../ui_elements/modern_page_widgets.dart';
@@ -35,6 +36,7 @@ class _ConversationChatSettingsSheetState
   void initState() {
     super.initState();
     _load();
+    RioPreferences.instance.load();
   }
 
   Future<void> _load() async {
@@ -133,6 +135,17 @@ class _ConversationChatSettingsSheetState
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
+                      ValueListenableBuilder<bool>(
+                        valueListenable: RioPreferences.instance.showRio,
+                        builder: (context, show, _) => AppToggleRow(
+                          title: 'Show Rio',
+                          subtitle:
+                              'Rio the otter talks with you. Turn off for the plain chat (this device).',
+                          value: show,
+                          enabled: true,
+                          onChanged: RioPreferences.instance.setShowRio,
+                        ),
+                      ),
                       AppToggleRow(
                         title: 'AI voice',
                         subtitle:

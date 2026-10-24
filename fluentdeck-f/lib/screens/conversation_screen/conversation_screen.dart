@@ -14,11 +14,13 @@ import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/daily_goal_tracker.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/services/speaking_scores_service.dart';
+import 'package:fluentdeck/services/rio_preferences.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/utils/correction_text_utils.dart';
 import 'package:fluentdeck/utils/vocabulary_highlight_utils.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/ai_daily_usage_bar.dart';
+import 'package:fluentdeck/widgets/rio_stage.dart';
 
 import 'conversation_chat_settings_sheet.dart';
 import 'save_word_meaning_sheet.dart';
@@ -57,6 +59,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     DailyGoalTracker.instance.dailyGoalReached.addListener(_onDailyGoalReached);
     unawaited(_loadSpeakingPrefs());
     unawaited(_service.refreshSpeakingSettings());
+    unawaited(RioPreferences.instance.load());
     _loadUsage();
   }
 
@@ -115,6 +118,23 @@ class _ConversationScreenState extends State<ConversationScreen> {
     unawaited(_loadSpeakingPrefs());
     unawaited(_loadUsage());
     _scrollToBottom();
+  }
+
+  RioMood get _rioMood {
+    if (_celebratingGoal) return RioMood.cheering;
+    if (_service.isPlayingTts) return RioMood.speaking;
+    if (_service.isRecording) return RioMood.listening;
+    if (_service.isProcessing) return RioMood.thinking;
+    return RioMood.idle;
+  }
+
+  /// Tapping Rio replays the tutor's last reply (when voice is on and nothing else is running).
+  void _onRioTap() {
+    if (_service.isProcessing || _service.isRecording || _service.isPlayingTts) return;
+    if (!(_service.soundOnEnabled && _service.autoPlayVoiceEnabled)) return;
+    final index = _service.turns.lastIndexWhere((t) => !t.isUser);
+    if (index < 0) return;
+    _service.playAiText(_service.turns[index].text, turnIndex: index);
   }
 
   void _scrollToBottom() {
@@ -348,6 +368,13 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 ),
               ],
             ),
+          // Rio talks with the learner; Chat settings → "Show Rio" turns it off.
+          ValueListenableBuilder<bool>(
+            valueListenable: RioPreferences.instance.showRio,
+            builder: (context, show, _) => show
+                ? RioStage(mood: _rioMood, onTap: _onRioTap)
+                : const SizedBox.shrink(),
+          ),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
