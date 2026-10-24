@@ -31,7 +31,17 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
   static const _curious = 'assets/rio/rio-curious.webp';
   static const _excited = 'assets/rio/rio-excited.webp';
   // Mouth shapes in a loose, speech-like order (closed / half / open).
-  static const _mouth = [_talkMid, _talk, _talkMid, _happy, _talk, _talkMid, _talk, _talkMid, _happy];
+  static const _mouth = [
+    _talkMid,
+    _talk,
+    _talkMid,
+    _happy,
+    _talk,
+    _talkMid,
+    _talk,
+    _talkMid,
+    _happy,
+  ];
 
   late final AnimationController _breath = AnimationController(
     vsync: this,
@@ -72,7 +82,9 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
   void didUpdateWidget(RioStage old) {
     super.didUpdateWidget(old);
     if (old.mood != widget.mood) {
-      _applyMood(hop: widget.mood == RioMood.speaking || widget.mood == RioMood.cheering);
+      _applyMood(
+        hop: widget.mood == RioMood.speaking || widget.mood == RioMood.cheering,
+      );
     }
   }
 
@@ -99,7 +111,10 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
     if (!mounted) return;
     setState(() => _frame = _mouth[_mouthStep % _mouth.length]);
     _mouthStep += 1;
-    _mouthTimer = Timer(Duration(milliseconds: 80 + _random.nextInt(70)), _nextMouth);
+    _mouthTimer = Timer(
+      Duration(milliseconds: 80 + _random.nextInt(70)),
+      _nextMouth,
+    );
   }
 
   void _onTap() {
@@ -116,12 +131,12 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
   }
 
   String get _line => switch (widget.mood) {
-        RioMood.idle => 'Hi, I\'m Rio! Tap the mic and say hello 👋',
-        RioMood.speaking => 'Rio is speaking…',
-        RioMood.listening => 'I\'m listening…',
-        RioMood.thinking => 'Hmm, let me think…',
-        RioMood.cheering => 'You did it! 🎉',
-      };
+    RioMood.idle => 'Hi, I\'m Rio! Tap the mic and say hello 👋',
+    RioMood.speaking => 'Rio is speaking…',
+    RioMood.listening => 'I\'m listening…',
+    RioMood.thinking => 'Hmm, let me think…',
+    RioMood.cheering => 'You did it! 🎉',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +173,11 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
                     offset: Offset(0, hopY),
                     child: Transform(
                       alignment: Alignment.bottomCenter,
-                      transform: Matrix4.diagonal3Values(1 + 0.02 * b, 1 - 0.015 * b, 1),
+                      transform: Matrix4.diagonal3Values(
+                        1 + 0.02 * b,
+                        1 - 0.015 * b,
+                        1,
+                      ),
                       child: child,
                     ),
                   );
@@ -170,7 +189,8 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
                     _frame,
                     fit: BoxFit.contain,
                     alignment: Alignment.bottomCenter,
-                    gaplessPlayback: true, // no blank flash between mouth frames
+                    gaplessPlayback:
+                        true, // no blank flash between mouth frames
                     excludeFromSemantics: true,
                   ),
                 ),
@@ -184,7 +204,10 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
                   duration: AppMotion.duration(context, AppMotion.fast),
                   child: Container(
                     key: ValueKey(widget.mood),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     margin: const EdgeInsets.only(right: 12),
                     decoration: BoxDecoration(
                       color: AppPageColors.cardBgOf(context),

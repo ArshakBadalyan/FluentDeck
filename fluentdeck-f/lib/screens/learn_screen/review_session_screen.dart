@@ -32,6 +32,7 @@ import 'package:fluentdeck/widgets/image_occlusion_review.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:animations/animations.dart';
+import 'package:fluentdeck/widgets/rio.dart';
 
 class ReviewSessionScreen extends StatefulWidget {
   const ReviewSessionScreen({super.key, this.deckId});
@@ -1279,7 +1280,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
       return const AppListSkeleton(count: 1, itemHeight: 420);
     }
     if (_submitting) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: RioLoader(label: 'Getting your cards…'));
     }
 
     if (_error != null) {
@@ -1296,11 +1297,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
               // "Session complete" pops in (spring scale) with a confetti
               // burst; an empty deck just shows its icon.
               if (_startedEmpty)
-                Icon(
-                  Icons.inbox_outlined,
-                  size: 64,
-                  color: AppPageColors.subtitleOf(context),
-                )
+                const RioImage(RioPose.sleepy, height: 110, motion: RioMotion.sway)
               else
                 AppConfettiBurst(
                   colors: const [
@@ -1315,11 +1312,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                     curve: AppMotion.spring,
                     builder: (context, scale, child) =>
                         Transform.scale(scale: scale, child: child),
-                    child: const Icon(
-                      Icons.check_circle,
-                      size: 64,
-                      color: AppColors.greenCorrect,
-                    ),
+                    child: const RioImage(RioPose.catchFish, height: 120, motion: RioMotion.none),
                   ),
                 ),
               const SizedBox(height: 16),

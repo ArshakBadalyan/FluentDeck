@@ -30,6 +30,7 @@ import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:fluentdeck/widgets/rio.dart';
 
 class _DeckRow {
   const _DeckRow({required this.deck, required this.depth});
@@ -812,11 +813,15 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            if (_decks.isEmpty)
+                            if (_decks.isEmpty) ...[
+                              const Center(
+                                child: RioImage(RioPose.sleepy, height: 120, motion: RioMotion.sway),
+                              ),
                               const AppEmptyHint(
                                 text:
-                                    'No decks yet. Save words or take notes to auto-create cards.',
+                                    'No decks yet. Let\'s catch some words! Save words or take notes to auto-create cards.',
                               ),
+                            ],
                           ]),
                         ),
                       ),

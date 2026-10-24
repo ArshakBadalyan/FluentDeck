@@ -10,6 +10,7 @@ import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
 import 'package:fluentdeck/utils/practice_time_format.dart';
+import 'package:fluentdeck/widgets/rio.dart';
 
 const String kEnglishOnboardingSeenPrefsKey = 'english_onboarding_seen';
 const String kEnglishLevelPrefsKey = 'english_level';
@@ -41,12 +42,16 @@ class _OnboardingPage {
   const _OnboardingPage({
     required this.id,
     required this.icon,
+    required this.rio,
     required this.accent,
     this.chips = const [],
   });
 
   final String id;
   final IconData icon;
+
+  /// Rio's pose on this page (shown in place of [icon]).
+  final RioPose rio;
   final Color accent;
 
   /// Keys of short highlights shown under the text.
@@ -57,30 +62,35 @@ const _pages = [
   _OnboardingPage(
     id: 'speak',
     icon: Icons.mic_rounded,
+    rio: RioPose.explore,
     accent: AppColors.voiceDeep,
     chips: ['voice-or-text', 'gentle-corrections', 'remembers-you'],
   ),
   _OnboardingPage(
     id: 'practice',
     icon: Icons.forum_rounded,
+    rio: RioPose.excited,
     accent: AppColors.brandPrimary,
     chips: ['topics', 'role-plays', 'games', 'languages'],
   ),
   _OnboardingPage(
     id: 'flashcards',
     icon: Icons.style_rounded,
+    rio: RioPose.catchFish,
     accent: AppColors.brandPrimaryDeep,
     chips: ['auto-saved', 'spaced-repetition', 'anki-import'],
   ),
   _OnboardingPage(
     id: 'progress',
     icon: Icons.local_fire_department_rounded,
+    rio: RioPose.determined,
     accent: AppColors.primaryYellow,
     chips: ['daily-goal', 'streak', 'cefr-level'],
   ),
   _OnboardingPage(
     id: 'plan',
     icon: Icons.workspace_premium_rounded,
+    rio: RioPose.happy,
     accent: AppColors.brandPrimary,
   ),
 ];
@@ -250,13 +260,14 @@ class _OnboardingPageView extends StatelessWidget {
         children: [
           AppFadeIn(
             child: Container(
-              width: 132,
-              height: 132,
+              width: 168,
+              height: 168,
+              alignment: Alignment.bottomCenter,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: accent.withValues(alpha: 0.14),
               ),
-              child: Icon(page.icon, size: 64, color: accent),
+              child: RioImage(page.rio, height: 156, motion: RioMotion.pop),
             ),
           ),
           const SizedBox(height: 32),

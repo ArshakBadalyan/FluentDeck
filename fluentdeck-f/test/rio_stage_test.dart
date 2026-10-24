@@ -1,6 +1,8 @@
 import 'package:fluentdeck/services/rio_preferences.dart';
+import 'package:fluentdeck/widgets/rio.dart';
 import 'package:fluentdeck/widgets/rio_stage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,5 +52,31 @@ void main() {
     await RioPreferences.instance.setShowRio(false);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('show_rio'), isFalse);
+  });
+
+  testWidgets('A popping Rio settles (so pages using it can pumpAndSettle)', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: RioImage(RioPose.catchFish, motion: RioMotion.pop)));
+    await tester.pumpAndSettle();
+    expect(find.byType(RioImage), findsOneWidget);
+  });
+
+  testWidgets('Every pose has its picture in the asset bundle', (tester) async {
+    for (final pose in RioPose.values) {
+      final data = await rootBundle.load(pose.asset);
+      expect(data.lengthInBytes, greaterThan(1000), reason: pose.asset);
+    }
+  });
+
+  testWidgets('Reduce motion: the swimming loader holds still', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(
+        builder: (context) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: const Scaffold(body: RioLoader(label: 'Loading')),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle(); // would time out if the waves kept moving
+    expect(find.text('Loading'), findsOneWidget);
   });
 }

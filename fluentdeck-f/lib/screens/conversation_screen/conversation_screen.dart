@@ -21,6 +21,7 @@ import 'package:fluentdeck/utils/vocabulary_highlight_utils.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/ai_daily_usage_bar.dart';
 import 'package:fluentdeck/widgets/rio_stage.dart';
+import 'package:fluentdeck/widgets/rio.dart';
 
 import 'conversation_chat_settings_sheet.dart';
 import 'save_word_meaning_sheet.dart';
@@ -93,7 +94,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (_service.onStateChanged == _onServiceUpdate) {
       _service.onStateChanged = null;
     }
-    DailyGoalTracker.instance.dailyGoalReached.removeListener(_onDailyGoalReached);
+    DailyGoalTracker.instance.dailyGoalReached.removeListener(
+      _onDailyGoalReached,
+    );
     _celebrationTimer?.cancel();
     _textController.dispose();
     _scrollController.dispose();
@@ -130,7 +133,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   /// Tapping Rio replays the tutor's last reply (when voice is on and nothing else is running).
   void _onRioTap() {
-    if (_service.isProcessing || _service.isRecording || _service.isPlayingTts) return;
+    if (_service.isProcessing || _service.isRecording || _service.isPlayingTts)
+      return;
     if (!(_service.soundOnEnabled && _service.autoPlayVoiceEnabled)) return;
     final index = _service.turns.lastIndexWhere((t) => !t.isUser);
     if (index < 0) return;
@@ -163,7 +167,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
     await _service.sendTextMessage(text);
   }
 
-  Future<void> _saveChatSelection(String selected, String sourceSentence) async {
+  Future<void> _saveChatSelection(
+    String selected,
+    String sourceSentence,
+  ) async {
     final trimmed = selected.trim();
     if (trimmed.isEmpty) return;
 
@@ -187,13 +194,13 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
     if (!mounted) return;
     if (result.ok) {
-      final msg =
-          result.flashcardCreated
-              ? 'Saved to notes and From speaking deck'
-              : 'Saved to notes';
+      final msg = result.flashcardCreated
+          ? 'Saved to notes and From speaking deck'
+          : 'Saved to notes';
       AppToast.showSnackBar(context, SnackBar(content: Text(msg)));
     } else {
-      AppToast.showSnackBar(context, 
+      AppToast.showSnackBar(
+        context,
         SnackBar(content: Text(result.message ?? 'Could not save')),
       );
     }
@@ -232,14 +239,39 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 
   Future<void> _endSession() async {
-    final result = await _service.evaluateCurrentSession();
+    final scoring = showAppDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const PopScope(
+        canPop: false,
+        child: Center(
+          child: Material(
+            type: MaterialType.transparency,
+            child: RioLoader(
+              label: 'Rio is scoring your conversation…',
+              width: 200,
+            ),
+          ),
+        ),
+      ),
+    );
+    final SessionEvaluationResult? result;
+    try {
+      result = await _service.evaluateCurrentSession();
+    } finally {
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+      await scoring;
+    }
     if (!mounted) return;
     if (result == null) {
-      AppToast.showSnackBar(context, 
+      AppToast.showSnackBar(
+        context,
         const SnackBar(content: Text('Could not evaluate this session yet.')),
       );
       return;
     }
+    final evaluation =
+        result; // non-null from here (the dialog below captures it)
 
     final ctx = _service.sessionContext;
     SpeakingSessionCompleteResult? saved;
@@ -257,7 +289,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      AppToast.showSnackBar(context, 
+      AppToast.showSnackBar(
+        context,
         SnackBar(content: Text('Score saved locally. Sync failed: $e')),
       );
       if (ctx.referenceKey != null && ctx.referenceKey!.isNotEmpty) {
@@ -271,17 +304,26 @@ class _ConversationScreenState extends State<ConversationScreen> {
     }
 
     if (!mounted) return;
-    final streakNote =
-        saved != null && saved.streakDays > 0
-            ? '\n\n${saved.streakDays} day speaking streak!'
-            : '';
+    final streakNote = saved != null && saved.streakDays > 0
+        ? '\n\n${saved.streakDays} day speaking streak!'
+        : '';
     await showAppDialog<void>(
       context: context,
-      builder:
-          (dialogCtx) => AlertDialog(
-            title: Text('Score: ${result.score} / 10'),
-            content: Text('${result.feedback}$streakNote'),
-          ),
+      builder: (dialogCtx) => AlertDialog(
+        title: Text('Score: ${evaluation.score} / 10'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const RioImage(
+              RioPose.determined,
+              height: 110,
+              motion: RioMotion.pop,
+            ),
+            const SizedBox(height: 12),
+            Text('${evaluation.feedback}$streakNote'),
+          ],
+        ),
+      ),
     );
   }
 
@@ -290,157 +332,167 @@ class _ConversationScreenState extends State<ConversationScreen> {
     final statusLine = _compactStatusLine();
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
-      appBar:
-          widget.embedInShell
-              ? null
-              : AppBar(
-                title: const Text('English Practice'),
-                backgroundColor: AppColors.brandPrimary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                actions: [
-                  IconButton(
-                    onPressed: () => showConversationChatSettingsSheet(context),
-                    icon: const Icon(Icons.tune_rounded),
-                    tooltip: 'Chat settings',
-                  ),
-                ],
-              ),
-      body: Stack(
-        children: [
-          Column(
-        children: [
-          if (_usage != null && _usage!.hasMeter) AiDailyUsageBar(usage: _usage!),
-          if (statusLine != null || _service.canEvaluateSession)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              color: AppColors.brandPrimary.withValues(alpha: 0.06),
-              child: Row(
-                children: [
-                  if (statusLine != null)
-                    Expanded(
-                      child: Text(
-                        statusLine,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppPageColors.subtitleOf(context),
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )
-                  else
-                    const Spacer(),
-                  if (_service.canEvaluateSession)
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed:
-                          _service.isEvaluatingSession ? null : _endSession,
-                      child:
-                          _service.isEvaluatingSession
-                              ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                              : const Text('End & score'),
-                    ),
-                ],
-              ),
-            ),
-          if (_service.errorMessage != null)
-            MaterialBanner(
-              content: Text(_service.errorMessage!),
-              backgroundColor: AppColors.redWrong.withValues(alpha: 0.12),
+      appBar: widget.embedInShell
+          ? null
+          : AppBar(
+              title: const Text('English Practice'),
+              backgroundColor: AppColors.brandPrimary,
+              foregroundColor: Colors.white,
+              elevation: 0,
               actions: [
-                TextButton(
-                  onPressed: () {
-                    _service.errorMessage = null;
-                    _onServiceUpdate();
-                  },
-                  child: const Text('Dismiss'),
+                IconButton(
+                  onPressed: () => showConversationChatSettingsSheet(context),
+                  icon: const Icon(Icons.tune_rounded),
+                  tooltip: 'Chat settings',
                 ),
               ],
             ),
-          // Rio talks with the learner; Chat settings → "Show Rio" turns it off.
-          ValueListenableBuilder<bool>(
-            valueListenable: RioPreferences.instance.showRio,
-            builder: (context, show, _) => show
-                ? RioStage(mood: _rioMood, onTap: _onRioTap)
-                : const SizedBox.shrink(),
-          ),
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              itemCount: _service.turns.length,
-              itemBuilder: (context, index) {
-                final turn = _service.turns[index];
-                final isPlayingAi =
-                    _service.isPlayingTts && index == _service.ttsTurnIndex;
-                return AppFadeIn(
-                  // Only the newest turns animate in; history scrolled back
-                  // into view appears at rest.
-                  animate: index >= _service.turns.length - 2,
-                  child: _TurnBubble(
-                  turnIndex: index,
-                  turn: turn,
-                  translationLanguage:
-                      _hasTranslationHelper ? _translationLanguage : null,
-                  translationHelperLabel:
-                      _hasTranslationHelper ? _translationHelperLabel : null,
-                  onTranslateTurn: _hasTranslationHelper ? _translateTurn : null,
-                  vocabularyHighlights:
-                      turn.isUser
-                          ? const []
-                          : _service.sessionContext.suggestedVocabulary,
-                  // No Play button when AI voice is off — playback is muted then.
-                  // The settings sheet shows one merged "AI voice" switch backed by
-                  // two prefs (soundOn + autoPlayVoice); check both so accounts with
-                  // mismatched legacy values don't show Play after turning it off.
-                  onPlayAi:
-                      turn.isUser ||
-                              !(_service.soundOnEnabled &&
-                                  _service.autoPlayVoiceEnabled)
-                          ? null
-                          : () => _service.playAiText(turn.text, turnIndex: index),
-                  isPlayingAi: isPlayingAi,
-                  onSaveSelection: _saveChatSelection,
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              if (_usage != null && _usage!.hasMeter)
+                AiDailyUsageBar(usage: _usage!),
+              if (statusLine != null || _service.canEvaluateSession)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  color: AppColors.brandPrimary.withValues(alpha: 0.06),
+                  child: Row(
+                    children: [
+                      if (statusLine != null)
+                        Expanded(
+                          child: Text(
+                            statusLine,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppPageColors.subtitleOf(context),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      else
+                        const Spacer(),
+                      if (_service.canEvaluateSession)
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: _service.isEvaluatingSession
+                              ? null
+                              : _endSession,
+                          child: _service.isEvaluatingSession
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('End & score'),
+                        ),
+                    ],
+                  ),
                 ),
-                );
-              },
-            ),
-          ),
-          _ProcessingIndicator(
-            isProcessing: _service.isProcessing,
-            stage: _service.stage,
-            onCancel:
-                (_service.isProcessing || _service.isRecording)
+              if (_service.errorMessage != null)
+                MaterialBanner(
+                  content: Text(_service.errorMessage!),
+                  backgroundColor: AppColors.redWrong.withValues(alpha: 0.12),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        _service.errorMessage = null;
+                        _onServiceUpdate();
+                      },
+                      child: const Text('Dismiss'),
+                    ),
+                  ],
+                ),
+              // Rio talks with the learner; Chat settings → "Show Rio" turns it off.
+              ValueListenableBuilder<bool>(
+                valueListenable: RioPreferences.instance.showRio,
+                builder: (context, show, _) => show
+                    ? RioStage(mood: _rioMood, onTap: _onRioTap)
+                    : const SizedBox.shrink(),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  itemCount: _service.turns.length,
+                  itemBuilder: (context, index) {
+                    final turn = _service.turns[index];
+                    final isPlayingAi =
+                        _service.isPlayingTts && index == _service.ttsTurnIndex;
+                    return AppFadeIn(
+                      // Only the newest turns animate in; history scrolled back
+                      // into view appears at rest.
+                      animate: index >= _service.turns.length - 2,
+                      child: _TurnBubble(
+                        turnIndex: index,
+                        turn: turn,
+                        translationLanguage: _hasTranslationHelper
+                            ? _translationLanguage
+                            : null,
+                        translationHelperLabel: _hasTranslationHelper
+                            ? _translationHelperLabel
+                            : null,
+                        onTranslateTurn: _hasTranslationHelper
+                            ? _translateTurn
+                            : null,
+                        vocabularyHighlights: turn.isUser
+                            ? const []
+                            : _service.sessionContext.suggestedVocabulary,
+                        // No Play button when AI voice is off — playback is muted then.
+                        // The settings sheet shows one merged "AI voice" switch backed by
+                        // two prefs (soundOn + autoPlayVoice); check both so accounts with
+                        // mismatched legacy values don't show Play after turning it off.
+                        onPlayAi:
+                            turn.isUser ||
+                                !(_service.soundOnEnabled &&
+                                    _service.autoPlayVoiceEnabled)
+                            ? null
+                            : () => _service.playAiText(
+                                turn.text,
+                                turnIndex: index,
+                              ),
+                        isPlayingAi: isPlayingAi,
+                        onSaveSelection: _saveChatSelection,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              _ProcessingIndicator(
+                isProcessing: _service.isProcessing,
+                stage: _service.stage,
+                onCancel: (_service.isProcessing || _service.isRecording)
                     ? () => _service.cancelActiveOperation()
                     : null,
-          ),
-          _InputBar(
-            isRecording: _service.isRecording,
-            isProcessing: _service.isProcessing,
-            recordingDurationLabel:
-                _service.isRecording ? _service.recordingDurationLabel : null,
-            textController: _textController,
-            onMicTap: _onMicTap,
-            onSendText: _onSendText,
-            typeMessagesEnabled: _service.typeMessagesEnabled,
-            onCancel:
-                (_service.isProcessing || _service.isRecording)
+              ),
+              _InputBar(
+                isRecording: _service.isRecording,
+                isProcessing: _service.isProcessing,
+                recordingDurationLabel: _service.isRecording
+                    ? _service.recordingDurationLabel
+                    : null,
+                textController: _textController,
+                onMicTap: _onMicTap,
+                onSendText: _onSendText,
+                typeMessagesEnabled: _service.typeMessagesEnabled,
+                onCancel: (_service.isProcessing || _service.isRecording)
                     ? () => _service.cancelActiveOperation()
                     : null,
+              ),
+            ],
           ),
-        ],
-      ),
           // Daily goal reached: a card pops in with confetti, then fades.
           Positioned.fill(
             child: IgnorePointer(
@@ -568,14 +620,14 @@ class _TurnBubbleState extends State<_TurnBubble> {
 
   @override
   Widget build(BuildContext context) {
-    final cardCorrections =
-        turn.corrections.where((correction) => correction.showsCard).toList();
+    final cardCorrections = turn.corrections
+        .where((correction) => correction.showsCard)
+        .toList();
     final showInstantOkBadge =
-        isUser &&
-        turn.corrections.isEmpty &&
-        turn.text.trim().isNotEmpty;
-    final translation =
-        !isUser && _showTranslation ? turn.translation?.trim() : null;
+        isUser && turn.corrections.isEmpty && turn.text.trim().isNotEmpty;
+    final translation = !isUser && _showTranslation
+        ? turn.translation?.trim()
+        : null;
     final actionIconCount =
         (_hasTranslateAction ? 1 : 0) +
         (widget.onSaveSelection != null ? 1 : 0);
@@ -585,34 +637,35 @@ class _TurnBubbleState extends State<_TurnBubble> {
       fontSize: 15,
       height: 1.35,
     );
-    final messageSpans =
-        isUser && turn.corrections.any((c) => c.showsInline)
-            ? buildCorrectedMessageSpans(
-              text: turn.text,
-              corrections: turn.corrections,
-              baseStyle: baseStyle,
-              errorColor:
-                  isUser ? const Color(0xFFFF8A80) : AppColors.redWrong,
-              correctionColor:
-                  isUser ? const Color(0xFF69F0AE) : AppColors.greenCorrect,
-            )
-            : !isUser && widget.vocabularyHighlights.isNotEmpty
-            ? buildVocabularyHighlightSpans(
-              text: turn.text,
-              vocabulary: widget.vocabularyHighlights,
-              baseStyle: baseStyle,
-            )
-            : [TextSpan(text: turn.text, style: baseStyle)];
+    final messageSpans = isUser && turn.corrections.any((c) => c.showsInline)
+        ? buildCorrectedMessageSpans(
+            text: turn.text,
+            corrections: turn.corrections,
+            baseStyle: baseStyle,
+            errorColor: isUser ? const Color(0xFFFF8A80) : AppColors.redWrong,
+            correctionColor: isUser
+                ? const Color(0xFF69F0AE)
+                : AppColors.greenCorrect,
+          )
+        : !isUser && widget.vocabularyHighlights.isNotEmpty
+        ? buildVocabularyHighlightSpans(
+            text: turn.text,
+            vocabulary: widget.vocabularyHighlights,
+            baseStyle: baseStyle,
+          )
+        : [TextSpan(text: turn.text, style: baseStyle)];
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
-        crossAxisAlignment:
-            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment:
-                isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisAlignment: isUser
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
             children: [
               if (!isUser)
                 const CircleAvatar(
@@ -628,7 +681,9 @@ class _TurnBubbleState extends State<_TurnBubble> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: isUser ? AppColors.brandPrimary : AppPageColors.cardBgOf(context),
+                    color: isUser
+                        ? AppColors.brandPrimary
+                        : AppPageColors.cardBgOf(context),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -649,9 +704,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
                     clipBehavior: Clip.none,
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(
-                          right: actionPadding,
-                        ),
+                        padding: EdgeInsets.only(right: actionPadding),
                         child: SelectableText.rich(
                           TextSpan(children: messageSpans),
                           style: baseStyle,
@@ -661,10 +714,10 @@ class _TurnBubbleState extends State<_TurnBubble> {
                             final selection = value.selection;
                             final selectedText =
                                 selection.isValid && !selection.isCollapsed
-                                    ? value.text
-                                        .substring(selection.start, selection.end)
-                                        .trim()
-                                    : '';
+                                ? value.text
+                                      .substring(selection.start, selection.end)
+                                      .trim()
+                                : '';
 
                             final items = <ContextMenuButtonItem>[
                               ...editableTextState.contextMenuButtonItems,
@@ -706,40 +759,40 @@ class _TurnBubbleState extends State<_TurnBubble> {
                                       minWidth: 32,
                                       minHeight: 32,
                                     ),
-                                    tooltip:
-                                        _showTranslation
-                                            ? 'Hide ${widget.translationHelperLabel ?? 'translation'}'
-                                            : 'Show ${widget.translationHelperLabel ?? 'translation'}',
-                                    icon:
-                                        _loadingTranslation
-                                            ? SizedBox(
-                                              width: 18,
-                                              height: 18,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color:
-                                                    isUser
-                                                        ? Colors.white
-                                                            .withValues(alpha: 0.9)
-                                                        : AppPageColors.accentOf(context),
-                                              ),
-                                            )
-                                            : Icon(
-                                              _showTranslation
-                                                  ? Icons.translate
-                                                  : Icons.translate_outlined,
-                                              size: 20,
-                                              color:
-                                                  isUser
-                                                      ? Colors.white.withValues(
-                                                        alpha: 0.9,
-                                                      )
-                                                      : AppPageColors.accentOf(context),
+                                    tooltip: _showTranslation
+                                        ? 'Hide ${widget.translationHelperLabel ?? 'translation'}'
+                                        : 'Show ${widget.translationHelperLabel ?? 'translation'}',
+                                    icon: _loadingTranslation
+                                        ? SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: isUser
+                                                  ? Colors.white.withValues(
+                                                      alpha: 0.9,
+                                                    )
+                                                  : AppPageColors.accentOf(
+                                                      context,
+                                                    ),
                                             ),
-                                    onPressed:
-                                        _loadingTranslation
-                                            ? null
-                                            : _onTranslateTap,
+                                          )
+                                        : Icon(
+                                            _showTranslation
+                                                ? Icons.translate
+                                                : Icons.translate_outlined,
+                                            size: 20,
+                                            color: isUser
+                                                ? Colors.white.withValues(
+                                                    alpha: 0.9,
+                                                  )
+                                                : AppPageColors.accentOf(
+                                                    context,
+                                                  ),
+                                          ),
+                                    onPressed: _loadingTranslation
+                                        ? null
+                                        : _onTranslateTap,
                                   ),
                                 ),
                               if (widget.onSaveSelection != null)
@@ -756,12 +809,12 @@ class _TurnBubbleState extends State<_TurnBubble> {
                                     icon: Icon(
                                       Icons.bookmark_add_outlined,
                                       size: 20,
-                                      color:
-                                          isUser
-                                              ? Colors.white.withValues(alpha: 0.9)
-                                              : AppPageColors.accentOf(context),
+                                      color: isUser
+                                          ? Colors.white.withValues(alpha: 0.9)
+                                          : AppPageColors.accentOf(context),
                                     ),
-                                    onPressed: () => _openSaveSheet(turn.text.trim()),
+                                    onPressed: () =>
+                                        _openSaveSheet(turn.text.trim()),
                                   ),
                                 ),
                             ],
@@ -780,7 +833,10 @@ class _TurnBubbleState extends State<_TurnBubble> {
                   decoration: BoxDecoration(
                     color: AppColors.greenCorrect.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.greenCorrect, width: 1.5),
+                    border: Border.all(
+                      color: AppColors.greenCorrect,
+                      width: 1.5,
+                    ),
                   ),
                   child: const Icon(
                     Icons.check_rounded,
@@ -799,7 +855,9 @@ class _TurnBubbleState extends State<_TurnBubble> {
                 right: isUser ? 0 : 8,
               ),
               child: Align(
-                alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                alignment: isUser
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
                 child: FilledButton.tonalIcon(
                   onPressed: () => _openSaveSheet(_selectedText!),
                   icon: const Icon(Icons.bookmark_add_outlined, size: 18),
@@ -826,8 +884,9 @@ class _TurnBubbleState extends State<_TurnBubble> {
                 right: isUser ? 0 : 8,
               ),
               child: Align(
-                alignment:
-                    isUser ? Alignment.centerRight : Alignment.centerLeft,
+                alignment: isUser
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
                 child: Text(
                   translation,
                   style: TextStyle(
@@ -846,7 +905,9 @@ class _TurnBubbleState extends State<_TurnBubble> {
                 onPressed: widget.isPlayingAi ? null : widget.onPlayAi,
                 icon: AppFadeThroughSwitcher(
                   child: Icon(
-                    widget.isPlayingAi ? Icons.volume_up : Icons.play_arrow_rounded,
+                    widget.isPlayingAi
+                        ? Icons.volume_up
+                        : Icons.play_arrow_rounded,
                     key: ValueKey(widget.isPlayingAi),
                     size: 18,
                   ),
@@ -903,15 +964,13 @@ class _CorrectionCardState extends State<_CorrectionCard> {
       if (!mounted) return;
       if (result.ok) {
         setState(() => _saved = true);
-        final msg =
-            result.flashcardCreated
-                ? 'Saved to notes and From speaking deck'
-                : 'Saved to notes';
-        AppToast.showSnackBar(context, 
-          SnackBar(content: Text(msg)),
-        );
+        final msg = result.flashcardCreated
+            ? 'Saved to notes and From speaking deck'
+            : 'Saved to notes';
+        AppToast.showSnackBar(context, SnackBar(content: Text(msg)));
       } else {
-        AppToast.showSnackBar(context, 
+        AppToast.showSnackBar(
+          context,
           SnackBar(content: Text(result.message ?? 'Could not save')),
         );
       }
@@ -926,138 +985,162 @@ class _CorrectionCardState extends State<_CorrectionCard> {
       padding: const EdgeInsets.only(top: 6),
       child: Align(
         alignment: Alignment.centerRight,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 320),
-          child: Material(
-            color: AppPageColors.cardBgOf(context),
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: () => setState(() => _expanded = !_expanded),
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // A surprised Rio peeks at the fix (unless Rio is turned off).
+            ValueListenableBuilder<bool>(
+              valueListenable: RioPreferences.instance.showRio,
+              builder: (context, show, _) => show
+                  ? const Padding(
+                      padding: EdgeInsets.only(right: 4),
+                      child: RioImage(
+                        RioPose.surprised,
+                        height: 52,
+                        motion: RioMotion.pop,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            Flexible(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 320),
+                child: Material(
+                  color: AppPageColors.cardBgOf(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.primaryYellow.withValues(alpha: 0.8),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          _isSaved
-                              ? Icons.bookmark_added_rounded
-                              : Icons.auto_fix_high,
-                          size: 16,
-                          color: AppColors.brandPrimary,
+                  child: InkWell(
+                    onTap: () => setState(() => _expanded = !_expanded),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.primaryYellow.withValues(alpha: 0.8),
                         ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            widget.correction.correctedText,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.brandPrimary,
-                            ),
-                          ),
-                        ),
-                        if (_isSaved) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryYellow.withValues(
-                                alpha: 0.2,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                _isSaved
+                                    ? Icons.bookmark_added_rounded
+                                    : Icons.auto_fix_high,
+                                size: 16,
+                                color: AppColors.brandPrimary,
                               ),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: AppColors.primaryYellow.withValues(
-                                  alpha: 0.85,
-                                ),
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.bookmark_added_rounded,
-                                  size: 13,
-                                  color: AppColors.brandPrimary,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Saved',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  widget.correction.correctedText,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
                                     color: AppColors.brandPrimary,
                                   ),
                                 ),
+                              ),
+                              if (_isSaved) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryYellow.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                      color: AppColors.primaryYellow.withValues(
+                                        alpha: 0.85,
+                                      ),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.bookmark_added_rounded,
+                                        size: 13,
+                                        color: AppColors.brandPrimary,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Saved',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.brandPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
                               ],
-                            ),
+                              Icon(
+                                _expanded
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
+                                size: 18,
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 4),
+                          if (_expanded) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'You said: ${widget.correction.originalText}',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.correction.explanation,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppPageColors.subtitleOf(context),
+                              ),
+                            ),
+                            if (!_isSaved) ...[
+                              const SizedBox(height: 10),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: _saving ? null : _saveToNotes,
+                                  icon: Icon(
+                                    _saving
+                                        ? Icons.hourglass_top_rounded
+                                        : Icons.bookmark_add_outlined,
+                                    size: 16,
+                                  ),
+                                  label: Text(
+                                    _saving ? 'Saving…' : 'Save to notes',
+                                  ),
+                                ),
+                              ),
+                            ] else ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Added to your From speaking deck',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppPageColors.subtitleOf(context),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ],
                         ],
-                        Icon(
-                          _expanded
-                              ? Icons.expand_less
-                              : Icons.expand_more,
-                          size: 18,
-                        ),
-                      ],
+                      ),
                     ),
-                    if (_expanded) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'You said: ${widget.correction.originalText}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.correction.explanation,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppPageColors.subtitleOf(context),
-                        ),
-                      ),
-                      if (!_isSaved) ...[
-                        const SizedBox(height: 10),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton.icon(
-                            onPressed: _saving ? null : _saveToNotes,
-                            icon: Icon(
-                              _saving
-                                  ? Icons.hourglass_top_rounded
-                                  : Icons.bookmark_add_outlined,
-                              size: 16,
-                            ),
-                            label: Text(_saving ? 'Saving…' : 'Save to notes'),
-                          ),
-                        ),
-                      ] else ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Added to your From speaking deck',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppPageColors.subtitleOf(context),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -1165,29 +1248,29 @@ class _InputBar extends StatelessWidget {
         active: isRecording,
         color: AppColors.redWrong,
         child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isRecording ? AppColors.redWrong : AppColors.voiceDeep,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.voiceDeep.withValues(alpha: 0.35),
-              blurRadius: size / 6,
-              offset: Offset(0, size / 18),
+          duration: const Duration(milliseconds: 200),
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isRecording ? AppColors.redWrong : AppColors.voiceDeep,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.voiceDeep.withValues(alpha: 0.35),
+                blurRadius: size / 6,
+                offset: Offset(0, size / 18),
+              ),
+            ],
+          ),
+          child: AppFadeThroughSwitcher(
+            child: Icon(
+              isRecording ? Icons.stop : Icons.mic,
+              key: ValueKey(isRecording),
+              color: Colors.white,
+              size: size * 0.45,
             ),
-          ],
-        ),
-        child: AppFadeThroughSwitcher(
-          child: Icon(
-            isRecording ? Icons.stop : Icons.mic,
-            key: ValueKey(isRecording),
-            color: Colors.white,
-            size: size * 0.45,
           ),
         ),
-      ),
       ),
     );
   }
@@ -1236,7 +1319,9 @@ class _InputBar extends StatelessWidget {
                         fillColor: AppPageColors.fieldBgOf(context),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+                          borderSide: BorderSide(
+                            color: AppPageColors.subtleBorderOf(context),
+                          ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -1262,13 +1347,19 @@ class _InputBar extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   recordingLabel,
-                  style: TextStyle(color: AppPageColors.subtitleOf(context), fontSize: 13),
+                  style: TextStyle(
+                    color: AppPageColors.subtitleOf(context),
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ] else
               Text(
                 isRecording ? recordingLabel : 'Tap the mic to speak',
-                style: TextStyle(color: AppPageColors.subtitleOf(context), fontSize: 13),
+                style: TextStyle(
+                  color: AppPageColors.subtitleOf(context),
+                  fontSize: 13,
+                ),
               ),
             if (onCancel != null) ...[
               const SizedBox(height: 6),
@@ -1307,10 +1398,10 @@ class _DailyGoalReachedCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.emoji_events_rounded,
-                size: 44,
-                color: AppColors.primaryYellow,
+              const RioImage(
+                RioPose.catchFish,
+                height: 110,
+                motion: RioMotion.pop,
               ),
               const SizedBox(height: 8),
               const Text(
