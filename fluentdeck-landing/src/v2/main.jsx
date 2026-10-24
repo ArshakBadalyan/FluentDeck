@@ -347,7 +347,8 @@ if (wide && !reduceMotion) {
   );
 }
 
-// THROWAWAY SPIKE: end-of-page otter, only with ?otter in the URL.
-if (new URLSearchParams(location.search).has('otter')) {
-  import('../spikes/otter.js').then((m) => m.default());
-}
+// Rio the otter: loaded after the page has drawn and the browser is idle, so it never slows the first paint.
+const loadOtter = () => import('./otter.js').then((m) => m.default());
+const whenIdle = (fn) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 600));
+if (document.readyState === 'complete') whenIdle(loadOtter);
+else window.addEventListener('load', () => whenIdle(loadOtter), { once: true });

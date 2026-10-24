@@ -1,15 +1,28 @@
-// THROWAWAY SPIKE: the otter mascot, in four scenes. Loaded only with ?otter
-// (see src/v2/main.jsx). Frames live in public/media/otter/. Delete this
-// file, that folder and the block in main.jsx to remove it.
+// Rio, the otter mascot, in three scenes. Loaded by src/v2/main.jsx once the page
+// has drawn; frames live in public/media/otter/, voice lines in .../otter/voice/.
+// Pictures load per scene, only when a visitor gets near it (see preload/whenNear).
+// Reduced motion or a data-saving/2G connection: one still Rio, nothing else.
 //   1. Hero: stands by the phone's left edge; click and it runs behind the phone and pops out on the right to say hello.
 //   3. More screens (desktop): hide-and-seek behind the screenshot cards.
 //   4. Final section: the water rises, then the otter pops up through it.
 
 const IMG = (name) => `/media/otter/${name}.webp`;
-const FRAMES = [
-  'run-1', 'run-2', 'run-3', 'run-4', 'limp-1', 'limp-2', 'climb', 'peek', 'scream', 'fall-1', 'fall-2', 'dazed', 'ladder',
-  'turn-back', 'turn-jump', 'turn-front', 'face-happy', 'face-excited', 'face-curious', 'face-sleepy', 'face-surprised',
-];
+// Frames each scene swaps to, fetched ahead so a swap never flashes empty.
+const RUN = ['run-1', 'run-2', 'run-3', 'run-4'];
+const HERO_FRAMES = ['turn-jump', 'turn-front', ...RUN];
+const FAN_FRAMES = [...RUN, 'climb', 'peek', 'scream', 'fall-1', 'fall-2', 'dazed', 'ladder', 'limp-1', 'limp-2',
+  'face-happy', 'face-excited', 'face-sleepy'];
+const END_FRAMES = ['face-excited'];
+const preload = (names) => names.forEach((name) => { new Image().src = IMG(name); });
+/** Runs `fn` once, when `el` comes within `margin` of the screen. */
+function whenNear(el, fn, margin = '600px') {
+  const io = new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) return;
+    io.disconnect();
+    fn();
+  }, { rootMargin: margin });
+  io.observe(el);
+}
 
 const HELLO = {
   English: 'Hello!', Spanish: '¡Hola!', French: 'Bonjour !', German: 'Hallo!', Italian: 'Ciao!',
@@ -50,6 +63,8 @@ const CSS = `
 .otter-stand.ot-crouch .anim { animation: none; transform: scale(1.08, .86); transition: transform .12s ease-out; }
 .otter-stand.ot-air .anim { animation: otter-leap .42s cubic-bezier(.3,.7,.4,1); }
 .otter-stand.ot-land .anim { animation: otter-land .3s ease-out; }
+.otter-stand.still { cursor: default; }
+.otter-stand.still .anim { animation: none; }
 .otter-stand.ot-hi .anim { animation: otter-hop .45s ease-in-out 2, otter-breathe 3.2s ease-in-out .9s infinite; }
 
 /* 3. Fan hide-and-seek */
@@ -91,17 +106,6 @@ const CSS = `
 .otter-stage.water-up .otter-sea-svg { transform: none; transition: transform .9s cubic-bezier(.2,.8,.3,1); }
 
 /* Sound: the permission card, then a small speaker toggle. */
-.otter-ask { position: fixed; left: 16px; bottom: 16px; z-index: 90; display: flex; align-items: center; gap: 12px; max-width: 340px;
-  padding: 12px 14px; border-radius: 18px; background: #0f2226; border: 1px solid rgba(255,255,255,.1); color: #f3f4f6;
-  font: 500 14px/1.35 Rubik, system-ui, sans-serif; box-shadow: 0 18px 40px rgba(0,0,0,.45);
-  transform: translateY(140%); transition: transform .5s cubic-bezier(.3,1.4,.5,1); }
-.otter-ask.show { transform: none; }
-.otter-ask img { height: 56px; width: auto; flex: none; }
-.otter-ask strong { display: block; font-size: 15px; margin-bottom: 2px; }
-.otter-ask .row { display: flex; gap: 8px; margin-top: 8px; }
-.otter-ask button { border: 0; border-radius: 999px; padding: 6px 12px; font: 600 13px Rubik, system-ui, sans-serif; cursor: pointer; }
-.otter-ask .yes { background: #0d7c86; color: #fff; }
-.otter-ask .no { background: transparent; color: #9ca3af; }
 .otter-mute { position: fixed; left: 16px; bottom: 16px; z-index: 90; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12);
   background: #0f2226; color: #f3f4f6; font-size: 18px; cursor: pointer; box-shadow: 0 10px 24px rgba(0,0,0,.35); }
 
@@ -229,10 +233,10 @@ const sound = (() => {
   };
   const sfx = (name) => { if (on) EFFECTS[name]?.(); };
 
-  function set(v) {
+  function set(v, remember = true) {
     on = v;
-    save(v ? 'on' : 'off');
-    if (v) { audio(); ['hiii', 'oops', 'scream', 'bonk'].forEach(load); }
+    if (remember) save(v ? 'on' : 'off');
+    if (v) audio(); // voice lines are fetched one by one, the first time each is said
     if (toggle) {
       toggle.textContent = v ? '🔊' : '🔇';
       toggle.setAttribute('aria-label', v ? 'Turn otter sounds off' : 'Turn otter sounds on');
@@ -244,31 +248,18 @@ const sound = (() => {
     toggle.className = 'otter-mute';
     toggle.addEventListener('click', () => { set(!on); if (on) say('hiii'); });
     document.body.append(toggle);
-    set(on);
+    set(on, false); // only a visitor's own tap is remembered
   }
-  // Asks once (remembered). Browsers only allow sound after a click, which this is.
+  /** A tap on Rio before any choice counts as "yes, let Rio talk" (browsers allow sound after a tap). */
+  function wake() { if (read() === null) set(true); }
   function init() {
     const saved = read();
-    if (saved) { on = saved === 'on'; showToggle(); return; }
-    const ask = document.createElement('div');
-    ask.className = 'otter-ask';
-    ask.setAttribute('role', 'dialog');
-    ask.setAttribute('aria-label', 'Otter sounds');
-    ask.innerHTML = `${img('face-happy')}<div><strong>Let Rio talk? 🔊</strong>Turn on Rio's voice and sounds.
-      <div class="row"><button class="yes" type="button">Turn on</button><button class="no" type="button">No thanks</button></div></div>`;
-    document.body.append(ask);
-    setTimeout(() => ask.classList.add('show'), 2500);
-    const done = (v) => {
-      ask.classList.remove('show');
-      setTimeout(() => ask.remove(), 500);
-      set(v);
-      showToggle();
-      if (v) say('hiii');
-    };
-    ask.querySelector('.yes').addEventListener('click', () => done(true));
-    ask.querySelector('.no').addEventListener('click', () => done(false));
+    on = saved === 'on';
+    showToggle();
+    if (!on) toggle.setAttribute('aria-label', 'Turn on Rio\'s voice and sounds');
   }
-  return { init, say, sfx };
+  const asked = () => read() !== null;
+  return { init, say, sfx, wake, asked };
 })();
 
 function img(name, extra = '') {
@@ -313,7 +304,7 @@ function bubble(host) {
 // Back turned, watching the tutor. Click: spins round to side-on. Click
 // again: turns to face you (side → three-quarter → front) and says hi.
 // Left alone, it turns back to the phone the same way.
-function standScene() {
+function standScene({ still = false } = {}) {
   const visual = document.querySelector('.hero-visual');
   const phone = visual?.querySelector('.phone');
   if (!phone) return;
@@ -321,8 +312,9 @@ function standScene() {
   const otter = document.createElement('div');
   otter.className = 'otter-stand';
   otter.setAttribute('role', 'button');
-  otter.setAttribute('aria-label', 'Say hi to the otter');
-  otter.innerHTML = `<div class="anim">${img('turn-back')}</div>`;
+  otter.setAttribute('tabindex', '0');
+  otter.setAttribute('aria-label', 'Say hi to Rio the otter');
+  otter.innerHTML = `<div class="anim">${img(still ? 'turn-front' : 'turn-back')}</div>`;
   visual.append(otter);
   const pic = otter.querySelector('.otter-img');
 
@@ -339,7 +331,7 @@ function standScene() {
     left: () => onScreen(phone.offsetLeft + 20),
     right: () => onScreen(phone.offsetLeft + phone.offsetWidth - 20),
   };
-  let at = 'left';
+  let at = still ? 'right' : 'left';
   let x = 0;
   const setX = (v) => { x = v; otter.style.left = `${v}px`; };
   const place = () => {
@@ -348,6 +340,23 @@ function standScene() {
   };
   place();
   window.addEventListener('resize', place);
+  if (still) {
+    otter.classList.add('still');
+    otter.removeAttribute('role');
+    otter.removeAttribute('tabindex');
+    otter.setAttribute('aria-hidden', 'true');
+    return;
+  }
+  // The rest of the turn only loads when someone is about to play with Rio.
+  ['pointerenter', 'touchstart', 'focus'].forEach((ev) => otter.addEventListener(ev, () => preload(HERO_FRAMES), { once: true, passive: true }));
+  // Until the visitor has chosen, Rio hints that it can talk.
+  const talk = bubble(visual);
+  if (!sound.asked()) {
+    setTimeout(() => {
+      if (sound.asked()) return;
+      talk.at(x, phone.offsetTop + phone.offsetHeight + 18 - 190).say('Tap me, I can talk! 🔊', 4500);
+    }, 2500);
+  }
 
   const play = (cls) => { otter.classList.remove('ot-crouch', 'ot-air', 'ot-land', 'ot-hi'); void otter.offsetWidth; if (cls) otter.classList.add(cls); };
   function tween(ms, fn) {
@@ -420,7 +429,14 @@ function standScene() {
     }, 7000);
   };
 
+  otter.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    otter.click();
+  });
   otter.addEventListener('click', async () => {
+    sound.wake();
+    talk.hide();
     if (busy) return;
     busy = true;
     if (at === 'left') await cross('right', 'turn-front');
@@ -437,6 +453,10 @@ function fanScene() {
   if (!window.matchMedia('(min-width: 961px)').matches) return;
   const island = document.querySelector('[data-island="fan"]');
   if (!island) return;
+  whenNear(island, () => { preload(FAN_FRAMES); waitForCards(island); });
+}
+
+function waitForCards(island) {
   const found = () => island.querySelector('.bounce-cards');
   if (found()) return startGame(found());
   const mo = new MutationObserver(() => {
@@ -728,6 +748,7 @@ function startGame(root) {
 
   // ── clicks ──
   root.addEventListener('click', (e) => {
+    sound.wake();
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
     if (state === 'corner' && actor.contains(target)) { runToLast(); return; }
@@ -765,7 +786,7 @@ function finalScene() {
 
   const stage = document.createElement('div');
   stage.className = 'otter-stage';
-  stage.innerHTML = `<div class="otter-pop">${img('face-happy', 'aria-label="A friendly otter"')}</div>${sea('otter-end', 300, 70)}`;
+  stage.innerHTML = `<div class="otter-pop">${img('face-happy', 'loading="lazy" aria-label="Rio the otter"')}</div>${sea('otter-end', 300, 70)}`;
   section.classList.add('otter-host');
   section.append(stage);
   const pop = stage.querySelector('.otter-pop');
@@ -813,11 +834,13 @@ function finalScene() {
     later(1500, () => set('water-up', false)); // then the water goes down
   }
 
+  whenNear(section, () => preload(END_FRAMES));
   new IntersectionObserver(([e]) => (e.isIntersecting ? arrive() : leave()), { threshold: 0.3 }).observe(section);
 
   pop.addEventListener('mouseenter', () => { if (here) { look('face-excited'); set('wiggle', true); } });
   pop.addEventListener('mouseleave', () => { set('wiggle', false); look('face-happy'); });
   pop.addEventListener('click', () => {
+    sound.wake();
     if (!here) return;
     clicks += 1;
     flash('splash', 700);
@@ -851,11 +874,13 @@ function finalScene() {
 }
 
 export default function mountOtter() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const style = document.createElement('style');
   style.textContent = CSS;
   document.head.append(style);
-  FRAMES.forEach((name) => { new Image().src = IMG(name); }); // preload, so frame swaps never flash
+  const net = navigator.connection;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    || net?.saveData || /(^|-)2g$/.test(net?.effectiveType || '');
+  if (calm) return standScene({ still: true });
   sound.init();
   standScene();
   fanScene();
