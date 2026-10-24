@@ -11,10 +11,10 @@ const IMG = (name) => `/media/otter/${name}.webp`;
 const RUN = ['run-1', 'run-2', 'run-3', 'run-4'];
 const HERO_TALK = ['turn-front', 'turn-talk-mid', 'turn-talk'];
 const HERO_FRAMES = ['turn-jump', ...HERO_TALK, ...RUN];
-const FAN_FRAMES = [...RUN, 'climb', 'peek', 'scream', 'fall-1', 'fall-2', 'dazed', 'ladder', 'limp-1', 'limp-2',
-  'face-happy', 'face-excited', 'face-sleepy'];
-const END_TALK = ['face-happy', 'face-talk-mid', 'face-talk'];
-const END_FRAMES = ['face-excited', ...END_TALK];
+const FACE_TALK = ['face-happy', 'face-talk-mid', 'face-talk'];
+const FAN_FRAMES = [...FACE_TALK, ...RUN, 'climb', 'peek', 'scream', 'fall-1', 'fall-2', 'dazed', 'ladder', 'limp-1', 'limp-2',
+  'face-excited', 'face-sleepy'];
+const END_FRAMES = ['face-excited', ...FACE_TALK];
 const preload = (names) => names.forEach((name) => { new Image().src = IMG(name); });
 /**
  * Moves Rio's mouth (closed / half / open) for `ms`, then rests on `rest`. At least ~1 s, so
@@ -549,6 +549,7 @@ function startGame(root) {
   let frameTimer = 0;
   const render = () => { actor.style.transform = `translate(${pos.x}px, ${pos.y}px) translate(-50%, -100%)`; };
   const setFrame = (name) => {
+    delete frame.dataset.talk; // stops any lip sync
     frame.src = IMG(name);
     glow.style.setProperty('--frame', `url(${IMG(name)})`);
   };
@@ -775,7 +776,7 @@ function startGame(root) {
     glow.classList.remove('on');
     toCorner();
     say('Again? Click me! 🙂', 2600);
-    sound.say('again');
+    speak(frame, FACE_TALK, 'again');
   }
 
   // ── clicks ──
@@ -797,7 +798,7 @@ function startGame(root) {
     clearTimeout(idleTimer);
     setFrame('face-excited');
     say('Play hide-and-seek? Click me!', 1800);
-    sound.say('play');
+    speak(frame, FACE_TALK, 'play', 'face-excited');
   });
   actor.addEventListener('pointerleave', () => { if (state === 'corner') setFrame('face-happy'); });
 
@@ -831,7 +832,7 @@ function finalScene() {
   const set = (cls, on) => stage.classList.toggle(cls, on);
   const flash = (cls, ms) => { set(cls, false); void stage.offsetWidth; set(cls, true); later(ms, () => set(cls, false)); };
   const look = (name) => { delete otter.dataset.talk; otter.src = IMG(name); };
-  const speakLine = (key, rest) => speak(otter, END_TALK, key, rest);
+  const speakLine = (key, rest) => speak(otter, FACE_TALK, key, rest);
   // Ducks under the water and pops back up.
   const dive = () => {
     set('otter-up', false);
