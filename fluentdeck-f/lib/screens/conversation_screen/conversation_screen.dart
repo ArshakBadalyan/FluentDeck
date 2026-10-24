@@ -1374,6 +1374,12 @@ class _InputBar extends StatelessWidget {
     );
   }
 
+  static OutlineInputBorder _fieldBorder(Color color, {double width = 1}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: color, width: width),
+      );
+
   @override
   Widget build(BuildContext context) {
     final recordingLabel =
@@ -1412,19 +1418,37 @@ class _InputBar extends StatelessWidget {
                       minLines: 1,
                       maxLines: 5,
                       onSubmitted: (_) => onSendText(),
+                      // Same look as the app's other fields (AppTextField): white, thin
+                      // border, teal when focused; a light placeholder.
                       decoration: InputDecoration(
                         hintText: 'Type your message…',
+                        hintStyle: TextStyle(
+                          fontWeight: FontWeight.w400,
+                          color: AppPageColors.subtitleOf(
+                            context,
+                          ).withValues(alpha: 0.6),
+                        ),
                         filled: true,
-                        fillColor: AppPageColors.fieldBgOf(context),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(
-                            color: AppPageColors.subtleBorderOf(context),
-                          ),
+                        fillColor:
+                            Theme.of(context).brightness == Brightness.dark
+                            ? AppPageColors.fieldBgOf(context)
+                            : Colors.white,
+                        border: _fieldBorder(
+                          AppPageColors.subtleBorderOf(context),
+                        ),
+                        enabledBorder: _fieldBorder(
+                          AppPageColors.subtleBorderOf(context),
+                        ),
+                        disabledBorder: _fieldBorder(
+                          AppPageColors.subtleBorderOf(context),
+                        ),
+                        focusedBorder: _fieldBorder(
+                          AppPageColors.accentOf(context),
+                          width: 1.5,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          horizontal: 14,
+                          vertical: 14,
                         ),
                       ),
                     ),
