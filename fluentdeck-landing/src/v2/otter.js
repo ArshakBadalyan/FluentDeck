@@ -62,7 +62,7 @@ const NO_HELLO = ['Russian', 'Armenian'];
 const TEASES = ['Nope! 😜', 'Cold! ❄️', '¡Frío! 🥶', 'Non non! 😝', 'Not here! 🙃', 'Hehe, wrong one!', 'Warmer… no, colder! 😆', 'Try again! 🐾'];
 
 const CSS = `
-.otter-bubble { position: absolute; z-index: 60; transform: translate(-50%, -100%) scale(.6); transform-origin: 50% 100%;
+.otter-bubble { position: absolute; z-index: 40; /* above Rio (30) and the ladder (35), under the sticky header (50) */ transform: translate(-50%, -100%) scale(.6); transform-origin: 50% 100%;
   opacity: 0; pointer-events: none; white-space: nowrap; padding: 9px 15px; border-radius: 18px; background: #fff;
   color: #0f1d1f; font: 700 15px/1.2 Rubik, system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.35);
   transition: opacity .2s, transform .3s cubic-bezier(.3,1.6,.5,1); }
