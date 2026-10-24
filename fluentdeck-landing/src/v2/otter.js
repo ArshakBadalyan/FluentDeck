@@ -9,11 +9,39 @@
 const IMG = (name) => `/media/otter/${name}.webp`;
 // Frames each scene swaps to, fetched ahead so a swap never flashes empty.
 const RUN = ['run-1', 'run-2', 'run-3', 'run-4'];
-const HERO_FRAMES = ['turn-jump', 'turn-front', ...RUN];
+const HERO_TALK = ['turn-front', 'turn-talk-mid', 'turn-talk'];
+const HERO_FRAMES = ['turn-jump', ...HERO_TALK, ...RUN];
 const FAN_FRAMES = [...RUN, 'climb', 'peek', 'scream', 'fall-1', 'fall-2', 'dazed', 'ladder', 'limp-1', 'limp-2',
   'face-happy', 'face-excited', 'face-sleepy'];
-const END_FRAMES = ['face-excited'];
+const END_TALK = ['face-happy', 'face-talk-mid', 'face-talk'];
+const END_FRAMES = ['face-excited', ...END_TALK];
 const preload = (names) => names.forEach((name) => { new Image().src = IMG(name); });
+/**
+ * Moves Rio's mouth (closed / half / open) for `ms`, then rests on `rest`. At least ~1 s, so
+ * Rio still "talks" with sound off. Any other frame change cancels it (pic.dataset.talk).
+ */
+function lipSync(pic, [closed, mid, open], ms, rest = closed) {
+  const token = String(Math.random());
+  pic.dataset.talk = token;
+  const seq = [mid, open, mid, closed, open, mid, open, mid, closed];
+  const end = performance.now() + Math.max(ms, 1100);
+  let i = 0;
+  return new Promise((done) => {
+    const step = () => {
+      if (pic.dataset.talk !== token) return done();
+      if (performance.now() >= end) { pic.src = IMG(rest); delete pic.dataset.talk; return done(); }
+      pic.src = IMG(seq[i % seq.length]);
+      i += 1;
+      setTimeout(step, 80 + Math.random() * 70);
+    };
+    step();
+  });
+}
+/** Says a voice line and moves the mouth with it. */
+async function speak(pic, frames, key, rest) {
+  const ms = await sound.say(key);
+  return lipSync(pic, frames, ms, rest);
+}
 /** Runs `fn` once, when `el` comes within `margin` of the screen. */
 function whenNear(el, fn, margin = '600px') {
   const io = new IntersectionObserver(([e]) => {
@@ -174,10 +202,11 @@ const sound = (() => {
     }
     return buffers.get(key);
   }
+  /** Plays a voice line; resolves with its length in ms (0 when sound is off). */
   async function say(key) {
-    if (!on) return;
+    if (!on) return 0;
     const buf = await load(key);
-    if (!buf || !on) return;
+    if (!buf || !on) return 0;
     try { voice?.stop(); } catch { /* already ended */ }
     const src = audio().createBufferSource();
     src.buffer = buf;
@@ -186,6 +215,7 @@ const sound = (() => {
     src.connect(g).connect(ctx.destination);
     src.start();
     voice = src;
+    return buf.duration * 1000;
   }
 
   // Effects, made on the fly.
@@ -379,6 +409,7 @@ function standScene({ still = false } = {}) {
     await sleep(120);
     play();
     otter.classList.add('behind');
+    delete pic.dataset.talk;
     pic.classList.toggle('left', !goingRight);
     const from = x;
     let k = 0;
@@ -442,9 +473,10 @@ function standScene({ still = false } = {}) {
     if (at === 'left') await cross('right', 'turn-front');
     play('ot-hi');
     const hello = nextHello();
-    sound.say(hello === 'intro' ? 'intro' : `hello-${hello}`);
     busy = false;
     waitThenGoBack();
+    await speak(pic, HERO_TALK, hello === 'intro' ? 'intro' : `hello-${hello}`);
+    waitThenGoBack(); // count the 7 s from when Rio stops talking
   });
 }
 
@@ -798,7 +830,8 @@ function finalScene() {
   const later = (ms, fn) => timers.push(setTimeout(fn, ms));
   const set = (cls, on) => stage.classList.toggle(cls, on);
   const flash = (cls, ms) => { set(cls, false); void stage.offsetWidth; set(cls, true); later(ms, () => set(cls, false)); };
-  const look = (name) => { otter.src = IMG(name); };
+  const look = (name) => { delete otter.dataset.talk; otter.src = IMG(name); };
+  const speakLine = (key, rest) => speak(otter, END_TALK, key, rest);
   // Ducks under the water and pops back up.
   const dive = () => {
     set('otter-up', false);
@@ -819,8 +852,11 @@ function finalScene() {
     sound.sfx('whoosh');
     later(850, () => { set('otter-up', true); flash('splash', 700); sound.sfx('splash'); }); // …then the otter pops up through it
     later(1900, dive);
-    later(3000, () => { look('face-excited'); set('wiggle', true); talk.say('You made it! Your turn to talk 👋', 3200); sound.say('made-it'); });
-    later(4300, () => { set('wiggle', false); look('face-happy'); });
+    later(3000, () => {
+      set('wiggle', true);
+      talk.say('You made it! Your turn to talk 👋', 3200);
+      speakLine('made-it').then(() => set('wiggle', false));
+    });
   }
 
   function leave() {
@@ -829,7 +865,7 @@ function finalScene() {
     timers.splice(0).forEach(clearTimeout);
     set('excited', false);
     talk.say('Bye! See you soon 👋', 1000);
-    sound.say('bye');
+    speakLine('bye');
     later(900, () => { set('otter-up', false); flash('splash', 700); }); // dives
     later(1500, () => set('water-up', false)); // then the water goes down
   }
@@ -847,13 +883,13 @@ function finalScene() {
     if (clicks % 5 === 0) {
       dive();
       talk.say('🐚 *crack!* You found my snack!');
-      sound.say('snack');
+      speakLine('snack');
       return;
     }
     const lang = pick(Object.keys(HELLO).filter((l) => !NO_HELLO.includes(l)));
     talk.say(HELLO[lang], 1800);
     sound.sfx('splash');
-    sound.say(`hello-${lang}`);
+    speakLine(`hello-${lang}`);
   });
 
   // The final button: the otter cheers. Delegated: the button re-renders when its island mounts.
@@ -863,7 +899,7 @@ function finalScene() {
     look('face-excited');
     set('excited', true);
     talk.say('That one! Go on 🎉', 0);
-    sound.say('cheer');
+    speakLine('cheer', 'face-excited');
   });
   section.addEventListener('mouseout', (e) => {
     if (!ctaOf(e.target) || ctaOf(e.relatedTarget)) return;
