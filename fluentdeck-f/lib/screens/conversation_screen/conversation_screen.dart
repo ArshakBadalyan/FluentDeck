@@ -119,7 +119,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   void _onServiceUpdate() {
     if (!mounted) return;
-    setState(() {});
+    setState(() {
+      if (_service.turns.isEmpty)
+        _started = false; // a new conversation starts with the button again
+    });
     unawaited(_loadSpeakingPrefs());
     unawaited(_loadUsage());
     _scrollToBottom();
@@ -130,6 +133,17 @@ class _ConversationScreenState extends State<ConversationScreen> {
   bool get _rioView =>
       RioPreferences.instance.showRio.value && !_showTranscript;
   bool get _hasUserTurn => _service.turns.any((t) => t.isUser);
+
+  /// Set by "Start a conversation": from then on the normal input bar shows
+  /// (mic, text field, send), even before the learner's first message lands.
+  bool _started = false;
+  bool get _showStartButton =>
+      _rioView && !_started && !_hasUserTurn && !_service.isRecording;
+
+  Future<void> _onStartConversation() async {
+    setState(() => _started = true);
+    await _onMicTap();
+  }
 
   void _onRioPrefChanged() {
     if (mounted) setState(() {});
@@ -570,9 +584,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     ? () => _service.cancelActiveOperation()
                     : null,
               ),
-              if (_rioView && !_hasUserTurn && !_service.isRecording)
+              if (_showStartButton)
                 _StartConversationButton(
-                  onPressed: _service.isProcessing ? null : _onMicTap,
+                  onPressed: _service.isProcessing
+                      ? null
+                      : _onStartConversation,
                 )
               else
                 _InputBar(
