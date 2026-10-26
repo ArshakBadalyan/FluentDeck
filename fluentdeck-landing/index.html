@@ -26,7 +26,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/src/styles.css" />
 <link rel="stylesheet" href="/src/v2/v2.css" />
 
@@ -96,13 +96,21 @@
 
 <main id="main">
   <!-- HERO -->
-  <section class="hero">
-    <div class="aurora-bg" data-island="aurora" aria-hidden="true"></div>
+  <section class="hero hero-cinema">
+    <!-- Full-bleed scene: Rio with a lantern at the mouth of a cave (drifts on scroll) -->
+    <div class="hero-scene" aria-hidden="true" data-parallax>
+      <img src="/media/scenes/cave.webp" width="2400" height="1340" alt="" fetchpriority="high" decoding="async" />
+      <!-- Loaded by main.js on wide screens only (not with reduced motion or Save-Data) -->
+      <video muted loop playsinline preload="none" data-hero-video>
+        <source data-src="/media/scenes/cave.webm" type="video/webm" />
+        <source data-src="/media/scenes/cave.mp4" type="video/mp4" />
+      </video>
+    </div>
     <div class="container hero-grid">
       <div class="hero-copy reveal">
-        <p class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span> <span data-island="shiny">AI speaking tutor · Free to start</span></p>
-        <h1>Speak <span class="lang-rotator" data-island="languages">English</span><br /> without the <span class="hl">social anxiety</span>.</h1>
-        <p class="lead">Practice real conversations in 16 languages with an AI tutor that never judges you. Talk out loud, get gentle corrections, and turn every mistake into a flashcard you'll actually remember.</p>
+        <p class="hero-overline">AI speaking tutor · 16 languages · Free to start</p>
+        <h1>Speak <span class="lang-rotator" data-island="languages">English</span><br /> without the <em class="serif-em">fear</em>.</h1>
+        <p class="lead">A quiet place to practice out loud. Rio, your AI tutor, never judges, corrects you gently, and turns every mistake into a flashcard you'll actually remember.</p>
         <div class="cta-row">
           <span class="magnet-host" data-island="magnet"><a class="btn btn-primary btn-large" href="__SIGNUP_URL__" data-app-link>
             Start speaking free
@@ -120,6 +128,73 @@
           </div>
         </div>
         <p class="fineprint">Free plan: 5 minutes of AI conversation every day. No credit card needed.</p>
+      </div>
+    </div>
+
+    <a class="scroll-hint" href="#story" aria-label="Scroll to the story">Scroll <span aria-hidden="true">·</span> meet Rio <span class="scroll-line" aria-hidden="true"></span></a>
+
+    <ul class="proof-row container reveal" aria-label="Highlights">
+      <li><strong data-island="count" data-to="16">16</strong> languages to practice</li>
+      <li><strong>A1–C2</strong> conversations at your level</li>
+      <li><strong data-island="count" data-to="6">6</strong> natural tutor voices</li>
+      <li><strong>iPhone · Android · Web</strong></li>
+    </ul>
+  </section>
+
+  <!-- PROBLEM: told as Rio's story, one scene per chapter -->
+  <section class="section problem" id="story">
+    <div class="container narrow center reveal">
+      <h2>Why do you freeze when speaking a new language?</h2>
+      <p class="section-lead">You've done the courses. You understand films. But when it's your turn to talk, the words disappear.</p>
+    </div>
+    <div class="container cards-3 story">
+      <article class="card story-card reveal">
+        <img src="/media/scenes/reading.webp" width="1100" height="614" loading="lazy" decoding="async" alt="Rio the otter puzzling over a grammar book" />
+        <p class="chapter">01</p>
+        <h3>You know the grammar, not the moment</h3>
+        <p>Reading and listening don't train your mouth. Fluency comes from speaking — a lot.</p>
+      </article>
+      <article class="card story-card reveal">
+        <img src="/media/scenes/online.webp" width="1100" height="614" loading="lazy" decoding="async" alt="Rio the otter in a busy online class, hesitating to speak" />
+        <p class="chapter">02</p>
+        <h3>No safe place to practice</h3>
+        <p>Classes move fast, tutors are expensive, and nobody wants to sound wrong in front of colleagues.</p>
+      </article>
+      <article class="card story-card reveal">
+        <img src="/media/scenes/fishing.webp" width="1100" height="614" loading="lazy" decoding="async" alt="Rio the otter proudly holding up a fish he caught" />
+        <p class="chapter">03</p>
+        <h3>Mistakes you forget to fix</h3>
+        <p>You make the same mistakes again because nothing reminds you of them later. Riovox catches them for you.</p>
+      </article>
+    </div>
+    <p class="container narrow center punch reveal">Riovox gives you a private place to practice speaking — as often as you like, at your own pace.</p>
+  </section>
+
+  <!-- HOW IT WORKS: the three steps beside the live conversation demo -->
+  <section class="section how" id="how-it-works">
+    <div class="container how-grid">
+      <div>
+        <div class="reveal">
+          <p class="kicker">How it works</p>
+          <h2>Practice speaking any language with AI in three steps</h2>
+        </div>
+        <ol class="steps steps-stack">
+          <li class="step reveal">
+            <span class="step-num">1</span>
+            <h3>Talk with your AI tutor</h3>
+            <p>Speak out loud or type. Pick a free conversation, a topic or a real-life role-play like a job interview.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step-num">2</span>
+            <h3>Get gentle corrections</h3>
+            <p>Your tutor answers in a natural voice and shows what to say instead — kindly, without breaking the conversation.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step-num">3</span>
+            <h3>Lock it in with smart flashcards</h3>
+            <p>Corrections and new words become flashcards that come back right before you'd forget them.</p>
+          </li>
+        </ol>
       </div>
 
       <!-- Live demo: an animated conversation (respects reduced motion) -->
@@ -165,61 +240,6 @@
         </div>
       </div>
     </div>
-
-    <ul class="proof-row container reveal" aria-label="Highlights">
-      <li><strong data-island="count" data-to="16">16</strong> languages to practice</li>
-      <li><strong>A1–C2</strong> conversations at your level</li>
-      <li><strong data-island="count" data-to="6">6</strong> natural tutor voices</li>
-      <li><strong>iPhone · Android · Web</strong></li>
-    </ul>
-  </section>
-
-  <!-- PROBLEM -->
-  <section class="section problem">
-    <div class="container narrow center reveal">
-      <h2>Why do you freeze when speaking a new language?</h2>
-      <p class="section-lead">You've done the courses. You understand films. But when it's your turn to talk, the words disappear.</p>
-    </div>
-    <div class="container cards-3">
-      <article class="card reveal">
-        <h3>You know the grammar, not the moment</h3>
-        <p>Reading and listening don't train your mouth. Fluency comes from speaking — a lot.</p>
-      </article>
-      <article class="card reveal">
-        <h3>No safe place to practice</h3>
-        <p>Classes move fast, tutors are expensive, and nobody wants to sound wrong in front of colleagues.</p>
-      </article>
-      <article class="card reveal">
-        <h3>Mistakes you forget to fix</h3>
-        <p>You make the same mistakes again because nothing reminds you of them later.</p>
-      </article>
-    </div>
-    <p class="container narrow center punch reveal">Riovox gives you a private place to practice speaking — as often as you like, at your own pace.</p>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section class="section" id="how-it-works">
-    <div class="container narrow center reveal">
-      <p class="kicker">How it works</p>
-      <h2>Practice speaking any language with AI in three steps</h2>
-    </div>
-    <ol class="container steps">
-      <li class="step reveal">
-        <span class="step-num">1</span>
-        <h3>Talk with your AI tutor</h3>
-        <p>Speak out loud or type. Pick a free conversation, a topic or a real-life role-play like a job interview.</p>
-      </li>
-      <li class="step reveal">
-        <span class="step-num">2</span>
-        <h3>Get gentle corrections</h3>
-        <p>Your tutor answers in a natural voice and shows what to say instead — kindly, without breaking the conversation.</p>
-      </li>
-      <li class="step reveal">
-        <span class="step-num">3</span>
-        <h3>Lock it in with smart flashcards</h3>
-        <p>Corrections and new words become flashcards that come back right before you'd forget them.</p>
-      </li>
-    </ol>
   </section>
 
   <!-- IN ACTION: real screens from the running app (decks, conversation, review, progress) -->
@@ -349,6 +369,18 @@
         <p class="lang-pair-static">I speak <strong>Spanish</strong> → I want to speak <strong>English</strong>. Or English → Japanese, Turkish → German, Portuguese → French…</p>
       </div>
     </div>
+    <!-- Journey: a line that inks itself as you scroll, counting the language pairs -->
+    <div class="container journey reveal" data-journey>
+      <svg class="journey-svg" viewBox="0 0 1000 140" aria-hidden="true">
+        <path class="journey-track" d="M12 110 C 220 120, 300 30, 500 54 S 780 128, 988 26" />
+        <path class="journey-ink" d="M12 110 C 220 120, 300 30, 500 54 S 780 128, 988 26" pathLength="1" />
+      </svg>
+      <div class="journey-ends">
+        <span>Your language</span>
+        <p class="journey-count"><strong data-journey-count data-to="240">240</strong> language pairs</p>
+        <span>Any of 16</span>
+      </div>
+    </div>
     <div class="container lang-loop reveal" data-island="lang-loop">
     <ul class="lang-chips reveal" aria-label="Languages you can practice">
       <li>English</li><li>Spanish</li><li>French</li><li>German</li><li>Italian</li><li>Portuguese</li><li>Mandarin</li><li>Japanese</li><li>Russian</li><li>Hindi</li><li>Turkish</li><li>Korean</li><li>Arabic</li><li>Vietnamese</li><li>Indonesian</li><li>Armenian</li>
@@ -422,10 +454,10 @@
   </section>
 
   <!-- FINAL CTA -->
-  <section class="section final-cta">
-    <div class="cta-waves" data-island="waves" aria-hidden="true"></div>
+  <section class="section final-cta final-cinema">
+    <div class="cta-scene" aria-hidden="true"><img src="/media/scenes/exploring.webp" width="2400" height="1340" alt="" loading="lazy" decoding="async" /></div>
     <div class="container narrow center reveal">
-      <h2>Your shyness is just a lack of practice.</h2>
+      <h2>Your shyness is just a lack of <em class="serif-em">practice</em>.</h2>
       <p class="section-lead">Five free minutes of speaking a day is enough to start. Your tutor is ready when you are.</p>
       <span class="star-host" data-island="star"><a class="btn btn-primary btn-large" href="__SIGNUP_URL__" data-app-link>Start speaking free</a></span>
     </div>

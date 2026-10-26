@@ -131,3 +131,39 @@ if (demo) {
     visible.observe(demo);
   }
 }
+
+// Hero scene drifts slower than the page; the languages line inks itself and
+// counts the language pairs as its section scrolls by.
+const parallax = document.querySelector('[data-parallax]');
+
+// Hero video: only on wide screens with motion allowed and no Save-Data; the
+// still image stays underneath until the first frame plays.
+const heroVideo = document.querySelector('[data-hero-video]');
+if (heroVideo && !reduceMotion && !navigator.connection?.saveData && window.matchMedia('(min-width: 961px)').matches) {
+  heroVideo.querySelectorAll('source[data-src]').forEach((s) => { s.src = s.dataset.src; });
+  heroVideo.addEventListener('playing', () => heroVideo.classList.add('playing'), { once: true });
+  heroVideo.load();
+  heroVideo.play().catch(() => {});
+}
+const journey = document.querySelector('[data-journey]');
+const journeyCount = journey?.querySelector('[data-journey-count]');
+const pairs = Number(journeyCount?.dataset.to ?? 0);
+if (!reduceMotion && (parallax || journey)) {
+  let queued = false;
+  const update = () => {
+    queued = false;
+    const vh = window.innerHeight;
+    if (parallax && window.scrollY < vh * 1.5) parallax.style.setProperty('--parallax', `${window.scrollY * 0.28}px`);
+    if (journey) {
+      const box = journey.getBoundingClientRect();
+      // 0 when the line enters at the bottom of the screen, 1 by the middle.
+      const t = Math.min(1, Math.max(0, (vh - box.top) / (vh * 0.55)));
+      journey.style.setProperty('--journey-off', String(1 - t));
+      if (journeyCount) journeyCount.textContent = String(Math.round(pairs * t));
+    }
+  };
+  window.addEventListener('scroll', () => {
+    if (!queued) { queued = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  update();
+}

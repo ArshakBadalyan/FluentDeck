@@ -249,3 +249,77 @@ p { margin: 0 0 1em; }
 
 /* The typing dots take no space once the tutor's answer replaces them. */
 .chat-log > li.typing:not(.show) { display: none; }
+
+/* ── Cinematic direction (Longwave-style hero, story chapters, journey line) ── */
+.serif-em { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: 0; color: #f6d9a8; }
+
+/* Hero: full-bleed scene on the right, fading into the page on the left and bottom. */
+.hero-cinema { min-height: calc(100svh - 68px); display: flex; flex-direction: column; justify-content: flex-end; padding: 96px 0 0; background: #050d0f; }
+.hero-cinema::before, .hero-cinema::after { display: none; }
+.hero-scene { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.hero-scene img, .hero-scene video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%; transform: translate3d(0, var(--parallax, 0px), 0) scale(1.08); will-change: transform; animation: scene-in 2.4s cubic-bezier(.16, 1, .3, 1) backwards; }
+.hero-scene::after { content: ''; position: absolute; inset: 0; background:
+  linear-gradient(90deg, rgba(5, 13, 15, .92) 0%, rgba(5, 13, 15, .6) 30%, transparent 58%),
+  linear-gradient(0deg, #071214 0%, rgba(7, 18, 20, .6) 22%, transparent 50%),
+  radial-gradient(ellipse at 80% 40%, rgba(255, 190, 110, .1), transparent 55%); }
+.hero-scene video { opacity: 0; transition: opacity 1.2s ease; animation: none; }
+.hero-scene video.playing { opacity: 1; }
+.hero-cinema .hero-grid { grid-template-columns: minmax(0, 620px); }
+.hero-cinema h1 { font-weight: 600; font-size: clamp(2.6rem, 6vw, 4.6rem); line-height: 1.05; letter-spacing: -0.025em; }
+.hero-cinema h1 .serif-em { font-size: 1.12em; }
+.hero-overline { margin: 0 0 22px; font-size: .78rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: rgba(243, 244, 246, .7); }
+.hero-cinema .lead { color: rgba(243, 244, 246, .78); }
+.hero-cinema .proof-row { margin-top: 64px; border-bottom: 0; }
+.scroll-hint { position: absolute; right: max(16px, calc((100% - var(--container)) / 2)); bottom: 120px; z-index: 1; display: inline-flex; align-items: center; gap: 10px; color: rgba(243, 244, 246, .7); font-size: .78rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; text-decoration: none; }
+.scroll-hint:hover { color: var(--text); }
+.scroll-line { display: block; width: 1px; height: 38px; background: linear-gradient(var(--text), transparent); animation: drip 2.2s ease-in-out infinite; transform-origin: top; }
+
+/* Problem as a story: one Rio scene per chapter. */
+.story-card { padding: 0; overflow: hidden; }
+.story-card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; transition: transform .8s cubic-bezier(.16, 1, .3, 1); }
+.story-card:hover img { transform: scale(1.04); }
+.story-card .chapter { margin: 22px 26px 4px; font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 1.6rem; line-height: 1; color: #f6d9a8; }
+.story-card h3, .story-card > p:last-child { margin-inline: 26px; }
+.story-card > p:last-child { margin-bottom: 26px; }
+
+/* How it works: steps stacked beside the live chat demo. */
+.how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+.steps-stack { grid-template-columns: minmax(0, 1fr); margin-top: 28px; gap: 14px; }
+.steps-stack .step { display: grid; grid-template-columns: auto 1fr; column-gap: 18px; padding: 22px 24px; }
+.steps-stack .step-num { grid-row: span 2; margin: 0; }
+.steps-stack .step h3 { margin-bottom: 4px; }
+
+/* Languages: a line that inks itself as the section scrolls by. */
+.journey { margin-top: 44px; }
+.journey-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.journey-track, .journey-ink { fill: none; stroke-width: 3; stroke-linecap: round; }
+.journey-track { stroke: rgba(255, 255, 255, .1); stroke-dasharray: 2 8; }
+.journey-ink { stroke: var(--teal-on-dark); stroke-dasharray: 1; stroke-dashoffset: var(--journey-off, 0); filter: drop-shadow(0 0 8px rgba(46, 196, 207, .6)); }
+.journey-ends { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 8px; color: var(--muted); font-size: .85rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.journey-count { margin: 0; text-transform: none; letter-spacing: 0; font-size: 1rem; color: var(--text); }
+.journey-count strong { font-size: 2rem; font-weight: 800; color: var(--teal-on-dark); font-variant-numeric: tabular-nums; margin-right: 6px; }
+
+/* Final call to action over Rio setting out. */
+.final-cinema { padding: 160px 0; }
+.final-cinema::before { display: none; }
+.cta-scene { position: absolute; inset: 0; z-index: 0; }
+.cta-scene img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; opacity: .7; }
+.cta-scene::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, var(--bg) 0%, rgba(7, 18, 20, .55) 35%, rgba(7, 18, 20, .55) 65%, var(--bg) 100%); }
+.final-cinema h2 { font-size: clamp(2rem, 4.6vw, 3.4rem); }
+
+@keyframes scene-in { from { opacity: 0; transform: translate3d(0, 0, 0) scale(1.18); } }
+@keyframes drip { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
+
+@media (max-width: 960px) {
+  .how-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hero-scene { height: 58%; inset: 0 0 auto 0; }
+  .hero-scene img { object-position: 78% 50%; }
+  .hero-scene::after { background: linear-gradient(0deg, #050d0f 0%, rgba(5, 13, 15, .55) 40%, transparent 75%); }
+  .hero-cinema { padding-top: 46vh; }
+  .scroll-hint { display: none; }
+}
+@media (max-width: 760px) {
+  .final-cinema { padding: 110px 0; }
+  .journey-ends > span { display: none; }
+  .journey-ends { justify-content: center; }
+}
