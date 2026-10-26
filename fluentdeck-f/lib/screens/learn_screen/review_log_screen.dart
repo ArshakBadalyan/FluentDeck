@@ -57,8 +57,8 @@ class _ReviewLogScreenState extends State<ReviewLogScreen> {
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         title: const Text('Review log'),
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
         elevation: 0,
       ),
       body:

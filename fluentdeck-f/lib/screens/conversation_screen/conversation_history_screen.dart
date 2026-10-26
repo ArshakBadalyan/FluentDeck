@@ -1,3 +1,4 @@
+import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -135,34 +136,103 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
               ),
             )
           : ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               itemCount: _sessions.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final session = _sessions[index];
-                final date = DateFormat.yMMMd().add_jm().format(
+                final date = DateFormat.MMMd().add_jm().format(
                   session.startedAt.toLocal(),
                 );
+                final fixes = session.correctionsCount;
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                // Orange badge for sessions with fixes, green when clean.
+                final badgeColor = fixes > 0 ? AppColors.orangeHard : AppColors.greenCorrect;
+                final badgeText = isDark ? badgeColor : Color.lerp(badgeColor, Colors.black, 0.5)!;
                 return AppStaggeredFadeIn(
                   index: index,
                   child: Dismissible(
                     key: ValueKey('history-${session.id}'),
                     direction: DismissDirection.endToStart,
-                    background: SwipeActionBackgrounds.delete(),
+                    background: SwipeActionBackgrounds.delete(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                     confirmDismiss: (_) => _confirmDeleteSession(session),
                     onDismissed: (_) => _deleteSession(session),
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        _preview(session),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    child: Material(
+                      color: AppPageColors.cardBgOf(context),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                       ),
-                      subtitle: Text(
-                        '$date · ${session.transcript.length} messages'
-                        '${session.correctionsCount > 0 ? ' · ${session.correctionsCount} corrections' : ''}',
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () => _continueSession(session),
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppPageColors.accentOf(context).withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(
+                                  Icons.forum_outlined,
+                                  size: 20,
+                                  color: AppPageColors.accentOf(context),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _preview(session),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      '$date · ${session.transcript.length} messages',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppPageColors.subtitleOf(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: badgeColor.withValues(alpha: isDark ? 0.2 : 0.15),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  fixes == 0
+                                      ? 'No fixes'
+                                      : '$fixes fix${fixes == 1 ? '' : 'es'}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: badgeText,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      onTap: () => _continueSession(session),
                     ),
                   ),
                 );

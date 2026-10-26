@@ -522,11 +522,17 @@ class _StreakHero extends StatelessWidget {
           ),
         ],
       ),
+      // Picture on the outer 40%; the text and the goal ring stay clear of
+      // it so Rio (right of the cave mouth) isn't covered.
       child: SceneBackdrop(
         scene: TutorScene.cave,
         color: AppColors.heroGradient.last,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+        widthFactor: 0.4,
+        child: LayoutBuilder(
+          builder: (context, c) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            24, 28, 12 + (c.maxWidth * 0.3).clamp(0.0, 200.0), 28,
+          ),
           child: Row(
         children: [
           Expanded(
@@ -567,6 +573,7 @@ class _StreakHero extends StatelessWidget {
           _StreakGaugeIcon(goal: goal, today: today, onGoalChanged: onGoalChanged),
         ],
       ),
+        ),
         ),
       ),
     );
@@ -650,7 +657,8 @@ class _StreakGaugeIconState extends State<_StreakGaugeIcon>
   }
 
   void _handleDrag(Offset localPosition) {
-    const center = Offset(_goalGaugeSize / 2, _goalGaugeSize / 2);
+    // The ring sits inside its backing disc's 8px padding.
+    const center = Offset(_goalGaugeSize / 2 + 8, _goalGaugeSize / 2 + 8);
     final dx = localPosition.dx - center.dx;
     final dy = localPosition.dy - center.dy;
     var theta = atan2(dy, dx) + pi / 2;
@@ -688,12 +696,28 @@ class _StreakGaugeIconState extends State<_StreakGaugeIcon>
           final swell = sin(pi * _pulse.value);
           return Transform.scale(scale: 1 + 0.08 * swell, child: child);
         },
-        child: DualArcProgressRing(
+        // Solid disc behind the ring so it stays fully visible over the
+        // card's picture (it was see-through before).
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.brandPrimaryDeep,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: DualArcProgressRing(
           targetFraction: targetFraction,
           progressFraction: progressFraction,
           size: _goalGaugeSize,
           strokeWidth: 14,
-          trackColor: Colors.white.withValues(alpha: 0.15),
+          trackColor: Colors.white.withValues(alpha: 0.22),
           targetColor: const Color(0xFF2196F3),
           progressColor: reached ? AppColors.greenCorrect : Colors.orange.shade300,
           animationDuration: _dragging
@@ -735,6 +759,8 @@ class _StreakGaugeIconState extends State<_StreakGaugeIcon>
             ),
           ),
         ),
+          ),
+        ),
       ),
     );
   }
@@ -753,58 +779,10 @@ class _MetricTile extends StatelessWidget {
   final String value;
   final Color color;
 
+  // Same tile as the rest of the app (number first, label under it).
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(
-              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04,
-            ),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppPageColors.subtitleOf(context),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      AppMetricTile(icon: icon, label: label, value: value, color: color);
 }
 
 class _ActivitySection extends StatelessWidget {
@@ -820,35 +798,34 @@ class _ActivitySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppPageColors.subtleBorderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(
-              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
-            ),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: AppPageColors.accentOf(context)),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, size: 18, color: accent),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -897,81 +874,63 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = AppPageColors.accentOf(context);
+    // Neutral row; the score pill carries the colour.
     return Material(
-      color: isDark
-          ? AppColors.greenCorrect.withValues(alpha: 0.12)
-          : const Color(0xFFF4FBF6),
-      borderRadius: BorderRadius.circular(14),
+      color: AppPageColors.cardBgOf(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.greenCorrect.withValues(alpha: isDark ? 0.28 : 0.25),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.greenCorrect.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.chat_bubble_outline_rounded,
-              color: AppColors.greenCorrect,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppPageColors.subtitleOf(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.greenCorrect.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '$score/10',
-              style: const TextStyle(
-                color: Color(0xFF1B9E4B),
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
+                child: Icon(Icons.forum_outlined, color: accent, size: 20),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$score/10',
+                  style: TextStyle(color: accent, fontWeight: FontWeight.w700, fontSize: 13),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
         ),
       ),
     );
@@ -989,29 +948,23 @@ class _PhraseCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.brandPrimary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.brandPrimary.withValues(alpha: 0.12),
-        ),
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.format_quote_rounded,
+            Icons.bookmark_rounded,
             size: 18,
-            color: AppColors.brandPrimary.withValues(alpha: 0.6),
+            color: AppColors.primaryYellow,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-                height: 1.4,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15, height: 1.4),
             ),
           ),
         ],

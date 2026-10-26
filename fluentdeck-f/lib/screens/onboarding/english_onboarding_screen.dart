@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/ui_elements/riovox_wordmark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
@@ -63,7 +64,8 @@ const _pages = [
     id: 'speak',
     icon: Icons.mic_rounded,
     rio: RioPose.explore,
-    accent: AppColors.voiceDeep,
+    // Brand teal glow behind Rio on the first screen (Lagoon Daylight).
+    accent: AppColors.brandPrimary,
     chips: ['voice-or-text', 'gentle-corrections', 'remembers-you'],
   ),
   _OnboardingPage(
@@ -207,6 +209,11 @@ class _EnglishOnboardingScreenState extends State<EnglishOnboardingScreen> {
                   ),
                 ],
               ),
+            ),
+            // Brand wordmark under the top bar.
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: RiovoxWordmark(height: 26),
             ),
             Expanded(
               child: PageView.builder(

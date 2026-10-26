@@ -6,6 +6,7 @@ import 'package:fluentdeck/data/decks_help_content.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/flashcard_stats_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/widgets/tutor_scene.dart';
 import 'package:fluentdeck/services/flashcard_stats_export_service.dart';
 import 'package:fluentdeck/screens/learn_screen/review_log_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
@@ -404,113 +405,50 @@ class _DeckStatsHero extends StatelessWidget {
   final int todayReviews;
   final String todayDuration;
 
+  // Same hero as Decks and Profile: Rio studying on the right, a solid
+  // white button that opens the card browser.
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: AppColors.heroGradient,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.brandPrimary.withValues(alpha: 0.28),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+    return AppHeroCard(
+      scene: TutorScene.reading,
+      value: '$todayReviews',
+      label: todayReviews == 1 ? 'card today' : 'cards today',
+      subtitle: todayReviews > 0
+          ? '$todayDuration spent reviewing'
+          : 'Start reviewing to track your progress',
+      icon: Icons.collections_bookmark_outlined,
+      onIconTap: () => MainNavigationCoordinator.goToTab(
+        MainTabId.decks,
+        subIndex: 1,
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$todayReviews',
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    height: 1,
+      badge: reviewStreak > 0
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.local_fire_department_rounded,
+                    size: 16,
+                    color: AppColors.primaryYellow,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  todayReviews == 1 ? 'card today' : 'cards today',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.92),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  todayReviews > 0
-                      ? '$todayDuration spent reviewing'
-                      : 'Start reviewing to track your progress',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.78),
-                  ),
-                ),
-                if (reviewStreak > 0) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.local_fire_department_rounded,
-                          size: 16,
-                          color: Colors.orange.shade200,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$reviewStreak day review streak',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                  const SizedBox(width: 4),
+                  Text(
+                    '$reviewStreak day review streak',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
-              ],
-            ),
-          ),
-          Material(
-            color: Colors.white.withValues(alpha: 0.18),
-            shape: const CircleBorder(),
-            child: InkWell(
-              onTap: () => MainNavigationCoordinator.goToTab(
-                MainTabId.decks,
-                subIndex: 1,
               ),
-              customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(16),
-                child: Icon(
-                  Icons.collections_bookmark_outlined,
-                  size: 40,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+            )
+          : null,
     );
   }
 }

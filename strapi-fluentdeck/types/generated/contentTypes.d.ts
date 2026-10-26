@@ -1217,6 +1217,22 @@ export interface ApiSpeakingSessionSpeakingSession
       Schema.Attribute.Private;
     durationMinutes: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>;
     feedback: Schema.Attribute.Text;
+    fluencyScore: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 10;
+          min: 0;
+        },
+        number
+      >;
+    grammarScore: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 10;
+          min: 0;
+        },
+        number
+      >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1248,6 +1264,14 @@ export interface ApiSpeakingSessionSpeakingSession
       'manyToOne',
       'plugin::users-permissions.user'
     >;
+    vocabularyScore: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 10;
+          min: 0;
+        },
+        number
+      >;
   };
 }
 

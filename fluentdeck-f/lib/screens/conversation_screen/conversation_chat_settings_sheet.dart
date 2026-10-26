@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../models/speaking_preferences.dart';
 import '../../services/conversation_service.dart';
 import '../../services/rio_preferences.dart';
+import '../../services/subscription_service.dart';
 import '../../services/speaking_preferences_service.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../ui_elements/modern_page_widgets.dart';
@@ -31,6 +32,10 @@ class _ConversationChatSettingsSheetState
   SpeakingPreferences _prefs = const SpeakingPreferences();
   bool _loading = true;
   bool _saving = false;
+  bool _isPremium = false;
+
+  static const _levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  static const _premiumOnlyLevels = {'B2', 'C1', 'C2'};
 
   @override
   void initState() {
@@ -43,9 +48,14 @@ class _ConversationChatSettingsSheetState
     final prefs = await SpeakingPreferencesService.instance.load(
       forceRefresh: true,
     );
+    var premium = false;
+    try {
+      premium = (await SubscriptionService.instance.fetchStatus()).isPremium;
+    } catch (_) {}
     if (!mounted) return;
     setState(() {
       _prefs = prefs;
+      _isPremium = premium;
       _loading = false;
     });
   }
@@ -80,6 +90,103 @@ class _ConversationChatSettingsSheetState
     if (mounted) setState(() {});
   }
 
+  Widget _label(BuildContext context, String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: AppPageColors.textPrimaryOf(context),
+      ),
+    ),
+  );
+
+  void _premiumNotice() {
+    AppToast.showSnackBar(
+      context,
+      const SnackBar(content: Text('This one is part of Premium.')),
+    );
+  }
+
+  /// A1–C2 as one row of square buttons; the current level is solid teal.
+  Widget _levelButton(BuildContext context, String level) {
+    final selected = (_prefs.englishLevel ?? 'A1') == level;
+    final locked = !_isPremium && _premiumOnlyLevels.contains(level);
+    final accent = AppPageColors.accentOf(context);
+    return Material(
+      color: selected ? accent : AppPageColors.fieldBgOf(context),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          if (locked) return _premiumNotice();
+          if (!selected) _save(_prefs.copyWith(englishLevel: level));
+        },
+        child: SizedBox(
+          height: 44,
+          child: Center(
+            child: locked
+                ? Icon(Icons.lock_outline_rounded, size: 16, color: AppPageColors.subtitleOf(context))
+                : Text(
+                    level,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                      color: selected
+                          ? AppPageColors.onAccentOf(context)
+                          : AppPageColors.textPrimaryOf(context),
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _voiceChip(BuildContext context, String id) {
+    final selected = _prefs.tutorVoice == id;
+    final locked = !_isPremium && !SpeakingPreferences.freeVoiceIds.contains(id);
+    final accent = AppPageColors.accentOf(context);
+    final name = SpeakingPreferences.voiceOptions[id]!.split(' — ').first;
+    return Material(
+      color: selected ? accent.withValues(alpha: 0.14) : AppPageColors.cardBgOf(context),
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: selected ? accent : AppPageColors.subtleBorderOf(context),
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: () {
+          if (locked) return _premiumNotice();
+          if (!selected) _save(_prefs.copyWith(tutorVoice: id));
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (locked) ...[
+                Icon(Icons.lock_outline_rounded, size: 14, color: AppPageColors.subtitleOf(context)),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? accent : AppPageColors.textPrimaryOf(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -104,10 +211,10 @@ class _ConversationChatSettingsSheetState
               children: [
                 const Expanded(
                   child: Text(
-                    'Chat settings',
+                    'Conversation settings',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
                       fontFamily: 'Rubik',
                     ),
                   ),
@@ -138,7 +245,28 @@ class _ConversationChatSettingsSheetState
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      _label(context, 'Your level'),
+                      Row(
+                        children: [
+                          for (var i = 0; i < _levels.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 6),
+                            Expanded(child: _levelButton(context, _levels[i])),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _label(context, 'Tutor voice'),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final id in SpeakingPreferences.voiceOptions.keys)
+                            _voiceChip(context, id),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
                       ValueListenableBuilder<bool>(
                         valueListenable: RioPreferences.instance.showRio,
                         builder: (context, show, _) => AppToggleRow(

@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/riovox_wordmark.dart';
 import 'package:fluentdeck/ui_elements/screen_tutorial_targets.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/services/analytics_service.dart';
@@ -152,6 +153,96 @@ class _NavItem extends StatelessWidget {
                 color: selected ? accent : AppPageColors.subtitleOf(context),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Wide screens: the main tabs as a left side menu (icon + label rows), with
+/// the app name on top. Same tabs and taps as [EnglishBottomNav].
+class EnglishSideNav extends StatelessWidget {
+  const EnglishSideNav({super.key, required this.currentIndex, required this.onTap});
+
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = MainTabConfig.definitionsFor(context);
+    final selected = currentIndex.clamp(0, tabs.length - 1);
+    final accent = AppPageColors.accentOf(context);
+    return SafeArea(
+      right: false,
+      child: Container(
+        key: ScreenTutorialKeys.mainBottomNav,
+        width: 232,
+        margin: const EdgeInsets.fromLTRB(16, 16, 0, 16),
+        padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+        decoration: BoxDecoration(
+          color: AppPageColors.cardBgOf(context),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 0, 12, 20),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: RiovoxWordmark(height: 26),
+              ),
+            ),
+            for (var i = 0; i < tabs.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Material(
+                  color: i == selected ? accent.withValues(alpha: 0.14) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () {
+                      InteractionHaptics.pulse();
+                      ClickTracker.recordNamedTap();
+                      AnalyticsService.instance.logTap(
+                        targetId: 'side_nav.english.${tabs[i].id.name}',
+                        extra: {'main_index': i, 'main_tab': tabs[i].id.name},
+                      );
+                      onTap(i);
+                    },
+                    child: Semantics(
+                      button: true,
+                      selected: i == selected,
+                      child: SizedBox(
+                        height: 48,
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 12),
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: FittedBox(child: tabs[i].iconBuilder(i == selected)),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                tabs[i].navLabel,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: i == selected ? FontWeight.w700 : FontWeight.w500,
+                                  color: i == selected ? accent : AppPageColors.subtitleOf(context),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

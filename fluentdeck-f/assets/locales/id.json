@@ -462,6 +462,7 @@
     }
   },
   "forgot-password": {
+    "subtitle": "Masukkan email-mu dan kami akan mengirim tautan untuk mengaturnya ulang.",
     "forgot-password": "Lupa Kata Sandi ?",
     "send-email": "Kirim email",
     "back-to-start": "Kembali ke halaman awal"

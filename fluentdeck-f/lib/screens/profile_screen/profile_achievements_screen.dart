@@ -113,36 +113,68 @@ class _SummaryBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final unlocked = snapshot.unlockedCount;
     final total = snapshot.achievements.length;
-    final pct = total == 0 ? 0.0 : unlocked / total;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // The closest badge still locked is the one to chase next.
+    final locked = snapshot.achievements.where((a) => !a.unlocked).toList()
+      ..sort((a, b) => b.progress.compareTo(a.progress));
+    final next = locked.isEmpty ? null : locked.first;
+    final ink = isDark ? AppColors.primaryYellow : const Color(0xFF6B5300);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+        color: AppColors.primaryYellow.withValues(alpha: isDark ? 0.14 : 0.18),
+        borderRadius: BorderRadius.circular(22),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            '$unlocked of $total unlocked',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          Container(
+            width: 52,
+            height: 52,
+            decoration: const BoxDecoration(
+              color: AppColors.primaryYellow,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              next?.definition.icon ?? Icons.emoji_events_rounded,
+              color: const Color(0xFF1A1400),
+              size: 26,
+            ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Practice speaking, review cards, and complete lessons to earn badges.',
-            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context), height: 1.35),
-          ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: pct,
-              minHeight: 8,
-              backgroundColor: AppColors.brandPrimary.withValues(alpha: 0.12),
-              color: AppColors.brandPrimary,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  next == null ? 'All $total badges earned' : 'Next: ${next.definition.title}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppPageColors.textPrimaryOf(context),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  next == null
+                      ? 'Amazing work.'
+                      : '${next.current} of ${next.definition.target} · $unlocked of $total unlocked',
+                  style: TextStyle(fontSize: 13, color: ink),
+                ),
+                if (next != null) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: next.progress,
+                      minHeight: 6,
+                      backgroundColor: AppColors.primaryYellow.withValues(alpha: 0.3),
+                      color: AppColors.primaryYellow,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -168,21 +200,8 @@ class _AchievementTile extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color:
-              unlocked
-                  ? AppPageColors.accentOf(context).withValues(alpha: 0.35)
-                  : AppPageColors.subtleBorderOf(context),
-        ),
-        boxShadow: [
-          if (unlocked)
-            BoxShadow(
-              color: AppPageColors.accentOf(context).withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,14 +213,15 @@ class _AchievementTile extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  // Earned badges are gold medals (yellow = rewards only).
                   color:
                       unlocked
-                          ? AppPageColors.accentOf(context).withValues(alpha: 0.12)
+                          ? AppColors.primaryYellow
                           : AppPageColors.fieldBgOf(context),
                 ),
                 child: Icon(
                   def.icon,
-                  color: unlocked ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
+                  color: unlocked ? const Color(0xFF1A1400) : AppPageColors.subtitleOf(context),
                   size: 22,
                 ),
               ),

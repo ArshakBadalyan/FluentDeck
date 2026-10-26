@@ -115,28 +115,14 @@ class AppSectionCard extends StatelessWidget {
     final cardBg = AppPageColors.cardBgOf(context);
     final borderColor = AppPageColors.subtleBorderOf(context);
 
-    // The shadow sits on an opaque box *behind* the card. Painting it inside
-    // an unfilled Container let it show through and tint the card grey.
+    // Flat card with a hairline border (Lagoon Daylight); the section icon
+    // sits in a soft tinted badge.
     return AppFadeIn(
-      child: DecoratedBox(
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(
-              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
-            ),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
       child: Material(
       color: cardBg,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         side: BorderSide(color: borderColor),
       ),
       clipBehavior: Clip.antiAlias,
@@ -149,8 +135,16 @@ class AppSectionCard extends StatelessWidget {
             Row(
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 20, color: AppColors.brandPrimary),
-                  const SizedBox(width: 8),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: AppPageColors.accentOf(context).withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Icon(icon, size: 18, color: AppPageColors.accentOf(context)),
+                  ),
+                  const SizedBox(width: 10),
                 ],
                 Expanded(
                   child: Text(
@@ -179,7 +173,6 @@ class AppSectionCard extends StatelessWidget {
             child,
           ],
         ),
-      ),
       ),
     ),
     );
@@ -210,7 +203,7 @@ class AppSettingsCategoryTile extends StatelessWidget {
         color: AppPageColors.cardBgOf(context),
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
         ),
         clipBehavior: Clip.antiAlias,
@@ -223,10 +216,10 @@ class AppSettingsCategoryTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.brandPrimary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppPageColors.accentOf(context).withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(icon, size: 22, color: AppColors.brandPrimary),
+                  child: Icon(icon, size: 22, color: AppPageColors.accentOf(context)),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -280,62 +273,54 @@ class AppSettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Small grey label above a flat grouped card (Lagoon Daylight).
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Material(
-        color: AppPageColors.cardBgOf(context),
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
-          side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color: AppColors.brandPrimary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                    color: AppPageColors.subtitleOf(context),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (subtitle != null) ...[
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.only(left: 14),
-                  child: Text(
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
                     subtitle!,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       color: AppPageColors.subtitleOf(context),
                       height: 1.35,
                     ),
                   ),
-                ),
+                ],
               ],
-              const SizedBox(height: 12),
-              child,
-            ],
+            ),
           ),
-        ),
+          Material(
+            color: AppPageColors.cardBgOf(context),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(borderRadius < 20 ? 20 : borderRadius),
+              side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: child,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -552,99 +537,146 @@ class AppHeroCard extends StatelessWidget {
   final TutorScene? scene;
   final bool sceneOnLeft;
 
-  Widget _withScene(Widget content) {
+  Widget _withScene(Widget content, {required double clearFactor}) {
     final s = scene;
     if (s == null) return content;
+    // The picture takes the outer ~40% and the text keeps clear of it.
     return SceneBackdrop(
       scene: s,
       onLeft: sceneOnLeft,
+      widthFactor: 0.4,
       color: sceneOnLeft ? AppColors.heroGradient.first : AppColors.heroGradient.last,
-      child: content,
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final clear = (c.maxWidth * clearFactor).clamp(0.0, 200.0);
+          return Padding(
+            padding: sceneOnLeft
+                ? EdgeInsets.only(left: clear)
+                : EdgeInsets.only(right: clear),
+            child: content,
+          );
+        },
+      ),
+    );
+  }
+
+  /// Solid white action disc: the one obvious thing to tap.
+  Widget _disc({required bool compact}) {
+    return AppPressScale(
+      enabled: onIconTap != null,
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        elevation: 6,
+        shadowColor: Colors.black.withValues(alpha: 0.3),
+        child: InkWell(
+          onTap: onIconTap,
+          customBorder: const CircleBorder(),
+          child: Padding(
+            padding: EdgeInsets.all(compact ? 13 : 18),
+            child: Icon(icon, size: compact ? 26 : 32, color: AppColors.brandPrimaryDeep),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _text() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppCountUpText(
+          value,
+          style: const TextStyle(
+            fontSize: 44,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            height: 1,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Colors.white.withValues(alpha: 0.92),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.white.withValues(alpha: 0.78),
+          ),
+        ),
+        if (badge != null) ...[const SizedBox(height: 12), badge!],
+        if (action != null) ...[const SizedBox(height: 14), action!],
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return AppFadeIn(
-      child: Container(
-      width: double.infinity,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: AppColors.heroGradient,
-        ),
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.brandPrimary.withValues(alpha: 0.28),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: _withScene(Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Phones: the disc moves into the picture's bottom corner (clear of
+          // Rio's face) so the text side keeps room for its pills and buttons.
+          final compact = scene != null && constraints.maxWidth < 480;
+          Widget body = _withScene(
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: compact
+                  ? _text()
+                  : Row(
+                      children: [
+                        Expanded(child: _text()),
+                        _disc(compact: false),
+                      ],
+                    ),
+            ),
+            clearFactor: 0.3,
+          );
+          if (compact) {
+            body = Stack(
+              // Passthrough keeps the card's full width (a loose Stack would
+              // shrink the picture to the text's width).
+              fit: StackFit.passthrough,
               children: [
-                AppCountUpText(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 44,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    height: 1,
-                  ),
+                body,
+                Positioned(
+                  bottom: 16,
+                  right: sceneOnLeft ? null : 16,
+                  left: sceneOnLeft ? 16 : null,
+                  child: _disc(compact: true),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.92),
-                  ),
+              ],
+            );
+          }
+          return Container(
+            width: double.infinity,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: AppColors.heroGradient,
+              ),
+              borderRadius: BorderRadius.circular(26),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.brandPrimary.withValues(alpha: 0.28),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.78),
-                  ),
-                ),
-                if (badge != null) ...[const SizedBox(height: 12), badge!],
-                if (action != null) ...[const SizedBox(height: 14), action!],
               ],
             ),
-          ),
-          // Solid white action disc: the one obvious thing to tap.
-          AppPressScale(
-            enabled: onIconTap != null,
-            child: Material(
-              color: Colors.white,
-              shape: const CircleBorder(),
-              elevation: 6,
-              shadowColor: Colors.black.withValues(alpha: 0.3),
-              child: InkWell(
-                onTap: onIconTap,
-                customBorder: const CircleBorder(),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Icon(icon, size: 32, color: AppColors.brandPrimaryDeep),
-                ),
-              ),
-            ),
-          ),
-        ],
+            child: body,
+          );
+        },
       ),
-    )),
-    ),
     );
   }
 }

@@ -79,8 +79,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.lessonTitle),
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),

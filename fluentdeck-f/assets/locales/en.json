@@ -462,6 +462,7 @@
     }
   },
   "forgot-password": {
+    "subtitle": "Enter your email and we'll send you a link to reset it.",
     "forgot-password": "Forgot Password ?",
     "send-email": "Send email",
     "back-to-start": "Back to start page"

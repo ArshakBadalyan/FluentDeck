@@ -5,6 +5,7 @@ import 'package:fluentdeck/app_colors.dart';
 import '../../models/conversation_prompt_model.dart';
 import '../../models/speaking_session_context.dart';
 import '../../services/custom_role_play_service.dart';
+import '../../widgets/tutor_scene.dart';
 import '../../services/speaking_content_service.dart';
 import '../../services/speaking_scores_service.dart';
 import '../../services/speaking_session_service.dart';
@@ -215,7 +216,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
       color: AppColors.brandPrimary,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         itemCount: _scenarios.length,
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
@@ -269,20 +270,12 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
           },
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: OutlinedButton.icon(
-            onPressed: _showCreateDialog,
-            icon: const Icon(Icons.add),
-            label: const Text('Create custom role-play'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.brandPrimary,
-              side: const BorderSide(color: AppColors.brandPrimary),
-            ),
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+          child: _RolePlayIntro(onCreate: _showCreateDialog),
         ),
         if (!_isPremium)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
             child: Text(
               '${_customCount.clamp(0, kFreeCustomRolePlayLimit)} of $kFreeCustomRolePlayLimit free custom role-play used',
               style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
@@ -596,6 +589,94 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Picture card explaining role-plays, with "Write your own scenario" under it.
+class _RolePlayIntro extends StatelessWidget {
+  const _RolePlayIntro({required this.onCreate});
+
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: SizedBox(
+            height: 128,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  TutorScene.online.asset,
+                  fit: BoxFit.cover,
+                  alignment: const Alignment(0, -0.3),
+                  excludeFromSemantics: true,
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [Color(0xD904191B), Color(0x0004191B)],
+                    ),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.all(14),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Rehearse real moments',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Rio plays the other person. Pick a scene below.',
+                        style: TextStyle(fontSize: 13, color: Color(0xFFCFEDEF)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Material(
+          color: AppPageColors.cardBgOf(context),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(color: accent.withValues(alpha: 0.45), width: 1.5),
+          ),
+          child: InkWell(
+            onTap: onCreate,
+            customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  Icon(Icons.add_rounded, color: accent),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Write your own scenario',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: accent),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

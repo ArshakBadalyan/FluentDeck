@@ -217,6 +217,14 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                             : '${_studySettings!.noteCount}/${_studySettings!.noteLimit}',
                   ),
                 if (_achievementSnapshot != null) const SizedBox(height: 16),
+                if (!_subscriptionStatus.isPremium)
+                  _GoPremiumBanner(
+                    onTap: () => MainNavigationCoordinator.goToTab(
+                      MainTabId.profile,
+                      subIndex: kProfileSubscriptionTabIndex,
+                    ),
+                  )
+                else
                 AppSectionCard(
                   title: 'Riovox Premium',
                   icon: Icons.workspace_premium_outlined,
@@ -317,6 +325,68 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
         ),
       ),
     ),
+    );
+  }
+}
+
+/// Free plan: one dark-teal banner inviting an upgrade (Lagoon Daylight).
+class _GoPremiumBanner extends StatelessWidget {
+  const _GoPremiumBanner({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppPressScale(
+      child: Material(
+        color: AppColors.brandPrimaryDeep,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.workspace_premium_rounded,
+                    color: AppColors.primaryYellow,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Go Premium',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'More speaking time every day, all voices, no ads',
+                        style: TextStyle(fontSize: 13, color: Color(0xFFBFE4E7)),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: Colors.white),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

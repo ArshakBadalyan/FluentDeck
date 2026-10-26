@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/user_note_model.dart';
 import 'package:fluentdeck/services/note_service.dart';
+import 'package:fluentdeck/services/phrase_audio_service.dart';
+import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
@@ -53,8 +56,8 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         title: const Text('Saved phrases'),
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
         elevation: 0,
       ),
       body:
@@ -89,11 +92,14 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
                 onRefresh: _load,
                 color: AppColors.brandPrimary,
                 child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                   itemCount: _phrases.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
-                    return _SavedPhraseCard(text: _phrases[index].word);
+                    return AppStaggeredFadeIn(
+                      index: index,
+                      child: _SavedPhraseCard(note: _phrases[index]),
+                    );
                   },
                 ),
               ),
@@ -102,43 +108,94 @@ class _SpeakingSavedPhrasesScreenState extends State<SpeakingSavedPhrasesScreen>
 }
 
 class _SavedPhraseCard extends StatelessWidget {
-  const _SavedPhraseCard({required this.text});
+  const _SavedPhraseCard({required this.note});
+
+  final UserNoteModel note;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = AppPageColors.subtitleOf(context);
+    final meaning = note.translation.trim().isNotEmpty
+        ? note.translation.trim()
+        : note.definition.trim();
+    final example = note.exampleSentence.trim();
+    // Phrase, its meaning and an example, on a flat card.
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  note.word,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, height: 1.3),
+                ),
+              ),
+              // Listen button; off unless SAVED_PHRASES_LISTEN_ENABLED=true.
+              if (PhraseAudioService.enabled) _ListenButton(text: note.word),
+            ],
+          ),
+          if (meaning.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(meaning, style: TextStyle(fontSize: 14, color: subtitle, height: 1.4)),
+          ],
+          if (example.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              '“$example”',
+              style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, height: 1.4),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ListenButton extends StatelessWidget {
+  const _ListenButton({required this.text});
 
   final String text;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppPageColors.accentOf(context).withValues(alpha: 0.12),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.format_quote_rounded,
-            size: 18,
-            color: AppPageColors.accentOf(context).withValues(alpha: 0.6),
+    final accent = AppPageColors.accentOf(context);
+    return ValueListenableBuilder<String?>(
+      valueListenable: PhraseAudioService.instance.playing,
+      builder: (context, playing, _) {
+        final active = playing == text.trim();
+        return IconButton(
+          tooltip: active ? 'Stop' : 'Listen',
+          onPressed: () async {
+            if (active) return PhraseAudioService.instance.stop();
+            try {
+              await PhraseAudioService.instance.play(text);
+            } catch (_) {
+              if (!context.mounted) return;
+              AppToast.showSnackBar(
+                context,
+                const SnackBar(content: Text("Couldn't play this phrase. Try again.")),
+              );
+            }
+          },
+          style: IconButton.styleFrom(
+            side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
+          icon: Icon(
+            active ? Icons.stop_rounded : Icons.volume_up_rounded,
+            color: accent,
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

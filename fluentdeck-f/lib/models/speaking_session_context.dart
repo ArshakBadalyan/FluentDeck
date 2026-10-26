@@ -91,15 +91,26 @@ class SessionEvaluationResult {
   final String feedback;
   final String summary;
 
+  /// Optional 0-10 skill scores; null when the evaluation didn't rate one.
+  final int? fluency;
+  final int? grammar;
+  final int? vocabulary;
+
   const SessionEvaluationResult({
     required this.score,
     required this.feedback,
     required this.summary,
+    this.fluency,
+    this.grammar,
+    this.vocabulary,
   });
 
   factory SessionEvaluationResult.fromJson(Map<String, dynamic> json) {
     return SessionEvaluationResult(
       score: (json['score'] as num?)?.round() ?? 0,
+      fluency: (json['fluency'] as num?)?.round(),
+      grammar: (json['grammar'] as num?)?.round(),
+      vocabulary: (json['vocabulary'] as num?)?.round(),
       feedback: json['feedback']?.toString() ?? '',
       summary: json['summary']?.toString() ?? '',
     );

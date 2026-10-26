@@ -5,6 +5,7 @@ import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/routing/app_route_names.dart';
 import 'package:fluentdeck/routing/app_page_routes.dart';
 import 'package:fluentdeck/screens/auth/reset_password_screen.dart';
+import 'package:fluentdeck/ui_elements/auth_input_decoration.dart';
 import 'package:fluentdeck/ui_elements/auth_secondary_link.dart';
 import '../../services/auth_service.dart';
 import 'auth_screen.dart';
@@ -36,34 +37,52 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 60),
+              const SizedBox(height: 8),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: IconButton(
+                  tooltip: 'Back',
+                  icon: Icon(
+                    Icons.arrow_back_rounded,
+                    color: AppPageColors.textPrimaryOf(context),
+                  ),
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+              ),
+              const SizedBox(height: 12),
 
+              // Bold, left-aligned title with a one-line explanation.
               Text(
                 context.tr('forgot-password.forgot-password'),
-                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
-                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  color: AppPageColors.textPrimaryOf(context),
+                ),
               ),
-
-              const SizedBox(height: 48),
-
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: context.tr('inputs.your-email'),
-                  labelStyle: TextStyle(color: AppPageColors.subtitleOf(context)),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppPageColors.accentOf(context)),
-                  ),
+              const SizedBox(height: 6),
+              Text(
+                context.tr('forgot-password.subtitle'),
+                style: TextStyle(
+                  fontSize: 16,
+                  height: 1.4,
+                  color: AppPageColors.subtitleOf(context),
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
+
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: authInput(context, context.tr('inputs.your-email')),
+              ),
+
+              const SizedBox(height: 24),
 
               SizedBox(
-                height: 50,
+                height: 56,
                 // FilledButton (not ElevatedButton+hardcoded colors): the
                 // app's own filledButtonTheme already pairs light/dark
                 // backgrounds with correctly readable text in both modes.
@@ -111,12 +130,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   style: FilledButton.styleFrom(
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                   ),
                   child: Text(
                     context.tr('forgot-password.send-email'),
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

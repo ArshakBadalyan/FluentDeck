@@ -247,10 +247,16 @@ class _HeroCard extends StatelessWidget {
         ],
       ),
       child: SceneBackdrop(
-        scene: TutorScene.hiking,
+        // Close-up, centred Rio cheering "you can do it" — reads well in the
+        // narrow strip this tall card leaves for the picture.
+        scene: TutorScene.encouraging,
         color: AppColors.heroGradient.last,
-        child: Padding(
-          padding: const EdgeInsets.all(22),
+        widthFactor: 0.5,
+        // The text keeps clear of the picture on the right, so it stays
+        // readable on narrow phones.
+        child: LayoutBuilder(
+          builder: (context, c) => Padding(
+          padding: EdgeInsets.fromLTRB(22, 22, (c.maxWidth * 0.34).clamp(22.0, 220.0), 22),
           child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -286,11 +292,7 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           // Kept on the text side so the scene on the right stays clear.
-          FractionallySizedBox(
-            widthFactor: 0.6,
-            alignment: Alignment.centerLeft,
-            child: _CefrBar(level: estimatedLevel ?? tutorLevel),
-          ),
+          _CefrBar(level: estimatedLevel ?? tutorLevel),
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -309,6 +311,7 @@ class _HeroCard extends StatelessWidget {
           ),
         ],
       ),
+        ),
         ),
       ),
     );

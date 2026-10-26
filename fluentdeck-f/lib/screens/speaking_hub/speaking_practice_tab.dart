@@ -191,7 +191,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
       color: AppColors.brandPrimary,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
         itemCount: _decks.length,
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
@@ -201,6 +201,9 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
             subtitle: _deckSubtitle(deck),
             icon: Icons.style_outlined,
             selected: _selected?.id == deck.id,
+            trailing: _selected?.id == deck.id
+                ? Icon(Icons.check_circle_rounded, color: AppPageColors.accentOf(context))
+                : null,
             onTap: () => setState(() => _selected = deck),
           );
         },
@@ -215,12 +218,11 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
           child: Text(
-            'Practice words from any of your decks. '
-            'During chat you can ask the tutor to save new notes to a deck.',
+            'Pick a deck. Rio will build a conversation that uses its words.',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               height: 1.4,
               color: AppPageColors.subtitleOf(context),
               fontFamily: 'Rubik',
@@ -229,7 +231,11 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
         ),
         Expanded(child: _buildList()),
         SpeakingStartButton(
-          label: _starting ? 'Loading deck…' : 'Start Deck Practice',
+          label: _starting
+              ? 'Loading deck…'
+              : _selected == null
+              ? 'Pick a deck to practice'
+              : 'Practice “${_selected!.name}”',
           enabled: _selected != null && !_starting,
           onPressed: _starting ? null : _startPractice,
         ),

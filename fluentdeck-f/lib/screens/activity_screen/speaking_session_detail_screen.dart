@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/models/speaking_session_record_model.dart';
 import 'package:fluentdeck/routing/app_route_names.dart';
@@ -26,8 +25,8 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         title: Text(l10n.t('speaking-activity.session-detail.title')),
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
         elevation: 0,
       ),
       body: ListView(
@@ -35,6 +34,28 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
         children: [
           _ScoreHero(score: session.score),
           const SizedBox(height: 12),
+          // Skill boxes only when the evaluation rated them (newer sessions).
+          if (session.fluencyScore != null ||
+              session.grammarScore != null ||
+              session.vocabularyScore != null) ...[
+            Row(
+              children: [
+                for (final (label, value) in [
+                  ('Fluency', session.fluencyScore),
+                  ('Grammar', session.grammarScore),
+                  ('Vocabulary', session.vocabularyScore),
+                ])
+                  if (value != null)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: _SkillBox(label: label, score: value),
+                      ),
+                    ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           _InfoCard(
             children: [
               _InfoRow(
@@ -101,30 +122,69 @@ class _ScoreHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
+    final value = (score / 10).clamp(0.0, 1.0);
+    final verdict = score >= 8
+        ? 'Clear and confident'
+        : score >= 5
+        ? 'Good progress'
+        : 'A good start';
+    // Score ring beside a short verdict (Lagoon Daylight).
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.greenCorrect.withValues(alpha: 0.3),
-        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Text(
-            '$score/10',
-            style: const TextStyle(
-              fontSize: 42,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF1B9E4B),
+          SizedBox(
+            width: 80,
+            height: 80,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: value),
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 600),
+              curve: Curves.easeOutCubic,
+              builder: (context, v, _) => Stack(
+                fit: StackFit.expand,
+                children: [
+                  CircularProgressIndicator(
+                    value: v,
+                    strokeWidth: 9,
+                    strokeCap: StrokeCap.round,
+                    color: accent,
+                    backgroundColor: accent.withValues(alpha: 0.14),
+                  ),
+                  Center(
+                    child: Text(
+                      '$score',
+                      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            AppLocalizations.of(context).t('speaking-activity.session-detail.score'),
-            style: TextStyle(color: AppPageColors.subtitleOf(context)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  verdict,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$score/10 · ${AppLocalizations.of(context).t('speaking-activity.session-detail.score')}',
+                  style: TextStyle(color: AppPageColors.subtitleOf(context), fontSize: 14),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -140,10 +200,10 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(children: children),
@@ -193,10 +253,10 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(
@@ -216,4 +276,43 @@ class _SectionCard extends StatelessWidget {
 
 String speakingSessionLoadError(BuildContext context, Object error) {
   return AppLocalizations.of(context).t(userFacingErrorLocalizationKey(error));
+}
+
+/// One skill (Fluency / Grammar / Vocabulary) as a word plus its 0-10 score:
+/// green when strong, orange when it needs work.
+class _SkillBox extends StatelessWidget {
+  const _SkillBox({required this.label, required this.score});
+
+  final String label;
+  final int score;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final (word, base) = score >= 8
+        ? ('Strong', const Color(0xFF2EE66B))
+        : score >= 6
+        ? ('Good', AppPageColors.accentOf(context))
+        : ('Fair', const Color(0xFFFF8F3D));
+    final ink = isDark ? base : Color.lerp(base, Colors.black, 0.45)!;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Column(
+        children: [
+          Text(word, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: ink)),
+          const SizedBox(height: 2),
+          Text(
+            '$label · $score/10',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
+          ),
+        ],
+      ),
+    );
+  }
 }

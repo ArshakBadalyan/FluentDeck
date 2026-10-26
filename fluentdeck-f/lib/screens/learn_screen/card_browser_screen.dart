@@ -852,11 +852,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shadowColor: Colors.black.withValues(alpha: 0.35),
-        scrolledUnderElevation: 8,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -868,7 +867,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.normal,
-                  color: Colors.white.withValues(alpha: 0.75),
+                  color: AppPageColors.subtitleOf(context),
                 ),
               ),
           ],

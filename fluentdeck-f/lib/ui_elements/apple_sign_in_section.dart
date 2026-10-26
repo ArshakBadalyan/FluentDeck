@@ -22,10 +22,15 @@ class AppleSignInSection extends StatefulWidget {
     required this.isSignUp,
     required this.enabled,
     this.onComplete,
+    this.showDivider = true,
   });
 
   final bool isSignUp;
   final bool enabled;
+
+  /// False when the form draws [AuthOrDivider] itself (Apple and Google side
+  /// by side under one divider).
+  final bool showDivider;
   final AppleAuthComplete? onComplete;
 
   @override
@@ -127,21 +132,11 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
 
     return Column(
       children: [
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(child: Divider(color: AppPageColors.subtleBorderOf(context))),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                label,
-                style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
-              ),
-            ),
-            Expanded(child: Divider(color: AppPageColors.subtleBorderOf(context))),
-          ],
-        ),
-        const SizedBox(height: 16),
+        if (widget.showDivider) ...[
+          const SizedBox(height: 8),
+          _OrDividerRow(label: label),
+          const SizedBox(height: 16),
+        ],
         if (_loading)
           const SizedBox(
             height: 50,
@@ -199,6 +194,50 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// "Sign in using" with a hairline on each side.
+class _OrDividerRow extends StatelessWidget {
+  const _OrDividerRow({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: AppPageColors.subtleBorderOf(context))),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+          ),
+        ),
+        Expanded(child: Divider(color: AppPageColors.subtleBorderOf(context))),
+      ],
+    );
+  }
+}
+
+/// The divider above the social sign-in buttons, for forms that lay the
+/// buttons out themselves.
+class AuthOrDivider extends StatelessWidget {
+  const AuthOrDivider({super.key, required this.isSignUp});
+
+  final bool isSignUp;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 16),
+      child: _OrDividerRow(
+        label: isSignUp
+            ? context.tr('login-register.sign-up-using')
+            : context.tr('login-register.sign-in-using'),
+      ),
     );
   }
 }

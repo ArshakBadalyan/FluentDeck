@@ -618,11 +618,11 @@ class _CardEditScreenState extends State<CardEditScreen> {
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shadowColor: Colors.black.withValues(alpha: 0.35),
-        scrolledUnderElevation: 8,
+        // Light header; Save is the one teal action (Lagoon Daylight).
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Text(widget.isEditing ? 'Edit note' : 'Add note'),
         actions: [
@@ -631,10 +631,22 @@ class _CardEditScreenState extends State<CardEditScreen> {
             tooltip: 'Preview',
             onPressed: _loading || _saving ? null : _preview,
           ),
-          IconButton(
-            icon: const Icon(Icons.check_rounded, color: Colors.white),
-            tooltip: 'Save',
-            onPressed: _saving || _loading ? null : _save,
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: FilledButton(
+                onPressed: _saving || _loading ? null : _save,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppPageColors.accentOf(context),
+                  foregroundColor: AppPageColors.onAccentOf(context),
+                  elevation: 0,
+                  minimumSize: const Size(0, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Save', style: TextStyle(fontWeight: FontWeight.w600)),
+              ),
+            ),
           ),
         ],
       ),

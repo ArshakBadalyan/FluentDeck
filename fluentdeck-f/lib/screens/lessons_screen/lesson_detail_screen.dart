@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/exercise_model.dart';
 import 'package:fluentdeck/models/lesson_model.dart';
@@ -80,8 +81,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_lesson?.title ?? 'Lesson'),
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
       ),
       body:
           _loading

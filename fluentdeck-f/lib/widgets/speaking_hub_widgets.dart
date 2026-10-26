@@ -123,7 +123,28 @@ class SpeakingSelectionCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              SpeakingListIconBadge(icon: icon, title: title),
+              // Selected items swap their icon for a tick, like a checkbox.
+              AppFadeThroughSwitcher(
+                child: selected
+                    ? Container(
+                        key: const ValueKey('selected'),
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppPageColors.accentOf(context),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          Icons.check_rounded,
+                          color: AppPageColors.onAccentOf(context),
+                          size: 24,
+                        ),
+                      )
+                    : KeyedSubtree(
+                        key: const ValueKey('icon'),
+                        child: SpeakingListIconBadge(icon: icon, title: title),
+                      ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

@@ -14,6 +14,30 @@ enum TutorScene {
   fishing;
 
   String get asset => 'assets/tutor/scene-$name.webp';
+
+  /// Where Rio's face is in the picture. Cards show only a narrow slice of
+  /// these wide scenes, so the crop centres on him instead of the middle
+  /// (which, in some scenes, is his backpack).
+  Alignment get focus {
+    switch (this) {
+      case TutorScene.hiking:
+        return const Alignment(0.75, 0);
+      case TutorScene.teaching:
+        return const Alignment(-0.6, 0);
+      case TutorScene.cave:
+        // Rio stands at the right of the cave mouth with his lantern.
+        return const Alignment(0.62, 0);
+      case TutorScene.encouraging:
+        return const Alignment(-0.2, 0);
+      case TutorScene.reading:
+      case TutorScene.online:
+        return const Alignment(0.05, 0);
+      case TutorScene.fishing:
+      case TutorScene.listening:
+      case TutorScene.exploring:
+        return Alignment.center;
+    }
+  }
 }
 
 /// Puts a [TutorScene] on one side of a card, with the card's own colour
@@ -80,6 +104,7 @@ class SceneBackdrop extends StatelessWidget {
                       child: Image.asset(
                         scene.asset,
                         fit: BoxFit.cover,
+                        alignment: scene.focus,
                         filterQuality: FilterQuality.medium,
                         excludeFromSemantics: true,
                       ),

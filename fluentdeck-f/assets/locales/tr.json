@@ -462,6 +462,7 @@
     }
   },
   "forgot-password": {
+    "subtitle": "E-postanı yaz, sıfırlaman için sana bir bağlantı gönderelim.",
     "forgot-password": "Parolayı Unuttuysan ?",
     "send-email": "E-posta gönder",
     "back-to-start": "Başlangıç sayfasına dön"

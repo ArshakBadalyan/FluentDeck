@@ -6,6 +6,11 @@ class SpeakingSessionRecord {
   final String? referenceKey;
   final String title;
   final int score;
+
+  /// Optional 0-10 skill scores; null for older sessions.
+  final int? fluencyScore;
+  final int? grammarScore;
+  final int? vocabularyScore;
   final String feedback;
   final String summary;
   final int durationMinutes;
@@ -18,6 +23,9 @@ class SpeakingSessionRecord {
     this.referenceKey,
     required this.title,
     required this.score,
+    this.fluencyScore,
+    this.grammarScore,
+    this.vocabularyScore,
     this.feedback = '',
     this.summary = '',
     this.durationMinutes = 0,
@@ -68,6 +76,9 @@ class SpeakingSessionRecord {
       referenceKey: json['referenceKey'] as String?,
       title: json['title'] as String? ?? '',
       score: (json['score'] as num?)?.round() ?? 0,
+      fluencyScore: (json['fluencyScore'] as num?)?.round(),
+      grammarScore: (json['grammarScore'] as num?)?.round(),
+      vocabularyScore: (json['vocabularyScore'] as num?)?.round(),
       feedback: json['feedback'] as String? ?? '',
       summary: json['summary'] as String? ?? '',
       durationMinutes: (json['durationMinutes'] as num?)?.round() ?? 0,

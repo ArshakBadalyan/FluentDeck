@@ -7,6 +7,9 @@ function formatSession(row) {
     referenceKey: row.referenceKey ?? row.reference_key ?? null,
     title: row.title,
     score: row.score,
+    fluencyScore: row.fluencyScore ?? row.fluency_score ?? null,
+    grammarScore: row.grammarScore ?? row.grammar_score ?? null,
+    vocabularyScore: row.vocabularyScore ?? row.vocabulary_score ?? null,
     feedback: row.feedback ?? '',
     summary: row.summary ?? '',
     durationMinutes: row.durationMinutes ?? row.duration_minutes ?? 0,
@@ -95,6 +98,12 @@ async function recordSpeakingPractice(strapi, userId, durationMinutes, now = new
 async function createCompletedSession(strapi, userId, payload) {
   const now = payload.completedAt ? new Date(payload.completedAt) : new Date();
   const score = Math.min(10, Math.max(0, Math.round(Number(payload.score) || 0)));
+  // Optional 0-10 skill scores from the session evaluation.
+  const subScore = (value) => {
+    if (value == null || value === '') return null;
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.min(10, Math.max(0, Math.round(n))) : null;
+  };
   const durationMinutes = Math.min(
     Math.max(Number(payload.durationMinutes) || 1, 1),
     120,
@@ -106,6 +115,9 @@ async function createCompletedSession(strapi, userId, payload) {
       referenceKey: payload.referenceKey ?? null,
       title: payload.title,
       score,
+      fluencyScore: subScore(payload.fluencyScore),
+      grammarScore: subScore(payload.grammarScore),
+      vocabularyScore: subScore(payload.vocabularyScore),
       feedback: payload.feedback ?? '',
       summary: payload.summary ?? payload.title,
       durationMinutes,

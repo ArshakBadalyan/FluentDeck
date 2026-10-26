@@ -396,6 +396,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
       saved = await SpeakingSessionService.instance.completeSession(
         context: ctx,
         score: result.score,
+        fluencyScore: result.fluency,
+        grammarScore: result.grammar,
+        vocabularyScore: result.vocabulary,
         feedback: result.feedback,
         summary: result.summary,
         turnCount: _service.turns.length,
@@ -453,8 +456,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
           ? null
           : AppBar(
               title: const Text('English Practice'),
-              backgroundColor: AppColors.brandPrimary,
-              foregroundColor: Colors.white,
+              backgroundColor: AppPageColors.pageBgOf(context),
+              foregroundColor: AppPageColors.textPrimaryOf(context),
               elevation: 0,
               actions: [
                 IconButton(
@@ -464,7 +467,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 ),
               ],
             ),
-      body: Stack(
+      // Wide screens: the chat plus a corrections panel on the right.
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final chat = Stack(
         children: [
           Column(
             children: [
@@ -585,6 +591,21 @@ class _ConversationScreenState extends State<ConversationScreen> {
             ),
           ),
         ],
+      );
+          if (constraints.maxWidth < 760) return chat;
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: chat),
+              _CorrectionsPanel(
+                corrections: [
+                  for (final turn in _service.turns)
+                    if (turn.isUser) ...turn.corrections,
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1556,6 +1577,109 @@ class _DailyGoalReachedCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Wide screens: every correction from this chat in one list, newest first.
+class _CorrectionsPanel extends StatelessWidget {
+  const _CorrectionsPanel({required this.corrections});
+
+  final List<GrammarCorrection> corrections;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final strike = isDark ? const Color(0xFFFF8A80) : const Color(0xFFB42318);
+    final better = isDark ? AppColors.greenCorrect : const Color(0xFF0B6B3A);
+    final items = corrections.reversed.toList();
+    return Container(
+      width: 300,
+      margin: const EdgeInsets.fromLTRB(0, 12, 16, 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Corrections in this chat',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppPageColors.textPrimaryOf(context),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (items.isEmpty)
+            Text(
+              'Nothing to fix yet. Corrections will collect here as you talk.',
+              style: TextStyle(fontSize: 13, height: 1.4, color: AppPageColors.subtitleOf(context)),
+            )
+          else
+            Expanded(
+              child: ListView.separated(
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final c = items[index];
+                  return Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.voice.withValues(alpha: isDark ? 0.10 : 0.06),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.voice.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text.rich(
+                          TextSpan(
+                            style: TextStyle(fontSize: 14, height: 1.4, color: AppPageColors.textPrimaryOf(context)),
+                            children: [
+                              if (c.originalText.trim().isNotEmpty) ...[
+                                TextSpan(
+                                  text: c.originalText,
+                                  style: TextStyle(
+                                    color: strike,
+                                    decoration: TextDecoration.lineThrough,
+                                    decorationColor: strike,
+                                  ),
+                                ),
+                                const TextSpan(text: '  →  '),
+                              ],
+                              TextSpan(
+                                text: c.correctedText,
+                                style: TextStyle(fontWeight: FontWeight.w700, color: better),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (c.explanation.trim().isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            c.explanation,
+                            style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
+                          ),
+                        ],
+                        if (c.autoSaved) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            'Saved as a card',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: better),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
       ),
     );
   }

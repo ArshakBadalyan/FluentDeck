@@ -912,8 +912,13 @@ Score from 0 to 10 where:
 
 Consider: grammar, vocabulary range, fluency, relevance to the session topic/scenario/game, and engagement.
 
+Also rate three skills separately, each 0-10 on the same scale:
+- fluency: flow, response length, hesitation, keeping the conversation going
+- grammar: accuracy of verb forms, word order, agreement
+- vocabulary: range and precision of the words used
+
 Respond ONLY with valid JSON (no markdown):
-{"score": <integer 0-10>, "feedback": "<2-3 encouraging sentences>", "summary": "<one line for activity history>"}`;
+{"score": <integer 0-10>, "fluency": <integer 0-10>, "grammar": <integer 0-10>, "vocabulary": <integer 0-10>, "feedback": "<2-3 encouraging sentences>", "summary": "<one line for activity history>"}`;
 
 function formatTranscriptForEvaluation(history) {
   if (!Array.isArray(history) || history.length === 0) {
@@ -966,8 +971,17 @@ Evaluate the learner's spoken English in this session.`;
   }
 
   const score = Math.min(10, Math.max(0, Math.round(Number(parsed.score) || 5)));
+  // Skill sub-scores are optional: null when the model left one out, so the
+  // app hides that box instead of showing a made-up number.
+  const subScore = (value) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.min(10, Math.max(0, Math.round(n))) : null;
+  };
   return {
     score,
+    fluency: subScore(parsed.fluency),
+    grammar: subScore(parsed.grammar),
+    vocabulary: subScore(parsed.vocabulary),
     feedback: String(parsed.feedback ?? "").trim() || "Nice work — keep practicing!",
     summary: String(parsed.summary ?? "").trim() || `${title} session`,
   };

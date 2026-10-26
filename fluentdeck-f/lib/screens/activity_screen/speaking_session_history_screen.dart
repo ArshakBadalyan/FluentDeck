@@ -68,8 +68,8 @@ class _SpeakingSessionHistoryScreenState
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
         title: Text(l10n.t('speaking-activity.session-history.title')),
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.35),
         scrolledUnderElevation: 8,

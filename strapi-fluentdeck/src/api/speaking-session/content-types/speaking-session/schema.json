@@ -14,7 +14,13 @@
   "attributes": {
     "mode": {
       "type": "enumeration",
-      "enum": ["chat", "role_play", "topic", "game", "lesson"],
+      "enum": [
+        "chat",
+        "role_play",
+        "topic",
+        "game",
+        "lesson"
+      ],
       "required": true
     },
     "referenceKey": {
@@ -27,6 +33,21 @@
     "score": {
       "type": "integer",
       "required": true,
+      "min": 0,
+      "max": 10
+    },
+    "fluencyScore": {
+      "type": "integer",
+      "min": 0,
+      "max": 10
+    },
+    "grammarScore": {
+      "type": "integer",
+      "min": 0,
+      "max": 10
+    },
+    "vocabularyScore": {
+      "type": "integer",
       "min": 0,
       "max": 10
     },

@@ -149,14 +149,25 @@ class _RegisterFormState extends State<RegisterForm> {
           enabled: _isValid && !_loading,
           onPressed: _submit,
         ),
-        AppleSignInSection(
-          isSignUp: true,
-          enabled: !_loading,
-        ),
-        const SizedBox(height: 12),
-        GoogleSignInSection(
-          isSignUp: true,
-          enabled: !_loading,
+        // Apple and Google side by side under one divider.
+        AuthOrDivider(isSignUp: true),
+        Row(
+          children: [
+            Expanded(
+              child: AppleSignInSection(
+                isSignUp: true,
+                enabled: !_loading,
+                showDivider: false,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: GoogleSignInSection(
+                isSignUp: true,
+                enabled: !_loading,
+              ),
+            ),
+          ],
         ),
         const Spacer(),
         AuthInlineSwitchLink(

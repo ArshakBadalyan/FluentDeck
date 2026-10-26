@@ -1,7 +1,9 @@
-import 'package:fl_chart/fl_chart.dart';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
+import 'package:fluentdeck/models/flashcard_stats_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
@@ -10,7 +12,6 @@ import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dar
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/widgets/tutor_scene.dart';
 
 /// Deck overview — opened by tapping deck name or count buttons.
 class DeckOverviewScreen extends StatefulWidget {
@@ -29,6 +30,10 @@ class DeckOverviewScreen extends StatefulWidget {
 
 class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
   late FlashcardDeckModel _deck = widget.deck;
+
+  /// Cards coming due per day (from the deck's detailed stats); null until
+  /// loaded, empty when the request fails.
+  List<FlashcardDayCount>? _forecast;
   // True once this screen's counts have diverged from what the caller (the
   // Decks list) was showing when it opened this screen — tells the caller
   // on the way back whether it needs to reload too, same as the explicit
@@ -43,6 +48,19 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
     // fetched its deck list) — refresh once up front rather than only
     // after this screen's own actions change something.
     _refreshDeck();
+    _loadForecast();
+  }
+
+  Future<void> _loadForecast() async {
+    try {
+      final stats = await FlashcardService.instance.fetchDetailedStats(
+        deckId: _deck.id,
+        range: '1m',
+      );
+      if (mounted) setState(() => _forecast = stats.futureDueByDay);
+    } catch (_) {
+      if (mounted) setState(() => _forecast = const []);
+    }
   }
 
   /// Re-fetches this deck from the server so counts reflect reviews/edits
@@ -108,33 +126,16 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
     return AppPageBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        // Light header, like the main tabs.
         appBar: AppBar(
-          backgroundColor: AppColors.brandPrimaryDeep,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: Colors.black.withValues(alpha: 0.35),
-          scrolledUnderElevation: 8,
+          backgroundColor: AppPageColors.pageBgOf(context),
+          foregroundColor: AppPageColors.textPrimaryOf(context),
+          elevation: 0,
+          scrolledUnderElevation: 0,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context, _changed),
-          ),
-          title: Row(
-            children: [
-              if (deck.isFiltered) ...[
-                Icon(Icons.filter_list, size: 20, color: Colors.white.withValues(alpha: 0.85)),
-                const SizedBox(width: 6),
-              ],
-              Expanded(
-                child: Text(
-                  deck.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Rubik',
-                  ),
-                ),
-              ),
-            ],
           ),
           actions: [
             IconButton(
@@ -152,43 +153,105 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   _filterDescription(deck.filterQuery!, widget.allDecks),
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                 ),
               ),
-            _DeckHeroCard(
-              totalCards: totalCards,
-              newCount: deck.newCount,
-              learningCount: deck.learningCount,
-              reviewCount: deck.reviewDueCount,
+            _DeckHeader(deck: deck, totalCards: totalCards),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: _CountBox(
+                    count: deck.newCount,
+                    label: 'New',
+                    color: const Color(0xFF2196F3),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _CountBox(
+                    count: deck.learningCount,
+                    label: 'Learning',
+                    color: AppColors.redWrong,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _CountBox(
+                    count: deck.reviewDueCount,
+                    label: 'To review',
+                    color: AppColors.greenCorrect,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            AppSectionCard(
-              title: 'Study',
-              icon: Icons.school_outlined,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _PrimaryDeckAction(
-                    icon: Icons.play_arrow_rounded,
-                    title: 'Study now',
-                    subtitle: deck.reviewDueCount + deck.newCount + deck.learningCount > 0
-                        ? 'Review cards due today'
-                        : 'No cards due right now',
+            if (totalCards > 0 && deck.reviewDueCount + deck.newCount + deck.learningCount == 0) ...[
+              const SizedBox(height: 10),
+              Text(
+                'All caught up. Come back when cards are due.',
+                style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+              ),
+            ] else if (totalCards == 0) ...[
+              const SizedBox(height: 10),
+              Text(
+                'No cards in this deck yet.',
+                style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+              ),
+            ],
+            const SizedBox(height: 18),
+            AppPressScale(
+              child: SizedBox(
+                height: 56,
+                child: FilledButton.icon(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => ReviewSessionScreen(deckId: deck.id),
+                      ),
+                    );
+                    _refreshDeck();
+                    _loadForecast();
+                  },
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: Text(
+                    () {
+                      final due = deck.reviewDueCount + deck.newCount + deck.learningCount;
+                      return due > 0 ? 'Study $due card${due == 1 ? '' : 's'}' : 'Study now';
+                    }(),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppPageColors.accentOf(context),
+                    foregroundColor: AppPageColors.onAccentOf(context),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _SecondaryDeckAction(
+                    icon: Icons.manage_search_rounded,
+                    label: 'Browse cards',
                     onTap: () async {
                       await Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => ReviewSessionScreen(deckId: deck.id),
+                          builder: (_) => CardBrowserScreen(deckId: deck.id),
                         ),
                       );
                       _refreshDeck();
                     },
                   ),
-                  if (!deck.isFiltered) ...[
-                    const SizedBox(height: 8),
-                    AppSheetActionTile(
+                ),
+                if (!deck.isFiltered) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _SecondaryDeckAction(
                       icon: Icons.note_add_outlined,
-                      title: 'Add card',
-                      subtitle: 'Create a new flashcard in this deck',
+                      label: 'Add card',
                       onTap: () async {
                         final saved = await Navigator.of(context).push<bool>(
                           MaterialPageRoute(
@@ -200,287 +263,271 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                         }
                       },
                     ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            AppSectionCard(
-              title: 'Browse',
-              icon: Icons.grid_view_rounded,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AppSheetActionTile(
-                    icon: Icons.manage_search_rounded,
-                    title: 'Browse cards',
-                    subtitle: 'Search, filter, and edit cards in a table',
-                    onTap: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => CardBrowserScreen(deckId: deck.id),
-                        ),
-                      );
-                      _refreshDeck();
-                    },
                   ),
                 ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DeckHeroCard extends StatelessWidget {
-  const _DeckHeroCard({
-    required this.totalCards,
-    required this.newCount,
-    required this.learningCount,
-    required this.reviewCount,
-  });
-
-  final int totalCards;
-  final int newCount;
-  final int learningCount;
-  final int reviewCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.brandPrimaryDeep,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Container(
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(18)),
-          color: AppColors.brandPrimaryDeep,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: SceneBackdrop(
-          scene: TutorScene.listening,
-          color: AppColors.brandPrimaryDeep,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$totalCards card${totalCards == 1 ? '' : 's'}',
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Rubik',
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Track new, learning, and review progress',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white.withValues(alpha: 0.78),
-                height: 1.35,
-              ),
-            ),
-            const SizedBox(height: 18),
-            if (newCount + learningCount + reviewCount > 0)
-              Center(
-                child: SizedBox(
-                  width: 240,
-                  height: 110,
-                  child: _DeckCountBarChart(
-                    newCount: newCount,
-                    learningCount: learningCount,
-                    reviewCount: reviewCount,
-                  ),
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  totalCards == 0
-                      ? 'No cards in this deck yet.'
-                      : 'All cards are suspended or buried.',
-                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.78)),
-                ),
-              ),
-          ],
-        ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Rounded-capsule bar chart (fl_chart "pill" style) for the New/Learning/
-/// Review split — a background track plus a filled, color-matched bar.
-class _DeckCountBarChart extends StatelessWidget {
-  const _DeckCountBarChart({
-    required this.newCount,
-    required this.learningCount,
-    required this.reviewCount,
-  });
-
-  final int newCount;
-  final int learningCount;
-  final int reviewCount;
-
-  @override
-  Widget build(BuildContext context) {
-    final values = [
-      (label: 'New', count: newCount, color: const Color(0xFF4994EC)),
-      (label: 'Learning', count: learningCount, color: const Color(0xFFED7249)),
-      (label: 'To review', count: reviewCount, color: const Color(0xFF7FFB66)),
-    ];
-    final maxY =
-        values.map((e) => e.count).fold<int>(0, (a, b) => a > b ? a : b).toDouble();
-    final chartMaxY = maxY < 1 ? 1.0 : maxY * 1.15;
-
-    return AppChartReveal(
-      style: AppChartRevealStyle.up,
-      child: BarChart(
-      BarChartData(
-        maxY: chartMaxY,
-        alignment: BarChartAlignment.spaceAround,
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-        barTouchData: BarTouchData(
-          touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (group) => values[group.x.toInt()].color.withValues(alpha: 0.9),
-            getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
-              rod.toY.toInt().toString(),
-              const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ),
-        ),
-        titlesData: FlTitlesData(
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 24,
-              getTitlesWidget: (value, meta) {
-                final i = value.toInt();
-                if (i < 0 || i >= values.length) return const SizedBox.shrink();
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    values[i].label,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.85),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        barGroups: [
-          for (var i = 0; i < values.length; i++)
-            BarChartGroupData(
-              x: i,
-              barRods: [
-                BarChartRodData(
-                  toY: values[i].count.toDouble(),
-                  color: values[i].color,
-                  width: 30,
-                  borderRadius: BorderRadius.circular(30),
-                  backDrawRodData: BackgroundBarChartRodData(
-                    show: true,
-                    toY: chartMaxY,
-                    color: Colors.white.withValues(alpha: 0.18),
-                  ),
-                ),
               ],
             ),
-        ],
+            const SizedBox(height: 20),
+            _ForecastCard(
+              forecast: _forecast,
+              dueToday: deck.newCount + deck.learningCount + deck.reviewDueCount,
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }
 
-class _PrimaryDeckAction extends StatelessWidget {
-  const _PrimaryDeckAction({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
+
+
+
+/// One tinted count box (New / Learning / To review).
+class _CountBox extends StatelessWidget {
+  const _CountBox({required this.count, required this.label, required this.color});
+
+  final int count;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final text = isDark ? color : Color.lerp(color, Colors.black, 0.45)!;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.18 : 0.13),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppCountUpText(
+            '$count',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: text, height: 1.1),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: text)),
+        ],
+      ),
+    );
+  }
+}
+
+/// White secondary action beside its sibling (Browse cards / Add card).
+class _SecondaryDeckAction extends StatelessWidget {
+  const _SecondaryDeckAction({required this.icon, required this.label, required this.onTap});
 
   final IconData icon;
-  final String title;
-  final String subtitle;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.brandPrimaryDeep,
-      borderRadius: BorderRadius.circular(14),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          child: Row(
+    return AppPressScale(
+      child: Material(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            height: 52,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 20, color: AppPageColors.accentOf(context)),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppPageColors.textPrimaryOf(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Deck icon, big name and card count (the name lives here, not in the bar).
+class _DeckHeader extends StatelessWidget {
+  const _DeckHeader({required this.deck, required this.totalCards});
+
+  final FlashcardDeckModel deck;
+  final int totalCards;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
+    return Row(
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Icon(
+            deck.isFiltered ? Icons.filter_list_rounded : Icons.style_rounded,
+            color: accent,
+            size: 28,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 22, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        fontFamily: 'Rubik',
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
+              Text(
+                deck.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 24,
+                  height: 1.15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                  color: AppPageColors.textPrimaryOf(context),
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: Colors.white.withValues(alpha: 0.9),
+              const SizedBox(height: 2),
+              Text(
+                deck.isFiltered
+                    ? 'Filtered deck · $totalCards card${totalCards == 1 ? '' : 's'}'
+                    : '$totalCards card${totalCards == 1 ? '' : 's'}',
+                style: TextStyle(fontSize: 14, color: AppPageColors.subtitleOf(context)),
               ),
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// "Next 7 days": how many cards come due each day, today highlighted.
+class _ForecastCard extends StatelessWidget {
+  const _ForecastCard({required this.forecast, required this.dueToday});
+
+  final List<FlashcardDayCount>? forecast;
+  final int dueToday;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
+    final subtitle = AppPageColors.subtitleOf(context);
+    final today = DateTime.now();
+    final byDate = {for (final d in forecast ?? const <FlashcardDayCount>[]) d.date: d.count};
+    String key(DateTime d) =>
+        '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final days = [for (var i = 0; i < 7; i++) today.add(Duration(days: i))];
+    // Today never shows fewer than the cards already due now.
+    final counts = <int>[
+      for (var i = 0; i < 7; i++)
+        i == 0
+            ? math.max(byDate[key(days[i])] ?? 0, dueToday)
+            : (byDate[key(days[i])] ?? 0),
+    ];
+    final maxCount = counts.fold<int>(0, (a, b) => a > b ? a : b);
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Next 7 days',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppPageColors.textPrimaryOf(context),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            forecast == null
+                ? 'Loading…'
+                : maxCount == 0
+                ? 'Nothing due this week. New cards appear as you add them.'
+                : '${counts.fold<int>(0, (a, b) => a + b)} cards coming up',
+            style: TextStyle(fontSize: 13, color: subtitle),
+          ),
+          const SizedBox(height: 14),
+          // Room for the count (14) + bar (6–66) + day label (14) + gaps.
+          SizedBox(
+            height: 120,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (var i = 0; i < 7; i++)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (counts[i] > 0)
+                            Text(
+                              '${counts[i]}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: i == 0 ? accent : subtitle,
+                              ),
+                            ),
+                          const SizedBox(height: 4),
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(
+                              begin: 0,
+                              end: maxCount == 0 ? 0 : counts[i] / maxCount,
+                            ),
+                            duration: MediaQuery.disableAnimationsOf(context)
+                                ? Duration.zero
+                                : const Duration(milliseconds: 500),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, v, _) => Container(
+                              height: 6 + 60 * v,
+                              decoration: BoxDecoration(
+                                color: i == 0 ? accent : accent.withValues(alpha: 0.35),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            i == 0 ? 'Today' : labels[days[i].weekday - 1],
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: i == 0 ? FontWeight.w700 : FontWeight.w500,
+                              color: i == 0 ? accent : subtitle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

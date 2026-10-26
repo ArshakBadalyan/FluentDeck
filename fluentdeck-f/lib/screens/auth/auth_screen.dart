@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/ui_elements/riovox_wordmark.dart';
 import 'package:fluentdeck/widgets/rio.dart';
 import 'login_form.dart';
 import 'register_form.dart';
@@ -36,8 +37,11 @@ class _AuthScreenState extends State<AuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 40),
-              // Rio greets the learner; the title is bold and left-aligned.
-              Container(
+              // Rio and the wordmark greet the learner; the title is bold and
+              // left-aligned.
+              Row(
+                children: [
+                  Container(
                 width: 64,
                 height: 64,
                 clipBehavior: Clip.antiAlias,
@@ -54,6 +58,10 @@ class _AuthScreenState extends State<AuthScreen> {
                     alignment: Alignment.topCenter,
                   ),
                 ),
+              ),
+                  const SizedBox(width: 14),
+                  const RiovoxWordmark(height: 30),
+                ],
               ),
               const SizedBox(height: 20),
               AppFadeThroughSwitcher(

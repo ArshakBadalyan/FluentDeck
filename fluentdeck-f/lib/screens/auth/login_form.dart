@@ -141,14 +141,25 @@ class _LoginFormState extends State<LoginForm> {
           enabled: _isValid && !_loading,
           onPressed: _submit,
         ),
-        AppleSignInSection(
-          isSignUp: false,
-          enabled: !_loading,
-        ),
-        const SizedBox(height: 12),
-        GoogleSignInSection(
-          isSignUp: false,
-          enabled: !_loading,
+        // Apple and Google side by side under one divider.
+        AuthOrDivider(isSignUp: false),
+        Row(
+          children: [
+            Expanded(
+              child: AppleSignInSection(
+                isSignUp: false,
+                enabled: !_loading,
+                showDivider: false,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: GoogleSignInSection(
+                isSignUp: false,
+                enabled: !_loading,
+              ),
+            ),
+          ],
         ),
         const Spacer(),
         AuthInlineSwitchLink(

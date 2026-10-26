@@ -24,6 +24,7 @@ import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/services/notifications_service.dart';
 import 'package:fluentdeck/utils/strapi_response.dart';
+import 'package:fluentdeck/services/theme_settings_store.dart';
 import 'package:fluentdeck/services/unsaved_changes_service.dart';
 import 'package:fluentdeck/ui_elements/english_bottom_nav.dart';
 import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
@@ -402,9 +403,15 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     final isSpeak = tab == MainTabId.speak;
     final isActivity = tab == MainTabId.activity;
 
-    return Scaffold(
+    final wide = MediaQuery.sizeOf(context).width >= 960;
+
+    final scaffold = Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: MainAppBar(
+      // In a live conversation the session's own header (Rio + title) is the
+      // only header, so the main bar steps aside.
+      appBar: isSpeak && _speakInSession
+          ? null
+          : MainAppBar(
         title: _currentTitle,
         suppressShadow: isSpeak && _speakInSession,
         // Profile: log out sits to the right of the bell.
@@ -443,6 +450,8 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                             )
                             : const SizedBox.shrink(),
                   )
+                : isProfile
+                ? const _ThemeToggleButton()
                 : null,
         tabs:
             isProfile
@@ -531,7 +540,10 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
           ),
         ],
       ),
-      bottomNavigationBar: EnglishBottomNav(
+      // Wide web/tablet: the side menu (below) replaces the bottom bar.
+      bottomNavigationBar: wide
+          ? null
+          : EnglishBottomNav(
         currentIndex: _currentIndex,
         // Decks has its own banner directly above the nav bar (streak /
         // studied-today), and Speak's message composer has its own outlined
@@ -541,15 +553,29 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
             _currentTab == MainTabId.decks || _currentTab == MainTabId.speak
                 ? false
                 : _bottomNavShowShadow,
-        onTap: (index) async {
-          if (index == _currentIndex) return;
-          _pendingSubIndex = null;
-          if (!await _confirmLeaveIfUnsaved()) return;
-          _leaveSpeakTabIfNeeded(index);
-          await _showMainPage(index);
-        },
+        onTap: _onMainNavTap,
       ),
     );
+
+    if (!wide) return scaffold;
+    return ColoredBox(
+      color: AppPageColors.pageBgOf(context),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          EnglishSideNav(currentIndex: _currentIndex, onTap: _onMainNavTap),
+          Expanded(child: scaffold),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onMainNavTap(int index) async {
+    if (index == _currentIndex) return;
+    _pendingSubIndex = null;
+    if (!await _confirmLeaveIfUnsaved()) return;
+    _leaveSpeakTabIfNeeded(index);
+    await _showMainPage(index);
   }
 }
 
@@ -603,6 +629,32 @@ class _OfflineSyncBanner extends StatelessWidget {
               : const SizedBox.shrink(),
         );
       },
+    );
+  }
+}
+
+/// Profile header: switches between light and dark mode in one tap (the icon
+/// shows the mode you'll switch to). Same setting as Settings → General →
+/// App theme.
+class _ThemeToggleButton extends StatelessWidget {
+  const _ThemeToggleButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return IconButton(
+      tooltip: isDark ? 'Switch to light mode' : 'Switch to dark mode',
+      color: AppPageColors.textPrimaryOf(context),
+      onPressed: () => ThemeSettingsStore.instance.setThemeMode(
+        isDark ? ThemeMode.light : ThemeMode.dark,
+      ),
+      icon: AppFadeThroughSwitcher(
+        child: Icon(
+          isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+          key: ValueKey(isDark),
+          size: 24,
+        ),
+      ),
     );
   }
 }

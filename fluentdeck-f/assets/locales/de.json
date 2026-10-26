@@ -462,6 +462,7 @@
     }
   },
   "forgot-password": {
+    "subtitle": "Gib deine E-Mail ein, dann schicken wir dir einen Link zum Zurücksetzen.",
     "forgot-password": "Passwort vergessen",
     "send-email": "E-Mail senden",
     "back-to-start": "Zurück zur Startseite"

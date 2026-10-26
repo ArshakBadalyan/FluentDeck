@@ -3,8 +3,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../app_colors.dart';
+import '../../models/conversation_session_model.dart';
 import '../../models/speaking_session_context.dart';
+import '../../models/speaking_topic_model.dart';
+import '../../screens/learn_screen/review_session_screen.dart';
+import '../../services/conversation_history_service.dart';
 import '../../services/conversation_limit_service.dart';
+import '../../services/conversation_service.dart';
+import '../../services/flashcard_service.dart';
+import '../../services/main_navigation_coordinator.dart';
+import '../../services/speaking_content_service.dart';
 import '../../ui_elements/app_motion.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../utils/practice_time_format.dart';
@@ -21,12 +29,48 @@ class SpeakingChatTab extends StatefulWidget {
 
 class _SpeakingChatTabState extends State<SpeakingChatTab> {
   ConversationUsageStatus? _usage;
+  ConversationSessionModel? _lastChat;
+  int? _cardsDue;
+  List<SpeakingTopicModel> _topics = const [];
 
   @override
   void initState() {
     super.initState();
     _loadUsage();
+    _loadShortcuts();
   }
+
+  /// "Pick up where you left off" and "Talk about…": each part is optional
+  /// and simply hides when its data can't load.
+  Future<void> _loadShortcuts() async {
+    final results = await Future.wait<Object?>([
+      ConversationHistoryService.instance
+          .listSessions()
+          .then<Object?>((s) => s.isEmpty ? null : s.first, onError: (_) => null),
+      FlashcardService.instance
+          .fetchStats()
+          .then<Object?>((s) => s.dueNow, onError: (_) => null),
+      SpeakingContentService.instance
+          .fetchTopicsCatalog()
+          .then<Object?>(
+            (c) => c.items.where((t) => !t.isPremiumLocked).take(6).toList(),
+            onError: (_) => const <SpeakingTopicModel>[],
+          ),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _lastChat = results[0] as ConversationSessionModel?;
+      _cardsDue = results[1] as int?;
+      _topics = results[2] as List<SpeakingTopicModel>;
+    });
+  }
+
+  Future<void> _continueChat(ConversationSessionModel session) async {
+    await ConversationService.instance.loadSession(session);
+    MainNavigationCoordinator.enterSpeakSession();
+  }
+
+  Future<void> _refresh() => Future.wait([_loadUsage(), _loadShortcuts()]);
 
   Future<void> _loadUsage() async {
     try {
@@ -51,7 +95,7 @@ class _SpeakingChatTabState extends State<SpeakingChatTab> {
 
     return AppPageBackground(
       child: RefreshIndicator(
-        onRefresh: _loadUsage,
+        onRefresh: _refresh,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [
@@ -102,6 +146,77 @@ class _SpeakingChatTabState extends State<SpeakingChatTab> {
                         style: TextStyle(fontSize: 14, height: 1.45, color: subtitle),
                       ),
                     ),
+                    if (_lastChat != null || (_cardsDue ?? 0) > 0) ...[
+                      const SizedBox(height: 24),
+                      AppStaggeredFadeIn(
+                        index: 3,
+                        child: _SectionTitle('Pick up where you left off'),
+                      ),
+                      const SizedBox(height: 10),
+                      AppStaggeredFadeIn(
+                        index: 4,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_lastChat != null)
+                              Expanded(
+                                child: _ShortcutCard(
+                                  icon: Icons.forum_outlined,
+                                  tint: AppColors.voice,
+                                  title: 'Last conversation',
+                                  subtitle: _lastChatPreview(_lastChat!),
+                                  onTap: () => _continueChat(_lastChat!),
+                                ),
+                              ),
+                            if (_lastChat != null && (_cardsDue ?? 0) > 0)
+                              const SizedBox(width: 12),
+                            if ((_cardsDue ?? 0) > 0)
+                              Expanded(
+                                child: _ShortcutCard(
+                                  icon: Icons.style_outlined,
+                                  tint: AppPageColors.accentOf(context),
+                                  title: '$_cardsDue card${_cardsDue == 1 ? '' : 's'} due',
+                                  subtitle: 'Review your flashcards',
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => const ReviewSessionScreen(),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (_topics.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      AppStaggeredFadeIn(index: 5, child: _SectionTitle('Talk about…')),
+                      const SizedBox(height: 10),
+                      AppStaggeredFadeIn(
+                        index: 6,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final topic in _topics)
+                              ActionChip(
+                                label: Text(topic.title),
+                                onPressed: () => widget.onStart(
+                                  SpeakingContentService.instance.topicSessionFrom(topic),
+                                ),
+                                backgroundColor: AppPageColors.cardBgOf(context),
+                                side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+                                shape: const StadiumBorder(),
+                                labelStyle: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: textPrimary,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -343,6 +458,97 @@ class _StartButton extends StatelessWidget {
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _lastChatPreview(ConversationSessionModel session) {
+  final userTurns = session.transcript.where((t) => t.isUser).toList();
+  final text = (userTurns.isNotEmpty ? userTurns.last : session.transcript.lastOrNull)?.text.trim();
+  return (text == null || text.isEmpty) ? 'Continue the chat' : '“$text”';
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: AppPageColors.textPrimaryOf(context),
+      ),
+    );
+  }
+}
+
+/// Small white card: tinted icon, title, one-line detail.
+class _ShortcutCard extends StatelessWidget {
+  const _ShortcutCard({
+    required this.icon,
+    required this.tint,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color tint;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppPressScale(
+      child: Material(
+        color: AppPageColors.cardBgOf(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: tint.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, size: 20, color: tint),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppPageColors.textPrimaryOf(context),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                ),
+              ],
+            ),
           ),
         ),
       ),

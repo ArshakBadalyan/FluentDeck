@@ -320,11 +320,10 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shadowColor: Colors.black.withValues(alpha: 0.35),
-        scrolledUnderElevation: 8,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Text(widget.isEditing ? 'Edit note' : 'New note'),
       ),

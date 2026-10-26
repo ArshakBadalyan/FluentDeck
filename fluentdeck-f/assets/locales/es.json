@@ -462,6 +462,7 @@
     }
   },
   "forgot-password": {
+    "subtitle": "Escribe tu correo y te enviaremos un enlace para restablecerla.",
     "forgot-password": "¿Olvidaste tu contraseña?",
     "send-email": "Enviar correo",
     "back-to-start": "Volver a la página de inicio"

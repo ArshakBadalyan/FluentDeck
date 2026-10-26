@@ -462,6 +462,7 @@
     }
   },
   "forgot-password": {
+    "subtitle": "Nhập email của bạn, chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.",
     "forgot-password": "Quên Mật khẩu ?",
     "send-email": "Gửi email",
     "back-to-start": "Quay lại trang chủ"

@@ -458,6 +458,7 @@
     }
   },
   "forgot-password": {
+    "subtitle": "Введи email, и мы пришлём ссылку для сброса пароля.",
     "forgot-password": "Забыли пароль ?",
     "send-email": "Отправить письмо",
     "back-to-start": "Назад на главную страницу"

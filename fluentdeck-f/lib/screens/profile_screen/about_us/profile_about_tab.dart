@@ -9,7 +9,10 @@ import 'package:fluentdeck/services/consent_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/screen_tutorial_explain_sheet.dart';
 import 'package:fluentdeck/services/user_session.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:fluentdeck/ui_elements/riovox_wordmark.dart';
+import 'package:fluentdeck/widgets/rio.dart';
 import 'app_review_sheet.dart';
 import 'privacy_policy_page.dart';
 import 'software_page.dart';
@@ -105,6 +108,8 @@ class _ProfileAboutTabState extends State<ProfileAboutTab> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         children: [
+          const _AboutHeader(),
+          const SizedBox(height: 12),
           // Split into "ways to get help" vs. "legal/app info" — a single
           // flat 8-row list made it hard to scan for what you wanted.
           AppSectionCard(
@@ -178,6 +183,45 @@ class _ProfileAboutTabState extends State<ProfileAboutTab> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Rio, the app name and the installed version.
+class _AboutHeader extends StatelessWidget {
+  const _AboutHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Column(
+        children: [
+          Image.asset(RioPose.happy.asset, height: 96, excludeFromSemantics: true),
+          const SizedBox(height: 8),
+          const RiovoxWordmark(height: 30),
+          const SizedBox(height: 8),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snap) {
+              final version = snap.data?.version;
+              return Text(
+                version == null
+                    ? 'AI speaking practice'
+                    : 'Version $version · AI speaking practice',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: AppPageColors.subtitleOf(context)),
+              );
+            },
           ),
         ],
       ),
