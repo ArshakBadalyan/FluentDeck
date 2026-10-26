@@ -156,6 +156,8 @@
   },
   "login-register": {
     "sign-in": "Đăng nhập",
+    "sign-in-subtitle": "Rio đã lưu tiến trình của bạn. Đăng nhập để tiếp tục trò chuyện.",
+    "sign-up-subtitle": "Luyện nói miễn phí cùng Rio. Không cần thẻ.",
     "sign-up": "Đăng ký",
     "registration": "Đăng ký",
     "only-nickname": "Chỉ tên người dùng",

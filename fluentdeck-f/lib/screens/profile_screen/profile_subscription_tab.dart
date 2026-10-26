@@ -304,7 +304,7 @@ class _StatusHeroCard extends StatelessWidget {
                 )
                 : null,
         color: isPremium ? null : AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(26),
         border: isPremium ? null : Border.all(color: AppPageColors.subtleBorderOf(context)),
         boxShadow: [
           BoxShadow(
@@ -514,20 +514,18 @@ class _PlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       // Selecting a plan eases the border, tint and radio into place.
       child: AnimatedContainer(
         duration: AppMotion.duration(context, AppMotion.normal),
         curve: AppMotion.standardCurve,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected
-              ? AppColors.brandPrimary.withValues(alpha: 0.06)
-              : AppPageColors.cardBgOf(context),
-          borderRadius: BorderRadius.circular(16),
+          color: AppPageColors.cardBgOf(context),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected
-                ? AppColors.brandPrimary
+                ? AppPageColors.accentOf(context)
                 : AppPageColors.subtleBorderOf(context),
             width: selected ? 2 : 1,
           ),
@@ -542,7 +540,7 @@ class _PlanCard extends StatelessWidget {
                   key: ValueKey(selected),
                 selected ? Icons.radio_button_checked : Icons.radio_button_off,
                 color: selected
-                    ? AppColors.brandPrimary
+                    ? AppPageColors.accentOf(context)
                     : AppPageColors.subtitleOf(context),
               ),
               ),
@@ -557,7 +555,7 @@ class _PlanCard extends StatelessWidget {
                       Text(
                         plan.title,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
@@ -585,7 +583,7 @@ class _PlanCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: AppColors.primaryYellow,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             badge!,

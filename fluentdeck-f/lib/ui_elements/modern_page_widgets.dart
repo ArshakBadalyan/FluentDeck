@@ -575,7 +575,7 @@ class AppHeroCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: AppColors.heroGradient,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
             color: AppColors.brandPrimary.withValues(alpha: 0.28),
@@ -623,15 +623,21 @@ class AppHeroCard extends StatelessWidget {
               ],
             ),
           ),
-          Material(
-            color: Colors.white.withValues(alpha: 0.18),
-            shape: const CircleBorder(),
-            child: InkWell(
-              onTap: onIconTap,
-              customBorder: const CircleBorder(),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Icon(icon, size: 40, color: Colors.white),
+          // Solid white action disc: the one obvious thing to tap.
+          AppPressScale(
+            enabled: onIconTap != null,
+            child: Material(
+              color: Colors.white,
+              shape: const CircleBorder(),
+              elevation: 6,
+              shadowColor: Colors.black.withValues(alpha: 0.3),
+              child: InkWell(
+                onTap: onIconTap,
+                customBorder: const CircleBorder(),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Icon(icon, size: 32, color: AppColors.brandPrimaryDeep),
+                ),
               ),
             ),
           ),
@@ -662,49 +668,43 @@ class AppMetricTile extends StatelessWidget {
     return AppFadeIn(
       child: Container(
       padding: const EdgeInsets.all(16),
+      // Flat card with a hairline border; the number leads, the label follows.
       decoration: BoxDecoration(
         color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppPageColors.subtleBorderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(
-              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04,
-            ),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(height: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppPageColors.subtitleOf(context),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
           AppCountUpText(
             value,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 22,
               fontWeight: FontWeight.w700,
+              height: 1.1,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: AppPageColors.subtitleOf(context),
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -780,7 +780,7 @@ class AppTextField extends StatelessWidget {
                     ? AppPageColors.fieldBgOf(context)
                     : Colors.white,
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             suffixIcon: suffixIcon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -792,11 +792,15 @@ class AppTextField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
+              borderSide: BorderSide(color: AppPageColors.accentOf(context), width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: AppColors.redWrong.withValues(alpha: 0.6)),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.redWrong, width: 2),
             ),
           ),
         ),

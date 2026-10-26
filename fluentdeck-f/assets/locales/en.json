@@ -156,6 +156,8 @@
   },
   "login-register": {
     "sign-in": "Sign In",
+    "sign-in-subtitle": "Rio saved your progress. Sign in to keep talking.",
+    "sign-up-subtitle": "Practice speaking with Rio for free. No card needed.",
     "sign-up": "Sign Up",
     "registration": "Registration",
     "only-nickname": "Only nickname",

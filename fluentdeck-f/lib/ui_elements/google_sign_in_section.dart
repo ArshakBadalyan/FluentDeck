@@ -130,7 +130,7 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
           foregroundColor: AppPageColors.textPrimaryOf(context),
           side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
         icon: SvgPicture.string(_googleLogoSvg, width: 20, height: 20),

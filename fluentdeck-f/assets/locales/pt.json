@@ -156,6 +156,8 @@
   },
   "login-register": {
     "sign-in": "Entrar",
+    "sign-in-subtitle": "O Rio guardou o seu progresso. Entre para continuar falando.",
+    "sign-up-subtitle": "Pratique a conversação com o Rio de graça. Sem cartão.",
     "sign-up": "Cadastrar-se",
     "registration": "Cadastro",
     "only-nickname": "Apenas apelido",

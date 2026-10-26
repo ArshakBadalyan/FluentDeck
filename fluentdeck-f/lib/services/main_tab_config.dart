@@ -103,10 +103,15 @@ class MainTabConfig {
       case MainTabId.speak:
         return MainTabDefinition(
           id: id,
-          title: 'Speak',
-          navLabel: 'Speak',
+          // The speaking hub is the home tab: today's practice and the
+          // start button come first.
+          title: 'Today',
+          navLabel: 'Today',
           iconBuilder:
-              (active) => Icon(Icons.mic, color: _iconColor(active, context)),
+              (active) => Icon(
+                active ? Icons.home_rounded : Icons.home_outlined,
+                color: _iconColor(active, context),
+              ),
         );
       case MainTabId.decks:
         return MainTabDefinition(
@@ -120,8 +125,8 @@ class MainTabConfig {
       case MainTabId.activity:
         return MainTabDefinition(
           id: id,
-          title: AppLocalizations.instance.t('activity.Activity'),
-          navLabel: AppLocalizations.instance.t('activity.Activity'),
+          title: AppLocalizations.instance.t('activity.tabs.Progress'),
+          navLabel: AppLocalizations.instance.t('activity.tabs.Progress'),
           iconBuilder:
               (active) => SvgPicture.asset(
                 'assets/buttons/activity.svg',

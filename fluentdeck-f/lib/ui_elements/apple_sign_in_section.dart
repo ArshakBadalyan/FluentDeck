@@ -163,7 +163,7 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
                 foregroundColor: AppPageColors.textPrimaryOf(context),
                 side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
               icon: const Icon(Icons.apple, size: 22),
@@ -178,7 +178,7 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
             style: Theme.of(context).brightness == Brightness.dark
                 ? SignInWithAppleButtonStyle.white
                 : SignInWithAppleButtonStyle.black,
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(14),
             height: 50,
           )
         else
@@ -191,7 +191,7 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
                 foregroundColor: AppPageColors.textPrimaryOf(context),
                 side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
               icon: const Icon(Icons.apple, size: 22),

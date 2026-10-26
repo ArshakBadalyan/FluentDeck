@@ -1,7 +1,6 @@
 import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/conversation_session_model.dart';
 import 'package:fluentdeck/services/conversation_history_service.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
@@ -109,11 +108,11 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        backgroundColor: AppColors.brandPrimaryDeep,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shadowColor: Colors.black.withValues(alpha: 0.35),
-        scrolledUnderElevation: 8,
+        // Light header on the page background, like the main tabs.
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         title: const Text('Conversation history'),
         actions: [

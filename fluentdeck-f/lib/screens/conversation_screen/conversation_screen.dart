@@ -751,28 +751,24 @@ class _TurnBubbleState extends State<_TurnBubble> {
               Flexible(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
+                    horizontal: 16,
+                    vertical: 12,
                   ),
+                  // Rounder bubbles; the tutor's sits on a white card with a
+                  // hairline border instead of a shadow (Lagoon Daylight).
                   decoration: BoxDecoration(
                     color: isUser
                         ? AppColors.brandPrimary
                         : AppPageColors.cardBgOf(context),
                     borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(16),
-                      topRight: const Radius.circular(16),
-                      bottomLeft: Radius.circular(isUser ? 16 : 4),
-                      bottomRight: Radius.circular(isUser ? 4 : 16),
+                      topLeft: const Radius.circular(22),
+                      topRight: const Radius.circular(22),
+                      bottomLeft: Radius.circular(isUser ? 22 : 8),
+                      bottomRight: Radius.circular(isUser ? 8 : 22),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.transparent
-                            : Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    border: isUser
+                        ? null
+                        : Border.all(color: AppPageColors.subtleBorderOf(context)),
                   ),
                   child: Stack(
                     clipBehavior: Clip.none,
@@ -1080,141 +1076,141 @@ class _CorrectionCardState extends State<_CorrectionCard> {
             Flexible(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 320),
-                child: Material(
-                  color: AppPageColors.cardBgOf(context),
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    onTap: () => setState(() => _expanded = !_expanded),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.primaryYellow.withValues(alpha: 0.8),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                _isSaved
-                                    ? Icons.bookmark_added_rounded
-                                    : Icons.auto_fix_high,
-                                size: 16,
-                                color: AppColors.brandPrimary,
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  widget.correction.correctedText,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.brandPrimary,
-                                  ),
-                                ),
-                              ),
-                              if (_isSaved) ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryYellow.withValues(
-                                      alpha: 0.2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(999),
-                                    border: Border.all(
-                                      color: AppColors.primaryYellow.withValues(
-                                        alpha: 0.85,
-                                      ),
-                                    ),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.bookmark_added_rounded,
-                                        size: 13,
-                                        color: AppColors.brandPrimary,
-                                      ),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        'Saved',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.brandPrimary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                              ],
-                              Icon(
-                                _expanded
-                                    ? Icons.expand_less
-                                    : Icons.expand_more,
-                                size: 18,
-                              ),
-                            ],
-                          ),
-                          if (_expanded) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              'You said: ${widget.correction.originalText}',
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.correction.explanation,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppPageColors.subtitleOf(context),
-                              ),
-                            ),
-                            if (!_isSaved) ...[
-                              const SizedBox(height: 10),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton.icon(
-                                  onPressed: _saving ? null : _saveToNotes,
-                                  icon: Icon(
-                                    _saving
-                                        ? Icons.hourglass_top_rounded
-                                        : Icons.bookmark_add_outlined,
-                                    size: 16,
-                                  ),
-                                  label: Text(
-                                    _saving ? 'Saving…' : 'Save to notes',
-                                  ),
-                                ),
-                              ),
-                            ] else ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                'Added to your From speaking deck',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppPageColors.subtitleOf(context),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                child: _sayItBetter(context),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// "Say it better": what you said → the better way, always visible; tap
+  /// for the explanation. Saving turns it into a flashcard.
+  Widget _sayItBetter(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const coral = Color(0xFFC2410C);
+    final strike = isDark ? const Color(0xFFFF8A80) : const Color(0xFFB42318);
+    final better = isDark ? AppColors.greenCorrect : const Color(0xFF0B6B3A);
+    final c = widget.correction;
+    return Material(
+      color: AppPageColors.cardBgOf(context),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () => setState(() => _expanded = !_expanded),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.voice.withValues(alpha: isDark ? 0.45 : 0.35),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.voiceDeep.withValues(alpha: isDark ? 0 : 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'SAY IT BETTER',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: isDark ? AppColors.voice : coral,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    size: 18,
+                    color: AppPageColors.subtitleOf(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text.rich(
+                TextSpan(
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.45,
+                    color: AppPageColors.textPrimaryOf(context),
+                  ),
+                  children: [
+                    if (c.originalText.trim().isNotEmpty) ...[
+                      TextSpan(
+                        text: c.originalText,
+                        style: TextStyle(
+                          color: strike,
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: strike,
+                        ),
+                      ),
+                      const TextSpan(text: '  →  '),
+                    ],
+                    TextSpan(
+                      text: c.correctedText,
+                      style: TextStyle(fontWeight: FontWeight.w700, color: better),
+                    ),
+                  ],
+                ),
+              ),
+              if (_expanded && c.explanation.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  c.explanation,
+                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                ),
+              ],
+              const SizedBox(height: 10),
+              if (_isSaved)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.greenCorrect.withValues(alpha: isDark ? 0.18 : 0.16),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_rounded, size: 14, color: better),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Saved as a card',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: better),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                OutlinedButton.icon(
+                  onPressed: _saving ? null : _saveToNotes,
+                  icon: Icon(
+                    _saving ? Icons.hourglass_top_rounded : Icons.bookmark_add_outlined,
+                    size: 16,
+                  ),
+                  label: Text(_saving ? 'Saving…' : 'Save as a card'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppPageColors.textPrimaryOf(context),
+                    side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+                    shape: const StadiumBorder(),
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1356,6 +1352,17 @@ class _InputBar extends StatelessWidget {
             shape: BoxShape.circle,
             color: isRecording ? AppColors.redWrong : AppColors.voiceDeep,
             boxShadow: [
+              // Soft halo rings around the big voice-only mic.
+              if (size >= 64) ...[
+                BoxShadow(
+                  color: AppColors.voice.withValues(alpha: 0.16),
+                  spreadRadius: size * 0.12,
+                ),
+                BoxShadow(
+                  color: AppColors.voice.withValues(alpha: 0.07),
+                  spreadRadius: size * 0.26,
+                ),
+              ],
               BoxShadow(
                 color: AppColors.voiceDeep.withValues(alpha: 0.35),
                 blurRadius: size / 6,
@@ -1391,18 +1398,11 @@ class _InputBar extends StatelessWidget {
       top: false,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+        // The dock sits on the page itself; the mic is the focal point.
         decoration: BoxDecoration(
-          color: AppPageColors.cardBgOf(context),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.transparent
-                  : Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
+          color: AppPageColors.pageBgOf(context),
+          border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
         ),
         child: Column(
           children: [
@@ -1458,12 +1458,26 @@ class _InputBar extends StatelessWidget {
                   const SizedBox(width: 8),
                   _micButton(size: 44),
                   const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: isProcessing || isRecording ? null : onSendText,
-                    icon: const Icon(Icons.send),
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.brandPrimary,
-                      foregroundColor: Colors.white,
+                  // A filled teal circle (IconButton.filled's style is
+                  // ignored under the app's Material 2 theme).
+                  Material(
+                    color: isProcessing || isRecording
+                        ? AppPageColors.subtleBorderOf(context)
+                        : AppPageColors.accentOf(context),
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: isProcessing || isRecording ? null : onSendText,
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: Icon(
+                          Icons.send_rounded,
+                          size: 22,
+                          semanticLabel: 'Send',
+                          color: AppPageColors.onAccentOf(context),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -1491,8 +1505,9 @@ class _InputBar extends StatelessWidget {
               TextButton(onPressed: onCancel, child: const Text('Cancel')),
             ],
             if (!typeMessagesEnabled) ...[
-              const SizedBox(height: 10),
-              _micButton(size: 72),
+              const SizedBox(height: 26),
+              _micButton(size: 80),
+              const SizedBox(height: 14),
             ],
           ],
         ),

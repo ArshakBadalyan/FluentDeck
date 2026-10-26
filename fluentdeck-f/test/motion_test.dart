@@ -66,11 +66,11 @@ void main() {
       }
     });
 
-    test('FilledButton gets the M2 shape and pressed elevation', () {
+    test('FilledButton gets the rounded shape and M2 pressed elevation', () {
       for (final theme in [AppTheme.light, AppTheme.dark]) {
         final style = theme.filledButtonTheme.style!;
         final shape = style.shape!.resolve({}) as RoundedRectangleBorder;
-        expect(shape.borderRadius, BorderRadius.circular(4));
+        expect(shape.borderRadius, BorderRadius.circular(14));
         expect(style.elevation!.resolve({}), 2);
         expect(style.elevation!.resolve({WidgetState.pressed}), 8);
         expect(style.elevation!.resolve({WidgetState.disabled}), 0);

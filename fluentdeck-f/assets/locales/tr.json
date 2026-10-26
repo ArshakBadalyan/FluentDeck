@@ -156,6 +156,8 @@
   },
   "login-register": {
     "sign-in": "Giriş Yap",
+    "sign-in-subtitle": "Rio ilerlemeni kaydetti. Konuşmaya devam etmek için giriş yap.",
+    "sign-up-subtitle": "Rio ile ücretsiz konuşma pratiği yap. Kart gerekmez.",
     "sign-up": "Kayıt Ol",
     "registration": "Kayıt",
     "only-nickname": "Sadece kullanıcı adı",

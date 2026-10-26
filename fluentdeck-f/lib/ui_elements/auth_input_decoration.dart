@@ -8,11 +8,23 @@ InputDecoration authInput(BuildContext context, String label) {
       color: AppPageColors.subtitleOf(context),
       fontSize: 14,
     ),
-    enabledBorder: UnderlineInputBorder(
+    // Filled, rounded fields (Lagoon Daylight) instead of a bare underline.
+    filled: true,
+    fillColor: Theme.of(context).brightness == Brightness.dark
+        ? AppPageColors.fieldBgOf(context)
+        : Colors.white,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
       borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
     ),
-    focusedBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: AppPageColors.accentOf(context)),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: AppPageColors.accentOf(context), width: 2),
     ),
   );
 }

@@ -914,19 +914,23 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                   builder: (context, value, _) => LinearProgressIndicator(
                     value: value,
                     minHeight: 3,
-                    // White on the dark brand bar (yellow is for rewards only).
-                    backgroundColor: Colors.white.withValues(alpha: 0.18),
-                    color: Colors.white,
+                    // Brand teal on the light header (yellow is for rewards only).
+                    backgroundColor: AppPageColors.accentOf(context)
+                        .withValues(alpha: 0.14),
+                    color: AppPageColors.accentOf(context),
                   ),
                 ),
               ),
-        // Same dark brand bar as the main app header; white text and icons.
-        backgroundColor: AppColors.brandPrimaryDeep,
+        // Same light header as the main tabs.
+        backgroundColor: AppPageColors.pageBgOf(context),
         surfaceTintColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actionsIconTheme: const IconThemeData(color: Colors.white),
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        foregroundColor: AppPageColors.textPrimaryOf(context),
+        iconTheme: IconThemeData(color: AppPageColors.textPrimaryOf(context)),
+        actionsIconTheme:
+            IconThemeData(color: AppPageColors.textPrimaryOf(context)),
+        systemOverlayStyle: Theme.of(context).brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         elevation: 0,
         centerTitle: false,
         // Card timer, centred on the screen's top edge.
@@ -939,7 +943,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppPageColors.textPrimaryOf(context),
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -956,7 +960,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.normal,
-                  color: Colors.white.withValues(alpha: 0.75),
+                  color: AppPageColors.subtitleOf(context),
                 ),
               ),
           ],
@@ -1011,7 +1015,8 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
       PopupMenuButton<int>(
         icon: Icon(
           Icons.flag,
-          color: flagColorFor(_queue[_index].flag) ?? Colors.white,
+          color: flagColorFor(_queue[_index].flag) ??
+              AppPageColors.textPrimaryOf(context),
         ),
         tooltip: 'Flag',
         onSelected: _setFlag,
@@ -1565,57 +1570,52 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
             const SizedBox(height: 12),
             AppFadeIn(
               // Quick (≤240 ms) and never blocks taps or shortcuts.
-              delay: Duration(milliseconds: 0),
+              delay: Duration.zero,
               duration: AppMotion.fast,
-              child: _ratingButton(
-              _settings.labelAgain,
-              AppColors.redWrong,
-              'again',
-              preview('again'),
-              icon: Icons.replay_rounded,
-              lightText: true,
-            )
-            ),
-            const SizedBox(height: 8),
-            if (_settings.showHardButton) ...[
-              AppFadeIn(
-              // Quick (≤240 ms) and never blocks taps or shortcuts.
-              delay: Duration(milliseconds: 20),
-              duration: AppMotion.fast,
-              child: _ratingButton(
-                _settings.labelHard,
-                AppColors.orangeHard,
-                'hard',
-                preview('hard'),
-                icon: Icons.trending_down_rounded,
-              )
-            ),
-              const SizedBox(height: 8),
-            ],
-            AppFadeIn(
-              // Quick (≤240 ms) and never blocks taps or shortcuts.
-              delay: Duration(milliseconds: 40),
-              duration: AppMotion.fast,
-              child: _ratingButton(
-              _settings.labelGood,
-              AppColors.primaryYellow,
-              'good',
-              preview('good'),
-              icon: Icons.check_rounded,
-            )
-            ),
-            const SizedBox(height: 8),
-            AppFadeIn(
-              // Quick (≤240 ms) and never blocks taps or shortcuts.
-              delay: Duration(milliseconds: 60),
-              duration: AppMotion.fast,
-              child: _ratingButton(
-              _settings.labelEasy,
-              AppColors.greenCorrect,
-              'easy',
-              preview('easy'),
-              icon: Icons.bolt_rounded,
-            )
+              // One row of soft tinted buttons; Good (the usual answer) is
+              // outlined in brand teal.
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _ratingButton(
+                      _settings.labelAgain,
+                      AppColors.redWrong,
+                      'again',
+                      preview('again'),
+                    ),
+                  ),
+                  if (_settings.showHardButton) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _ratingButton(
+                        _settings.labelHard,
+                        AppColors.orangeHard,
+                        'hard',
+                        preview('hard'),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ratingButton(
+                      _settings.labelGood,
+                      AppPageColors.accentOf(context),
+                      'good',
+                      preview('good'),
+                      emphasized: true,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ratingButton(
+                      _settings.labelEasy,
+                      AppColors.greenCorrect,
+                      'easy',
+                      preview('easy'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
@@ -1628,44 +1628,51 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     Color color,
     String rating,
     String? interval, {
-    IconData? icon,
-    bool lightText = false,
+    bool emphasized = false,
   }) {
     final scale = _settings.reviewButtonScale;
-    final textColor = lightText ? Colors.white : Colors.black87;
-    return Transform.scale(
-      scale: scale,
-      alignment: Alignment.center,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Tinted fill with a darker shade of the same hue as text, so each
+    // rating keeps its meaning without four loud solid blocks.
+    final textColor =
+        isDark ? color : Color.lerp(color, Colors.black, 0.45) ?? color;
+    return AppPressScale(
       child: SizedBox(
-        width: double.infinity,
-        child: FilledButton(
+        height: 64 * scale,
+        child: TextButton(
           onPressed: () => _answer(rating),
-          style: FilledButton.styleFrom(
-            backgroundColor: color,
+          style: TextButton.styleFrom(
+            backgroundColor: color.withValues(alpha: isDark ? 0.18 : 0.14),
             foregroundColor: textColor,
-            padding: EdgeInsets.symmetric(vertical: 14 * scale),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(18),
+              side: emphasized
+                  ? BorderSide(color: color, width: 2)
+                  : BorderSide.none,
             ),
           ),
-          child: Row(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (icon != null) ...[
-                Icon(icon, size: 18, color: textColor),
-                const SizedBox(width: 8),
-              ],
               Text(
                 label,
-                style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                ),
               ),
               if (_settings.showIntervalPreviews && interval != null) ...[
-                const SizedBox(width: 8),
+                const SizedBox(height: 2),
                 Text(
                   interval,
+                  maxLines: 1,
                   style: TextStyle(
-                    fontSize: 13,
-                    color: textColor.withValues(alpha: 0.75),
+                    fontSize: 12,
+                    color: textColor.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

@@ -147,7 +147,7 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
     if (_loading) {
       return AppLoadingSwitcher(
       loading: true,
-      child: const AppGridSkeleton(count: 9, crossAxisCount: 3, childAspectRatio: 0.85),
+      child: const AppGridSkeleton(count: 6, crossAxisCount: 2, childAspectRatio: 1.2),
     );
     }
     if (_error != null) {
@@ -184,11 +184,11 @@ class _SpeakingGamesTabState extends State<SpeakingGamesTab> {
       color: AppColors.brandPrimary,
       child: GridView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        // Cap card width so web/tablet show more columns instead of huge cards.
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        // Two columns on phones; web/tablet show more instead of huge cards.
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 180,
-          mainAxisExtent: 148,
+          maxCrossAxisExtent: 220,
+          mainAxisExtent: 150,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
         ),

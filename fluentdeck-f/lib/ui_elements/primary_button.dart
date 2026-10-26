@@ -49,7 +49,7 @@ class PrimaryButton extends StatelessWidget {
       enabled: enabled && !isLoading,
       child: SizedBox(
       width: double.infinity,
-      height: tallLabel ? 68 : 52,
+      height: tallLabel ? 68 : 56,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: enabled ? baseColor : baseColor.withOpacity(0.5),
@@ -61,7 +61,7 @@ class PrimaryButton extends StatelessWidget {
           disabledForegroundColor: Colors.white,
           elevation: 0,
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         ),
         // `enabled: false` must make this a truly disabled button (no tap
         // target, no ripple) — not just a dimmed one a tap still reaches.

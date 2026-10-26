@@ -28,6 +28,7 @@ import 'package:fluentdeck/services/unsaved_changes_service.dart';
 import 'package:fluentdeck/ui_elements/english_bottom_nav.dart';
 import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
 import 'package:fluentdeck/ui_elements/main_app_bar.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/notification_panel.dart';
 import 'ui_elements/app_motion.dart';
 
@@ -82,7 +83,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
 
   static const _decksSubTabs = ['Decks', 'Browser'];
 
-  static const _activitySubTabs = ['Progress', 'Speaking', 'Decks'];
+  static const _activitySubTabs = ['Overview', 'Speaking', 'Decks'];
 
   static const _speakSubTabDefs = [
     ('chat', 'Chat'),
@@ -413,7 +414,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                   builder: (context) => IconButton(
                     tooltip: 'Log out',
                     icon: const Icon(Icons.logout_rounded, size: 24),
-                    color: Colors.white,
+                    color: AppPageColors.textPrimaryOf(context),
                     onPressed: () => runLogoutFlow(context),
                   ),
                 )
@@ -426,7 +427,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                       helpSectionId:
                           _decksTabController.index == 1 ? 'card-browser' : null,
                       iconSize: 26,
-                      color: Colors.white,
+                      color: AppPageColors.textPrimaryOf(context),
                     ),
                   )
                 : isActivity
@@ -435,10 +436,10 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                     // Deck statistics help on Activity → Decks.
                     builder: (context, _) =>
                         _activityTabController.index == 2
-                            ? const DecksContextualHelpButton(
+                            ? DecksContextualHelpButton(
                               helpSectionId: 'statistics',
                               iconSize: 26,
-                              color: Colors.white,
+                              color: AppPageColors.textPrimaryOf(context),
                             )
                             : const SizedBox.shrink(),
                   )

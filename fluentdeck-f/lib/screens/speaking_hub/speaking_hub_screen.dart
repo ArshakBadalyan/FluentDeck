@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:fluentdeck/widgets/rio.dart';
 
 import 'package:flutter/material.dart';
 
@@ -15,9 +16,6 @@ import 'speaking_practice_tab.dart';
 import 'speaking_role_play_tab.dart';
 import 'speaking_topics_tab.dart';
 import 'package:fluentdeck/services/conversation_start_ad.dart';
-
-/// Same purple as [MainAppBar] background.
-const Color _speakSessionBarColor = AppColors.brandPrimaryDeep;
 
 class SpeakingHubScreen extends StatefulWidget {
   const SpeakingHubScreen({
@@ -121,35 +119,75 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
     if (_inSession) {
       return Column(
         children: [
+          // Light session header: back, Rio, the session title, settings.
           Material(
-            color: _speakSessionBarColor,
+            color: AppPageColors.pageBgOf(context),
             child: SafeArea(
               bottom: false,
               child: SizedBox(
-                height: 48,
+                height: 56,
                 child: Row(
                   children: [
                     IconButton(
                       onPressed: _exitSession,
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon: Icon(
+                        Icons.arrow_back_rounded,
+                        color: AppPageColors.textPrimaryOf(context),
+                      ),
                       tooltip: 'Exit session',
                     ),
-                    Expanded(
-                      child: Text(
-                        ConversationService.instance.sessionContext.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Rubik',
+                    Container(
+                      width: 36,
+                      height: 36,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppPageColors.accentOf(context).withValues(alpha: 0.16),
+                      ),
+                      child: Transform.scale(
+                        scale: 2.1,
+                        alignment: const Alignment(0, -0.62),
+                        child: Image.asset(
+                          RioPose.happy.asset,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
                         ),
-                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Rio',
+                            style: TextStyle(
+                              color: AppPageColors.textPrimaryOf(context),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            ConversationService.instance.sessionContext.title,
+                            style: TextStyle(
+                              color: AppPageColors.subtitleOf(context),
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                     IconButton(
                       onPressed: () => showConversationChatSettingsSheet(context),
-                      icon: const Icon(Icons.tune_rounded, color: Colors.white),
+                      icon: Icon(
+                        Icons.tune_rounded,
+                        color: AppPageColors.textPrimaryOf(context),
+                      ),
                       tooltip: 'Chat settings',
                     ),
+                    const SizedBox(width: 4),
                   ],
                 ),
               ),

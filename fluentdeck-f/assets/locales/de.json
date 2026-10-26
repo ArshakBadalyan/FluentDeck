@@ -156,6 +156,8 @@
   },
   "login-register": {
     "sign-in": "Einloggen",
+    "sign-in-subtitle": "Rio hat deinen Fortschritt gespeichert. Melde dich an und sprich weiter.",
+    "sign-up-subtitle": "Übe kostenlos das Sprechen mit Rio. Keine Karte nötig.",
     "sign-up": "Anmelden",
     "registration": "Registrieren",
     "only-nickname": "Nur Spitzname",

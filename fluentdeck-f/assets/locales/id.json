@@ -156,6 +156,8 @@
   },
   "login-register": {
     "sign-in": "Masuk",
+    "sign-in-subtitle": "Rio menyimpan progresmu. Masuk untuk lanjut berbicara.",
+    "sign-up-subtitle": "Latihan berbicara dengan Rio secara gratis. Tanpa kartu.",
     "sign-up": "Sign Up",
     "registration": "Pendaftaran",
     "only-nickname": "Hanya nama pengguna",

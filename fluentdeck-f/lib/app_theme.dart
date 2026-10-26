@@ -35,7 +35,8 @@ abstract final class AppTheme {
       colorScheme: scheme,
       fontFamily: BrandConfig.fontFamily,
       textTheme: AppTextTheme.textTheme,
-      scaffoldBackgroundColor: Colors.white,
+      // Matches the light header and page background (Lagoon Daylight).
+      scaffoldBackgroundColor: AppPageColors.pageBg,
       cardColor: AppPageColors.cardBg,
       dividerColor: Colors.black.withValues(alpha: 0.06),
       // Flutter's mouse tracker doesn't re-evaluate hover regions on scroll
@@ -44,7 +45,7 @@ abstract final class AppTheme {
       // scrolls under the (unmoved) cursor. Mobile has no hover anyway.
       hoverColor: Colors.transparent,
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBg,
         foregroundColor: BrandConfig.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -75,7 +76,7 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
         menuStyle: MenuStyle(
@@ -194,7 +195,7 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: raised,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
         menuStyle: MenuStyle(
@@ -269,12 +270,13 @@ abstract final class AppTheme {
     );
   }
 
-  /// FilledButton is a Material 3 widget; give it the M2 button look used by
-  /// ElevatedButton under `useMaterial3: false` — 4dp corners, resting
-  /// elevation 2 that rises to 8 while pressed (animated by the button).
+  /// FilledButton is a Material 3 widget; give it the M2 button behaviour
+  /// used by ElevatedButton under `useMaterial3: false` — resting elevation 2
+  /// that rises to 8 while pressed (animated by the button) — with the softer
+  /// 14dp Lagoon Daylight corners.
   static final ButtonStyle _m2ButtonShapeAndElevation = ButtonStyle(
     shape: WidgetStateProperty.all(
-      RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
     elevation: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.disabled)) return 0;

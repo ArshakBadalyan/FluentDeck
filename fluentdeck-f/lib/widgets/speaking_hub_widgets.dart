@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/speaking_item_icons.dart';
 
@@ -54,17 +55,10 @@ class SpeakingListIconBadge extends StatelessWidget {
     return Container(
       width: size,
       height: size,
+      // Flat soft tint of the item's accent (Lagoon Daylight).
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            accent.withValues(alpha: 0.18),
-            accent.withValues(alpha: 0.08),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accent.withValues(alpha: 0.22)),
+        color: accent.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(size * 0.32),
       ),
       child: Icon(icon, color: accent, size: iconSize),
     );
@@ -108,28 +102,23 @@ class SpeakingSelectionCard extends StatelessWidget {
         : AppColors.brandPrimary;
     return Opacity(
       opacity: isPremiumLocked ? 0.55 : 1,
+      child: AppPressScale(
       child: Material(
-      color: selected
-          ? Color.alphaBlend(
-              AppColors.brandPrimary.withValues(alpha: 0.06),
-              cardBg,
-            )
-          : cardBg,
-      borderRadius: BorderRadius.circular(16),
-      elevation: selected ? 2 : 0,
-      shadowColor: AppColors.brandPrimary.withValues(alpha: 0.2),
+      color: cardBg,
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        borderRadius: BorderRadius.circular(22),
+        child: AnimatedContainer(
+          duration: AppMotion.duration(context, AppMotion.fast),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: selected
                   ? selectedBorderColor
                   : AppPageColors.subtleBorderOf(context),
-              width: selected ? (isDark ? 1.5 : 2) : 1,
+              width: selected ? 2 : 1,
             ),
           ),
           child: Row(
@@ -143,8 +132,8 @@ class SpeakingSelectionCard extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                         fontFamily: 'Rubik',
                       ),
                     ),
@@ -155,7 +144,7 @@ class SpeakingSelectionCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: AppPageColors.subtitleOf(context),
                           height: 1.3,
                           fontFamily: 'Rubik',
@@ -174,8 +163,8 @@ class SpeakingSelectionCard extends StatelessWidget {
               if (score != null)
                 Text(
                   '$score / 10',
-                  style: const TextStyle(
-                    color: AppColors.brandPrimary,
+                  style: TextStyle(
+                    color: AppPageColors.accentOf(context),
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Rubik',
                   ),
@@ -184,6 +173,7 @@ class SpeakingSelectionCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
     ),
     );
   }
@@ -212,107 +202,87 @@ class SpeakingGameGridCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cardBg = AppPageColors.cardBgOf(context);
+    final accent = AppPageColors.accentOf(context);
+    // The featured game is the one dark-teal card in the grid.
+    final hero = featured && !isPremiumLocked;
+    final bg = hero ? AppColors.brandPrimaryDeep : cardBg;
+    final fg = hero ? Colors.white : AppPageColors.textPrimaryOf(context);
     return Opacity(
       opacity: isPremiumLocked ? 0.55 : 1,
+      child: AppPressScale(
       child: Material(
-      color: selected
-          ? Color.alphaBlend(
-              AppColors.brandPrimary.withValues(alpha: 0.06),
-              cardBg,
-            )
-          : cardBg,
-      borderRadius: BorderRadius.circular(16),
-      elevation: selected ? 2 : 0,
-      shadowColor: AppColors.brandPrimary.withValues(alpha: 0.15),
+      color: bg,
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
+        borderRadius: BorderRadius.circular(22),
+        child: AnimatedContainer(
+          duration: AppMotion.duration(context, AppMotion.fast),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected
-                  ? AppColors.brandPrimary
-                  : AppPageColors.subtleBorderOf(context),
-              width: selected ? 2 : 1,
-            ),
+            borderRadius: BorderRadius.circular(22),
+            border: hero
+                ? null
+                : Border.all(
+                    color: selected ? accent : AppPageColors.subtleBorderOf(context),
+                    width: selected ? 2 : 1,
+                  ),
           ),
-          padding: const EdgeInsets.all(12),
-          child: Stack(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (featured && !isPremiumLocked)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.brandPrimary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'Popular',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.brandPrimary,
-                        fontFamily: 'Rubik',
-                      ),
-                    ),
-                  ),
-                ),
-              if (score != null)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  child: Text(
-                    '$score / 10',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.brandPrimary,
-                      fontFamily: 'Rubik',
-                    ),
-                  ),
-                ),
-              if (isPremiumLocked)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Icon(Icons.lock_outline, color: AppPageColors.subtitleOf(context), size: 18),
-                ),
-              Padding(
-                padding: const EdgeInsets.only(top: 14),
-                child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SpeakingListIconBadge(
-                      icon: icon,
-                      title: title,
-                      size: 52,
-                      iconSize: 26,
-                    ),
-                    const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  hero
+                      ? Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(icon, color: const Color(0xFF9FF0F5), size: 22),
+                        )
+                      : SpeakingListIconBadge(icon: icon, title: title),
+                  const Spacer(),
+                  if (isPremiumLocked)
+                    Icon(Icons.lock_outline, color: AppPageColors.subtitleOf(context), size: 18)
+                  else if (score != null)
                     Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        fontFamily: 'Rubik',
+                      '$score / 10',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: hero ? Colors.white : accent,
+                      ),
+                    )
+                  else if (hero)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.voice,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text(
+                        'Popular',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
                       ),
                     ),
-                  ],
-                ),
+                ],
               ),
+              const Spacer(),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, height: 1.2, color: fg),
               ),
             ],
           ),
         ),
       ),
+    ),
     ),
     );
   }
@@ -338,23 +308,27 @@ class SpeakingStartButton extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         child: SizedBox(
           width: double.infinity,
-          height: 52,
-          child: FilledButton(
-            onPressed: enabled ? onPressed : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.brandPrimary,
-              disabledBackgroundColor: AppColors.greySkipped.withValues(alpha: 0.4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+          height: 56,
+          child: AppPressScale(
+            enabled: enabled,
+            child: FilledButton(
+              onPressed: enabled ? onPressed : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppPageColors.accentOf(context),
+                foregroundColor: AppPageColors.onAccentOf(context),
+                disabledBackgroundColor: AppColors.greySkipped.withValues(alpha: 0.4),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
               ),
-            ),
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
-                fontFamily: 'Rubik',
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Rubik',
+                ),
               ),
             ),
           ),
@@ -450,11 +424,12 @@ class _SpeakingFilterChipsState extends State<SpeakingFilterChips> {
             child: FilterChip(
               label: Text(widget.labels[index]),
               selected: selected,
+              showCheckmark: false,
               onSelected: (_) => widget.onSelected(index),
-              selectedColor: AppColors.brandPrimary.withValues(alpha: 0.12),
-              checkmarkColor: AppColors.brandPrimary,
+              backgroundColor: AppPageColors.cardBgOf(context),
+              selectedColor: AppPageColors.accentOf(context),
               labelStyle: TextStyle(
-                color: selected ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
+                color: selected ? AppPageColors.onAccentOf(context) : AppPageColors.textPrimaryOf(context),
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                 fontFamily: 'Rubik',
               ),

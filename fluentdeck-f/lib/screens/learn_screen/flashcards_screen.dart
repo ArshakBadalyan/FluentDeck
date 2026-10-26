@@ -957,17 +957,17 @@ class _DeckListTile extends StatelessWidget {
       color: AppPageColors.cardBgOf(context),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onShowOptions,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         splashColor: AppColors.brandPrimary.withValues(alpha: 0.06),
         highlightColor: AppColors.brandPrimary.withValues(alpha: 0.04),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
               dragHandle,
@@ -1013,12 +1013,12 @@ class _DeckListTile extends StatelessWidget {
                 ? DismissDirection.horizontal
                 : DismissDirection.startToEnd,
         background: SwipeActionBackgrounds.study(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
         secondaryBackground:
             onDelete != null
                 ? SwipeActionBackgrounds.delete(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                   )
                 : null,
         confirmDismiss: (direction) async {
@@ -1051,7 +1051,6 @@ class _TodayFooter extends StatelessWidget {
             ? 'Studied $reviews card${reviews == 1 ? '' : 's'} in $duration today'
             : 'Studied 0 cards today';
 
-    final streakText = streak > 0 ? ' · 🔥 $streak day streak' : '';
 
     return Container(
       width: double.infinity,
@@ -1076,7 +1075,7 @@ class _TodayFooter extends StatelessWidget {
           const SizedBox(width: 8),
           Flexible(
             child: Text(
-              '$summary$streakText',
+              summary,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
@@ -1085,6 +1084,19 @@ class _TodayFooter extends StatelessWidget {
               ),
             ),
           ),
+          if (streak > 0) ...[
+            const SizedBox(width: 10),
+            const Icon(Icons.local_fire_department_rounded, size: 16, color: AppColors.primaryYellow),
+            const SizedBox(width: 2),
+            Text(
+              '$streak day streak',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppPageColors.subtitleOf(context),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1100,7 +1112,7 @@ class _StatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subtitle = stats.reviewStreakDays > 0
-        ? '🔥 ${stats.reviewStreakDays} day review streak'
+        ? '${stats.reviewStreakDays}-day review streak'
         : 'Tap Study now to begin your session';
 
     return AppHeroCard(
@@ -1108,7 +1120,7 @@ class _StatsCard extends StatelessWidget {
       value: '${stats.dueNow}',
       label: stats.dueNow == 1 ? 'card due' : 'cards due',
       subtitle: subtitle,
-      icon: Icons.play_circle_outline_rounded,
+      icon: Icons.play_arrow_rounded,
       badge: stats.newCards > 0
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

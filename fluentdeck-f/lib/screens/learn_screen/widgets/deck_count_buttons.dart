@@ -85,16 +85,43 @@ class DeckCountButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLarge = size == DeckCountButtonSize.large;
-    return SizedBox(
-      width: isLarge ? 72 : 28,
+    if (isLarge) {
+      return SizedBox(
+        width: 72,
+        child: Text(
+          '$count',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: _color,
+          ),
+        ),
+      );
+    }
+    // Compact: a soft tinted pill; zero counts go quiet grey so the decks
+    // with work waiting stand out.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final active = count > 0;
+    final fill = active
+        ? _color.withValues(alpha: isDark ? 0.2 : 0.14)
+        : (isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFF3F7F7));
+    final text = !active
+        ? (isDark ? const Color(0xFF9AB0B3) : const Color(0xFF6B7A7D))
+        : isDark
+            ? _color
+            : Color.lerp(_color, Colors.black, 0.5)!;
+    return Container(
+      constraints: const BoxConstraints(minWidth: 30),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(9),
+      ),
       child: Text(
         '$count',
         textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: isLarge ? 22 : 15,
-          fontWeight: FontWeight.w700,
-          color: _color,
-        ),
+        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: text),
       ),
     );
   }

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/language_levels_snapshot.dart';
+import 'package:fluentdeck/models/speaking_session_record_model.dart';
 import 'package:fluentdeck/services/language_levels_service.dart';
+import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
@@ -23,6 +25,9 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
   String? _error;
   LanguageLevelsSnapshot? _snapshot;
 
+  /// Recent speaking sessions, for the week strip; empty if they can't load.
+  List<SpeakingSessionRecord> _sessions = const [];
+
   @override
   void initState() {
     super.initState();
@@ -35,12 +40,17 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
       _error = null;
     });
     try {
+      final sessionsFuture = SpeakingSessionService.instance
+          .fetchRecent(limit: 50)
+          .then<List<SpeakingSessionRecord>>((s) => s, onError: (_) => const []);
       final snapshot = await LanguageLevelsService.instance.fetch(
         forceRefresh: true,
       );
+      final sessions = await sessionsFuture;
       if (!mounted) return;
       setState(() {
         _snapshot = snapshot;
+        _sessions = sessions;
         _loading = false;
       });
     } catch (e) {
@@ -105,6 +115,8 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
               tutorLevel: snapshot.tutorLevel,
             ),
             const SizedBox(height: 16),
+            _WeekStrip(sessions: _sessions),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -134,6 +146,8 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
               color: AppColors.brandPrimary,
               fullWidth: true,
             ),
+            const SizedBox(height: 24),
+            _JourneySection(snapshot: snapshot),
             const SizedBox(height: 24),
             Builder(
               builder: (context) {
@@ -223,7 +237,7 @@ class _HeroCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: AppColors.heroGradient,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
             color: AppColors.brandPrimary.withValues(alpha: 0.28),
@@ -250,9 +264,9 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            estimatedLevel ?? 'Not enough evidence yet',
+            estimatedLevel ?? 'Level coming soon',
             style: TextStyle(
-              fontSize: estimatedLevel != null ? 48 : 22,
+              fontSize: estimatedLevel != null ? 48 : 24,
               fontWeight: FontWeight.w800,
               color: Colors.white,
               height: 1,
@@ -260,13 +274,22 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            estimatedLevelStatus == 'legacy_unassessed'
+            estimatedLevel == null
+                ? 'Have a few conversations and Rio will estimate it'
+                : estimatedLevelStatus == 'legacy_unassessed'
                 ? 'Keep speaking — your level will be reassessed soon'
                 : 'AI-estimated from your speaking practice',
             style: TextStyle(
               fontSize: 13,
               color: Colors.white.withValues(alpha: 0.82),
             ),
+          ),
+          const SizedBox(height: 14),
+          // Kept on the text side so the scene on the right stays clear.
+          FractionallySizedBox(
+            widthFactor: 0.6,
+            alignment: Alignment.centerLeft,
+            child: _CefrBar(level: estimatedLevel ?? tutorLevel),
           ),
           const SizedBox(height: 14),
           Container(
@@ -314,25 +337,33 @@ class _MetricTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppPageColors.subtleBorderOf(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 10),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 12),
+          AppCountUpText(
+            value,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, height: 1.1),
+          ),
+          const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: AppPageColors.subtitleOf(context),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -352,8 +383,8 @@ class LanguageHistoryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Language history'),
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
         elevation: 0,
       ),
       body: AppPageBackground(
@@ -782,6 +813,352 @@ class _LevelProgressionChart extends StatelessWidget {
         ],
       ),
     ),
+    );
+  }
+}
+
+/// A1–C2 as six segments, filled up to [level] (on the dark hero card).
+class _CefrBar extends StatelessWidget {
+  const _CefrBar({required this.level});
+
+  final String level;
+
+  static const _levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
+  @override
+  Widget build(BuildContext context) {
+    final reached = _levels.indexOf(level.trim().toUpperCase());
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            for (var i = 0; i < _levels.length; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              Expanded(
+                child: Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: i < reached
+                        ? Colors.white
+                        : i == reached
+                        ? AppColors.brandPrimaryOnDark
+                        : Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            for (var i = 0; i < _levels.length; i++)
+              Expanded(
+                child: Text(
+                  _levels[i],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: i == reached ? FontWeight.w800 : FontWeight.w500,
+                    color: Colors.white.withValues(alpha: i == reached ? 1 : 0.7),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// "Rio's journey": milestones from the learner's real activity — done ones
+/// ticked, the next one with its progress, the rest locked.
+class _JourneySection extends StatelessWidget {
+  const _JourneySection({required this.snapshot});
+
+  final LanguageLevelsSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final milestones = <(String, int, int, IconData)>[
+      ('First conversation', snapshot.speakingTurns, 1, Icons.mic_rounded),
+      ('Use 50 different words', snapshot.uniqueWordsSpoken, 50, Icons.abc_rounded),
+      ('Review 20 deck words', snapshot.deckWordsReviewed, 20, Icons.style_outlined),
+      ('100 speaking turns', snapshot.speakingTurns, 100, Icons.record_voice_over_rounded),
+      ('Use 300 different words', snapshot.uniqueWordsSpoken, 300, Icons.auto_awesome_rounded),
+    ];
+    final nextIndex = milestones.indexWhere((m) => m.$2 < m.$3);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Rio's journey",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppPageColors.textPrimaryOf(context),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppPageColors.cardBgOf(context),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+          ),
+          child: Column(
+            children: [
+              for (var i = 0; i < milestones.length; i++)
+                _JourneyRow(
+                  title: milestones[i].$1,
+                  value: milestones[i].$2,
+                  target: milestones[i].$3,
+                  icon: milestones[i].$4,
+                  state: milestones[i].$2 >= milestones[i].$3
+                      ? _JourneyState.done
+                      : i == nextIndex
+                      ? _JourneyState.current
+                      : _JourneyState.locked,
+                  showDivider: i < milestones.length - 1,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+enum _JourneyState { done, current, locked }
+
+class _JourneyRow extends StatelessWidget {
+  const _JourneyRow({
+    required this.title,
+    required this.value,
+    required this.target,
+    required this.icon,
+    required this.state,
+    required this.showDivider,
+  });
+
+  final String title;
+  final int value;
+  final int target;
+  final IconData icon;
+  final _JourneyState state;
+  final bool showDivider;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
+    final subtitle = AppPageColors.subtitleOf(context);
+    final Widget badge = switch (state) {
+      _JourneyState.done => Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.greenCorrect.withValues(alpha: 0.18),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.check_rounded, size: 20, color: Color(0xFF0B6B3A)),
+      ),
+      _JourneyState.current => Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: accent,
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.18), spreadRadius: 5)],
+        ),
+        child: Icon(icon, size: 18, color: AppPageColors.onAccentOf(context)),
+      ),
+      _JourneyState.locked => Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: AppPageColors.subtleBorderOf(context), width: 1.5),
+        ),
+        child: Icon(Icons.lock_outline_rounded, size: 16, color: subtitle),
+      ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: showDivider
+            ? Border(bottom: BorderSide(color: AppPageColors.subtleBorderOf(context)))
+            : null,
+      ),
+      child: Row(
+        children: [
+          badge,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: state == _JourneyState.locked ? FontWeight.w500 : FontWeight.w600,
+                    color: state == _JourneyState.locked
+                        ? subtitle
+                        : AppPageColors.textPrimaryOf(context),
+                  ),
+                ),
+                if (state == _JourneyState.current) ...[
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(
+                      value: (value / target).clamp(0.0, 1.0),
+                      minHeight: 6,
+                      color: accent,
+                      backgroundColor: accent.withValues(alpha: 0.14),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (state == _JourneyState.current) ...[
+            const SizedBox(width: 12),
+            Text(
+              '$value / $target',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: accent),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// This week (Mon–Sun) with a tick on each day that had a speaking session,
+/// plus the speaking streak worked out from those same days.
+class _WeekStrip extends StatelessWidget {
+  const _WeekStrip({required this.sessions});
+
+  final List<SpeakingSessionRecord> sessions;
+
+  static DateTime _day(DateTime t) => DateTime(t.year, t.month, t.day);
+
+  @override
+  Widget build(BuildContext context) {
+    final practiced = {for (final s in sessions) _day(s.completedAt.toLocal())};
+    final today = _day(DateTime.now());
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+
+    // Consecutive practiced days ending today (or yesterday, if today is
+    // still open).
+    var streak = 0;
+    var cursor = practiced.contains(today) ? today : today.subtract(const Duration(days: 1));
+    while (practiced.contains(cursor)) {
+      streak++;
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+
+    final accent = AppPageColors.accentOf(context);
+    final subtitle = AppPageColors.subtitleOf(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const letters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'This week',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppPageColors.textPrimaryOf(context),
+                  ),
+                ),
+              ),
+              if (streak > 0) ...[
+                const Icon(Icons.local_fire_department_rounded, size: 18, color: AppColors.primaryYellow),
+                const SizedBox(width: 4),
+                Text(
+                  '$streak-day speaking streak',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.primaryYellow : const Color(0xFF9A6B00),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              for (var i = 0; i < 7; i++)
+                Expanded(
+                  child: Builder(
+                    builder: (context) {
+                      final day = monday.add(Duration(days: i));
+                      final done = practiced.contains(day);
+                      final isToday = day == today;
+                      final future = day.isAfter(today);
+                      return Semantics(
+                        label:
+                            '${DateFormat.EEEE().format(day)}: ${done ? 'practiced' : future ? 'upcoming' : 'no practice'}',
+                        excludeSemantics: true,
+                        child: Column(
+                          children: [
+                            Text(
+                              letters[i],
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
+                                color: isToday ? AppPageColors.textPrimaryOf(context) : subtitle,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: done
+                                    ? accent
+                                    : isToday
+                                    ? accent.withValues(alpha: 0.12)
+                                    : AppPageColors.subtleBorderOf(context),
+                                borderRadius: BorderRadius.circular(12),
+                                border: isToday && !done
+                                    ? Border.all(color: accent, width: 1.5)
+                                    : null,
+                              ),
+                              child: done
+                                  ? Icon(Icons.check_rounded, size: 18, color: AppPageColors.onAccentOf(context))
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

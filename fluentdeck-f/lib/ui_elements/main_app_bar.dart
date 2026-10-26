@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 
-import '../app_colors.dart';
+import 'modern_page_widgets.dart';
 import 'screen_tutorial_targets.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -77,27 +77,30 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     if (!hasValidSize) {
       return AppBar(
         elevation: 0,
-        backgroundColor: AppColors.brandPrimaryDeep,
+        backgroundColor: AppPageColors.pageBgOf(context),
         toolbarHeight: _toolbarHeight,
       );
     }
 
+    // Light header on the page background (Lagoon Daylight): teal is kept
+    // for actions and the selected tab, not painted across the whole bar.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final barBg = AppPageColors.pageBgOf(context);
+    final fg = AppPageColors.textPrimaryOf(context);
+
     return AppBar(
-      systemOverlayStyle: const SystemUiOverlayStyle(
-        statusBarColor: Colors.black,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: barBg,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       ),
-      elevation: suppressShadow ? 0 : 4,
-      shadowColor: suppressShadow ? null : Colors.black.withValues(alpha: 0.35),
-      scrolledUnderElevation: suppressShadow ? 0 : 8,
+      elevation: 0,
+      scrolledUnderElevation: 0,
       // Material3 tints an elevated AppBar's surface with colorScheme.surfaceTint
-      // by default — in dark mode that's the bright cyan brandPrimaryOnDark, so
-      // the toolbar (elevated) ends up a visibly different, lighter teal than the
-      // flat tab-bar Material directly below it even though both use the same
-      // backgroundColor. Disabling the tint keeps elevation as a pure shadow.
+      // by default; keep the bar the exact page color.
       surfaceTintColor: Colors.transparent,
-      backgroundColor: AppColors.brandPrimaryDeep,
+      backgroundColor: barBg,
+      foregroundColor: fg,
       titleSpacing: 24,
       centerTitle: false,
       toolbarHeight: _toolbarHeight,
@@ -106,14 +109,14 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
           IconButton(
             tooltip: 'New conversation',
             icon: const Icon(Icons.add_comment_outlined, size: 26),
-            color: Colors.white,
+            color: fg,
             onPressed: onNewConversationTap,
           ),
         if (onConversationHistoryTap != null)
           IconButton(
             tooltip: 'Conversation history',
             icon: const Icon(Icons.history, size: 26),
-            color: Colors.white,
+            color: fg,
             onPressed: onConversationHistoryTap,
           ),
         if (onExplainOnePartTap != null)
@@ -122,14 +125,14 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
               'top-bar.explain-one-part-hint',
             ),
             icon: const Icon(Icons.help_outline_rounded, size: 26),
-            color: Colors.white,
+            color: fg,
             onPressed: onExplainOnePartTap,
           ),
         if (onSearchTap != null)
           IconButton(
             key: ScreenTutorialKeys.mainAppBarSearch,
             icon: const Icon(Icons.search, size: 26),
-            color: Colors.white,
+            color: fg,
             tooltip: 'Search',
             onPressed: onSearchTap,
           ),
@@ -145,7 +148,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                 label: Text('$assignmentsBadgeCount'),
                 child: const Icon(Icons.assignment_outlined, size: 26),
               ),
-              color: Colors.white,
+              color: fg,
               onPressed: onAssignmentsTap,
             ),
           ),
@@ -153,7 +156,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
           IconButton(
             tooltip: 'Decks settings',
             icon: const Icon(Icons.settings_outlined, size: 26),
-            color: Colors.white,
+            color: fg,
             onPressed: onDecksSettingsTap,
           ),
         if (helpAction != null) helpAction!,
@@ -174,7 +177,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 child: const Icon(Icons.notifications_none_outlined, size: 26),
               ),
-              color: Colors.white,
+              color: fg,
               onPressed: () {
                 Scaffold.of(context).openEndDrawer();
               },
@@ -190,22 +193,25 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
 
       title: Text(
         title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          fontSize: 20,
+        style: TextStyle(
+          color: fg,
+          fontWeight: FontWeight.w700,
+          fontSize: 24,
+          letterSpacing: -0.4,
         ),
       ),
 
-      bottom: tabs == null ? null : _buildTabBar(),
+      bottom: tabs == null ? null : _buildTabBar(context),
     );
   }
 
-  PreferredSizeWidget _buildTabBar() {
+  /// Sub-tabs as pills: the selected one sits on a soft teal tint.
+  PreferredSizeWidget _buildTabBar(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
     return PreferredSize(
       preferredSize: const Size.fromHeight(kTextTabBarHeight),
       child: Material(
-        color: AppColors.brandPrimaryDeep,
+        color: AppPageColors.pageBgOf(context),
         child: Row(
           children: [
             Expanded(
@@ -215,10 +221,16 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
                 padding: const EdgeInsets.only(left: 12),
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white.withValues(alpha: 0.65),
-                indicatorColor: Colors.white,
-                indicatorSize: TabBarIndicatorSize.label,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+                labelColor: accent,
+                unselectedLabelColor: AppPageColors.subtitleOf(context),
+                indicator: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicatorPadding: const EdgeInsets.symmetric(vertical: 7),
+                splashBorderRadius: BorderRadius.circular(999),
                 dividerColor: Colors.transparent,
                 labelStyle: const TextStyle(
                   fontSize: 14,
