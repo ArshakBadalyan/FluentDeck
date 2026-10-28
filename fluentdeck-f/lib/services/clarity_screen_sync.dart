@@ -1,6 +1,6 @@
 import 'package:fluentdeck/services/clarity_screen_sync_mobile.dart'
     if (dart.library.html) 'package:fluentdeck/services/clarity_screen_sync_stub.dart'
-    as _impl;
+    as impl;
 
 /// Microsoft Clarity "screen name" on iOS/Android; no-op on web / without project ID.
-void syncClarityScreenName(String name) => _impl.syncClarityScreenName(name);
+void syncClarityScreenName(String name) => impl.syncClarityScreenName(name);

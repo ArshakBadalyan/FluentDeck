@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../app_colors.dart';
@@ -51,12 +49,12 @@ class PrimaryButton extends StatelessWidget {
       height: tallLabel ? 68 : 56,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: enabled ? baseColor : baseColor.withOpacity(0.5),
+          backgroundColor: enabled ? baseColor : baseColor.withValues(alpha: 0.5),
           foregroundColor: Colors.white,
           // Without these, ElevatedButton swaps in its own grey
           // disabled-state colors once onPressed is null below, instead of
           // keeping this dimmed brand color.
-          disabledBackgroundColor: baseColor.withOpacity(0.5),
+          disabledBackgroundColor: baseColor.withValues(alpha: 0.5),
           disabledForegroundColor: Colors.white,
           elevation: 0,
           padding: EdgeInsets.zero,

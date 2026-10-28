@@ -41,8 +41,6 @@ class CardBrowserBulkActions {
     final hasBulkUndo = await CardTagUndoStore.instance.hasBulkUndo();
     if (!context.mounted) return;
 
-    final itemCount = 8 + (hasBulkUndo ? 1 : 0);
-
     final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,

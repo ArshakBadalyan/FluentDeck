@@ -803,6 +803,7 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     );
     if (deck != null && mounted) {
       await _loadDecks();
+      if (!mounted) return;
       AppToast.showSnackBar(context, 
         SnackBar(content: Text('Created filtered deck "${deck.name}"')),
       );

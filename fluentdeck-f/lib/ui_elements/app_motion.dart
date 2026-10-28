@@ -269,10 +269,9 @@ class _AppScaleTapState extends State<AppScaleTap> {
 class AppSharedAxisRoute<T> extends PageRouteBuilder<T> {
   AppSharedAxisRoute({
     required Widget page,
-    RouteSettings? settings,
+    super.settings,
     SharedAxisTransitionType transitionType = SharedAxisTransitionType.horizontal,
   }) : super(
-        settings: settings,
         pageBuilder: (context, animation, secondaryAnimation) => page,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           if (MediaQuery.disableAnimationsOf(context)) return child;

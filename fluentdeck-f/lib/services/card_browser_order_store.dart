@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,7 +54,6 @@ class CardBrowserOrderStore {
     return ordered;
   }
 
-  @visibleForTesting
   static String scopeKey({
     int? deckId,
     required String stateFilter,

@@ -37,6 +37,7 @@ class PushPromptCoordinator {
     final prev = prefs.getInt(_cacheKey(userId)) ?? 0;
     final count = prev + 1;
     await prefs.setInt(_cacheKey(userId), count);
+    if (!context.mounted) return;
 
     final dialog20Done = prefs.getBool(_dialog20Key(userId)) ?? false;
     final dialog200Done = prefs.getBool(_dialog200Key(userId)) ?? false;

@@ -106,6 +106,11 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
     final msg = _feedback.text.trim();
     final platform = _testerPlatformLabel();
 
+    // Read these now: the sheet's context is gone once it pops.
+    final parent = widget.parentContext;
+    final thanks = context.tr('profile.about-us.app-review-thanks-feedback');
+    final sendError = context.tr('profile.about-us.app-review-send-error');
+
     setState(() => _sending = true);
     try {
       await AppReviewWebhookService.submit(
@@ -116,30 +121,16 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
 
       if (!mounted) return;
       Navigator.of(context).pop();
-      AppToast.showSnackBar(widget.parentContext, 
-        SnackBar(
-          content: Text(
-            context.tr('profile.about-us.app-review-thanks-feedback'),
-          ),
-        ),
-      );
-    } on AppReviewWebhookException catch (_) {
-      if (!mounted) return;
-      setState(() => _sending = false);
-      AppToast.showSnackBar(widget.parentContext, 
-        SnackBar(
-          content: Text(context.tr('profile.about-us.app-review-send-error')),
-        ),
-      );
+      if (!parent.mounted) return;
+      AppToast.showSnackBar(parent, SnackBar(content: Text(thanks)));
     } catch (e, st) {
-      debugPrint('App review webhook: $e\n$st');
+      if (e is! AppReviewWebhookException) {
+        debugPrint('App review webhook: $e\n$st');
+      }
       if (!mounted) return;
       setState(() => _sending = false);
-      AppToast.showSnackBar(widget.parentContext, 
-        SnackBar(
-          content: Text(context.tr('profile.about-us.app-review-send-error')),
-        ),
-      );
+      if (!parent.mounted) return;
+      AppToast.showSnackBar(parent, SnackBar(content: Text(sendError)));
     }
   }
 
@@ -151,7 +142,7 @@ class _AppReviewSheetBodyState extends State<_AppReviewSheetBody> {
 
   @override
   Widget build(BuildContext context) {
-    final t = (String key) => context.tr('profile.about-us.$key');
+    String t(String key) => context.tr('profile.about-us.$key');
 
     return SingleChildScrollView(
       child: Padding(

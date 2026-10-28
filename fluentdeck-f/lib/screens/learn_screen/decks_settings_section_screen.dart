@@ -849,12 +849,13 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
     try {
       await widget.onSyncNow();
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _syncing = FlashcardSyncService.instance.syncing;
-        _syncLog = FlashcardSyncService.instance.log;
-      });
-      if (!_syncing) _syncIconController.stop();
+      if (mounted) {
+        setState(() {
+          _syncing = FlashcardSyncService.instance.syncing;
+          _syncLog = FlashcardSyncService.instance.log;
+        });
+        if (!_syncing) _syncIconController.stop();
+      }
     }
   }
 

@@ -1778,7 +1778,7 @@ Future<String?> showAppPromptDialog(
                           if (subtitle != null) ...[
                             const SizedBox(height: 2),
                             Text(
-                              subtitle!,
+                              subtitle,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppPageColors.subtitleOf(ctx),

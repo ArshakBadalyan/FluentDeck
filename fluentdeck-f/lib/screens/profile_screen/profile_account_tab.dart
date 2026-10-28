@@ -38,7 +38,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
 
   bool _loading = true;
   bool _saving = false;
-  bool _processing = false;
+  final bool _processing = false;
   AchievementSnapshot? _achievementSnapshot;
   SubscriptionStatus _subscriptionStatus = SubscriptionStatus.none;
   StudySettingsModel? _studySettings;

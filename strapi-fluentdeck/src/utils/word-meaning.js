@@ -12,7 +12,8 @@ function getOpenAIClient() {
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured");
   }
-  return new OpenAI({ apiKey });
+  // The SDK default is ~10 minutes; a stuck request would hang the user's turn.
+  return new OpenAI({ apiKey, timeout: 30_000, maxRetries: 1 });
 }
 
 const MAX_TRANSLATION_WORDS = 14;

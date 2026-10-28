@@ -49,6 +49,7 @@ dependencies:
   onesignal_flutter: ^5.4.6
   google_mobile_ads: ^5.1.0
   in_app_purchase: ^3.2.0
+  in_app_purchase_android: ^0.5.1
   firebase_core: ^4.6.0
   firebase_analytics: ^12.2.0
   package_info_plus: ^8.3.1
@@ -85,6 +86,8 @@ dev_dependencies:
   change_app_package_name: ^1.1.0
   isar_generator: ^3.1.0+1
   build_runner: ^2.4.13
+  flutter_lints: ^5.0.0
+  in_app_purchase_platform_interface: ^1.4.1
 
 flutter_native_splash:
   color: "#ffffff"
@@ -103,12 +106,6 @@ flutter_launcher_icons:
 
 
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

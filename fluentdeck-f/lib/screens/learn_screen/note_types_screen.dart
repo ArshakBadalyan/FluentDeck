@@ -123,10 +123,12 @@ class _NoteTypesScreenState extends State<NoteTypesScreen> {
   }
 
   Widget _body() {
-    if (_loading) return AppLoadingSwitcher(
+    if (_loading) {
+      return AppLoadingSwitcher(
       loading: true,
       child: const _NoteTypesSkeleton(),
     );
+    }
 
     if (_error != null) {
       return Center(

@@ -69,7 +69,8 @@ function getOpenAIClient() {
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured");
   }
-  return new OpenAI({ apiKey });
+  // The SDK default is ~10 minutes; a stuck request would hang the user's turn.
+  return new OpenAI({ apiKey, timeout: 30_000, maxRetries: 1 });
 }
 
 const TUTOR_SYSTEM_PROMPT = `You are an expert, warm, and encouraging {{practiceLanguageLabel}} conversation tutor inside a language-learning app. You are talking with {{userLevel}} level {{practiceLanguageLabel}} learner (CEFR scale). Their known weak areas are: {{weakAreas}}.
@@ -514,6 +515,8 @@ async function requestTranscription(config, filePath, originalName, language) {
   const client = new OpenAI({
     apiKey: config.apiKey,
     ...(config.baseURL ? { baseURL: config.baseURL } : {}),
+    timeout: 60_000,
+    maxRetries: 1,
   });
   // A fresh stream per attempt: a failed request may have consumed the last one.
   const file = await toFile(fs.createReadStream(filePath), originalName || "audio.m4a");
@@ -797,7 +800,7 @@ function resolveTtsRoute({ language = "en", voicePreference, env = process.env }
 async function requestSpeech(route, text) {
   const client =
     route.provider === "kokoro"
-      ? new OpenAI({ apiKey: route.apiKey, baseURL: route.baseURL })
+      ? new OpenAI({ apiKey: route.apiKey, baseURL: route.baseURL, timeout: 30_000, maxRetries: 1 })
       : getOpenAIClient();
   const response = await client.audio.speech.create({
     model: route.model,

@@ -183,7 +183,7 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
             if (snapshot.levelHistory.isNotEmpty) ...[
               const SizedBox(height: 16),
               _Section(
-                title: 'Level timeline (${currentLabel})',
+                title: 'Level timeline ($currentLabel)',
                 icon: Icons.timeline_rounded,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

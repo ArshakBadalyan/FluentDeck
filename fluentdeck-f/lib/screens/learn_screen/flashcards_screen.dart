@@ -257,6 +257,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         stats = await FlashcardService.instance.fetchStats();
       } catch (_) {}
       final deckRows = await _deckRowsWithStoredOrder(decks);
+      if (!mounted) return;
       setState(() {
         _decks = decks;
         _deckRows = deckRows;
@@ -341,6 +342,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     final deck = await showFilteredDeckDialog(context, decks: _decks);
     if (deck != null && mounted) {
       await _load();
+      if (!mounted) return;
       AppToast.showSnackBar(context, 
         SnackBar(content: Text('Created filtered deck "${deck.name}"')),
       );
@@ -600,6 +602,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       await FlashcardService.instance.deleteDeck(deck.id);
       if (!mounted) return;
       await _load();
+      if (!mounted) return;
       AppToast.showSnackBar(context, 
         SnackBar(content: Text('Deleted "${deck.name}"')),
       );

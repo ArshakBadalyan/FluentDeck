@@ -223,8 +223,9 @@ class ConversationService {
 
     // Give the user a beat to read (no audio) or finish listening (after TTS).
     await _delayBeforeAutoMic(sessionEpoch);
-    if (sessionEpoch != _chatSessionEpoch || !_chatActive || isRecording)
+    if (sessionEpoch != _chatSessionEpoch || !_chatActive || isRecording) {
       return;
+    }
 
     await startRecording();
   }
@@ -292,12 +293,6 @@ class ConversationService {
         try {
           await _ttsPlayer.stop();
         } catch (_) {}
-        isPlayingTts = false;
-        isTtsAudible = false;
-        ttsTurnIndex = null;
-        stage = ConversationProcessingStage.idle;
-        _notify();
-        return;
       }
       isPlayingTts = false;
       isTtsAudible = false;
@@ -629,15 +624,15 @@ class ConversationService {
   ) {
     final tutorRole = context.tutorRole ?? 'your partner';
     if (lang == 'de') {
-      return 'Willkommen bei ${context.title}! Ich spiele ${tutorRole}. '
+      return 'Willkommen bei ${context.title}! Ich spiele $tutorRole. '
           'Wenn du bereit bist, sag etwas, um zu beginnen.';
     }
     if (lang == 'es') {
-      return '¡Bienvenido a ${context.title}! Yo seré ${tutorRole}. '
+      return '¡Bienvenido a ${context.title}! Yo seré $tutorRole. '
           'Cuando estés listo, di algo para empezar.';
     }
     if (lang == 'fr') {
-      return 'Bienvenue dans ${context.title} ! Je jouerai ${tutorRole}. '
+      return 'Bienvenue dans ${context.title} ! Je jouerai $tutorRole. '
           'Quand tu es prêt, dis quelque chose pour commencer.';
     }
     return "Let's begin our role-play: ${context.title}. I'll play $tutorRole. "

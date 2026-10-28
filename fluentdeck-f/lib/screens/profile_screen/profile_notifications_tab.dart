@@ -53,6 +53,7 @@ class _ProfileNotificationsTabState extends State<ProfileNotificationsTab> {
     if (!mounted) return;
     if (!result.ok) {
       await _loadReminderPrefs();
+      if (!mounted) return;
       AppToast.showSnackBar(context, 
         SnackBar(
           content: Text(result.errorMessage ?? 'Could not update reminder'),

@@ -74,6 +74,7 @@ class _ProfileSecurityTabState extends State<ProfileSecurityTab> {
     setState(() => _saving = true);
 
     final res = await AuthService.updateUser({'password': password});
+    if (!mounted) return;
 
     setState(() => _saving = false);
 

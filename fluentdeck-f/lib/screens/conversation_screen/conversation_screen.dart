@@ -259,8 +259,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   /// Tapping Rio replays the tutor's last reply (when voice is on and nothing else is running).
   void _onRioTap() {
-    if (_service.isProcessing || _service.isRecording || _service.isPlayingTts)
+    if (_service.isProcessing || _service.isRecording || _service.isPlayingTts) {
       return;
+    }
     if (!(_service.soundOnEnabled && _service.autoPlayVoiceEnabled)) return;
     final index = _service.turns.lastIndexWhere((t) => !t.isUser);
     if (index < 0) return;
