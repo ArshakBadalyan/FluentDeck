@@ -949,12 +949,6 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
   List<Widget> _appearance() {
     return [
       AppToggleRow(
-        title: 'Dark mode (Decks)',
-        subtitle: 'Dark theme for the Decks section only',
-        value: _settings.darkMode,
-        onChanged: (v) => _save(_settings.copyWith(darkMode: v)),
-      ),
-      AppToggleRow(
         title: 'Keep screen on',
         subtitle: 'Prevent sleep during review sessions',
         value: _settings.keepScreenOn,

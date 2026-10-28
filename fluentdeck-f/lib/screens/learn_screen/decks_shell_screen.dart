@@ -6,8 +6,6 @@ import 'package:fluentdeck/screens/learn_screen/flashcards_screen.dart';
 import 'package:fluentdeck/data/flashcard_offline_store.dart';
 import 'package:fluentdeck/services/deck_backup_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
-import 'package:fluentdeck/services/review_settings_store.dart';
-import 'package:fluentdeck/app_theme.dart';
 import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
@@ -27,13 +25,10 @@ class DecksShellScreen extends StatefulWidget {
 }
 
 class DecksShellScreenState extends State<DecksShellScreen> with WidgetsBindingObserver {
-  ReviewSettings _settings = const ReviewSettings();
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    reloadSettings();
   }
 
   @override
@@ -53,11 +48,6 @@ class DecksShellScreenState extends State<DecksShellScreen> with WidgetsBindingO
     }
   }
 
-  Future<void> reloadSettings() async {
-    final settings = await ReviewSettingsStore.instance.load();
-    if (mounted) setState(() => _settings = settings);
-  }
-
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -66,25 +56,20 @@ class DecksShellScreenState extends State<DecksShellScreen> with WidgetsBindingO
 
   @override
   Widget build(BuildContext context) {
-    // "Dark mode (Decks)" forces dark here; otherwise follow the app theme.
-    final theme = _settings.darkMode ? AppTheme.dark : Theme.of(context);
-    final bg = theme.brightness == Brightness.dark
+    final bg = Theme.of(context).brightness == Brightness.dark
         ? AppPageColors.darkPageBg
         : AppPageColors.pageBg;
 
-    return Theme(
-      data: theme,
-      child: ColoredBox(
-        color: bg,
-        child: HandoffTabBarView(
-          controller: widget.tabController,
-          onHandoffPrevious: widget.mainTabHandoff.onPrevious,
-          onHandoffNext: widget.mainTabHandoff.onNext,
-          children: const [
-            FlashcardsScreen(),
-            CardBrowserScreen(embedInShell: true),
-          ],
-        ),
+    return ColoredBox(
+      color: bg,
+      child: HandoffTabBarView(
+        controller: widget.tabController,
+        onHandoffPrevious: widget.mainTabHandoff.onPrevious,
+        onHandoffNext: widget.mainTabHandoff.onNext,
+        children: const [
+          FlashcardsScreen(),
+          CardBrowserScreen(embedInShell: true),
+        ],
       ),
     );
   }
