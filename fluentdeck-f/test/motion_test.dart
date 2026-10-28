@@ -464,6 +464,36 @@ void remainingPhaseTests() {
       );
       await tester.pumpAndSettle();
     });
+
+    testWidgets('recording waveform repaints when a mic level arrives', (tester) async {
+      final levels = ValueNotifier<List<double>>(const []);
+      addTearDown(levels.dispose);
+      await tester.pumpWidget(
+        _app(AppRecordingWaveform(levels: levels, color: AppColors.redWrong)),
+      );
+      final painter = tester
+          .widget<CustomPaint>(
+            find.descendant(
+              of: find.byType(AppRecordingWaveform),
+              matching: find.byType(CustomPaint),
+            ),
+          )
+          .painter!;
+      var repaints = 0;
+      painter.addListener(() => repaints++);
+      levels.value = const [0.2, 0.9];
+      expect(repaints, 1);
+      // Its own repaint boundary: the loop doesn't repaint the chat around it.
+      expect(
+        find.descendant(
+          of: find.byType(AppRecordingWaveform),
+          matching: find.byType(RepaintBoundary),
+        ),
+        findsOneWidget,
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('daily goal celebration trigger', () {

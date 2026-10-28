@@ -2,6 +2,7 @@ import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/config/brand_config.dart';
@@ -567,6 +568,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
               _InputBar(
                 isRecording: _service.isRecording,
                 isProcessing: _service.isProcessing,
+                recordingLevels: _service.recordingLevels,
                 recordingDurationLabel: _service.isRecording
                     ? _service.recordingDurationLabel
                     : null,
@@ -1373,6 +1375,7 @@ class _InputBar extends StatelessWidget {
     required this.onMicTap,
     required this.onSendText,
     this.recordingDurationLabel,
+    this.recordingLevels,
     this.typeMessagesEnabled = false,
     this.onCancel,
     this.onTypeTap,
@@ -1382,6 +1385,9 @@ class _InputBar extends StatelessWidget {
   final bool isRecording;
   final bool isProcessing;
   final String? recordingDurationLabel;
+
+  /// Live mic levels for the waveform while recording.
+  final ValueListenable<List<double>>? recordingLevels;
   final TextEditingController textController;
   final VoidCallback onMicTap;
   final VoidCallback onSendText;
@@ -1567,6 +1573,14 @@ class _InputBar extends StatelessWidget {
               ),
               if (isRecording) ...[
                 const SizedBox(height: 8),
+                if (recordingLevels != null) ...[
+                  AppRecordingWaveform(
+                    levels: recordingLevels!,
+                    color: AppColors.redWrong,
+                    height: 20,
+                  ),
+                  const SizedBox(height: 4),
+                ],
                 Text(
                   recordingLabel,
                   style: TextStyle(
@@ -1602,6 +1616,13 @@ class _InputBar extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
+              if (isRecording && recordingLevels != null) ...[
+                AppRecordingWaveform(
+                  levels: recordingLevels!,
+                  color: AppColors.redWrong,
+                ),
+                const SizedBox(height: 8),
+              ],
               Text(
                 isRecording ? recordingLabel : 'Tap to speak · tap again to send',
                 style: TextStyle(

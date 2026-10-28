@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:animations/animations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -456,6 +457,83 @@ class _AppPulseState extends State<AppPulse> with SingleTickerProviderStateMixin
       ),
     );
   }
+}
+
+/// Live mic level bars while recording: the newest level is on the right.
+/// [levels] are 0–1, oldest first. Only this paints when a level arrives.
+class AppRecordingWaveform extends StatelessWidget {
+  const AppRecordingWaveform({
+    super.key,
+    required this.levels,
+    required this.color,
+    this.barCount = 32,
+    this.height = 28,
+  });
+
+  final ValueListenable<List<double>> levels;
+  final Color color;
+  final int barCount;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: RepaintBoundary(
+        child: SizedBox(
+          height: height,
+          width: double.infinity,
+          child: CustomPaint(
+            painter: _WaveformPainter(
+              levels: levels,
+              color: color,
+              barCount: barCount,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WaveformPainter extends CustomPainter {
+  _WaveformPainter({
+    required this.levels,
+    required this.color,
+    required this.barCount,
+  }) : super(repaint: levels);
+
+  final ValueListenable<List<double>> levels;
+  final Color color;
+  final int barCount;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final values = levels.value;
+    const gap = 3.0;
+    final barWidth = math.min(4.0, (size.width - gap * (barCount - 1)) / barCount);
+    final total = barCount * barWidth + (barCount - 1) * gap;
+    final left = (size.width - total) / 2;
+    final paint = Paint()..color = color;
+    for (var i = 0; i < barCount; i++) {
+      // Right-align the history so it scrolls in from the right.
+      final v = i - (barCount - values.length);
+      final level = v >= 0 ? values[v] : 0.0;
+      final h = math.max(barWidth, size.height * level);
+      final rect = Rect.fromCenter(
+        center: Offset(left + i * (barWidth + gap) + barWidth / 2, size.height / 2),
+        width: barWidth,
+        height: h,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(barWidth / 2)),
+        paint..color = color.withValues(alpha: v >= 0 ? 1 : 0.3),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_WaveformPainter old) =>
+      old.levels != levels || old.color != color || old.barCount != barCount;
 }
 
 /// Text that counts up to its number when it first appears and eases between

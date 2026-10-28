@@ -73,6 +73,12 @@ class ConversationService {
   DateTime? sessionStartedAt;
   DateTime? _recordingStartedAt;
   Timer? _recordingTimer;
+  StreamSubscription<Amplitude>? _amplitudeSub;
+
+  /// Recent mic levels (0–1, oldest first) while recording, for the live
+  /// waveform. A notifier of its own so only the bars repaint, not the chat.
+  final ValueNotifier<List<double>> recordingLevels = ValueNotifier(const []);
+  static const recordingLevelCount = 32;
   String _webUploadFilename = 'recording.webm';
   bool _chatActive = false;
   int _chatSessionEpoch = 0;
@@ -768,6 +774,24 @@ class ConversationService {
     _recordingTimer?.cancel();
     _recordingTimer = null;
     _recordingStartedAt = null;
+    _amplitudeSub?.cancel();
+    _amplitudeSub = null;
+    recordingLevels.value = const [];
+  }
+
+  /// dBFS (about -160 silent … 0 loudest) → 0–1; speech sits around -40…-10.
+  static double _levelFromDb(double db) => ((db + 50) / 45).clamp(0.0, 1.0);
+
+  void _listenToAmplitude() {
+    _amplitudeSub?.cancel();
+    _amplitudeSub = _recorder
+        .onAmplitudeChanged(const Duration(milliseconds: 80))
+        .listen((amp) {
+          final next = [...recordingLevels.value, _levelFromDb(amp.current)];
+          recordingLevels.value = next.length > recordingLevelCount
+              ? next.sublist(next.length - recordingLevelCount)
+              : next;
+        }, onError: (_) {});
   }
 
   Future<String?> _recordingPath() async {
@@ -796,6 +820,7 @@ class ConversationService {
     _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       _notify();
     });
+    _listenToAmplitude();
     if (kIsWeb) {
       await WakelockPlus.enable();
     }
