@@ -5,8 +5,10 @@ import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/language_levels_snapshot.dart';
 import 'package:fluentdeck/models/speaking_session_record_model.dart';
 import 'package:fluentdeck/services/language_levels_service.dart';
+import 'package:fluentdeck/services/milestone_tracker.dart';
 import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
+import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/widgets/tutor_scene.dart';
@@ -28,6 +30,9 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
   /// Recent speaking sessions, for the week strip; empty if they can't load.
   List<SpeakingSessionRecord> _sessions = const [];
 
+  /// The speaking level just went up: confetti on the hero card, once.
+  bool _levelUp = false;
+
   @override
   void initState() {
     super.initState();
@@ -47,12 +52,24 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
         forceRefresh: true,
       );
       final sessions = await sessionsFuture;
+      final levelUp = snapshot.hasAssessedLevel &&
+          await MilestoneTracker.instance.isLevelUp(
+            snapshot.practiceLanguage,
+            snapshot.estimatedLevel,
+          );
       if (!mounted) return;
       setState(() {
         _snapshot = snapshot;
         _sessions = sessions;
         _loading = false;
+        _levelUp = levelUp;
       });
+      if (levelUp) {
+        AppToast.showSnackBar(
+          context,
+          SnackBar(content: Text('Level up! You reached ${snapshot.estimatedLevel}.')),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -98,6 +115,12 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
     final snapshot = _snapshot!;
     final service = LanguageLevelsService.instance;
     final currentLabel = service.languageLabel(snapshot.practiceLanguage);
+    final hero = _HeroCard(
+      languageLabel: currentLabel,
+      estimatedLevel: snapshot.estimatedLevel,
+      estimatedLevelStatus: snapshot.estimatedLevelStatus,
+      tutorLevel: snapshot.tutorLevel,
+    );
 
     return AppLoadingSwitcher(
       loading: false,
@@ -108,12 +131,17 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
-            _HeroCard(
-              languageLabel: currentLabel,
-              estimatedLevel: snapshot.estimatedLevel,
-              estimatedLevelStatus: snapshot.estimatedLevelStatus,
-              tutorLevel: snapshot.tutorLevel,
-            ),
+            if (_levelUp)
+              AppConfettiBurst(
+                colors: const [
+                  AppColors.primaryYellow,
+                  AppColors.greenCorrect,
+                  Colors.white,
+                ],
+                child: hero,
+              )
+            else
+              hero,
             const SizedBox(height: 16),
             _WeekStrip(sessions: _sessions),
             const SizedBox(height: 12),

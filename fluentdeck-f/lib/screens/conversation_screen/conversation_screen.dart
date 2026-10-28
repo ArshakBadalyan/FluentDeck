@@ -12,6 +12,7 @@ import 'package:fluentdeck/models/grammar_correction.dart';
 import 'package:fluentdeck/models/speaking_session_context.dart';
 import 'package:fluentdeck/services/conversation_limit_service.dart';
 import 'package:fluentdeck/services/conversation_service.dart';
+import 'package:fluentdeck/services/milestone_tracker.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/daily_goal_tracker.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
@@ -434,10 +435,18 @@ class _ConversationScreenState extends State<ConversationScreen> {
       }
     }
 
+    final milestone = saved != null
+        ? await MilestoneTracker.instance.streakMilestone(saved.streakDays)
+        : null;
     if (!mounted) return;
-    final streakNote = saved != null && saved.streakDays > 0
+    final streakNote = saved != null && saved.streakDays > 0 && milestone == null
         ? '\n\n${saved.streakDays} day speaking streak!'
         : '';
+    const rio = RioImage(
+      RioPose.determined,
+      height: 110,
+      motion: RioMotion.pop,
+    );
     await showAppDialog<void>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
@@ -445,11 +454,28 @@ class _ConversationScreenState extends State<ConversationScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const RioImage(
-              RioPose.determined,
-              height: 110,
-              motion: RioMotion.pop,
-            ),
+            if (milestone != null) ...[
+              AppConfettiBurst(
+                colors: const [
+                  AppColors.primaryYellow,
+                  AppColors.orangeHard,
+                  AppColors.brandPrimary,
+                  AppColors.voice,
+                ],
+                child: rio,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '🔥 $milestone-day streak!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppPageColors.tintOf(dialogCtx, AppTint.reward).fg,
+                ),
+              ),
+            ] else
+              rio,
             const SizedBox(height: 12),
             Text('${evaluation.feedback}$streakNote'),
           ],
