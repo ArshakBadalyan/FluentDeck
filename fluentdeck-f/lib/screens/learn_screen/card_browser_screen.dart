@@ -1730,11 +1730,14 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                   final card = _visibleCards[index];
                   return KeyedSubtree(
                     key: ValueKey('browser-row-${card.id}'),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: _wrapSwipeRow(
-                        card,
-                        _mobileDenseRow(card, index),
+                    child: AppStaggeredFadeIn(
+                      index: index,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: _wrapSwipeRow(
+                          card,
+                          _mobileDenseRow(card, index),
+                        ),
                       ),
                     ),
                   );
@@ -1808,7 +1811,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                 );
                 return KeyedSubtree(
                   key: ValueKey('browser-row-${card.id}'),
-                  child: itemWidth != null ? SizedBox(width: itemWidth, child: row) : row,
+                  child: AppStaggeredFadeIn(
+                    index: index,
+                    child: itemWidth != null ? SizedBox(width: itemWidth, child: row) : row,
+                  ),
                 );
               },
             ),

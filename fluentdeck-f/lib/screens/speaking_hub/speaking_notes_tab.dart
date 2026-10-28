@@ -743,16 +743,21 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
               ],
             ),
           ),
-          ..._notes.map((note) {
+          ..._notes.indexed.map((entry) {
+            final (index, note) = entry;
             final selected = _selectedIds.contains(note.id);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _NoteRow(
-                title: note.word,
-                subtitle: _noteSubtitle(note),
-                selected: selected,
-                onTap: () => _toggleSelection(note.id),
-                onMore: () => _showNoteActions(note),
+            return AppStaggeredFadeIn(
+              key: ValueKey('note-${note.id}'),
+              index: index,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _NoteRow(
+                  title: note.word,
+                  subtitle: _noteSubtitle(note),
+                  selected: selected,
+                  onTap: () => _toggleSelection(note.id),
+                  onMore: () => _showNoteActions(note),
+                ),
               ),
             );
           }),
