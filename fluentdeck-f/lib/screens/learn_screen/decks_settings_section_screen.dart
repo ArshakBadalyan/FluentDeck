@@ -22,7 +22,6 @@ import 'package:fluentdeck/services/flashcard_import_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_store.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
-import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 /// Detail screen for one Decks settings section.
@@ -222,139 +221,6 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
         reviewReminderMinute: picked.minute,
       ),
     );
-  }
-
-  static String _hourLabel(int hour) {
-    final period = hour < 12 ? 'AM' : 'PM';
-    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    return '$displayHour $period';
-  }
-
-  Future<void> _pickNextDayStart() async {
-    final picked = await showFrostedBottomSheet<int>(
-      context: context,
-      builder: (ctx) {
-        var selected = _settings.nextDayStartHour;
-        final controller = FixedExtentScrollController(initialItem: selected);
-        return StatefulBuilder(
-          builder: (ctx, setLocal) {
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: AppPageColors.subtleBorderOf(ctx),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      'Start of next day',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(ctx).textTheme.bodyLarge?.color,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Cards due before this time still count as "today". Affects daily limits and stats — deck limits are set per deck.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppPageColors.subtitleOf(ctx),
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _hourLabel(selected),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.brandPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        IgnorePointer(
-                          child: Container(
-                            height: 44,
-                            margin: const EdgeInsets.symmetric(horizontal: 24),
-                            decoration: BoxDecoration(
-                              color: AppColors.brandPrimary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColors.brandPrimary.withValues(alpha: 0.25),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 200,
-                          child: CupertinoPicker(
-                            scrollController: controller,
-                            itemExtent: 44,
-                            diameterRatio: 1.1,
-                            selectionOverlay: const SizedBox.shrink(),
-                            onSelectedItemChanged: (index) {
-                              HapticFeedback.selectionClick();
-                              setLocal(() => selected = index);
-                            },
-                            children: List.generate(24, (hour) {
-                              final isSelected = hour == selected;
-                              return Center(
-                                child: Text(
-                                  _hourLabel(hour),
-                                  style: TextStyle(
-                                    fontSize: isSelected ? 20 : 17,
-                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected
-                                        ? Theme.of(ctx).textTheme.bodyLarge?.color
-                                        : AppPageColors.subtitleOf(ctx),
-                                  ),
-                                ),
-                              );
-                            }),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () => Navigator.pop(ctx, selected),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.brandPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text('Done'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-    if (picked == null) return;
-    await _save(_settings.copyWith(nextDayStartHour: picked));
   }
 
   Future<void> _pickGesture(
@@ -605,21 +471,6 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
   List<Widget> _general() {
     return [
       AppSettingsGroup(
-        title: 'Daily rollover',
-        child: decksSettingsPickerTile(
-          context: context,
-          title: 'Start of next day',
-          subtitle: Text('Day rolls over at ${_hourLabel(_settings.nextDayStartHour)}'),
-          valueLabel: 'Change',
-          onTap: _pickNextDayStart,
-        ),
-      ),
-      decksSettingsNote(
-        context,
-        'Affects daily limits and “today” statistics. Deck limits are set per deck.',
-      ),
-      const SizedBox(height: 12),
-      AppSettingsGroup(
         title: 'Library',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -687,7 +538,7 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
             ),
             AppToggleRow(
               title: 'Show remaining due counts',
-              subtitle: 'Display new, learning, and review counts during study',
+              subtitle: 'Show “Card 3 of 12” in the review header',
               value: _settings.showDueCountInStudy,
               onChanged: (v) => _save(_settings.copyWith(showDueCountInStudy: v)),
             ),
@@ -756,14 +607,14 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AppToggleRow(
-              title: 'Leech auto-suspend',
-              subtitle: 'Notify when a card is auto-suspended',
+              title: 'Leech suspend message',
+              subtitle: 'Tell me when a card is suspended as a leech',
               value: _settings.leechAutoSuspend,
               onChanged: (v) => _save(_settings.copyWith(leechAutoSuspend: v)),
             ),
             const SizedBox(height: 4),
             Text(
-              'Leech threshold',
+              'Leech badge after',
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -804,6 +655,10 @@ class _DecksSettingsSectionScreenState extends State<DecksSettingsSectionScreen>
             ),
           ],
         ),
+      ),
+      decksSettingsNote(
+        context,
+        'Cards are suspended at each deck’s own leech threshold, set in the deck’s options. This slider only sets when the “Leech” badge shows in review.',
       ),
       AppSettingsGroup(
         title: 'Daily reminder',
