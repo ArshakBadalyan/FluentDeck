@@ -1446,14 +1446,14 @@ class _InputBar extends StatelessWidget {
     );
   }
 
-  Widget _micButton({required double size}) {
+  Widget _micButton(BuildContext context, {required double size}) {
     return GestureDetector(
       onTap: isProcessing ? null : onMicTap,
       child: AppPulse(
         active: isRecording,
         color: AppColors.redWrong,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: AppMotion.duration(context, const Duration(milliseconds: 200)),
           width: size,
           height: size,
           decoration: BoxDecoration(
@@ -1571,7 +1571,7 @@ class _InputBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _micButton(size: 44),
+                  _micButton(context, size: 44),
                   const SizedBox(width: 8),
                   // A filled teal circle (IconButton.filled's style is
                   // ignored under the app's Material 2 theme).
@@ -1630,7 +1630,7 @@ class _InputBar extends StatelessWidget {
                   Semantics(
                     button: true,
                     label: isRecording ? 'Stop and send' : 'Tap to speak',
-                    child: _micButton(size: 84),
+                    child: _micButton(context, size: 84),
                   ),
                   _sideButton(
                     context,

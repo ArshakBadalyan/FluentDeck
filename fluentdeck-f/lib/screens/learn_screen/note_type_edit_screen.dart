@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/card_style_preset.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
@@ -343,7 +344,7 @@ class _NoteTypeEditScreenState extends State<NoteTypeEditScreen> {
     return GestureDetector(
       onTap: () => _selectStyle(preset.id),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: AppMotion.duration(context, const Duration(milliseconds: 150)),
         width: 96,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(

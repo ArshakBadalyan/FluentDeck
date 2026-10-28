@@ -7,10 +7,12 @@ import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/ui_elements/app_dialog.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 Widget _app(Widget child, {bool reduceMotion = false}) => MaterialApp(
   home: Builder(
@@ -493,6 +495,35 @@ void remainingPhaseTests() {
       );
       await tester.pump();
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('reduced motion', () {
+    testWidgets('AppMotion.duration drops to zero', (tester) async {
+      final normal = await _context(tester);
+      expect(AppMotion.duration(normal, AppMotion.normal), AppMotion.normal);
+      final still = await _context(tester, reduceMotion: true);
+      expect(AppMotion.duration(still, AppMotion.normal), Duration.zero);
+    });
+
+    testWidgets('skeletons shimmer, but hold still with reduced motion', (tester) async {
+      expect(appSkeletonEffect(await _context(tester)), isA<ShimmerEffect>());
+      expect(
+        appSkeletonEffect(await _context(tester, reduceMotion: true)),
+        isA<SolidColorEffect>(),
+      );
+    });
+
+    testWidgets('lists appear without a stagger', (tester) async {
+      await tester.pumpWidget(
+        _app(const AppStaggeredFadeIn(index: 3, child: Text('row')), reduceMotion: true),
+      );
+      // Visible on the very first frame: no fade, no delay.
+      final opacity = tester.widgetList<FadeTransition>(
+        find.ancestor(of: find.text('row'), matching: find.byType(FadeTransition)),
+      );
+      expect(opacity.every((f) => f.opacity.value == 1), isTrue);
+      await tester.pumpAndSettle();
     });
   });
 

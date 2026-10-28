@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/config/brand_config.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+
+/// The app-wide skeleton look: a shimmer that loops until content arrives,
+/// or a still fill with reduced motion.
+PaintingEffect appSkeletonEffect(BuildContext context) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final base = isDark ? const Color(0xFF1C3338) : BrandConfig.fieldBg;
+  if (MediaQuery.disableAnimationsOf(context)) {
+    return SolidColorEffect(color: base);
+  }
+  return ShimmerEffect(
+    baseColor: base,
+    highlightColor: isDark ? const Color(0xFF2A4A50) : const Color(0xFFDCEAEA),
+  );
+}
 
 /// Shimmer skeleton for the Decks tab while decks load.
 class DecksListSkeleton extends StatelessWidget {

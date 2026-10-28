@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/services/screen_tutorial_segments.dart';
@@ -464,7 +465,7 @@ class _CoachMarkHostState extends State<_CoachMarkHost> {
                       if (v > 180) _back();
                     },
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppMotion.duration(context, const Duration(milliseconds: 200)),
                       switchInCurve: Curves.easeOut,
                       switchOutCurve: Curves.easeIn,
                       child: KeyedSubtree(
@@ -575,7 +576,7 @@ class _CoachMarkHostState extends State<_CoachMarkHost> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(total, (i) {
               return AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
+                duration: AppMotion.duration(context, const Duration(milliseconds: 220)),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 width: _stepIndex == i ? 18 : 6,
                 height: 6,

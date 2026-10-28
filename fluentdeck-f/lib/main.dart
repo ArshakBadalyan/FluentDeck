@@ -20,8 +20,8 @@ import 'package:fluentdeck/services/subscription_service.dart';
 
 import 'app_start.dart';
 import 'app_theme.dart';
-import 'config/brand_config.dart';
 import 'package:fluentdeck/ui_elements/app_scroll_behavior.dart';
+import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/responsive_layout.dart';
 import 'services/theme_settings_store.dart';
 import 'services/api_service.dart';
@@ -149,16 +149,9 @@ class MyApp extends StatelessWidget {
           _clarityRouteObserver,
         ],
         builder: (context, child) {
-          final isDark = Theme.of(context).brightness == Brightness.dark;
           // Toasts sit above every route, bottom sheet and dialog.
           return SkeletonizerConfig(
-            data: SkeletonizerConfigData(
-              effect: ShimmerEffect(
-                baseColor: isDark ? const Color(0xFF1C3338) : BrandConfig.fieldBg,
-                highlightColor:
-                    isDark ? const Color(0xFF2A4A50) : const Color(0xFFDCEAEA),
-              ),
-            ),
+            data: SkeletonizerConfigData(effect: appSkeletonEffect(context)),
             child: AppToastHost(
               child: ResponsiveShell(
                 child: InteractionSwipeHapticsScope(
