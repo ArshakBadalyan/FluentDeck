@@ -108,8 +108,8 @@
     "language": "Idioma de la app",
     "pages": {
       "speak": {
-        "title": "Habla con un tutor de IA",
-        "body": "Habla en voz alta o escribe. Tu tutor responde con una voz natural, corrige suavemente tus errores y recuerda lo que hablaste.",
+        "title": "Habla con un tutor de IA que nunca te juzga",
+        "body": "Habla en voz alta o escribe. Rio responde con una voz natural y corrige tus errores con suavidad.",
         "chips": {
           "voice-or-text": "Voz o texto",
           "gentle-corrections": "Correcciones suaves",
@@ -191,7 +191,29 @@
     "school-email-pick-school": "Selecciona tu escuela",
     "school-email-pick-school-required": "Selecciona tu escuela para continuar.",
     "teacher-invite-code": "Código de invitación del maestro",
-    "teacher-invite-code-hint": "Pide a tu escuela el código anual del maestro (un código por escuela por año)."
+    "teacher-invite-code-hint": "Pide a tu escuela el código anual del maestro (un código por escuela por año).",
+    "welcome-back": "Hola de nuevo",
+    "email-or-nickname": "Correo o apodo",
+    "forgot-password-short": "¿Olvidaste tu contraseña?",
+    "sign-in-button": "Iniciar sesión",
+    "or-continue-with": "o continúa con",
+    "new-here": "¿Eres nuevo?",
+    "create-account": "Crea una cuenta",
+    "start-free": "Empieza a hablar gratis",
+    "sign-up-subtitle-minutes": "{count} minutos con Rio cada día. Sin tarjeta.",
+    "language-pair": "Hablo → Quiero hablar",
+    "i-speak": "Hablo",
+    "i-want-to-speak": "Quiero hablar",
+    "email": "Correo",
+    "password-min": "Usa al menos {count} caracteres.",
+    "create-account-button": "Crear cuenta",
+    "legal-before": "Al continuar aceptas los ",
+    "terms": "Términos",
+    "legal-and": " y la ",
+    "privacy": "Política de privacidad",
+    "have-account": "¿Ya tienes cuenta?",
+    "sign-in-link": "Inicia sesión",
+    "legal-after": "."
   },
   "teacher": {
     "badge": "Maestro",
@@ -465,7 +487,13 @@
     "subtitle": "Escribe tu correo y te enviaremos un enlace para restablecerla.",
     "forgot-password": "¿Olvidaste tu contraseña?",
     "send-email": "Enviar correo",
-    "back-to-start": "Volver a la página de inicio"
+    "back-to-start": "Volver a la página de inicio",
+    "title": "Restablece tu contraseña",
+    "subtitle-short": "Escribe tu correo y te enviaremos un enlace.",
+    "send-link": "Enviar enlace",
+    "check-inbox": "Revisa tu bandeja de entrada",
+    "check-inbox-body": "El enlace sirve durante 1 hora. ¿No llegó? Mira en spam.",
+    "enter-code": "Introducir el código"
   },
   "reset-password": {
     "reset-password": "Restablecer contraseña",

@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 import '../app_colors.dart';
 import 'app_motion.dart';
@@ -80,9 +79,7 @@ class PrimaryButton extends StatelessWidget {
                 onPressed?.call();
               }
             : null,
-        child: Stack(
-          children: [
-            Center(
+        child: Center(
               child: AnimatedSwitcher(
                 duration: AppMotion.duration(context, AppMotion.fast),
                 switchInCurve: AppMotion.decelerateCurve,
@@ -106,31 +103,13 @@ class PrimaryButton extends StatelessWidget {
                   maxLines: maxLines ?? 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: fontSize,
+                    fontSize: fontSize ?? 17,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
               ),
             ),
-            Positioned(
-              top: 0,
-              bottom: 0,
-              right: 0,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                child: SvgPicture.asset(
-                  'assets/buttons/button_wave.svg',
-                  fit: BoxFit.fitHeight,
-                  colorFilter: const ColorFilter.mode(
-                    Colors.white,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
       ),
     );

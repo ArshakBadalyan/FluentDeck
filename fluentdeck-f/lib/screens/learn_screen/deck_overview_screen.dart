@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/utils/deck_visuals.dart';
+import 'statistics_screen.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/flashcard_stats_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
@@ -134,19 +135,21 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
           scrolledUnderElevation: 0,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.chevron_left_rounded, size: 28),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () => Navigator.pop(context, _changed),
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Edit deck',
+              icon: const Icon(Icons.tune_rounded),
+              tooltip: 'Deck options',
               onPressed: () => _editDeck(context),
             ),
+            const SizedBox(width: 4),
           ],
         ),
         body: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
           children: [
             if (deck.isFiltered && deck.filterQuery != null)
               Padding(
@@ -157,14 +160,14 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                 ),
               ),
             _DeckHeader(deck: deck, totalCards: totalCards),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: _CountBox(
                     count: deck.newCount,
                     label: 'New',
-                    color: const Color(0xFF2196F3),
+                    tint: AppTint.info,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -172,7 +175,7 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                   child: _CountBox(
                     count: deck.learningCount,
                     label: 'Learning',
-                    color: AppColors.redWrong,
+                    tint: AppTint.danger,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -180,7 +183,7 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                   child: _CountBox(
                     count: deck.reviewDueCount,
                     label: 'To review',
-                    color: AppColors.greenCorrect,
+                    tint: AppTint.success,
                   ),
                 ),
               ],
@@ -198,9 +201,20 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                 style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
               ),
             ],
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             AppPressScale(
-              child: SizedBox(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppPageColors.accentOf(context).withValues(alpha: 0.35),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: SizedBox(
                 height: 56,
                 child: FilledButton.icon(
                   onPressed: () async {
@@ -228,8 +242,9 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                   ),
                 ),
               ),
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -267,10 +282,13 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
                 ],
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             _ForecastCard(
               forecast: _forecast,
               dueToday: deck.newCount + deck.learningCount + deck.reviewDueCount,
+              onStatistics: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const StatisticsPage()),
+              ),
             ),
           ],
         ),
@@ -284,20 +302,19 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
 
 /// One tinted count box (New / Learning / To review).
 class _CountBox extends StatelessWidget {
-  const _CountBox({required this.count, required this.label, required this.color});
+  const _CountBox({required this.count, required this.label, required this.tint});
 
   final int count;
   final String label;
-  final Color color;
+  final AppTint tint;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final text = isDark ? color : Color.lerp(color, Colors.black, 0.45)!;
+    final colors = AppPageColors.tintOf(context, tint);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.18 : 0.13),
+        color: colors.bg,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -305,10 +322,10 @@ class _CountBox extends StatelessWidget {
         children: [
           AppCountUpText(
             '$count',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: text, height: 1.1),
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: colors.fg, height: 1.1),
           ),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: text)),
+          Text(label, style: TextStyle(fontSize: 13, color: colors.fg)),
         ],
       ),
     );
@@ -333,7 +350,7 @@ class _SecondaryDeckAction extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            height: 52,
+            height: 48,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppPageColors.subtleBorderOf(context)),
@@ -341,8 +358,6 @@ class _SecondaryDeckAction extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 20, color: AppPageColors.accentOf(context)),
-                const SizedBox(width: 8),
                 Text(
                   label,
                   style: TextStyle(
@@ -370,21 +385,22 @@ class _DeckHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = AppPageColors.accentOf(context);
+    final fromSpeaking = deckTint(deck.name) == AppTint.voice;
+    final cards = '$totalCards card${totalCards == 1 ? '' : 's'}';
     return Row(
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Icon(
-            deck.isFiltered ? Icons.filter_list_rounded : Icons.style_rounded,
-            color: accent,
-            size: 28,
-          ),
-        ),
+        if (deck.isFiltered)
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppPageColors.tintOf(context, AppTint.teal).bg,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(Icons.filter_list_rounded, color: accent, size: 26),
+          )
+        else
+          DeckIconTile(name: deck.name, size: 56, iconSize: 26),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -395,18 +411,24 @@ class _DeckHeader extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 26,
                   height: 1.15,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
+                  letterSpacing: -0.5,
                   color: AppPageColors.textPrimaryOf(context),
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 deck.isFiltered
-                    ? 'Filtered deck · $totalCards card${totalCards == 1 ? '' : 's'}'
-                    : '$totalCards card${totalCards == 1 ? '' : 's'}',
+                    ? 'Filtered deck · $cards'
+                    : fromSpeaking
+                    ? '$cards · made from your conversations'
+                    : deck.description.trim().isNotEmpty
+                    ? '$cards · ${deck.description.trim()}'
+                    : cards,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 14, color: AppPageColors.subtitleOf(context)),
               ),
             ],
@@ -417,12 +439,13 @@ class _DeckHeader extends StatelessWidget {
   }
 }
 
-/// "Next 7 days": how many cards come due each day, today highlighted.
+/// "Next 7 days": how many cards come due each day, today in solid teal.
 class _ForecastCard extends StatelessWidget {
-  const _ForecastCard({required this.forecast, required this.dueToday});
+  const _ForecastCard({required this.forecast, required this.dueToday, required this.onStatistics});
 
   final List<FlashcardDayCount>? forecast;
   final int dueToday;
+  final VoidCallback onStatistics;
 
   @override
   Widget build(BuildContext context) {
@@ -453,79 +476,79 @@ class _ForecastCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Next 7 days',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppPageColors.textPrimaryOf(context),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Next 7 days',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppPageColors.textPrimaryOf(context),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: onStatistics,
+                style: TextButton.styleFrom(
+                  foregroundColor: accent,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  minimumSize: const Size(44, 32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text('Statistics', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+          if (forecast != null && maxCount == 0)
+            Text(
+              'Nothing due this week.',
+              style: TextStyle(fontSize: 13, color: subtitle),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            forecast == null
-                ? 'Loading…'
-                : maxCount == 0
-                ? 'Nothing due this week. New cards appear as you add them.'
-                : '${counts.fold<int>(0, (a, b) => a + b)} cards coming up',
-            style: TextStyle(fontSize: 13, color: subtitle),
-          ),
-          const SizedBox(height: 14),
-          // Room for the count (14) + bar (6–66) + day label (14) + gaps.
-          SizedBox(
-            height: 120,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (var i = 0; i < 7; i++)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (counts[i] > 0)
-                            Text(
-                              '${counts[i]}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: i == 0 ? accent : subtitle,
-                              ),
-                            ),
-                          const SizedBox(height: 4),
-                          TweenAnimationBuilder<double>(
-                            tween: Tween(
-                              begin: 0,
-                              end: maxCount == 0 ? 0 : counts[i] / maxCount,
-                            ),
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : const Duration(milliseconds: 500),
-                            curve: Curves.easeOutCubic,
-                            builder: (context, v, _) => Container(
-                              height: 6 + 60 * v,
-                              decoration: BoxDecoration(
-                                color: i == 0 ? accent : accent.withValues(alpha: 0.35),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
+          const SizedBox(height: 12),
+          Semantics(
+            label: [for (var i = 0; i < 7; i++) '${i == 0 ? 'Today' : labels[days[i].weekday - 1]} ${counts[i]}'].join(', '),
+            child: SizedBox(
+              height: 90,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var i = 0; i < 7; i++) ...[
+                    if (i > 0) const SizedBox(width: 10),
+                    Expanded(
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: maxCount == 0 ? 0 : counts[i] / maxCount),
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 500),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, v, _) => Container(
+                          height: 6 + 84 * v,
+                          decoration: BoxDecoration(
+                            color: i == 0 ? accent : accent.withValues(alpha: 0.4),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(8),
+                              bottom: Radius.circular(4),
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            i == 0 ? 'Today' : labels[days[i].weekday - 1],
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: i == 0 ? FontWeight.w700 : FontWeight.w500,
-                              color: i == 0 ? accent : subtitle,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                  ],
+                ],
+              ),
             ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (var i = 0; i < 7; i++)
+                Text(
+                  i == 0 ? 'Today' : labels[days[i].weekday - 1],
+                  style: TextStyle(fontSize: 12, color: subtitle),
+                ),
+            ],
           ),
         ],
       ),

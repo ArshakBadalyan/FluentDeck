@@ -112,6 +112,33 @@ String formatDueDateTime(DateTime dueAt) {
   return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')} $h:$m';
 }
 
+/// "Due", "New", "in 4d", "Suspended": a card's status as a small tinted chip.
+class CardStatusChip extends StatelessWidget {
+  const CardStatusChip({super.key, required this.card});
+
+  final FlashcardModel card;
+
+  @override
+  Widget build(BuildContext context) {
+    final raw = formatDueLabel(card);
+    final (String label, AppTint tint) = switch (raw) {
+      'due' => ('Due', AppTint.danger),
+      'new' => ('New', AppTint.info),
+      'suspended' => ('Suspended', AppTint.neutral),
+      'buried' => ('Buried', AppTint.neutral),
+      'learning' || 'relearning' => ('Learning', AppTint.danger),
+      'review' => ('Review', AppTint.success),
+      _ => (raw.contains(',') ? raw.split(',').first : 'in $raw', AppTint.success),
+    };
+    final colors = AppPageColors.tintOf(context, tint);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: colors.bg, borderRadius: BorderRadius.circular(8)),
+      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.fg)),
+    );
+  }
+}
+
 /// Due column cell with optional schedule icon when a custom due date is set.
 class CardDueLabel extends StatelessWidget {
   const CardDueLabel({super.key, required this.card, this.width = 40});

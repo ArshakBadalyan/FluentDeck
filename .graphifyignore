@@ -1,0 +1,23 @@
+# graphify scan rules (gitignore syntax; applied after .gitignore)
+
+# docs/ is git-ignored but is the project's design/architecture notes
+!docs/
+
+# media: logos, icons, screenshots, audio (no useful graph content)
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.svg
+*.mp3
+*.mp4
+*.wav
+*.m4a
+brand/
+*.local.md
+
+# generated or duplicated
+.cursor/
+.agents/
+strapi-fluentdeck/.strapi/

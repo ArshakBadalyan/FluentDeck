@@ -42,6 +42,7 @@ class SpeakingListIconBadge extends StatelessWidget {
     required this.title,
     this.size = 44,
     this.iconSize = 22,
+    this.tint,
   });
 
   final IconData icon;
@@ -49,22 +50,26 @@ class SpeakingListIconBadge extends StatelessWidget {
   final double size;
   final double iconSize;
 
+  /// Overrides the title-picked tint.
+  final AppTint? tint;
+
   @override
   Widget build(BuildContext context) {
-    final accent = speakingIconAccent(title);
+    final tint = this.tint ?? speakingIconTint(title);
     return Container(
       width: size,
       height: size,
-      // Flat soft tint of the item's accent (Lagoon Daylight).
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.14),
+        color: AppPageColors.tintOf(context, tint).bg,
         borderRadius: BorderRadius.circular(size * 0.32),
       ),
-      child: Icon(icon, color: accent, size: iconSize),
+      child: Icon(icon, color: AppPageColors.tintIconOf(context, tint), size: iconSize),
     );
   }
 }
 
+/// White row card: icon tile, title, detail; selected = 2 dp teal border.
+/// With [showChevron] it is a tap-to-start row (Role-play list).
 class SpeakingSelectionCard extends StatelessWidget {
   const SpeakingSelectionCard({
     super.key,
@@ -75,136 +80,207 @@ class SpeakingSelectionCard extends StatelessWidget {
     this.selected = false,
     this.isPremiumLocked = false,
     this.trailing,
+    this.showChevron = false,
+    this.iconTint,
     required this.onTap,
   });
 
   final String title;
   final IconData icon;
+  final AppTint? iconTint;
   final String? subtitle;
   final int? score;
   final bool selected;
   final bool isPremiumLocked;
   final Widget? trailing;
+  final bool showChevron;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final cardBg = AppPageColors.cardBgOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // A solid 2px brandPrimary border reads as a normal selection outline on
-    // white, but the same color looks like a glowing neon ring against the
-    // near-black dark surfaces (irradiation — a saturated color against a
-    // dark background looks far more vivid than its actual RGB value) — so
-    // dark mode dials the border back to a translucent, thinner version of
-    // the same selected-state indicator instead of a different color.
+    // Dark mode dials the selected outline back to a translucent version
+    // (a saturated ring on near-black reads like neon).
     final selectedBorderColor = isDark
         ? AppColors.brandPrimaryOnDark.withValues(alpha: 0.6)
         : AppColors.brandPrimary;
     return Opacity(
       opacity: isPremiumLocked ? 0.55 : 1,
       child: AppPressScale(
-      child: Material(
-      color: cardBg,
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: AnimatedContainer(
-          duration: AppMotion.duration(context, AppMotion.fast),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: selected
-                  ? selectedBorderColor
-                  : AppPageColors.subtleBorderOf(context),
-              width: selected ? 2 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              // Selected items swap their icon for a tick, like a checkbox.
-              AppFadeThroughSwitcher(
-                child: selected
-                    ? Container(
-                        key: const ValueKey('selected'),
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppPageColors.accentOf(context),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          Icons.check_rounded,
-                          color: AppPageColors.onAccentOf(context),
-                          size: 24,
-                        ),
-                      )
-                    : KeyedSubtree(
-                        key: const ValueKey('icon'),
-                        child: SpeakingListIconBadge(icon: icon, title: title),
-                      ),
+        child: Material(
+          color: AppPageColors.cardBgOf(context),
+          borderRadius: BorderRadius.circular(20),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(20),
+            child: AnimatedContainer(
+              duration: AppMotion.duration(context, AppMotion.fast),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: selected ? selectedBorderColor : AppPageColors.subtleBorderOf(context),
+                  width: selected ? 2 : 1,
+                ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Rubik',
-                      ),
+              child: Row(
+                children: [
+                  SpeakingListIconBadge(icon: icon, title: title, size: 48, tint: iconTint),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppPageColors.textPrimaryOf(context),
+                          ),
+                        ),
+                        if (subtitle != null && subtitle!.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppPageColors.subtitleOf(context),
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    if (subtitle != null && subtitle!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                  ),
+                  if (trailing != null) trailing!,
+                  if (isPremiumLocked)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Icon(Icons.lock_outline, color: AppPageColors.subtitleOf(context), size: 20),
+                    )
+                  else if (score != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Text(
+                        '$score / 10',
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppPageColors.subtitleOf(context),
-                          height: 1.3,
-                          fontFamily: 'Rubik',
+                          color: AppPageColors.accentOf(context),
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ],
-                  ],
-                ),
+                    ),
+                  if (showChevron && !isPremiumLocked)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Icon(Icons.chevron_right_rounded, size: 22, color: AppPageColors.mutedOf(context)),
+                    ),
+                ],
               ),
-              if (trailing != null) trailing!,
-              if (isPremiumLocked)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: Icon(Icons.lock_outline, color: AppPageColors.subtitleOf(context), size: 20),
-                ),
-              if (score != null)
-                Text(
-                  '$score / 10',
-                  style: TextStyle(
-                    color: AppPageColors.accentOf(context),
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Rubik',
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
       ),
-    ),
-    ),
     );
   }
 }
 
+/// Topics grid card: icon tile on top, bold title, one-line description.
+class SpeakingTopicGridCard extends StatelessWidget {
+  const SpeakingTopicGridCard({
+    super.key,
+    required this.title,
+    required this.icon,
+    this.subtitle,
+    this.selected = false,
+    this.isPremiumLocked = false,
+    required this.onTap,
+  });
+
+  final String title;
+  final IconData icon;
+  final String? subtitle;
+  final bool selected;
+  final bool isPremiumLocked;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Opacity(
+      opacity: isPremiumLocked ? 0.55 : 1,
+      child: AppPressScale(
+        child: Material(
+          color: AppPageColors.cardBgOf(context),
+          borderRadius: BorderRadius.circular(22),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(22),
+            child: AnimatedContainer(
+              duration: AppMotion.duration(context, AppMotion.fast),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: selected
+                      ? (isDark ? AppColors.brandPrimaryOnDark.withValues(alpha: 0.6) : AppColors.brandPrimary)
+                      : AppPageColors.subtleBorderOf(context),
+                  width: selected ? 2 : 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SpeakingListIconBadge(icon: icon, title: title),
+                      const Spacer(),
+                      if (isPremiumLocked)
+                        Icon(Icons.lock_outline, color: AppPageColors.subtitleOf(context), size: 18),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppPageColors.textPrimaryOf(context),
+                    ),
+                  ),
+                  if (subtitle != null && subtitle!.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      subtitle!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 13, height: 1.4, color: AppPageColors.subtitleOf(context)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 150 dp game tile: colored icon, then the name and a one-line description
+/// at the bottom. The featured game is the one dark-teal tile.
 class SpeakingGameGridCard extends StatelessWidget {
   const SpeakingGameGridCard({
     super.key,
     required this.title,
     required this.icon,
+    this.subtitle,
     this.score,
     this.featured = false,
     this.selected = false,
@@ -214,6 +290,7 @@ class SpeakingGameGridCard extends StatelessWidget {
 
   final String title;
   final IconData icon;
+  final String? subtitle;
   final int? score;
   final bool featured;
   final bool selected;
@@ -222,93 +299,86 @@ class SpeakingGameGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardBg = AppPageColors.cardBgOf(context);
     final accent = AppPageColors.accentOf(context);
-    // The featured game is the one dark-teal card in the grid.
     final hero = featured && !isPremiumLocked;
-    final bg = hero ? AppColors.brandPrimaryDeep : cardBg;
+    final bg = hero ? AppColors.brandPrimaryDeep : AppPageColors.cardBgOf(context);
     final fg = hero ? Colors.white : AppPageColors.textPrimaryOf(context);
+    final iconColor = hero
+        ? const Color(0xFF9FF0F5)
+        : AppPageColors.tintIconOf(context, speakingIconTint(title));
     return Opacity(
       opacity: isPremiumLocked ? 0.55 : 1,
       child: AppPressScale(
-      child: Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: AnimatedContainer(
-          duration: AppMotion.duration(context, AppMotion.fast),
-          decoration: BoxDecoration(
+        child: Material(
+          color: bg,
+          borderRadius: BorderRadius.circular(22),
+          child: InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(22),
-            border: hero
-                ? null
-                : Border.all(
-                    color: selected ? accent : AppPageColors.subtleBorderOf(context),
-                    width: selected ? 2 : 1,
-                  ),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            child: AnimatedContainer(
+              duration: AppMotion.duration(context, AppMotion.fast),
+              height: 150,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                border: hero
+                    ? null
+                    : Border.all(
+                        color: selected ? accent : AppPageColors.subtleBorderOf(context),
+                        width: selected ? 2 : 1,
+                      ),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  hero
-                      ? Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(14),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(icon, color: iconColor, size: 28),
+                      const Spacer(),
+                      if (isPremiumLocked)
+                        Icon(Icons.lock_outline, color: AppPageColors.subtitleOf(context), size: 18)
+                      else if (score != null)
+                        Text(
+                          '$score / 10',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: hero ? Colors.white : accent,
                           ),
-                          child: Icon(icon, color: const Color(0xFF9FF0F5), size: 22),
-                        )
-                      : SpeakingListIconBadge(icon: icon, title: title),
+                        ),
+                    ],
+                  ),
                   const Spacer(),
-                  if (isPremiumLocked)
-                    Icon(Icons.lock_outline, color: AppPageColors.subtitleOf(context), size: 18)
-                  else if (score != null)
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, height: 1.2, color: fg),
+                  ),
+                  if (subtitle != null && subtitle!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
                     Text(
-                      '$score / 10',
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: hero ? Colors.white : accent,
-                      ),
-                    )
-                  else if (hero)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.voice,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: const Text(
-                        'Popular',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                        color: hero ? const Color(0xFFBFE4E7) : AppPageColors.subtitleOf(context),
                       ),
                     ),
+                  ],
                 ],
               ),
-              const Spacer(),
-              Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, height: 1.2, color: fg),
-              ),
-            ],
+            ),
           ),
         ),
       ),
-    ),
-    ),
     );
   }
 }
 
+/// The page's main action, floating above the bottom nav with a teal glow.
 class SpeakingStartButton extends StatelessWidget {
   const SpeakingStartButton({
     super.key,
@@ -323,32 +393,37 @@ class SpeakingStartButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: AppPressScale(
-            enabled: enabled,
-            child: FilledButton(
-              onPressed: enabled ? onPressed : null,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppPageColors.accentOf(context),
-                foregroundColor: AppPageColors.onAccentOf(context),
-                disabledBackgroundColor: AppColors.greySkipped.withValues(alpha: 0.4),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        child: AppPressScale(
+          enabled: enabled,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: enabled
+                  ? [BoxShadow(color: accent.withValues(alpha: 0.35), blurRadius: 20, offset: const Offset(0, 8))]
+                  : null,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: FilledButton(
+                onPressed: enabled ? onPressed : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: accent,
+                  foregroundColor: AppPageColors.onAccentOf(context),
+                  disabledBackgroundColor: AppColors.greySkipped.withValues(alpha: 0.4),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 ),
-              ),
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Rubik',
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -376,7 +451,7 @@ class SpeakingFilterChips extends StatefulWidget {
 }
 
 class _SpeakingFilterChipsState extends State<SpeakingFilterChips> {
-  static const double _edgeInset = 16;
+  static const double _edgeInset = 20;
 
   final Map<int, GlobalKey> _chipKeys = {};
 
@@ -435,27 +510,42 @@ class _SpeakingFilterChipsState extends State<SpeakingFilterChips> {
   Widget _buildStrip() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: _edgeInset, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(_edgeInset, 4, _edgeInset, 12),
       child: Row(
         children: List.generate(widget.labels.length, (index) {
           final selected = index == widget.selectedIndex;
           return Padding(
             key: _keyFor(index),
             padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(widget.labels[index]),
-              selected: selected,
-              showCheckmark: false,
-              onSelected: (_) => widget.onSelected(index),
-              backgroundColor: AppPageColors.cardBgOf(context),
-              selectedColor: AppPageColors.accentOf(context),
-              labelStyle: TextStyle(
-                color: selected ? AppPageColors.onAccentOf(context) : AppPageColors.textPrimaryOf(context),
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                fontFamily: 'Rubik',
+            child: Material(
+              color: selected ? AppPageColors.accentOf(context) : AppPageColors.cardBgOf(context),
+              shape: StadiumBorder(
+                side: selected
+                    ? BorderSide.none
+                    : BorderSide(color: AppPageColors.subtleBorderOf(context)),
               ),
-              side: BorderSide(
-                color: selected ? AppPageColors.accentOf(context) : AppPageColors.subtleBorderOf(context),
+              child: InkWell(
+                customBorder: const StadiumBorder(),
+                onTap: () => widget.onSelected(index),
+                child: Semantics(
+                  button: true,
+                  selected: selected,
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    alignment: Alignment.center,
+                    child: Text(
+                      widget.labels[index],
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: selected
+                            ? AppPageColors.onAccentOf(context)
+                            : AppPageColors.textPrimaryOf(context),
+                        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           );

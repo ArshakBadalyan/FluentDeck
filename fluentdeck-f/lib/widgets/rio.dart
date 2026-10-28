@@ -14,7 +14,10 @@ enum RioPose {
   catchFish('rio-catch'),
   sleepy('rio-sleepy'),
   surprised('rio-surprised'),
-  determined('rio-determined');
+  determined('rio-determined'),
+
+  /// Full body, facing you, paw up: onboarding's welcome.
+  wave('rio-wave');
 
   const RioPose(this.file);
   final String file;

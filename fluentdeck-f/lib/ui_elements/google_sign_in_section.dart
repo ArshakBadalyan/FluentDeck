@@ -105,7 +105,7 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
   Widget build(BuildContext context) {
     if (_loading) {
       return const SizedBox(
-        height: 50,
+        height: 52,
         child: Center(
           child: SizedBox(
             width: 24,
@@ -118,7 +118,7 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
 
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 52,
       child: OutlinedButton.icon(
         onPressed:
             !widget.enabled
@@ -128,6 +128,8 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
                 : _handleGoogleSignIn,
         style: OutlinedButton.styleFrom(
           foregroundColor: AppPageColors.textPrimaryOf(context),
+          backgroundColor: AppPageColors.cardBgOf(context),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),

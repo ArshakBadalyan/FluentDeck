@@ -1,3 +1,4 @@
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:flutter/material.dart';
 
 /// Resolves a distinct Material icon for speaking hub list items.
@@ -27,6 +28,21 @@ IconData resolveSpeakingListIcon({
   if (fromKeywords != null) return fromKeywords;
 
   return _iconFromTitleHash(trimmed.isEmpty ? iconKey : trimmed);
+}
+
+/// The soft tint for an item's icon tile, picked from the title so each item
+/// keeps its color (teal, coral, pink, yellow, blue, green).
+AppTint speakingIconTint(String title) {
+  const tints = [
+    AppTint.teal,
+    AppTint.voice,
+    AppTint.pink,
+    AppTint.reward,
+    AppTint.info,
+    AppTint.success,
+  ];
+  if (title.trim().isEmpty) return tints.first;
+  return tints[title.hashCode.abs() % tints.length];
 }
 
 Color speakingIconAccent(String title) {

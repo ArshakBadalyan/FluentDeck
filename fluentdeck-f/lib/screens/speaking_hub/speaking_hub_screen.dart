@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/rio.dart';
 
 import 'package:flutter/material.dart';
 
 import '../../models/speaking_session_context.dart';
 import '../../services/conversation_service.dart';
 import '../../ui_elements/handoff_tab_bar_view.dart';
-import '../conversation_screen/conversation_chat_settings_sheet.dart';
 import '../conversation_screen/conversation_screen.dart';
 import 'speaking_chat_tab.dart';
 import 'speaking_games_tab.dart';
@@ -117,87 +114,7 @@ class SpeakingHubScreenState extends State<SpeakingHubScreen> {
   @override
   Widget build(BuildContext context) {
     if (_inSession) {
-      return Column(
-        children: [
-          // Light session header: back, Rio, the session title, settings.
-          Material(
-            color: AppPageColors.pageBgOf(context),
-            child: SafeArea(
-              bottom: false,
-              child: SizedBox(
-                height: 56,
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: _exitSession,
-                      icon: Icon(
-                        Icons.arrow_back_rounded,
-                        color: AppPageColors.textPrimaryOf(context),
-                      ),
-                      tooltip: 'Exit session',
-                    ),
-                    Container(
-                      width: 36,
-                      height: 36,
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppPageColors.accentOf(context).withValues(alpha: 0.16),
-                      ),
-                      child: Transform.scale(
-                        scale: 2.1,
-                        alignment: const Alignment(0, -0.62),
-                        child: Image.asset(
-                          RioPose.happy.asset,
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Rio',
-                            style: TextStyle(
-                              color: AppPageColors.textPrimaryOf(context),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            ConversationService.instance.sessionContext.title,
-                            style: TextStyle(
-                              color: AppPageColors.subtitleOf(context),
-                              fontSize: 13,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => showConversationChatSettingsSheet(context),
-                      icon: Icon(
-                        Icons.tune_rounded,
-                        color: AppPageColors.textPrimaryOf(context),
-                      ),
-                      tooltip: 'Chat settings',
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const Expanded(
-            child: ConversationScreen(embedInShell: true),
-          ),
-        ],
-      );
+      return ConversationScreen(embedInShell: true, onExit: _exitSession);
     }
 
     final allTabs = <String, Widget>{

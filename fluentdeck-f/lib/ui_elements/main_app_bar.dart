@@ -101,7 +101,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       surfaceTintColor: Colors.transparent,
       backgroundColor: barBg,
       foregroundColor: fg,
-      titleSpacing: 24,
+      titleSpacing: 20,
       centerTitle: false,
       toolbarHeight: _toolbarHeight,
       actions: [
@@ -207,7 +207,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   /// Sub-tabs as pills: the selected one sits on a soft teal tint.
   PreferredSizeWidget _buildTabBar(BuildContext context) {
-    final accent = AppPageColors.accentOf(context);
+    final tint = AppPageColors.tintOf(context, AppTint.teal);
     return PreferredSize(
       preferredSize: const Size.fromHeight(kTextTabBarHeight),
       child: Material(
@@ -221,15 +221,16 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
                 padding: const EdgeInsets.only(left: 12),
-                labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-                labelColor: accent,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 14),
+                labelColor: tint.fg,
                 unselectedLabelColor: AppPageColors.subtitleOf(context),
                 indicator: BoxDecoration(
-                  color: accent.withValues(alpha: 0.14),
+                  color: tint.bg,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: const EdgeInsets.symmetric(vertical: 7),
+                // 34 dp pills in the 46 dp strip.
+                indicatorPadding: const EdgeInsets.symmetric(vertical: 6),
                 splashBorderRadius: BorderRadius.circular(999),
                 dividerColor: Colors.transparent,
                 labelStyle: const TextStyle(
@@ -238,7 +239,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 unselectedLabelStyle: const TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                 ),
                 tabs: tabs!,
               ),

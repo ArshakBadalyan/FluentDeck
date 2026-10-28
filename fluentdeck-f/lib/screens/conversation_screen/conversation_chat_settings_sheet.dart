@@ -1,4 +1,5 @@
 import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/speaking_preferences.dart';
@@ -115,7 +116,7 @@ class _ConversationChatSettingsSheetState
     final locked = !_isPremium && _premiumOnlyLevels.contains(level);
     final accent = AppPageColors.accentOf(context);
     return Material(
-      color: selected ? accent : AppPageColors.fieldBgOf(context),
+      color: selected ? accent : AppPageColors.pageBgOf(context),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -124,7 +125,7 @@ class _ConversationChatSettingsSheetState
           if (!selected) _save(_prefs.copyWith(englishLevel: level));
         },
         child: SizedBox(
-          height: 44,
+          height: 40,
           child: Center(
             child: locked
                 ? Icon(Icons.lock_outline_rounded, size: 16, color: AppPageColors.subtitleOf(context))
@@ -148,9 +149,10 @@ class _ConversationChatSettingsSheetState
     final selected = _prefs.tutorVoice == id;
     final locked = !_isPremium && !SpeakingPreferences.freeVoiceIds.contains(id);
     final accent = AppPageColors.accentOf(context);
+    final tint = AppPageColors.tintOf(context, AppTint.teal);
     final name = SpeakingPreferences.voiceOptions[id]!.split(' — ').first;
     return Material(
-      color: selected ? accent.withValues(alpha: 0.14) : AppPageColors.cardBgOf(context),
+      color: selected ? tint.bg : AppPageColors.cardBgOf(context),
       shape: StadiumBorder(
         side: BorderSide(
           color: selected ? accent : AppPageColors.subtleBorderOf(context),
@@ -163,11 +165,16 @@ class _ConversationChatSettingsSheetState
           if (locked) return _premiumNotice();
           if (!selected) _save(_prefs.copyWith(tutorVoice: id));
         },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (selected) ...[
+                Icon(Icons.graphic_eq_rounded, size: 16, color: tint.fg),
+                const SizedBox(width: 6),
+              ],
               if (locked) ...[
                 Icon(Icons.lock_outline_rounded, size: 14, color: AppPageColors.subtitleOf(context)),
                 const SizedBox(width: 4),
@@ -176,8 +183,8 @@ class _ConversationChatSettingsSheetState
                 name,
                 style: TextStyle(
                   fontSize: 14,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected ? accent : AppPageColors.textPrimaryOf(context),
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  color: selected ? tint.fg : AppPageColors.textPrimaryOf(context),
                 ),
               ),
             ],
@@ -191,31 +198,33 @@ class _ConversationChatSettingsSheetState
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Center(
               child: Container(
-                width: 36,
-                height: 4,
+                width: 40,
+                height: 5,
                 decoration: BoxDecoration(
-                  color: AppPageColors.subtleBorderOf(context),
-                  borderRadius: BorderRadius.circular(999),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppPageColors.subtleBorderOf(context)
+                      : const Color(0xFFD5E0E1),
+                  borderRadius: BorderRadius.circular(3),
                 ),
               ),
             ),
             const SizedBox(height: 14),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Conversation settings',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      fontFamily: 'Rubik',
+                      color: AppPageColors.textPrimaryOf(context),
                     ),
                   ),
                 ),
@@ -227,15 +236,7 @@ class _ConversationChatSettingsSheetState
                   ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Applies to this conversation and saves to your account.',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppPageColors.subtitleOf(context),
-              ),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
@@ -266,65 +267,170 @@ class _ConversationChatSettingsSheetState
                             _voiceChip(context, id),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: RioPreferences.instance.showRio,
-                        builder: (context, show, _) => AppToggleRow(
-                          title: 'Show tutor',
-                          subtitle:
-                              'Your tutor (Rio the otter) talks with you. Turn off for the plain chat (this device).',
-                          value: show,
-                          enabled: true,
-                          onChanged: RioPreferences.instance.setShowRio,
+                      const SizedBox(height: 16),
+                      _CheckGroup(
+                        rows: [
+                          if (_prefs.translationLanguage != 'none')
+                            _CheckRow(
+                              title: 'Translate into ${SpeakingPreferences.translationLanguageOptions[_prefs.translationLanguage] ?? 'your language'}',
+                              subtitle: 'Tap any message to see it',
+                              value: _prefs.showTranslations,
+                              onChanged: (v) => _save(_prefs.copyWith(showTranslations: v)),
+                            ),
+                          _CheckRow(
+                            title: 'Auto-play voice',
+                            subtitle: 'Rio speaks each answer',
+                            value: _prefs.soundOn && _prefs.autoPlayVoice,
+                            onChanged: (v) => _save(_prefs.copyWith(soundOn: v, autoPlayVoice: v)),
+                          ),
+                          _CheckRow(
+                            title: 'Auto-start recording',
+                            subtitle: 'Open the mic after Rio finishes speaking',
+                            value: _prefs.autoStartRecording || _prefs.autoConversation,
+                            // Hands-free was merged into this toggle; clear the legacy flag.
+                            onChanged: (v) => _save(
+                              _prefs.copyWith(autoStartRecording: v, autoConversation: false),
+                            ),
+                          ),
+                          _CheckRow(
+                            title: 'Type messages',
+                            subtitle: 'A text field next to the mic',
+                            value: _prefs.typeMessagesEnabled,
+                            onChanged: (v) => _save(_prefs.copyWith(typeMessagesEnabled: v)),
+                          ),
+                          _CheckRow(
+                            title: 'Show tutor',
+                            subtitle: 'Rio the otter in the chat (this device)',
+                            listenable: RioPreferences.instance.showRio,
+                            onChanged: RioPreferences.instance.setShowRio,
+                          ),
+                          _CheckRow(
+                            title: 'Video-call view',
+                            subtitle: 'Rio big on screen, his latest reply over him',
+                            listenable: RioPreferences.instance.showRioStage,
+                            onChanged: RioPreferences.instance.setShowRioStage,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 56,
+                        child: FilledButton(
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppPageColors.accentOf(context),
+                            foregroundColor: AppPageColors.onAccentOf(context),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                          ),
+                          child: const Text('Done', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
                         ),
-                      ),
-                      AppToggleRow(
-                        title: 'AI voice',
-                        subtitle:
-                            'Speak tutor replies out loud. Turn off to read only.',
-                        value: _prefs.soundOn && _prefs.autoPlayVoice,
-                        enabled: true,
-                        onChanged: (value) {
-                          _save(
-                            _prefs.copyWith(
-                              soundOn: value,
-                              autoPlayVoice: value,
-                            ),
-                          );
-                        },
-                      ),
-                      AppToggleRow(
-                        title: 'Auto-start recording',
-                        subtitle:
-                            'Open the mic after the tutor finishes speaking.',
-                        value:
-                            _prefs.autoStartRecording ||
-                            _prefs.autoConversation,
-                        enabled: true,
-                        onChanged: (value) {
-                          // Hands-free was merged into this toggle; clear the legacy flag.
-                          _save(
-                            _prefs.copyWith(
-                              autoStartRecording: value,
-                              autoConversation: false,
-                            ),
-                          );
-                        },
-                      ),
-                      AppToggleRow(
-                        title: 'Type messages',
-                        subtitle:
-                            'Show a text field to type instead of only using the mic.',
-                        value: _prefs.typeMessagesEnabled,
-                        enabled: true,
-                        onChanged: (value) {
-                          _save(_prefs.copyWith(typeMessagesEnabled: value));
-                        },
                       ),
                     ],
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One rounded card of rows split by hairlines.
+class _CheckGroup extends StatelessWidget {
+  const _CheckGroup({required this.rows});
+
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              if (i > 0) Divider(height: 1, thickness: 1, color: AppPageColors.rowDividerOf(context)),
+              rows[i],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Title, one-line detail and a teal checkbox on the right.
+class _CheckRow extends StatelessWidget {
+  const _CheckRow({
+    required this.title,
+    required this.subtitle,
+    required this.onChanged,
+    this.value = false,
+    this.listenable,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool value;
+
+  /// When set, the row follows this instead of [value].
+  final ValueListenable<bool>? listenable;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = listenable;
+    if (l != null) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: l,
+        builder: (context, v, _) => _row(context, v),
+      );
+    }
+    return _row(context, value);
+  }
+
+  Widget _row(BuildContext context, bool checked) {
+    return InkWell(
+      onTap: () => onChanged(!checked),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppPageColors.textPrimaryOf(context),
+                    ),
+                  ),
+                  Text(subtitle, style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context))),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: Checkbox(
+                value: checked,
+                onChanged: (v) => onChanged(v ?? false),
+                activeColor: AppPageColors.accentOf(context),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
           ],
         ),
       ),

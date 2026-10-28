@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/utils/deck_visuals.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
@@ -31,7 +32,6 @@ import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/widgets/rio.dart';
-import 'package:fluentdeck/widgets/tutor_scene.dart';
 
 class _DeckRow {
   const _DeckRow({required this.deck, required this.depth});
@@ -738,7 +738,6 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     }
 
     final stats = _stats;
-    final dueSummary = stats != null ? '${stats.dueNow} due' : '';
 
     return AppLoadingSwitcher(
       loading: false,
@@ -762,58 +761,43 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   child: CustomScrollView(
                     slivers: [
                       SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
                             if (stats != null) ...[
-                              _StatsCard(stats: stats, onReview: () => _startReview()),
-                              const SizedBox(height: 16),
+                              _DueCard(stats: stats, onReview: () => _startReview()),
+                              const SizedBox(height: 14),
                             ],
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Decks',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                Expanded(
+                                  child: Text(
+                                    'Your decks',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppPageColors.textPrimaryOf(context),
                                     ),
-                                    if (dueSummary.isNotEmpty)
-                                      Text(
-                                        dueSummary,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: AppPageColors.subtitleOf(context),
-                                        ),
-                                      ),
-                                  ],
+                                  ),
                                 ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _SyncStatusButton(
-                                      status: _sync.status,
-                                      syncing: _sync.syncing,
-                                      onPressed: _manualSync,
-                                    ),
-                                    IconButton(
-                                      tooltip: 'Decks menu',
-                                      onPressed: _showOverflowMenu,
-                                      icon: Icon(
-                                        Icons.more_vert,
-                                        size: 22,
-                                        color: AppPageColors.subtitleOf(context),
-                                      ),
-                                    ),
-                                  ],
+                                _SyncStatusButton(
+                                  status: _sync.status,
+                                  syncing: _sync.syncing,
+                                  onPressed: _manualSync,
+                                ),
+                                IconButton(
+                                  tooltip: 'Decks menu',
+                                  onPressed: _showOverflowMenu,
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    size: 22,
+                                    color: AppPageColors.subtitleOf(context),
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             if (_decks.isEmpty) ...[
                               const Center(
                                 child: RioImage(RioPose.sleepy, height: 120, motion: RioMotion.sway),
@@ -828,8 +812,14 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                       ),
                       if (_decks.isNotEmpty)
                         SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          sliver: SliverReorderableList(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          sliver: DecoratedSliver(
+                            decoration: BoxDecoration(
+                              color: AppPageColors.cardBgOf(context),
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+                            ),
+                            sliver: SliverReorderableList(
                             itemCount: _deckRows.length,
                             onReorder: _onDeckReorder,
                             onReorderStart: (_) =>
@@ -854,29 +844,58 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                     row.deck.isDeletable
                                         ? () => _deleteDeck(row.deck)
                                         : null,
+                                isLast: index == _deckRows.length - 1,
                                 ),
                               );
                             },
                           ),
+                          ),
                         ),
-                      const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
+                      if (_decks.isNotEmpty)
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                          sliver: SliverToBoxAdapter(
+                            child: Text(
+                              'New · Learning · To review',
+                              style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
+                            ),
+                          ),
+                        ),
+                      const SliverPadding(padding: EdgeInsets.only(bottom: 96)),
                     ],
                   ),
                 ),
               ),
-              _TodayFooter(stats: stats),
             ],
           ),
+          // 60 dp rounded-square add button (Decks · My decks).
           Positioned(
-            right: 16,
-            bottom: 56,
-            child: FloatingActionButton(
-              onPressed: _showFabMenu,
-              tooltip: 'Add',
-              backgroundColor: AppColors.brandPrimaryDeep,
-              foregroundColor: Colors.white,
-              elevation: 4,
-              child: const Icon(Icons.add_rounded),
+            right: 20,
+            bottom: 20,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.brandPrimaryDeep.withValues(alpha: 0.4),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: AppColors.brandPrimaryDeep,
+                borderRadius: BorderRadius.circular(20),
+                child: InkWell(
+                  onTap: _showFabMenu,
+                  borderRadius: BorderRadius.circular(20),
+                  child: const SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: Icon(Icons.add_rounded, size: 28, color: Colors.white, semanticLabel: 'Add deck'),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -899,7 +918,7 @@ class _SyncStatusButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (icon, color, tooltip) = switch (status) {
+    final (_, color, tooltip) = switch (status) {
       FlashcardSyncStatus.synced => (
         Icons.cloud_done_outlined,
         AppColors.brandPrimary,
@@ -917,17 +936,31 @@ class _SyncStatusButton extends StatelessWidget {
       ),
     };
 
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: syncing ? null : onPressed,
-      icon:
-          syncing
-              ? SizedBox(
-                width: 20,
-                height: 20,
+    final label = switch (status) {
+      FlashcardSyncStatus.synced => 'Synced',
+      FlashcardSyncStatus.pending => 'Not synced',
+      FlashcardSyncStatus.offline => 'Offline',
+    };
+    return Tooltip(
+      message: tooltip,
+      child: TextButton(
+        onPressed: syncing ? null : onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: status == FlashcardSyncStatus.synced
+              ? AppPageColors.subtitleOf(context)
+              : color,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          minimumSize: const Size(44, 44),
+          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+        ),
+        child: syncing
+            ? SizedBox(
+                width: 16,
+                height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2, color: color),
               )
-              : Icon(icon, size: 22, color: color),
+            : Text(label),
+      ),
     );
   }
 }
@@ -941,6 +974,7 @@ class _DeckListTile extends StatelessWidget {
     required this.onStudy,
     this.enableSwipeActions = false,
     this.onDelete,
+    this.isLast = false,
   });
 
   final FlashcardDeckModel deck;
@@ -951,194 +985,173 @@ class _DeckListTile extends StatelessWidget {
   final VoidCallback onStudy;
   final VoidCallback? onDelete;
 
+  /// The last row has no hairline under it.
+  final bool isLast;
+
   @override
   Widget build(BuildContext context) {
+    final allDone = deck.newCount + deck.learningCount + deck.reviewDueCount == 0;
     final tile = Material(
-      color: AppPageColors.cardBgOf(context),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
-      ),
-      clipBehavior: Clip.antiAlias,
+      type: MaterialType.transparency,
       child: InkWell(
         onTap: onShowOptions,
-        borderRadius: BorderRadius.circular(20),
         splashColor: AppColors.brandPrimary.withValues(alpha: 0.06),
         highlightColor: AppColors.brandPrimary.withValues(alpha: 0.04),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: BoxDecoration(
+            border: isLast
+                ? null
+                : Border(bottom: BorderSide(color: AppPageColors.rowDividerOf(context))),
+          ),
           child: Row(
             children: [
               dragHandle,
               SizedBox(width: depth * 16.0),
-              if (deck.isFiltered) ...[
-                Icon(
-                  Icons.filter_list,
-                  size: 18,
-                  color: AppColors.brandPrimary.withValues(alpha: 0.8),
-                ),
-                const SizedBox(width: 6),
-              ],
+              if (deck.isFiltered)
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppPageColors.tintOf(context, AppTint.teal).bg,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.filter_list, size: 18, color: AppPageColors.tintIconOf(context, AppTint.teal)),
+                )
+              else
+                DeckIconTile(name: deck.name),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   deck.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppPageColors.textPrimaryOf(context),
                   ),
                 ),
               ),
-              DeckCountButtons(
-                newCount: deck.newCount,
-                learningCount: deck.learningCount,
-                reviewCount: deck.reviewDueCount,
-              ),
+              if (allDone)
+                Text(
+                  'All done',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppPageColors.tintOf(context, AppTint.success).fg,
+                  ),
+                )
+              else
+                DeckCountButtons(
+                  newCount: deck.newCount,
+                  learningCount: deck.learningCount,
+                  reviewCount: deck.reviewDueCount,
+                ),
             ],
           ),
         ),
       ),
     );
 
-    if (!enableSwipeActions) {
-      return Padding(padding: const EdgeInsets.only(bottom: 8), child: tile);
-    }
+    if (!enableSwipeActions) return tile;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Dismissible(
-        key: ValueKey('deck-${deck.id}'),
-        direction:
-            onDelete != null
-                ? DismissDirection.horizontal
-                : DismissDirection.startToEnd,
-        background: SwipeActionBackgrounds.study(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        secondaryBackground:
-            onDelete != null
-                ? SwipeActionBackgrounds.delete(
-                    borderRadius: BorderRadius.circular(20),
-                  )
-                : null,
-        confirmDismiss: (direction) async {
-          if (direction == DismissDirection.startToEnd) {
-            onStudy();
-          } else if (direction == DismissDirection.endToStart && onDelete != null) {
-            onDelete!();
-          }
-          return false;
-        },
-        child: tile,
+    return Dismissible(
+      key: ValueKey('deck-${deck.id}'),
+      direction:
+          onDelete != null
+              ? DismissDirection.horizontal
+              : DismissDirection.startToEnd,
+      background: SwipeActionBackgrounds.study(
+        borderRadius: BorderRadius.circular(20),
       ),
+      secondaryBackground:
+          onDelete != null
+              ? SwipeActionBackgrounds.delete(
+                  borderRadius: BorderRadius.circular(20),
+                )
+              : null,
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          onStudy();
+        } else if (direction == DismissDirection.endToStart && onDelete != null) {
+          onDelete!();
+        }
+        return false;
+      },
+      child: tile,
     );
   }
 }
 
-class _TodayFooter extends StatelessWidget {
-  const _TodayFooter({required this.stats});
-
-  final FlashcardStudyStats? stats;
-
-  @override
-  Widget build(BuildContext context) {
-    final reviews = stats?.todayReviews ?? 0;
-    final duration = stats?.todayDurationLabel ?? '0m';
-    final streak = stats?.reviewStreakDays ?? 0;
-
-    final summary =
-        reviews > 0
-            ? 'Studied $reviews card${reviews == 1 ? '' : 's'} in $duration today'
-            : 'Studied 0 cards today';
-
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppPageColors.cardBgOf(context),
-        border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.transparent
-                : Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.today_outlined, size: 16, color: AppPageColors.subtitleOf(context)),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              summary,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppPageColors.subtitleOf(context),
-              ),
-            ),
-          ),
-          if (streak > 0) ...[
-            const SizedBox(width: 10),
-            const Icon(Icons.local_fire_department_rounded, size: 16, color: AppColors.primaryYellow),
-            const SizedBox(width: 2),
-            Text(
-              '$streak day streak',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppPageColors.subtitleOf(context),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _StatsCard extends StatelessWidget {
-  const _StatsCard({required this.stats, required this.onReview});
+class _DueCard extends StatelessWidget {
+  const _DueCard({required this.stats, required this.onReview});
 
   final FlashcardStudyStats stats;
   final VoidCallback onReview;
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = stats.reviewStreakDays > 0
-        ? '${stats.reviewStreakDays}-day review streak'
-        : 'Tap Study now to begin your session';
-
-    return AppHeroCard(
-      scene: TutorScene.online,
-      value: '${stats.dueNow}',
-      label: stats.dueNow == 1 ? 'card due' : 'cards due',
-      subtitle: subtitle,
-      icon: Icons.play_arrow_rounded,
-      badge: stats.newCards > 0
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${stats.newCards} new',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+    final due = stats.dueNow;
+    final minutes = due == 0 ? 0 : (due * 20 / 60).ceil().clamp(1, 999);
+    final details = <String>[
+      if (due > 0) 'About $minutes minute${minutes == 1 ? '' : 's'}',
+      if (stats.newCards > 0) '${stats.newCards} new',
+      if (due == 0) 'Nothing waiting. Nice work',
+    ].join(' · ');
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.brandPrimaryDeep,
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$due',
+                  style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w800, color: Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  due == 1 ? 'card due today' : 'cards due today',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Text(details, style: const TextStyle(fontSize: 13, color: Color(0xFFBFE4E7))),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Material(
+              color: Colors.white,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onReview,
+                child: const SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    size: 32,
+                    color: AppColors.brandPrimaryDeep,
+                    semanticLabel: 'Start review',
+                  ),
                 ),
               ),
-            )
-          : null,
-      onIconTap: onReview,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

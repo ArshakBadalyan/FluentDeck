@@ -59,7 +59,7 @@ void main() {
   testWidgets('walks through the five real features, then sign-in', (tester) async {
     await _pumpOnboarding(tester);
 
-    expect(find.text('Speak with an AI tutor'), findsOneWidget);
+    expect(find.text('Speak with an AI tutor who never judges'), findsOneWidget);
     expect(find.text('Gentle corrections'), findsOneWidget);
 
     await _tapNext(tester);

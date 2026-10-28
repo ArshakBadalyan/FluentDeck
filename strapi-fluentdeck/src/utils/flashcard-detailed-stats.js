@@ -15,10 +15,9 @@ function addDays(date, days) {
 
 async function buildDetailedStats(strapi, userId, { deckId = null, range = '12m' } = {}) {
   const now = new Date();
-  const rangeStart =
-    range === 'all'
-      ? new Date(0)
-      : addDays(now, -365);
+  // '30d' / '90d' / '12m' look back that far; 'all' has no start.
+  const spanDays = { '30d': 30, '90d': 90, '12m': 365 }[range] ?? null;
+  const rangeStart = spanDays == null ? new Date(0) : addDays(now, -spanDays);
 
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
@@ -43,6 +42,9 @@ async function buildDetailedStats(strapi, userId, { deckId = null, range = '12m'
     new: 0,
     learning: 0,
     review: 0,
+    // review split by interval: young < 21 days, mature >= 21
+    young: 0,
+    mature: 0,
     suspended: 0,
     buried: 0,
   };
@@ -67,6 +69,8 @@ async function buildDetailedStats(strapi, userId, { deckId = null, range = '12m'
       continue;
     }
     counts.review += 1;
+    if ((st.intervalDays ?? 0) >= 21) counts.mature += 1;
+    else counts.young += 1;
   }
 
   let logs = [];
@@ -85,6 +89,23 @@ async function buildDetailedStats(strapi, userId, { deckId = null, range = '12m'
     });
   } catch (_) {
     logs = [];
+  }
+
+  // Reviews in the same-length period just before the range ("vs last month").
+  let previousReviewsInRange = null;
+  if (spanDays != null) {
+    try {
+      const prevWhere = {
+        user: userId,
+        reviewedAt: { $gte: addDays(rangeStart, -spanDays), $lt: rangeStart },
+      };
+      if (deckId) prevWhere.deck = deckId;
+      previousReviewsInRange = await strapi.db
+        .query('api::card-review-log.card-review-log')
+        .count({ where: prevWhere });
+    } catch (_) {
+      previousReviewsInRange = null;
+    }
   }
 
   const todayLogs = logs.filter((l) => new Date(l.reviewedAt ?? l.reviewed_at) >= todayStart);
@@ -211,6 +232,7 @@ async function buildDetailedStats(strapi, userId, { deckId = null, range = '12m'
     futureDueByDay: futureDueSeries,
     calendar: calendarDays,
     totalReviewsInRange: logs.length,
+    previousReviewsInRange,
     easeBuckets,
     intervalBuckets,
     retention: {

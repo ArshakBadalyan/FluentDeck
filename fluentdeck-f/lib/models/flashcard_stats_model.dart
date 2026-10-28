@@ -46,6 +46,11 @@ class FlashcardCardCounts {
   final int newCount;
   final int learning;
   final int review;
+
+  /// [review] split by interval: young < 21 days, mature >= 21 (null from
+  /// older servers).
+  final int? young;
+  final int? mature;
   final int suspended;
   final int buried;
 
@@ -53,6 +58,8 @@ class FlashcardCardCounts {
     this.newCount = 0,
     this.learning = 0,
     this.review = 0,
+    this.young,
+    this.mature,
     this.suspended = 0,
     this.buried = 0,
   });
@@ -63,6 +70,8 @@ class FlashcardCardCounts {
       newCount: json['new'] as int? ?? 0,
       learning: json['learning'] as int? ?? 0,
       review: json['review'] as int? ?? 0,
+      young: json['young'] as int?,
+      mature: json['mature'] as int?,
       suspended: json['suspended'] as int? ?? 0,
       buried: json['buried'] as int? ?? 0,
     );
@@ -194,6 +203,9 @@ class FlashcardDetailedStats {
   final List<FlashcardDayCount> futureDueByDay;
   final Map<String, int> calendar;
   final int totalReviewsInRange;
+
+  /// Reviews in the same-length period before the range (null for 'all').
+  final int? previousReviewsInRange;
   final int reviewStreakDays;
   final FlashcardEaseBuckets easeBuckets;
   final FlashcardIntervalBuckets intervalBuckets;
@@ -214,6 +226,7 @@ class FlashcardDetailedStats {
     this.futureDueByDay = const [],
     this.calendar = const {},
     this.totalReviewsInRange = 0,
+    this.previousReviewsInRange,
     this.reviewStreakDays = 0,
     this.easeBuckets = const FlashcardEaseBuckets(),
     this.intervalBuckets = const FlashcardIntervalBuckets(),
@@ -262,6 +275,7 @@ class FlashcardDetailedStats {
       futureDueByDay: parseSeries(json['futureDueByDay']),
       calendar: calendar,
       totalReviewsInRange: json['totalReviewsInRange'] as int? ?? 0,
+      previousReviewsInRange: json['previousReviewsInRange'] as int?,
       reviewStreakDays: json['reviewStreakDays'] as int? ?? 0,
       easeBuckets: FlashcardEaseBuckets.fromJson(
         json['easeBuckets'] is Map

@@ -108,8 +108,8 @@
     "language": "Bahasa aplikasi",
     "pages": {
       "speak": {
-        "title": "Bicara dengan tutor AI",
-        "body": "Bicara keras atau ketik. Tutor kamu menjawab dengan suara alami, menegakkan kesalahanmu dengan lembut, dan mengingat apa yang kamu bicarakan.",
+        "title": "Berbicara dengan tutor AI yang tidak pernah menghakimi",
+        "body": "Bicara langsung atau ketik. Rio menjawab dengan suara alami dan memperbaiki kesalahanmu dengan lembut.",
         "chips": {
           "voice-or-text": "Suara atau teks",
           "gentle-corrections": "Koreksi lembut",
@@ -191,7 +191,29 @@
     "school-email-pick-school": "Pilih sekolahmu",
     "school-email-pick-school-required": "Silakan pilih sekolahmu untuk melanjutkan.",
     "teacher-invite-code": "Kode undangan guru",
-    "teacher-invite-code-hint": "Tanyakan ke sekolahmu untuk kode guru tahunan (satu kode per sekolah per tahun)."
+    "teacher-invite-code-hint": "Tanyakan ke sekolahmu untuk kode guru tahunan (satu kode per sekolah per tahun).",
+    "welcome-back": "Selamat datang kembali",
+    "email-or-nickname": "Email atau nama panggilan",
+    "forgot-password-short": "Lupa kata sandi?",
+    "sign-in-button": "Masuk",
+    "or-continue-with": "atau lanjut dengan",
+    "new-here": "Baru di sini?",
+    "create-account": "Buat akun",
+    "start-free": "Mulai bicara gratis",
+    "sign-up-subtitle-minutes": "{count} menit bersama Rio setiap hari. Tanpa kartu.",
+    "language-pair": "Saya berbicara → Saya ingin berbicara",
+    "i-speak": "Saya berbicara",
+    "i-want-to-speak": "Saya ingin berbicara",
+    "email": "Email",
+    "password-min": "Gunakan minimal {count} karakter.",
+    "create-account-button": "Buat akun",
+    "legal-before": "Dengan melanjutkan, kamu menyetujui ",
+    "terms": "Ketentuan",
+    "legal-and": " dan ",
+    "privacy": "Kebijakan Privasi",
+    "have-account": "Sudah punya akun?",
+    "sign-in-link": "Masuk",
+    "legal-after": "."
   },
   "teacher": {
     "badge": "Guru",
@@ -465,7 +487,13 @@
     "subtitle": "Masukkan email-mu dan kami akan mengirim tautan untuk mengaturnya ulang.",
     "forgot-password": "Lupa Kata Sandi ?",
     "send-email": "Kirim email",
-    "back-to-start": "Kembali ke halaman awal"
+    "back-to-start": "Kembali ke halaman awal",
+    "title": "Atur ulang kata sandi",
+    "subtitle-short": "Masukkan email-mu dan kami akan mengirim tautan.",
+    "send-link": "Kirim tautan",
+    "check-inbox": "Cek kotak masuk",
+    "check-inbox-body": "Tautan berlaku 1 jam. Tidak ada? Cek folder spam.",
+    "enter-code": "Masukkan kode"
   },
   "reset-password": {
     "reset-password": "Atur Ulang Kata Sandi",

@@ -108,8 +108,8 @@
     "language": "Idioma do app",
     "pages": {
       "speak": {
-        "title": "Fale com um tutor de IA",
-        "body": "Fale em voz alta ou escreva. Seu tutor responde em voz natural, corrige gentilmente seus erros e lembra do que você fala.",
+        "title": "Converse com um tutor de IA que nunca julga",
+        "body": "Fale em voz alta ou digite. O Rio responde com voz natural e corrige seus erros com gentileza.",
         "chips": {
           "voice-or-text": "Voz ou texto",
           "gentle-corrections": "Correções gentis",
@@ -191,7 +191,29 @@
     "school-email-pick-school": "Selecione sua escola",
     "school-email-pick-school-required": "Selecione sua escola para continuar.",
     "teacher-invite-code": "Código de convite do professor",
-    "teacher-invite-code-hint": "Peça à sua escola pelo código anual do professor (um código por escola por ano)."
+    "teacher-invite-code-hint": "Peça à sua escola pelo código anual do professor (um código por escola por ano).",
+    "welcome-back": "Que bom te ver de novo",
+    "email-or-nickname": "E-mail ou apelido",
+    "forgot-password-short": "Esqueceu a senha?",
+    "sign-in-button": "Entrar",
+    "or-continue-with": "ou continue com",
+    "new-here": "Novo por aqui?",
+    "create-account": "Crie uma conta",
+    "start-free": "Comece a falar de graça",
+    "sign-up-subtitle-minutes": "{count} minutos com o Rio todos os dias. Sem cartão.",
+    "language-pair": "Eu falo → Quero falar",
+    "i-speak": "Eu falo",
+    "i-want-to-speak": "Quero falar",
+    "email": "E-mail",
+    "password-min": "Use pelo menos {count} caracteres.",
+    "create-account-button": "Criar conta",
+    "legal-before": "Ao continuar, você concorda com os ",
+    "terms": "Termos",
+    "legal-and": " e a ",
+    "privacy": "Política de Privacidade",
+    "have-account": "Já tem conta?",
+    "sign-in-link": "Entrar",
+    "legal-after": "."
   },
   "teacher": {
     "badge": "Professor",
@@ -465,7 +487,13 @@
     "subtitle": "Digite seu e-mail e enviaremos um link para redefini-la.",
     "forgot-password": "Esqueceu a senha ?",
     "send-email": "Enviar e-mail",
-    "back-to-start": "Voltar à página inicial"
+    "back-to-start": "Voltar à página inicial",
+    "title": "Redefina sua senha",
+    "subtitle-short": "Digite seu e-mail e enviaremos um link.",
+    "send-link": "Enviar link",
+    "check-inbox": "Confira seu e-mail",
+    "check-inbox-body": "O link vale por 1 hora. Não chegou? Veja no spam.",
+    "enter-code": "Inserir o código"
   },
   "reset-password": {
     "reset-password": "Redefinir senha",

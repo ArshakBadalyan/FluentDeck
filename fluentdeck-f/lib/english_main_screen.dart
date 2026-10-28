@@ -7,7 +7,6 @@ import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.da
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/screens/activity_screen/activity_shell_screen.dart';
 import 'package:fluentdeck/screens/speaking_hub/speaking_hub_screen.dart';
-import 'package:fluentdeck/screens/conversation_screen/conversation_history_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_shell_screen.dart';
 import 'package:fluentdeck/screens/profile_screen/about_us/profile_about_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_account_tab.dart';
@@ -86,13 +85,14 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
 
   static const _activitySubTabs = ['Overview', 'Speaking', 'Decks'];
 
+  // Order and names from the Riovox App Redesign; 'chat' is the Today home.
   static const _speakSubTabDefs = [
     ('chat', 'Chat'),
-    ('notes', 'My Notes'),
-    ('practice', 'Deck Words'),
+    ('roleplay', 'Role-play'),
     ('games', 'Games'),
-    ('roleplay', 'Role-Play'),
     ('topics', 'Topics'),
+    ('notes', 'My notes'),
+    ('practice', 'Deck words'),
   ];
 
   /// Falls back to showing every tab if config hides all of them (misconfiguration guard).
@@ -130,7 +130,14 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   @override
   void initState() {
     super.initState();
+    _speakTabController.addListener(_onSpeakSubTabChanged);
     MainNavigationCoordinator.navigateToMainTab = setMainIndex;
+    MainNavigationCoordinator.openSpeakSubTab = (id) {
+      final index = _speakSubTabIds.indexOf(id);
+      if (index >= 0) {
+        MainNavigationCoordinator.goToTab(MainTabId.speak, subIndex: index);
+      }
+    };
     if (DeckNotificationService.instance.consumeOpenDecksOnLaunch()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) MainNavigationCoordinator.goToTab(MainTabId.decks);
@@ -165,10 +172,24 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
         length: newLength,
         vsync: this,
         initialIndex: clampedIndex,
-      );
+      )..addListener(_onSpeakSubTabChanged);
     });
     oldController.dispose();
   }
+
+  int _speakSubIndex = 0;
+
+  /// Today's home (the first sub-tab) draws its own greeting header, so the
+  /// shared bar hides there; rebuild when the sub-tab settles on a new page.
+  void _onSpeakSubTabChanged() {
+    final index = _speakTabController.index;
+    if (index != _speakSubIndex) setState(() => _speakSubIndex = index);
+  }
+
+  bool get _speakHomeVisible =>
+      MainTabConfig.isTab(_currentIndex, MainTabId.speak) &&
+      !_speakInSession &&
+      _speakSubIndex == 0;
 
   int _tutorialMainIndex() => _currentIndex;
 
@@ -409,7 +430,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // In a live conversation the session's own header (Rio + title) is the
       // only header, so the main bar steps aside.
-      appBar: isSpeak && _speakInSession
+      appBar: isSpeak && (_speakInSession || _speakHomeVisible)
           ? null
           : MainAppBar(
         title: _currentTitle,
@@ -474,22 +495,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                 ? _speakTabController
                 : null,
         notificationUnreadCount: _notificationUnreadCount,
-        onConversationHistoryTap:
-            isSpeak
-                ? () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ConversationHistoryScreen(),
-                    ),
-                  );
-                }
-                : null,
-        onNewConversationTap:
-            isSpeak
-                ? () async {
-                  await _speakingHubKey.currentState?.startNewFreeChat();
-                }
-                : null,
       ),
       // Unread badge refreshes when the drawer closes (swipe / tap outside).
       onEndDrawerChanged: (isOpen) {
@@ -540,8 +545,9 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
           ),
         ],
       ),
-      // Wide web/tablet: the side menu (below) replaces the bottom bar.
-      bottomNavigationBar: wide
+      // Wide web/tablet: the side menu (below) replaces the bottom bar. In a
+      // live conversation the session fills the screen (no bar).
+      bottomNavigationBar: wide || (isSpeak && _speakInSession)
           ? null
           : EnglishBottomNav(
         currentIndex: _currentIndex,

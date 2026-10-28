@@ -76,4 +76,27 @@ abstract final class BrandConfig {
   static const Color hard = Color(0xFFFF8F3D); // Hard
   static const Color skipped = Color(0xFF9E9E9E);
   static const Color newCards = Color(0xFF2196F3); // New-card count (Anki)
+
+  // ── Tints (light theme): soft fill + readable text on it ────────────────
+  // Chips, icon tiles, count badges and notices (Riovox App Redesign).
+  static const Color tealTint = Color(0xFFE6F3F4);
+  static const Color tealTintStrong = Color(0xFFCDE8EA);
+  static const Color tealGlow = Color(0xFFDDF0F1);
+  static const Color voiceTint = Color(0xFFFFE9E2);
+  static const Color voiceTintText = Color(0xFFC2410C);
+  static const Color rewardTint = Color(0xFFFFF6D6);
+  static const Color successTint = Color(0xFFE3F8EB);
+  static const Color successText = Color(0xFF0B6B3A);
+  static const Color successBody = Color(0xFF2F5D44);
+  static const Color warningTint = Color(0xFFFFF1E6);
+  static const Color warningText = Color(0xFFB54708);
+  static const Color dangerTint = Color(0xFFFDECEC);
+  static const Color dangerText = Color(0xFFB42318);
+  static const Color infoTint = Color(0xFFE8F1FD);
+  static const Color infoText = Color(0xFF1D5FB8);
+  static const Color pinkTint = Color(0xFFFDECF2);
+  static const Color pinkText = Color(0xFFB4235A);
+
+  /// Hairline between rows inside a card.
+  static const Color rowDivider = Color(0xFFEEF3F3);
 }

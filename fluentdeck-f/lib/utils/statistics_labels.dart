@@ -37,8 +37,20 @@ class StatisticsLabels {
     return 'Deck #$deckFilter';
   }
 
-  static String rangeLabel(String range) =>
-      range == 'all' ? rangeAllHistory : range12Months;
+  static String rangeLabel(String range) => switch (range) {
+    '30d' => 'Last 30 days',
+    '90d' => 'Last 90 days',
+    'all' => rangeAllHistory,
+    _ => range12Months,
+  };
+
+  /// Short form for the range pill ("30 days").
+  static String rangeShort(String range) => switch (range) {
+    '30d' => '30 days',
+    '90d' => '90 days',
+    'all' => 'All time',
+    _ => '12 months',
+  };
 
   static String summary({
     required int? deckFilter,

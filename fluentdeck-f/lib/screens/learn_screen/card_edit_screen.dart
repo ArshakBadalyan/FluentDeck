@@ -10,7 +10,6 @@ import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/note_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/services/subscription_service.dart';
-import 'package:fluentdeck/ui_elements/primary_button.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/utils/speaking_premium_gate.dart';
@@ -624,7 +623,16 @@ class _CardEditScreenState extends State<CardEditScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        title: Text(widget.isEditing ? 'Edit note' : 'Add note'),
+        titleSpacing: 4,
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          tooltip: 'Close',
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: Text(
+          widget.isEditing ? 'Edit card' : 'Add card',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.visibility_outlined),
@@ -782,7 +790,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
     return AppLoadingSwitcher(
       loading: false,
       child: SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
       child: form,
     ),
     );
@@ -813,7 +821,21 @@ class _CardEditScreenState extends State<CardEditScreen> {
             ),
             const SizedBox(height: 16),
           ],
-          _deckDropdown(),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _typeDropdown()),
+              const SizedBox(width: 10),
+              Expanded(child: _deckDropdown()),
+            ],
+          ),
+          if (_activeType != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              '${_activeType!.cardTemplateNames.join(', ')} card(s) will be created',
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+            ),
+          ],
           if (!widget.isEditing) ...[
             const SizedBox(height: 12),
             AppSelectField<String>(
@@ -841,15 +863,6 @@ class _CardEditScreenState extends State<CardEditScreen> {
                 controller: _topicCtrl,
                 decoration: _filledDecoration(),
               ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          _typeDropdown(),
-          if (_activeType != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              '${_activeType!.cardTemplateNames.join(', ')} card(s) will be created',
-              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
             ),
           ],
           if (_needsFullEditor) ...[
@@ -900,15 +913,59 @@ class _CardEditScreenState extends State<CardEditScreen> {
             else
               _plainField('Tags (comma-separated)', _tagsCtrl),
           ],
-          if (!widget.sheetMode) ...[
-            const SizedBox(height: 24),
-            PrimaryButton(
-              text: _saving ? 'SAVING…' : (widget.isEditing ? 'UPDATE NOTE' : 'SAVE NOTE'),
-              enabled: !_saving,
-              onPressed: _save,
-            ),
+          // Save lives in the header; a live preview closes the form.
+          if (!widget.sheetMode && !_needsFullEditor && !_isImageOcclusion) ...[
+            const SizedBox(height: 16),
+            Text('Preview', style: _fieldLabelStyle),
+            const SizedBox(height: 8),
+            _livePreview(),
           ],
         ];
+  }
+
+  /// The card's front as it will read, blanks shown as […].
+  Widget _livePreview() {
+    final ctrl = _fieldCtrls['Text'] ?? _fieldCtrls['Front'];
+    if (ctrl == null) return const SizedBox.shrink();
+    final accent = AppPageColors.accentOf(context);
+    return ListenableBuilder(
+      listenable: ctrl,
+      builder: (context, _) {
+        final raw = stripHtml(ctrl.text).trim();
+        final cloze = RegExp(r'\{\{c\d+::(.*?)(?:::.*?)?\}\}');
+        final spans = <TextSpan>[];
+        var last = 0;
+        for (final m in cloze.allMatches(raw)) {
+          spans.add(TextSpan(text: raw.substring(last, m.start)));
+          spans.add(TextSpan(text: '[…]', style: TextStyle(color: accent)));
+          last = m.end;
+        }
+        spans.add(TextSpan(text: raw.substring(last)));
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppPageColors.cardBgOf(context),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+          ),
+          child: raw.isEmpty
+              ? Text(
+                  'Your card will show here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, color: AppPageColors.mutedOf(context)),
+                )
+              : Text.rich(
+                  TextSpan(children: spans),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    color: AppPageColors.textPrimaryOf(context),
+                  ),
+                ),
+        );
+      },
+    );
   }
 
   Widget _buildCefrSection() {

@@ -239,6 +239,31 @@ class ConversationService {
     }
   }
 
+  /// Reads [text] aloud in the tutor's voice ("Hear it" on a correction).
+  Future<void> speakText(String text) async {
+    if (!_chatActive || text.trim().isEmpty || isPlayingTts) return;
+    final sessionEpoch = _chatSessionEpoch;
+    isPlayingTts = true;
+    stage = ConversationProcessingStage.speaking;
+    _notify();
+    try {
+      await _playTutorReply(
+        text,
+        sessionEpoch: sessionEpoch,
+        sessionOpening: false,
+      ).timeout(const Duration(seconds: 60));
+    } catch (_) {
+      try {
+        await _ttsPlayer.stop();
+      } catch (_) {}
+    } finally {
+      isPlayingTts = false;
+      isTtsAudible = false;
+      stage = ConversationProcessingStage.idle;
+      _notify();
+    }
+  }
+
   Future<void> _playAiTextAtTurn(
     int turnIndex, {
     required int sessionEpoch,

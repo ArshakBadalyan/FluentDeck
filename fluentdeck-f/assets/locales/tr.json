@@ -108,8 +108,8 @@
     "language": "Uygulama dili",
     "pages": {
       "speak": {
-        "title": "AI tutor ile konuş",
-        "body": "Sesli konuş ya da yaz. Tutore seninle konuşmanı doğal bir sesle cevap verir, hatalarını nazikçe düzeltir ve konuşmanı hatırlar.",
+        "title": "Asla yargılamayan bir yapay zekâ öğretmeniyle konuş",
+        "body": "Sesli konuş ya da yaz. Rio doğal bir sesle yanıt verir ve hatalarını nazikçe düzeltir.",
         "chips": {
           "voice-or-text": "Sesli ya da metin",
           "gentle-corrections": "Nazik düzeltmeler",
@@ -191,7 +191,29 @@
     "school-email-pick-school": "Okulunuzu seçin",
     "school-email-pick-school-required": "Devam etmek için okulunuzu seçin.",
     "teacher-invite-code": "Öğretmen davet kodu",
-    "teacher-invite-code-hint": "Yıllık öğretmen kodunu okuldan sormak (her yıl her okul için bir kod)."
+    "teacher-invite-code-hint": "Yıllık öğretmen kodunu okuldan sormak (her yıl her okul için bir kod).",
+    "welcome-back": "Tekrar hoş geldin",
+    "email-or-nickname": "E-posta veya kullanıcı adı",
+    "forgot-password-short": "Şifreni mi unuttun?",
+    "sign-in-button": "Giriş yap",
+    "or-continue-with": "veya şununla devam et",
+    "new-here": "Yeni misin?",
+    "create-account": "Hesap oluştur",
+    "start-free": "Ücretsiz konuşmaya başla",
+    "sign-up-subtitle-minutes": "Her gün Rio ile {count} dakika. Kart gerekmez.",
+    "language-pair": "Konuştuğum → Konuşmak istediğim",
+    "i-speak": "Konuştuğum dil",
+    "i-want-to-speak": "Konuşmak istediğim dil",
+    "email": "E-posta",
+    "password-min": "En az {count} karakter kullan.",
+    "create-account-button": "Hesap oluştur",
+    "legal-before": "Devam ederek ",
+    "terms": "Koşulları",
+    "legal-and": " ve ",
+    "privacy": "Gizlilik Politikasını",
+    "have-account": "Hesabın var mı?",
+    "sign-in-link": "Giriş yap",
+    "legal-after": " kabul edersin."
   },
   "teacher": {
     "badge": "Öğretmen",
@@ -465,7 +487,13 @@
     "subtitle": "E-postanı yaz, sıfırlaman için sana bir bağlantı gönderelim.",
     "forgot-password": "Parolayı Unuttuysan ?",
     "send-email": "E-posta gönder",
-    "back-to-start": "Başlangıç sayfasına dön"
+    "back-to-start": "Başlangıç sayfasına dön",
+    "title": "Şifreni sıfırla",
+    "subtitle-short": "E-postanı yaz, sana bir bağlantı gönderelim.",
+    "send-link": "Sıfırlama bağlantısı gönder",
+    "check-inbox": "Gelen kutunu kontrol et",
+    "check-inbox-body": "Bağlantı 1 saat geçerli. Göremiyor musun? Spam klasörüne bak.",
+    "enter-code": "Kodu gir"
   },
   "reset-password": {
     "reset-password": "Parolayı sıfırla",

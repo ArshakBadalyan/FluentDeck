@@ -16,6 +16,7 @@ import '../../services/conversation_service.dart';
 import '../../services/my_notes_linked_decks_store.dart';
 import '../../services/note_service.dart';
 import '../../ui_elements/app_skeletons.dart';
+import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../utils/learning_language_utils.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
@@ -471,59 +472,14 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
 
   Widget _buildTrainBar() {
     final count = _selectedIds.length;
-    final enabled = count > 0 && !_starting;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppPageColors.cardBgOf(context),
-        border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.transparent
-                : Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: SizedBox(
-            width: double.infinity,
-            height: 42,
-            child: FilledButton.icon(
-              onPressed: enabled ? _startTraining : null,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPrimary,
-                disabledBackgroundColor: AppColors.greySkipped.withValues(alpha: 0.35),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: Icon(
-                _starting ? Icons.hourglass_top_rounded : Icons.record_voice_over_rounded,
-                size: 18,
-              ),
-              label: Text(
-                _starting
-                    ? 'Starting…'
-                    : count > 0
-                        ? 'Train with AI tutor ($count)'
-                        : 'Select notes to train',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Rubik',
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return SpeakingStartButton(
+      label: _starting
+          ? 'Starting…'
+          : count > 0
+              ? 'Practice $count note${count == 1 ? '' : 's'}'
+              : 'Select notes to practice',
+      enabled: count > 0 && !_starting,
+      onPressed: _startTraining,
     );
   }
 
@@ -596,22 +552,45 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
   }
 
   String _noteSubtitle(UserNoteModel note) {
-    final parts = <String>[note.sourceLabel];
-    if (note.languageCode.isNotEmpty) {
-      parts.add(LearningLanguageUtils.languageLabel(note.languageCode));
-    }
-    if (note.cefrLevel != null && note.cefrLevel!.isNotEmpty) {
-      parts.add(note.cefrLevel!);
-    }
-    if (note.topic != null && note.topic!.isNotEmpty) {
-      parts.add(note.topic!);
-    }
+    final parts = <String>[];
     if (note.definition.trim().isNotEmpty) {
       parts.add(_plainText(note.definition));
     } else if (note.exampleSentence.trim().isNotEmpty) {
       parts.add(_plainText(note.exampleSentence));
     }
+    if (note.sourceLabel.trim().isNotEmpty) parts.add('from ${note.sourceLabel.trim()}');
     return parts.join(' · ');
+  }
+
+  /// Edit / delete for one note (row menu or long-press).
+  Future<void> _showNoteActions(UserNoteModel note) async {
+    final action = await showFrostedBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Edit note'),
+                onTap: () => Navigator.pop(ctx, 'edit'),
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_outline, color: AppPageColors.tintOf(ctx, AppTint.danger).fg),
+                title: Text('Delete note', style: TextStyle(color: AppPageColors.tintOf(ctx, AppTint.danger).fg)),
+                onTap: () => Navigator.pop(ctx, 'delete'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (action == 'edit') await _openEditNote(note);
+    if (action == 'delete') await _confirmDeleteNote(note);
   }
 
   Future<void> _startTraining() async {
@@ -729,7 +708,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       color: AppColors.brandPrimary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
         children: [
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
@@ -768,29 +747,12 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
             final selected = _selectedIds.contains(note.id);
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: SpeakingSelectionCard(
+              child: _NoteRow(
                 title: note.word,
                 subtitle: _noteSubtitle(note),
-                icon: Icons.menu_book_outlined,
                 selected: selected,
                 onTap: () => _toggleSelection(note.id),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined, size: 20),
-                      tooltip: 'Edit note',
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => _openEditNote(note),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete_outline, size: 20, color: AppPageColors.subtitleOf(context)),
-                      tooltip: 'Delete note',
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => _confirmDeleteNote(note),
-                    ),
-                  ],
-                ),
+                onMore: () => _showNoteActions(note),
               ),
             );
           }),
@@ -806,10 +768,102 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildSourceFilterRow(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+          child: Text(
+            'Words and corrections Rio saved for you. Practice them in a conversation.',
+            style: TextStyle(fontSize: 14, color: AppPageColors.subtitleOf(context)),
+          ),
+        ),
         Expanded(child: _buildList()),
         // Nothing to train on an empty list.
         if (_notes.isNotEmpty) _buildTrainBar(),
       ],
+    );
+  }
+}
+
+/// One saved note: checkbox, the phrase, and what it is / where it came from.
+class _NoteRow extends StatelessWidget {
+  const _NoteRow({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+    required this.onMore,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback onMore;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
+    return Material(
+      color: AppPageColors.cardBgOf(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: selected
+            ? BorderSide(color: accent, width: 2)
+            : BorderSide(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onMore,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 4, 14),
+          child: Row(
+            children: [
+              Semantics(
+                checked: selected,
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: Checkbox(
+                    value: selected,
+                    onChanged: (_) => onTap(),
+                    activeColor: accent,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppPageColors.textPrimaryOf(context),
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty)
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                      ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Note options',
+                icon: Icon(Icons.more_vert_rounded, size: 20, color: AppPageColors.mutedOf(context)),
+                onPressed: onMore,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
+import 'package:fluentdeck/config/brand_config.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/models/conversation_turn_model.dart';
 import 'package:fluentdeck/models/grammar_correction.dart';
@@ -28,9 +29,13 @@ import 'save_word_meaning_sheet.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 
 class ConversationScreen extends StatefulWidget {
-  const ConversationScreen({super.key, this.embedInShell = false});
+  const ConversationScreen({super.key, this.embedInShell = false, this.onExit});
 
   final bool embedInShell;
+
+  /// Inside the Today tab: the screen draws its own header (back, Rio, the
+  /// session, time left) and this leaves the session.
+  final VoidCallback? onExit;
 
   @override
   State<ConversationScreen> createState() => _ConversationScreenState();
@@ -62,6 +67,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     unawaited(_service.refreshSpeakingSettings());
     unawaited(RioPreferences.instance.load());
     RioPreferences.instance.showRio.addListener(_onRioPrefChanged);
+    RioPreferences.instance.showRioStage.addListener(_onRioPrefChanged);
     _loadUsage();
   }
 
@@ -99,6 +105,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
       _onDailyGoalReached,
     );
     RioPreferences.instance.showRio.removeListener(_onRioPrefChanged);
+    RioPreferences.instance.showRioStage.removeListener(_onRioPrefChanged);
     _celebrationTimer?.cancel();
     _textController.dispose();
     _scrollController.dispose();
@@ -126,7 +133,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 
   /// Tutor view: the tutor character (Rio by default) big on screen with the latest exchange.
-  bool get _rioView => RioPreferences.instance.showRio.value;
+  bool get _rioView =>
+      RioPreferences.instance.showRio.value &&
+      RioPreferences.instance.showRioStage.value;
 
   void _onRioPrefChanged() {
     if (mounted) setState(() {});
@@ -474,7 +483,14 @@ class _ConversationScreenState extends State<ConversationScreen> {
         children: [
           Column(
             children: [
-              if (_usage != null && _usage!.hasMeter)
+              if (widget.embedInShell && widget.onExit != null)
+                _SessionHeader(
+                  title: _service.sessionContext.title,
+                  usage: _usage,
+                  onExit: widget.onExit!,
+                  onSettings: () => showConversationChatSettingsSheet(context),
+                )
+              else if (_usage != null && _usage!.hasMeter)
                 AiDailyUsageBar(usage: _usage!),
               if (statusLine != null || _service.canEvaluateSession)
                 Container(
@@ -560,6 +576,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 onCancel: (_service.isProcessing || _service.isRecording)
                     ? () => _service.cancelActiveOperation()
                     : null,
+                onTypeTap: () =>
+                    setState(() => _service.typeMessagesEnabled = true),
+                onHelpTap: () => _service.sendTextMessage(
+                  'Can you help me say it? Give me an example of what I could say next.',
+                ),
               ),
             ],
           ),
@@ -1036,7 +1057,6 @@ class _CorrectionCard extends StatefulWidget {
 }
 
 class _CorrectionCardState extends State<_CorrectionCard> {
-  bool _expanded = false;
   bool _saving = false;
   bool _saved = false;
 
@@ -1117,10 +1137,7 @@ class _CorrectionCardState extends State<_CorrectionCard> {
     return Material(
       color: AppPageColors.cardBgOf(context),
       borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: () => setState(() => _expanded = !_expanded),
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
+      child: Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
           decoration: BoxDecoration(
@@ -1139,27 +1156,16 @@ class _CorrectionCardState extends State<_CorrectionCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'SAY IT BETTER',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: isDark ? AppColors.voice : coral,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    _expanded ? Icons.expand_less : Icons.expand_more,
-                    size: 18,
-                    color: AppPageColors.subtitleOf(context),
-                  ),
-                ],
+              Text(
+                'SAY IT BETTER',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                  color: isDark ? AppColors.voice : coral,
+                ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
               Text.rich(
                 TextSpan(
                   style: TextStyle(
@@ -1186,29 +1192,48 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                   ],
                 ),
               ),
-              if (_expanded && c.explanation.trim().isNotEmpty) ...[
-                const SizedBox(height: 6),
+              if (c.explanation.trim().isNotEmpty) ...[
+                const SizedBox(height: 10),
                 Text(
                   c.explanation,
                   style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                 ),
               ],
               const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => ConversationService.instance.speakText(c.correctedText),
+                    icon: const Icon(Icons.volume_up_rounded, size: 16),
+                    label: const Text('Hear it'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppPageColors.textPrimaryOf(context),
+                      backgroundColor: AppPageColors.cardBgOf(context),
+                      side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+                      shape: const StadiumBorder(),
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ),
               if (_isSaved)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  height: 36,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.greenCorrect.withValues(alpha: isDark ? 0.18 : 0.16),
+                    color: AppPageColors.tintOf(context, AppTint.success).bg,
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_rounded, size: 14, color: better),
-                      const SizedBox(width: 4),
+                      Icon(Icons.check_rounded, size: 16, color: better),
+                      const SizedBox(width: 6),
                       Text(
                         'Saved as a card',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: better),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: better),
                       ),
                     ],
                   ),
@@ -1230,9 +1255,10 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                     textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ),
+                ],
+              ),
             ],
           ),
-        ),
       ),
     );
   }
@@ -1348,6 +1374,8 @@ class _InputBar extends StatelessWidget {
     this.recordingDurationLabel,
     this.typeMessagesEnabled = false,
     this.onCancel,
+    this.onTypeTap,
+    this.onHelpTap,
   });
 
   final bool isRecording;
@@ -1358,6 +1386,32 @@ class _InputBar extends StatelessWidget {
   final VoidCallback onSendText;
   final bool typeMessagesEnabled;
   final VoidCallback? onCancel;
+
+  /// "Type instead": shows the text field (voice-only mode).
+  final VoidCallback? onTypeTap;
+
+  /// "Help me say it": asks Rio for an example of what to say next.
+  final VoidCallback? onHelpTap;
+
+  /// 52 dp white circle beside the big mic.
+  Widget _sideButton(
+    BuildContext context, {
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onTap,
+    Color? color,
+  }) {
+    return Material(
+      color: AppPageColors.cardBgOf(context),
+      shape: CircleBorder(side: BorderSide(color: AppPageColors.subtleBorderOf(context))),
+      child: IconButton(
+        tooltip: tooltip,
+        constraints: const BoxConstraints.tightFor(width: 52, height: 52),
+        icon: Icon(icon, size: 22, color: color ?? AppPageColors.textPrimaryOf(context)),
+        onPressed: onTap,
+      ),
+    );
+  }
 
   Widget _micButton({required double size}) {
     return GestureDetector(
@@ -1376,12 +1430,12 @@ class _InputBar extends StatelessWidget {
               // Soft halo rings around the big voice-only mic.
               if (size >= 64) ...[
                 BoxShadow(
-                  color: AppColors.voice.withValues(alpha: 0.16),
-                  spreadRadius: size * 0.12,
+                  color: AppColors.voice.withValues(alpha: 0.18),
+                  spreadRadius: 10,
                 ),
                 BoxShadow(
-                  color: AppColors.voice.withValues(alpha: 0.07),
-                  spreadRadius: size * 0.26,
+                  color: AppColors.voice.withValues(alpha: 0.08),
+                  spreadRadius: 22,
                 ),
               ],
               BoxShadow(
@@ -1419,11 +1473,18 @@ class _InputBar extends StatelessWidget {
       top: false,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-        // The dock sits on the page itself; the mic is the focal point.
+        padding: EdgeInsets.fromLTRB(typeMessagesEnabled ? 16 : 20, 16, typeMessagesEnabled ? 16 : 20, 16),
+        // The dock fades out of the page; the mic is the focal point.
         decoration: BoxDecoration(
-          color: AppPageColors.pageBgOf(context),
-          border: Border(top: BorderSide(color: AppPageColors.subtleBorderOf(context))),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: const [0, 0.3],
+            colors: [
+              AppPageColors.pageBgOf(context).withValues(alpha: 0),
+              AppPageColors.pageBgOf(context),
+            ],
+          ),
         ),
         child: Column(
           children: [
@@ -1513,23 +1574,171 @@ class _InputBar extends StatelessWidget {
                   ),
                 ),
               ],
-            ] else
+            ] else ...[
+              // Type instead · the big mic · help me say it.
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _sideButton(
+                    context,
+                    icon: Icons.keyboard_alt_outlined,
+                    tooltip: 'Type instead',
+                    onTap: isRecording || isProcessing ? null : onTypeTap,
+                  ),
+                  Semantics(
+                    button: true,
+                    label: isRecording ? 'Stop and send' : 'Tap to speak',
+                    child: _micButton(size: 84),
+                  ),
+                  _sideButton(
+                    context,
+                    icon: Icons.lightbulb_outline_rounded,
+                    tooltip: 'Help me say it',
+                    color: AppPageColors.tintOf(context, AppTint.reward).fg,
+                    onTap: isRecording || isProcessing ? null : onHelpTap,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
               Text(
-                isRecording ? recordingLabel : 'Tap the mic to speak',
+                isRecording ? recordingLabel : 'Tap to speak · tap again to send',
                 style: TextStyle(
                   color: AppPageColors.subtitleOf(context),
                   fontSize: 13,
                 ),
               ),
+            ],
             if (onCancel != null) ...[
               const SizedBox(height: 6),
               TextButton(onPressed: onCancel, child: const Text('Cancel')),
             ],
-            if (!typeMessagesEnabled) ...[
-              const SizedBox(height: 26),
-              _micButton(size: 80),
-              const SizedBox(height: 14),
-            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Back, Rio, the session's name, time left; a thin bar of today's time below.
+class _SessionHeader extends StatelessWidget {
+  const _SessionHeader({
+    required this.title,
+    required this.usage,
+    required this.onExit,
+    required this.onSettings,
+  });
+
+  final String title;
+  final ConversationUsageStatus? usage;
+  final VoidCallback onExit;
+  final VoidCallback onSettings;
+
+  static String _clock(int seconds) {
+    final s = seconds.clamp(0, 359999);
+    final m = s ~/ 60;
+    return '$m:${(s % 60).toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final u = usage;
+    final meter = u != null && u.hasMeter;
+    final exhausted = meter && (!u.allowed || u.remaining <= 0);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final tint = AppPageColors.tintOf(context, exhausted ? AppTint.danger : AppTint.teal);
+    return Material(
+      color: AppPageColors.pageBgOf(context),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 8, 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: 'Exit session',
+                    constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+                    icon: Icon(Icons.chevron_left_rounded, size: 28, color: AppPageColors.textPrimaryOf(context)),
+                    onPressed: onExit,
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: dark ? AppPageColors.tintOf(context, AppTint.teal).bg : BrandConfig.tealTintStrong,
+                    ),
+                    child: Image.asset(RioPose.happy.asset, fit: BoxFit.cover, excludeFromSemantics: true),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Rio',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppPageColors.textPrimaryOf(context),
+                          ),
+                        ),
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (meter)
+                    Container(
+                      height: 34,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: AppPageColors.cardBgOf(context),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.schedule_rounded, size: 14, color: tint.fg),
+                          const SizedBox(width: 6),
+                          Text(
+                            exhausted ? "Time's up" : '${_clock(u.remaining)} left',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: tint.fg),
+                          ),
+                        ],
+                      ),
+                    ),
+                  IconButton(
+                    tooltip: 'Chat settings',
+                    constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+                    icon: Icon(Icons.tune_rounded, size: 22, color: AppPageColors.textPrimaryOf(context)),
+                    onPressed: onSettings,
+                  ),
+                ],
+              ),
+            ),
+            if (meter)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
+                    value: u.progress.clamp(0, 1),
+                    minHeight: 4,
+                    color: exhausted ? AppColors.redWrong : AppPageColors.accentOf(context),
+                    backgroundColor: AppPageColors.subtleBorderOf(context),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

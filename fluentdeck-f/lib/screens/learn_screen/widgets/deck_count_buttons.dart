@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 enum DeckCountKind { newCards, learning, review }
 
 enum DeckCountButtonSize { compact, large }
 
-/// Deck counts: blue = new, orange = learning, green = review.
+/// Deck counts: blue = new, red = learning, green = review.
 class DeckCountButtons extends StatelessWidget {
   const DeckCountButtons({
     super.key,
@@ -99,29 +100,27 @@ class DeckCountButton extends StatelessWidget {
         ),
       );
     }
-    // Compact: a soft tinted pill; zero counts go quiet grey so the decks
-    // with work waiting stand out.
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final active = count > 0;
-    final fill = active
-        ? _color.withValues(alpha: isDark ? 0.2 : 0.14)
-        : (isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFF3F7F7));
-    final text = !active
-        ? (isDark ? const Color(0xFF9AB0B3) : const Color(0xFF6B7A7D))
-        : isDark
-            ? _color
-            : Color.lerp(_color, Colors.black, 0.5)!;
+    // Compact: a soft tinted pill (blue new, red learning, green to review);
+    // zero counts go quiet grey so the decks with work waiting stand out.
+    final tint = count <= 0
+        ? AppTint.neutral
+        : switch (kind) {
+            DeckCountKind.newCards => AppTint.info,
+            DeckCountKind.learning => AppTint.danger,
+            DeckCountKind.review => AppTint.success,
+          };
+    final colors = AppPageColors.tintOf(context, tint);
     return Container(
-      constraints: const BoxConstraints(minWidth: 30),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      constraints: const BoxConstraints(minWidth: 26),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: fill,
-        borderRadius: BorderRadius.circular(9),
+        color: colors.bg,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         '$count',
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: text),
+        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.fg),
       ),
     );
   }

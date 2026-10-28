@@ -3,7 +3,7 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:fluentdeck/utils/deck_visuals.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/services/admob_service.dart';
@@ -119,19 +119,10 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     return DeckSchedulingDefaults.deckOptions;
   }
 
+  // The on-screen card timer is gone (Decks · Review); nothing ticks now.
+  // _cardShownAt still times each answer for the review log.
   void _startElapsedTimer() {
     _elapsedTimer?.cancel();
-    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  String _elapsedLabel() {
-    if (_cardShownAt == null) return '0:00';
-    final total = DateTime.now().difference(_cardShownAt!).inSeconds;
-    final minutes = total ~/ 60;
-    final seconds = total % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   Future<void> _advanceAfterAction() async {
@@ -891,187 +882,92 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     );
   }
 
-  bool get _isWide => MediaQuery.sizeOf(context).width >= 600;
-
   bool get _hasCardOnScreen => _queue.isNotEmpty && _index < _queue.length;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
-      appBar: AppBar(
-        // Session progress eases forward as each card is answered.
-        bottom: _queue.isEmpty || _loading
-            ? null
-            : PreferredSize(
-                preferredSize: const Size.fromHeight(3),
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(
-                    end: (_index / _queue.length).clamp(0.0, 1.0),
-                  ),
-                  duration: AppMotion.duration(context, AppMotion.normal),
-                  curve: AppMotion.standardCurve,
-                  builder: (context, value, _) => LinearProgressIndicator(
-                    value: value,
-                    minHeight: 3,
-                    // Brand teal on the light header (yellow is for rewards only).
-                    backgroundColor: AppPageColors.accentOf(context)
-                        .withValues(alpha: 0.14),
-                    color: AppPageColors.accentOf(context),
-                  ),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(64),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: 'Close review',
+                  constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+                  icon: Icon(Icons.close_rounded, color: AppPageColors.textPrimaryOf(context)),
+                  onPressed: () => Navigator.of(context).maybePop(),
                 ),
-              ),
-        // Same light header as the main tabs.
-        backgroundColor: AppPageColors.pageBgOf(context),
-        surfaceTintColor: Colors.transparent,
-        foregroundColor: AppPageColors.textPrimaryOf(context),
-        iconTheme: IconThemeData(color: AppPageColors.textPrimaryOf(context)),
-        actionsIconTheme:
-            IconThemeData(color: AppPageColors.textPrimaryOf(context)),
-        systemOverlayStyle: Theme.of(context).brightness == Brightness.dark
-            ? SystemUiOverlayStyle.light
-            : SystemUiOverlayStyle.dark,
-        elevation: 0,
-        centerTitle: false,
-        // Card timer, centred on the screen's top edge.
-        flexibleSpace:
-            _hasCardOnScreen && !_loading
-                ? SafeArea(
-                  child: Center(
-                    child: Text(
-                      _elapsedLabel(),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppPageColors.textPrimaryOf(context),
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _queue.isEmpty || _loading
+                      ? const SizedBox.shrink()
+                      // Session progress eases forward as each card is answered.
+                      : TweenAnimationBuilder<double>(
+                          tween: Tween(end: (_index / _queue.length).clamp(0.0, 1.0)),
+                          duration: AppMotion.duration(context, AppMotion.normal),
+                          curve: AppMotion.standardCurve,
+                          builder: (context, value, _) => ClipRRect(
+                            borderRadius: BorderRadius.circular(5),
+                            child: LinearProgressIndicator(
+                              value: value,
+                              minHeight: 10,
+                              backgroundColor: AppPageColors.subtleBorderOf(context),
+                              color: AppPageColors.accentOf(context),
+                            ),
+                          ),
+                        ),
+                ),
+                if (_queue.isNotEmpty && !_loading && _index < _queue.length) ...[
+                  const SizedBox(width: 12),
+                  Text(
+                    '${_index + 1} / ${_queue.length}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppPageColors.subtitleOf(context),
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
-                )
-                : null,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Review'),
-            if (_settings.showDueCountInStudy && _queue.isNotEmpty && _index < _queue.length)
-              Text(
-                'Card ${_index + 1} of ${_queue.length}',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.normal,
-                  color: AppPageColors.subtitleOf(context),
+                ],
+                // Undo, card tools and review settings.
+                IconButton(
+                  icon: Badge(
+                    smallSize: 8,
+                    backgroundColor: const Color(0xFFFFC857),
+                    isLabelVisible: _hasCardOnScreen && _hasCardState(_queue[_index]),
+                    child: Icon(Icons.more_horiz_rounded, color: AppPageColors.textPrimaryOf(context)),
+                  ),
+                  tooltip: 'Card actions',
+                  onPressed: _showCardActionsSheet,
                 ),
-              ),
-          ],
-        ),
-        actions: [
-          if (_index > 0 && _index <= _queue.length)
-            IconButton(
-              icon: const Icon(Icons.undo),
-              tooltip: 'Undo',
-              onPressed: _submitting ? null : _undo,
+              ],
             ),
-          // Tablet / web: card tools sit in the bar, left of the gear.
-          if (_isWide && _hasCardOnScreen && !_loading) ..._cardTools(),
-          // Phones: one "more" button opening labelled card actions.
-          if (!_isWide && _hasCardOnScreen && !_loading)
-            IconButton(
-              icon: Badge(
-                smallSize: 8,
-                backgroundColor: const Color(0xFFFFC857),
-                isLabelVisible: _hasCardState(_queue[_index]),
-                child: const Icon(Icons.more_horiz_rounded),
-              ),
-              tooltip: 'Card actions',
-              onPressed: _showCardActionsSheet,
-            ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Review settings',
-            onPressed: () async {
-              await Navigator.of(context).push(
-                AppSharedAxisRoute<void>(
-                  transitionType: SharedAxisTransitionType.scaled,
-                  page: const DecksSettingsScreen(),
-                ),
-              );
-              final settings = await ReviewSettingsStore.instance.load();
-              if (mounted) {
-                setState(() => _settings = settings);
-                _applyWakelock();
-              }
-            },
           ),
-        ],
+        ),
       ),
       body: _buildBody(),
     );
   }
 
-  /// Flag, mark, suspend and bury actions for the card on screen.
-  List<Widget> _cardTools() {
-    return [
-      PopupMenuButton<int>(
-        icon: Icon(
-          Icons.flag,
-          color: flagColorFor(_queue[_index].flag) ??
-              AppPageColors.textPrimaryOf(context),
-        ),
-        tooltip: 'Flag',
-        onSelected: _setFlag,
-        itemBuilder: (ctx) => [
-          const PopupMenuItem(value: 0, child: Text('No flag')),
-          for (final e in flagColors.entries)
-            PopupMenuItem(
-              value: e.key,
-              child: Row(
-                children: [
-                  Icon(Icons.flag, color: e.value, size: 18),
-                  const SizedBox(width: 8),
-                  Text('Flag ${e.key}'),
-                ],
-              ),
-            ),
-        ],
+  Future<void> _openReviewSettings() async {
+    await Navigator.of(context).push(
+      AppSharedAxisRoute<void>(
+        transitionType: SharedAxisTransitionType.scaled,
+        page: const DecksSettingsScreen(),
       ),
-      if (_queue[_index].noteId != null)
-        IconButton(
-          icon: Icon(
-            _queue[_index].noteMarked ? Icons.star : Icons.star_border,
-            color: _queue[_index].noteMarked ? AppColors.primaryYellow : null,
-          ),
-          tooltip: 'Mark note',
-          onPressed: _toggleMarked,
-        ),
-      IconButton(
-        icon: Icon(
-          _queue[_index].reviewState?.suspended == true
-              ? Icons.play_circle_outline
-              : Icons.pause_circle_outline,
-        ),
-        tooltip: _queue[_index].reviewState?.suspended == true
-            ? 'Unsuspend'
-            : 'Suspend',
-        onPressed: _toggleSuspend,
-      ),
-      IconButton(
-        icon: const Icon(Icons.visibility_off_outlined),
-        tooltip: 'Bury card',
-        onPressed: _buryCurrentCard,
-      ),
-      IconButton(
-        icon: const Icon(Icons.layers_outlined),
-        tooltip: 'Bury siblings',
-        onPressed: _burySiblings,
-      ),
-      IconButton(
-        icon: const Icon(Icons.layers_clear_outlined),
-        tooltip: 'Unbury card',
-        onPressed: _unburyCard,
-      ),
-    ];
+    );
+    final settings = await ReviewSettingsStore.instance.load();
+    if (mounted) {
+      setState(() => _settings = settings);
+      _applyWakelock();
+    }
   }
+
   bool _hasCardState(FlashcardModel card) => card.flag != 0 || card.noteMarked;
 
   /// Flag / marked chips above the card; tapping one changes it.
@@ -1143,7 +1039,8 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   /// Phones: labelled card actions in a bottom sheet (opened from ⋯ in the
   /// app bar). Tablet / web show the same actions as icons in the bar.
   Future<void> _showCardActionsSheet() async {
-    if (!_hasCardOnScreen) return;
+    if (!_hasCardOnScreen) return _openReviewSettings();
+    final canUndo = _index > 0 && _index <= _queue.length && !_submitting;
     final card = _queue[_index];
     final suspended = card.reviewState?.suspended == true;
     final buried = card.reviewState?.buriedUntil?.isAfter(DateTime.now()) == true;
@@ -1171,6 +1068,13 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
+                    if (canUndo)
+                      AppSheetActionTile(
+                        icon: Icons.undo_rounded,
+                        title: 'Undo last answer',
+                        subtitle: 'Go back to the previous card',
+                        onTap: () => Navigator.pop(ctx, 'undo'),
+                      ),
                     AppSheetActionTile(
                       icon: Icons.flag_outlined,
                       iconColor: flagColor,
@@ -1219,6 +1123,12 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                       subtitle: 'Bring a buried card back today',
                       onTap: () => Navigator.pop(ctx, 'unbury'),
                     ),
+                    AppSheetActionTile(
+                      icon: Icons.tune_rounded,
+                      title: 'Review settings',
+                      subtitle: 'Limits, steps, buttons and display',
+                      onTap: () => Navigator.pop(ctx, 'settings'),
+                    ),
                   ],
                 ),
               ),
@@ -1230,6 +1140,10 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     if (!mounted || action == null) return;
 
     switch (action) {
+      case 'undo':
+        await _undo();
+      case 'settings':
+        await _openReviewSettings();
       case 'flag':
         await _showFlagSheet(card.flag);
       case 'mark':
@@ -1362,7 +1276,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
         _settings.showIntervalPreviews ? previewsMap[key] : null;
 
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1409,7 +1323,13 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                         children: [
                       _cardStateChips(card),
                       if (!imageOcclusion) _mediaWidget(card),
-                      GestureDetector(
+                      Stack(
+                        children: [
+                          _ghostCard(context, inset: 24, top: 0, front: false),
+                          _ghostCard(context, inset: 12, top: 10, front: true),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20),
+                            child: GestureDetector(
                         onDoubleTap:
                             _settings.gesturesEnabled
                                 ? () => _handleGestureAction(_settings.gestures.doubleTap)
@@ -1430,15 +1350,30 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                           width: double.infinity,
                           padding: EdgeInsets.all(imageOcclusion ? 8 : 24),
                           decoration: BoxDecoration(
-                            color: cardTheme?.backgroundColor ?? AppPageColors.fieldBgOf(context),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: card.flag != 0
-                                  ? (flagColorFor(card.flag) ?? AppColors.redWrong)
-                                  : (cardTheme?.accentColor ?? AppColors.brandPrimary)
-                                      .withValues(alpha: 0.2),
-                              width: card.flag != 0 ? 2 : 1,
-                            ),
+                            color: cardTheme?.backgroundColor ?? AppPageColors.cardBgOf(context),
+                            borderRadius: BorderRadius.circular(28),
+                            border: card.flag != 0
+                                ? Border.all(
+                                    color: flagColorFor(card.flag) ?? AppColors.redWrong,
+                                    width: 2,
+                                  )
+                                : Theme.of(context).brightness == Brightness.dark
+                                ? Border.all(color: AppPageColors.subtleBorderOf(context))
+                                : null,
+                            boxShadow: Theme.of(context).brightness == Brightness.dark
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: const Color(0xFF102326).withValues(alpha: 0.06),
+                                      blurRadius: 2,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                    BoxShadow(
+                                      color: AppColors.brandPrimary.withValues(alpha: 0.14),
+                                      blurRadius: 40,
+                                      offset: const Offset(0, 18),
+                                    ),
+                                  ],
                           ),
                           child:
                               imageOcclusion
@@ -1455,42 +1390,70 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
-                                      AnimatedSwitcher(
-                                        duration: AppMotion.duration(context, const Duration(milliseconds: 150)),
-                                        switchInCurve: AppMotion.decelerateCurve,
-                                        switchOutCurve: AppMotion.accelerateCurve,
-                                        child: BasicHtmlText(
-                                        key: ValueKey(_revealed),
-                                        html: _revealed ? _backHtml(card) : _frontHtml(card),
+                                      _cardSourceRow(card),
+                                      const SizedBox(height: 28),
+                                      // The question stays; the answer opens under a hairline.
+                                      BasicHtmlText(
+                                        html: _frontHtml(card),
                                         style: TextStyle(
-                                          fontSize: (cardTheme?.fontSize ?? 22) * textScale,
-                                          fontWeight: cardTheme?.fontWeight ?? FontWeight.w600,
+                                          fontSize: (cardTheme?.fontSize ?? 26) * textScale,
+                                          fontWeight: cardTheme?.fontWeight ?? FontWeight.w700,
                                           color: cardTheme?.textColor ??
-                                              Theme.of(context).textTheme.bodyLarge?.color,
-                                          height: 1.35,
+                                              AppPageColors.textPrimaryOf(context),
+                                          height: 1.3,
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
-                                      ),
+                                      if (_revealed) ...[
+                                        const SizedBox(height: 20),
+                                        Container(
+                                          height: 1,
+                                          margin: const EdgeInsets.symmetric(horizontal: 24),
+                                          color: AppPageColors.subtleBorderOf(context),
+                                        ),
+                                        const SizedBox(height: 20),
+                                        AppFadeIn(
+                                          duration: AppMotion.fast,
+                                          child: BasicHtmlText(
+                                            html: _backHtml(card),
+                                            style: TextStyle(
+                                              fontSize: 22 * textScale,
+                                              fontWeight: FontWeight.w400,
+                                              color: cardTheme?.textColor ??
+                                                  AppPageColors.textPrimaryOf(context),
+                                              height: 1.35,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                      const SizedBox(height: 12),
                                       if (_revealed && _answerParts(card).example.isNotEmpty) ...[
-                                        const SizedBox(height: 10),
-                                        Text(
-                                          'e.g. ${_answerParts(card).example}',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontSize: 15 * textScale,
-                                            fontStyle: FontStyle.italic,
-                                            color: (cardTheme?.textColor ??
-                                                    Theme.of(context).textTheme.bodyLarge?.color ??
-                                                    Colors.black87)
-                                                .withValues(alpha: 0.6),
-                                            height: 1.35,
+                                        const SizedBox(height: 8),
+                                        Center(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: AppPageColors.pageBgOf(context),
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              _answerParts(card).example,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontSize: 13 * textScale,
+                                                color: AppPageColors.subtitleOf(context),
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ],
                                   ),
                         ),
+                      ),
+                          ),
+                        ],
                       ),
                       if (_revealed && !imageOcclusion && _showsTranslationPanel(card))
                         _translationPanel(card),
@@ -1531,34 +1494,14 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 12),
-                      Text(
-                        typeAnswer
-                            ? (_revealed ? 'Rate how well you knew it' : 'Type your answer, then check')
-                            : imageOcclusion
-                            ? (_revealed ? 'Tap to hide · swipe to rate' : 'Tap the hidden region to reveal')
-                            : (_revealed ? 'Tap to hide answer' : 'Tap to reveal answer'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
-                      ),
-                      if (_settings.gesturesEnabled && !typeAnswer)
+                      if (typeAnswer && !_revealed)
                         Padding(
-                          padding: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.only(top: 12),
                           child: Text(
-                            'Gestures: ← Again · → Good · ↑ Reveal',
+                            'Type your answer, then check',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
+                            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
                           ),
-                        ),
-                      if (!typeAnswer && _revealed && !imageOcclusion)
-                        TextButton(
-                          onPressed: () => setState(() => _revealed = false),
-                          child: const Text('Hide answer'),
-                        ),
-                      if (imageOcclusion && _revealed)
-                        TextButton(
-                          onPressed: () => setState(() => _revealed = false),
-                          child: const Text('Hide answer'),
                         ),
                         ],
                       ),
@@ -1566,8 +1509,30 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                   ),
             ),
           ),
+          if (!_revealed && !typeAnswer) ...[
+            const SizedBox(height: 18),
+            SizedBox(
+              height: 56,
+              child: FilledButton(
+                onPressed: _revealCard,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppPageColors.accentOf(context),
+                  foregroundColor: AppPageColors.onAccentOf(context),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                ),
+                child: const Text('Show answer', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ],
           if (_revealed) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 18),
+            Text(
+              'How well did you know it?',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+            ),
+            const SizedBox(height: 10),
             AppFadeIn(
               // Quick (≤240 ms) and never blocks taps or shortcuts.
               delay: Duration.zero,
@@ -1579,7 +1544,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                   Expanded(
                     child: _ratingButton(
                       _settings.labelAgain,
-                      AppColors.redWrong,
+                      AppTint.danger,
                       'again',
                       preview('again'),
                     ),
@@ -1589,7 +1554,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                     Expanded(
                       child: _ratingButton(
                         _settings.labelHard,
-                        AppColors.orangeHard,
+                        AppTint.warning,
                         'hard',
                         preview('hard'),
                       ),
@@ -1599,7 +1564,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                   Expanded(
                     child: _ratingButton(
                       _settings.labelGood,
-                      AppPageColors.accentOf(context),
+                      AppTint.teal,
                       'good',
                       preview('good'),
                       emphasized: true,
@@ -1609,7 +1574,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                   Expanded(
                     child: _ratingButton(
                       _settings.labelEasy,
-                      AppColors.greenCorrect,
+                      AppTint.success,
                       'easy',
                       preview('easy'),
                     ),
@@ -1617,38 +1582,109 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                 ],
               ),
             ),
+            if (_settings.gesturesEnabled && !typeAnswer) ...[
+              const SizedBox(height: 10),
+              Text(
+                'Swipe left = Again · right = Good',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: AppPageColors.mutedOf(context)),
+              ),
+            ],
           ],
         ],
       ),
     );
   }
 
+  /// A ghost card peeking above the real one (the stack still to come).
+  Widget _ghostCard(BuildContext context, {required double inset, required double top, required bool front}) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final color = dark
+        ? Colors.white.withValues(alpha: front ? 0.08 : 0.05)
+        : (front ? const Color(0xFFE9F2F3) : const Color(0xFFDCEBEC));
+    return Positioned(
+      left: inset,
+      right: inset,
+      top: top,
+      height: 40,
+      child: DecoratedBox(
+        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(28)),
+      ),
+    );
+  }
+
+  /// Where the card came from, and a listen button when it has audio.
+  Widget _cardSourceRow(FlashcardModel card) {
+    final deck = (card.deckName ?? '').trim();
+    final fromSpeaking = deck.isNotEmpty && deckTint(deck) == AppTint.voice;
+    final tint = AppPageColors.tintOf(context, fromSpeaking ? AppTint.voice : AppTint.teal);
+    final url = card.mediaUrl?.trim() ?? '';
+    final lower = url.toLowerCase();
+    final hasAudio = url.isNotEmpty &&
+        !const ['.png', '.jpg', '.jpeg', '.gif', '.webp'].any(lower.endsWith);
+    return Row(
+      children: [
+        if (deck.isNotEmpty)
+          Flexible(
+            child: Container(
+              height: 30,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(color: tint.bg, borderRadius: BorderRadius.circular(999)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(deckIcon(deck), size: 14, color: tint.fg),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      fromSpeaking ? 'From your conversation' : deck,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: tint.fg),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        const Spacer(),
+        if (hasAudio)
+          Material(
+            color: AppPageColors.cardBgOf(context),
+            shape: CircleBorder(side: BorderSide(color: AppPageColors.subtleBorderOf(context))),
+            child: IconButton(
+              tooltip: 'Listen',
+              constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+              icon: Icon(Icons.volume_up_rounded, size: 20, color: AppPageColors.accentOf(context)),
+              onPressed: () => _playMedia(url),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _ratingButton(
     String label,
-    Color color,
+    AppTint tint,
     String rating,
     String? interval, {
     bool emphasized = false,
   }) {
     final scale = _settings.reviewButtonScale;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Tinted fill with a darker shade of the same hue as text, so each
-    // rating keeps its meaning without four loud solid blocks.
-    final textColor =
-        isDark ? color : Color.lerp(color, Colors.black, 0.45) ?? color;
+    final colors = AppPageColors.tintOf(context, tint);
     return AppPressScale(
       child: SizedBox(
         height: 64 * scale,
         child: TextButton(
           onPressed: () => _answer(rating),
           style: TextButton.styleFrom(
-            backgroundColor: color.withValues(alpha: isDark ? 0.18 : 0.14),
-            foregroundColor: textColor,
+            backgroundColor: colors.bg,
+            foregroundColor: colors.fg,
             padding: const EdgeInsets.symmetric(horizontal: 4),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
               side: emphasized
-                  ? BorderSide(color: color, width: 2)
+                  ? BorderSide(color: AppPageColors.accentOf(context), width: 2)
                   : BorderSide.none,
             ),
           ),
@@ -1659,22 +1695,14 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.fg),
               ),
               if (_settings.showIntervalPreviews && interval != null) ...[
                 const SizedBox(height: 2),
                 Text(
                   interval,
                   maxLines: 1,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: textColor.withValues(alpha: 0.8),
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 12, color: colors.fg.withValues(alpha: 0.85)),
                 ),
               ],
             ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../localization/app_localizations.dart';
+import '../ui_elements/modern_page_widgets.dart';
 
 class MobileForceUpdateScreen extends StatelessWidget {
   const MobileForceUpdateScreen({
@@ -33,7 +34,7 @@ class MobileForceUpdateScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppPageColors.pageBgOf(context),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),

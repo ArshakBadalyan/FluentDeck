@@ -108,8 +108,8 @@
     "language": "App-Sprache",
     "pages": {
       "speak": {
-        "title": "Sprich mit einem AI-Tutor",
-        "body": "Sprich laut oder tippe. Dein Tutor antwortet mit einer natürlichen Stimme, korrigiert dich sanft und merkt sich, was du besprichst.",
+        "title": "Sprich mit einem KI-Tutor, der nie urteilt",
+        "body": "Sprich laut oder tippe. Rio antwortet mit natürlicher Stimme und korrigiert deine Fehler sanft.",
         "chips": {
           "voice-or-text": "Stimme oder Text",
           "gentle-corrections": "Sanfte Korrekturen",
@@ -191,7 +191,29 @@
     "school-email-pick-school": "Schule auswählen",
     "school-email-pick-school-required": "Bitte wählen Sie Ihre Schule aus.",
     "teacher-invite-code": "Lehrer-Einladungscode",
-    "teacher-invite-code-hint": "Fragen Sie Ihre Schule nach dem jährlichen Lehrer-Code (ein Code pro Schule und Jahr)."
+    "teacher-invite-code-hint": "Fragen Sie Ihre Schule nach dem jährlichen Lehrer-Code (ein Code pro Schule und Jahr).",
+    "welcome-back": "Willkommen zurück",
+    "email-or-nickname": "E-Mail oder Spitzname",
+    "forgot-password-short": "Passwort vergessen?",
+    "sign-in-button": "Anmelden",
+    "or-continue-with": "oder weiter mit",
+    "new-here": "Neu hier?",
+    "create-account": "Konto erstellen",
+    "start-free": "Kostenlos lossprechen",
+    "sign-up-subtitle-minutes": "{count} Minuten mit Rio jeden Tag. Keine Karte nötig.",
+    "language-pair": "Ich spreche → Ich will sprechen",
+    "i-speak": "Ich spreche",
+    "i-want-to-speak": "Ich will sprechen",
+    "email": "E-Mail",
+    "password-min": "Mindestens {count} Zeichen.",
+    "create-account-button": "Konto erstellen",
+    "legal-before": "Mit dem Fortfahren stimmst du den ",
+    "terms": "Bedingungen",
+    "legal-and": " und der ",
+    "privacy": "Datenschutzerklärung",
+    "have-account": "Schon ein Konto?",
+    "sign-in-link": "Anmelden",
+    "legal-after": " zu."
   },
   "teacher": {
     "badge": "Lehrer",
@@ -465,7 +487,13 @@
     "subtitle": "Gib deine E-Mail ein, dann schicken wir dir einen Link zum Zurücksetzen.",
     "forgot-password": "Passwort vergessen",
     "send-email": "E-Mail senden",
-    "back-to-start": "Zurück zur Startseite"
+    "back-to-start": "Zurück zur Startseite",
+    "title": "Passwort zurücksetzen",
+    "subtitle-short": "Gib deine E-Mail ein, wir schicken dir einen Link.",
+    "send-link": "Link senden",
+    "check-inbox": "Schau in dein Postfach",
+    "check-inbox-body": "Der Link gilt 1 Stunde. Nicht da? Sieh im Spam nach.",
+    "enter-code": "Code eingeben"
   },
   "reset-password": {
     "reset-password": "Passwort zurücksetzen",

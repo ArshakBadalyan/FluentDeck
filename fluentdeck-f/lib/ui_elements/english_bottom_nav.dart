@@ -130,7 +130,7 @@ class _NavItem extends StatelessWidget {
               height: 30,
               decoration: BoxDecoration(
                 color: selected
-                    ? accent.withValues(alpha: 0.14)
+                    ? AppPageColors.tintOf(context, AppTint.teal).bg
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(999),
               ),
@@ -199,7 +199,7 @@ class EnglishSideNav extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Material(
-                  color: i == selected ? accent.withValues(alpha: 0.14) : Colors.transparent,
+                  color: i == selected ? AppPageColors.tintOf(context, AppTint.teal).bg : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(14),

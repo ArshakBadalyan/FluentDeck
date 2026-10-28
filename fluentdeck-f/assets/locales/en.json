@@ -108,8 +108,8 @@
     "language": "App language",
     "pages": {
       "speak": {
-        "title": "Speak with an AI tutor",
-        "body": "Talk out loud or type. Your tutor answers in a natural voice, gently corrects your mistakes and remembers what you talk about.",
+        "title": "Speak with an AI tutor who never judges",
+        "body": "Talk out loud or type. Rio answers in a natural voice and gently fixes your mistakes.",
         "chips": {
           "voice-or-text": "Voice or text",
           "gentle-corrections": "Gentle corrections",
@@ -191,7 +191,29 @@
     "school-email-pick-school": "Select your school",
     "school-email-pick-school-required": "Please select your school to continue.",
     "teacher-invite-code": "Teacher invite code",
-    "teacher-invite-code-hint": "Ask your school for the annual teacher code (one code per school per year)."
+    "teacher-invite-code-hint": "Ask your school for the annual teacher code (one code per school per year).",
+    "welcome-back": "Welcome back",
+    "email-or-nickname": "Email or nickname",
+    "forgot-password-short": "Forgot password?",
+    "sign-in-button": "Sign in",
+    "or-continue-with": "or continue with",
+    "new-here": "New here?",
+    "create-account": "Create an account",
+    "start-free": "Start speaking free",
+    "sign-up-subtitle-minutes": "{count} minutes with Rio every day. No card needed.",
+    "language-pair": "I speak → I want to speak",
+    "i-speak": "I speak",
+    "i-want-to-speak": "I want to speak",
+    "email": "Email",
+    "password-min": "Use at least {count} characters.",
+    "create-account-button": "Create account",
+    "legal-before": "By continuing you agree to the ",
+    "terms": "Terms",
+    "legal-and": " and ",
+    "privacy": "Privacy Policy",
+    "have-account": "Have an account?",
+    "sign-in-link": "Sign in",
+    "legal-after": "."
   },
   "teacher": {
     "badge": "Teacher",
@@ -465,7 +487,13 @@
     "subtitle": "Enter your email and we'll send you a link to reset it.",
     "forgot-password": "Forgot Password ?",
     "send-email": "Send email",
-    "back-to-start": "Back to start page"
+    "back-to-start": "Back to start page",
+    "title": "Reset your password",
+    "subtitle-short": "Enter your email and we'll send you a link.",
+    "send-link": "Send reset link",
+    "check-inbox": "Check your inbox",
+    "check-inbox-body": "The link works for 1 hour. Not there? Look in spam.",
+    "enter-code": "Enter the code"
   },
   "reset-password": {
     "reset-password": "Reset Password",

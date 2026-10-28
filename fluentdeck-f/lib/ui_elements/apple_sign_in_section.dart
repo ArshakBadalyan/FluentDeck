@@ -139,7 +139,7 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
         ],
         if (_loading)
           const SizedBox(
-            height: 50,
+            height: 52,
             child: Center(
               child: SizedBox(
                 width: 24,
@@ -151,11 +151,13 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
         else if (showWebHint)
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: 52,
             child: OutlinedButton.icon(
               onPressed: widget.enabled ? _showWebUnavailableMessage : null,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppPageColors.textPrimaryOf(context),
+                backgroundColor: AppPageColors.cardBgOf(context),
+                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -168,22 +170,24 @@ class _AppleSignInSectionState extends State<AppleSignInSection> {
         else if (!kIsWeb && (Platform.isIOS || Platform.isMacOS))
           SignInWithAppleButton(
             onPressed: widget.enabled ? _handleAppleSignIn : () {},
-            // Apple's own light/dark button (not Flutter's theme) — black
-            // reads well on a light page, white on a dark one.
+            // Apple's own button style: white with an outline on a light
+            // page (like the Google button beside it), white on a dark one.
             style: Theme.of(context).brightness == Brightness.dark
                 ? SignInWithAppleButtonStyle.white
-                : SignInWithAppleButtonStyle.black,
+                : SignInWithAppleButtonStyle.whiteOutlined,
             borderRadius: BorderRadius.circular(14),
-            height: 50,
+            height: 52,
           )
         else
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: 52,
             child: OutlinedButton.icon(
               onPressed: widget.enabled ? _handleAppleSignIn : null,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppPageColors.textPrimaryOf(context),
+                backgroundColor: AppPageColors.cardBgOf(context),
+                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -213,7 +217,7 @@ class _OrDividerRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             label,
-            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+            style: TextStyle(fontSize: 13, color: AppPageColors.mutedOf(context)),
           ),
         ),
         Expanded(child: Divider(color: AppPageColors.subtleBorderOf(context))),
@@ -234,9 +238,7 @@ class AuthOrDivider extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 16),
       child: _OrDividerRow(
-        label: isSignUp
-            ? context.tr('login-register.sign-up-using')
-            : context.tr('login-register.sign-in-using'),
+        label: context.tr('login-register.or-continue-with'),
       ),
     );
   }

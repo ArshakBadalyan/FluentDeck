@@ -7,8 +7,6 @@ import '../../models/speaking_session_context.dart';
 import '../../services/custom_role_play_service.dart';
 import '../../widgets/tutor_scene.dart';
 import '../../services/speaking_content_service.dart';
-import '../../services/speaking_scores_service.dart';
-import '../../services/speaking_session_service.dart';
 import '../../services/subscription_service.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
@@ -31,23 +29,10 @@ class SpeakingRolePlayTab extends StatefulWidget {
 }
 
 class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
-  static const _filters = [
-    ('all', 'All'),
-    ('custom', 'Custom'),
-    ('daily_life', 'Daily life'),
-    ('career', 'Career'),
-    ('travel', 'Travel'),
-    ('relationships', 'Relationships'),
-    ('language_testing', 'Language testing'),
-    ('business', 'Business'),
-  ];
-
-  int _filterIndex = 0;
   List<ConversationPromptModel> _scenarios = [];
   ConversationPromptModel? _selected;
   bool _loading = true;
   String? _error;
-  Map<String, int?> _scoreCache = {};
   int _customCount = 0;
   bool _isPremium = false;
 
@@ -66,10 +51,8 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
       _error = null;
     });
     try {
-      await SpeakingSessionService.instance.refreshScoresFromServer();
-      final category = _filters[_filterIndex].$1;
       final catalog = await SpeakingContentService.instance
-          .fetchRolePlayCatalog(category: category);
+          .fetchRolePlayCatalog(category: 'all');
       final custom = await CustomRolePlayService.instance.fetchAll();
       final status = await SubscriptionService.instance.fetchStatus();
       // Free users only see their oldest custom role-plays, up to the limit.
@@ -87,12 +70,6 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
               )
               .toList();
 
-      final scores = <String, int?>{};
-      for (final s in scenarios) {
-        scores[s.referenceKey] =
-            await SpeakingScoresService.instance.getScore(s.referenceKey);
-      }
-
 
       if (!mounted) return;
       setState(() {
@@ -104,7 +81,6 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
                 ? _selected
                 : firstUnlocked(scenarios, _isLocked) ??
                     (scenarios.isNotEmpty ? scenarios.first : null);
-        _scoreCache = scores;
         _loading = false;
       });
     } catch (e) {
@@ -168,7 +144,6 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
       situation: result.situation,
     );
     if (!mounted) return;
-    setState(() => _filterIndex = _filters.indexWhere((f) => f.$1 == 'custom'));
     await _load();
     setState(() => _selected = prompt);
   }
@@ -200,106 +175,320 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            _filters[_filterIndex].$1 == 'custom'
-                ? 'No custom role-plays yet.\nTap "Create custom role-play" above.'
-                : 'No scenarios in this category.',
+            'No scenarios yet.',
             textAlign: TextAlign.center,
           ),
         ),
       );
     }
 
+    final featured = firstUnlocked(_scenarios, _isLocked);
+    final rest = _scenarios.where((s) => s != featured).toList();
     return AppLoadingSwitcher(
       loading: false,
       child: RefreshIndicator(
-      onRefresh: _load,
-      color: AppColors.brandPrimary,
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-        itemCount: _scenarios.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, index) {
-          final scenario = _scenarios[index];
-          return AppStaggeredFadeIn(
-                          index: index,
-                          child: SpeakingSelectionCard(
-            title: scenario.displayTitle,
-            subtitle: scenario.rolesSubtitle,
-            icon: resolveSpeakingListIcon(
-              title: scenario.displayTitle,
-              iconKey: scenario.iconKey,
+        onRefresh: _load,
+        color: AppColors.brandPrimary,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          children: [
+            if (featured != null) ...[
+              AppStaggeredFadeIn(
+                index: 0,
+                child: _FeaturedRolePlay(
+                  scenario: featured,
+                  onTap: () => _start(featured),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            AppStaggeredFadeIn(
+              index: 1,
+              child: _GroupedList(
+                children: [
+                  for (final scenario in rest)
+                    _RolePlayRow(
+                      scenario: scenario,
+                      locked: _isLocked(scenario),
+                      onTap: () => _start(scenario),
+                      onDelete: scenario.isLocal ? () => _deleteCustom(scenario) : null,
+                    ),
+                  _WriteYourOwnRow(onTap: _showCreateDialog),
+                ],
+              ),
             ),
-            score: _scoreCache[scenario.referenceKey],
-            selected: _selected?.referenceKey == scenario.referenceKey,
-            isPremiumLocked: _isLocked(scenario),
-            trailing:
-                scenario.isLocal
-                    ? IconButton(
-                      tooltip: 'Delete',
-                      icon: Icon(Icons.delete_outline, color: AppPageColors.subtitleOf(context)),
-                      onPressed: () => _deleteCustom(scenario),
-                    )
-                    : null,
-            onTap: () {
-              if (_isLocked(scenario)) {
-                showSpeakingPremiumSnackBar(context);
-                return;
-              }
-              setState(() => _selected = scenario);
-            },
-          ),
-                        );
-        },
+          ],
+        ),
       ),
-    ),
     );
   }
 
+  void _start(ConversationPromptModel scenario) {
+    if (_isLocked(scenario)) {
+      showSpeakingPremiumSnackBar(context);
+      return;
+    }
+    widget.onStart(SpeakingContentService.instance.rolePlaySessionFrom(scenario));
+  }
+
+  @override
+  Widget build(BuildContext context) => _buildList();
+}
+
+/// "B1 · with hiring manager" style detail for a scenario.
+String _rolePlayDetail(ConversationPromptModel s, {bool long = false}) {
+  final level = s.difficultyLevel.trim().toUpperCase();
+  final tutor = s.tutorRole.trim();
+  final parts = <String>[
+    if (long && tutor.isNotEmpty) 'Rio plays the ${tutor.toLowerCase()}',
+    if (level.isNotEmpty) level,
+    if (!long && tutor.isNotEmpty) 'with ${tutor.toLowerCase()}',
+  ];
+  return parts.isEmpty ? s.scenario : parts.join(' · ');
+}
+
+/// The picture card at the top: the first scenario, ready to start.
+class _FeaturedRolePlay extends StatelessWidget {
+  const _FeaturedRolePlay({required this.scenario, required this.onTap});
+
+  final ConversationPromptModel scenario;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SpeakingFilterChips(
-          labels: _filters.map((f) => f.$2).toList(),
-          selectedIndex: _filterIndex,
-          onSelected: (index) async {
-            setState(() => _filterIndex = index);
-            await _load();
-          },
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-          child: _RolePlayIntro(onCreate: _showCreateDialog),
-        ),
-        if (!_isPremium)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-            child: Text(
-              '${_customCount.clamp(0, kFreeCustomRolePlayLimit)} of $kFreeCustomRolePlayLimit free custom role-play used',
-              style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
+    return AppPressScale(
+      child: Material(
+        borderRadius: BorderRadius.circular(24),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            height: 168,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(TutorScene.online.asset, fit: BoxFit.cover, excludeFromSemantics: true),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Color(0xD904191B), Color(0x0004191B)],
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.voice,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'Start here',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          scenario.displayTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _rolePlayDetail(scenario, long: true),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, color: Color(0xFFCFEDEF)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        const SizedBox(height: 8),
-        Expanded(child: _buildList()),
-        SpeakingStartButton(
-          label: 'Start Role-Play',
-          enabled: _selected != null && !_isLocked(_selected!),
-          onPressed:
-              _selected == null || _isLocked(_selected!)
-                  ? null
-                  : () {
-                    widget.onStart(
-                      SpeakingContentService.instance.rolePlaySessionFrom(
-                        _selected!,
-                      ),
-                    );
-                  },
         ),
-      ],
+      ),
     );
   }
+}
+
+/// One white card holding rows split by hairlines.
+class _GroupedList extends StatelessWidget {
+  const _GroupedList({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) Divider(height: 1, thickness: 1, color: AppPageColors.rowDividerOf(context)),
+              children[i],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RolePlayRow extends StatelessWidget {
+  const _RolePlayRow({
+    required this.scenario,
+    required this.locked,
+    required this.onTap,
+    this.onDelete,
+  });
+
+  final ConversationPromptModel scenario;
+  final bool locked;
+  final VoidCallback onTap;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: locked ? 0.55 : 1,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              SpeakingListIconBadge(
+                icon: resolveSpeakingListIcon(title: scenario.displayTitle, iconKey: scenario.iconKey),
+                title: scenario.displayTitle,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      scenario.displayTitle,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppPageColors.textPrimaryOf(context),
+                      ),
+                    ),
+                    Text(
+                      _rolePlayDetail(scenario),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                    ),
+                  ],
+                ),
+              ),
+              if (onDelete != null)
+                IconButton(
+                  tooltip: 'Delete',
+                  icon: Icon(Icons.delete_outline, color: AppPageColors.subtitleOf(context)),
+                  onPressed: onDelete,
+                ),
+              Icon(
+                locked ? Icons.lock_outline : Icons.chevron_right_rounded,
+                size: locked ? 18 : 20,
+                color: AppPageColors.mutedOf(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Last row: a dashed "+" tile and "Write your own scenario".
+class _WriteYourOwnRow extends StatelessWidget {
+  const _WriteYourOwnRow({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = AppPageColors.tintOf(context, AppTint.teal);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            CustomPaint(
+              painter: _DashedRRectPainter(color: tint.fg.withValues(alpha: 0.45)),
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(Icons.add_rounded, size: 22, color: tint.fg),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Write your own scenario',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: tint.fg),
+                  ),
+                  Text(
+                    'Any situation you want to rehearse',
+                    style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DashedRRectPainter extends CustomPainter {
+  _DashedRRectPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius((Offset.zero & size).deflate(1), const Radius.circular(14)));
+    for (final metric in path.computeMetrics()) {
+      for (double d = 0; d < metric.length; d += 9) {
+        canvas.drawPath(metric.extractPath(d, d + 5), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedRRectPainter old) => old.color != color;
 }
 
 class _RolePlayDraft {
@@ -589,94 +778,6 @@ class _CreateRolePlaySheetState extends State<_CreateRolePlaySheet> {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Picture card explaining role-plays, with "Write your own scenario" under it.
-class _RolePlayIntro extends StatelessWidget {
-  const _RolePlayIntro({required this.onCreate});
-
-  final VoidCallback onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = AppPageColors.accentOf(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: SizedBox(
-            height: 128,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.asset(
-                  TutorScene.online.asset,
-                  fit: BoxFit.cover,
-                  alignment: const Alignment(0, -0.3),
-                  excludeFromSemantics: true,
-                ),
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [Color(0xD904191B), Color(0x0004191B)],
-                    ),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.all(14),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Rehearse real moments',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Rio plays the other person. Pick a scene below.',
-                        style: TextStyle(fontSize: 13, color: Color(0xFFCFEDEF)),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Material(
-          color: AppPageColors.cardBgOf(context),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-            side: BorderSide(color: accent.withValues(alpha: 0.45), width: 1.5),
-          ),
-          child: InkWell(
-            onTap: onCreate,
-            customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                children: [
-                  Icon(Icons.add_rounded, color: accent),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Write your own scenario',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: accent),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

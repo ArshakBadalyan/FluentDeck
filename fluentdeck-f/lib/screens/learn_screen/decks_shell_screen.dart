@@ -66,11 +66,14 @@ class DecksShellScreenState extends State<DecksShellScreen> with WidgetsBindingO
 
   @override
   Widget build(BuildContext context) {
-    final dark = _settings.darkMode;
-    final bg = dark ? const Color(0xFF121212) : AppPageColors.pageBg;
+    // "Dark mode (Decks)" forces dark here; otherwise follow the app theme.
+    final theme = _settings.darkMode ? AppTheme.dark : Theme.of(context);
+    final bg = theme.brightness == Brightness.dark
+        ? AppPageColors.darkPageBg
+        : AppPageColors.pageBg;
 
     return Theme(
-      data: dark ? AppTheme.dark : Theme.of(context),
+      data: theme,
       child: ColoredBox(
         color: bg,
         child: HandoffTabBarView(

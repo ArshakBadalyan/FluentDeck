@@ -3,6 +3,7 @@ import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/utils/html_text_utils.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/data/decks_help_content.dart';
 import 'package:fluentdeck/models/flashcard_note_model.dart';
@@ -433,7 +434,11 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     }
   }
 
-  List<FlashcardModel> get _visibleCards => _cards;
+  /// "Due" quick chip (phone): due cards only, filtered on the device.
+  bool _dueOnly = false;
+
+  List<FlashcardModel> get _visibleCards =>
+      _dueOnly ? _cards.where((c) => formatDueLabel(c) == 'due').toList() : _cards;
 
   void _toggleSelectMode() {
     setState(() {
@@ -906,67 +911,121 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
   }
 
   Widget _compactToolbar() {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+    );
+    final flagged = _flagFilters.isNotEmpty;
+    final suspended = _stateFilters.contains('suspended');
+    final noQuick = !_dueOnly && !flagged && !suspended;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 2, 4),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(20, 4, 8, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: TextField(
-              controller: _searchCtrl,
-              style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'Search cards…',
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
-                prefixIcon: const Icon(Icons.search, size: 20),
-                prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.refresh, size: 18),
-                  visualDensity: VisualDensity.compact,
-                  tooltip: 'Refresh',
-                  onPressed: _load,
-                ),
-                filled: true,
-                fillColor: AppPageColors.fieldBgOf(context),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppPageColors.subtleBorderOf(context)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppColors.brandPrimary.withValues(alpha: 0.45)),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: TextField(
+                    controller: _searchCtrl,
+                    style: TextStyle(fontSize: 15, color: AppPageColors.textPrimaryOf(context)),
+                    textAlignVertical: TextAlignVertical.center,
+                    decoration: InputDecoration(
+                      hintText: 'Search ${_cards.length} card${_cards.length == 1 ? '' : 's'}',
+                      hintStyle: TextStyle(fontSize: 15, color: AppPageColors.mutedOf(context)),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+                      prefixIcon: Icon(Icons.search_rounded, size: 20, color: AppPageColors.mutedOf(context)),
+                      prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      filled: true,
+                      fillColor: AppPageColors.cardBgOf(context),
+                      border: border,
+                      enabledBorder: border,
+                      focusedBorder: border.copyWith(
+                        borderSide: BorderSide(color: AppPageColors.accentOf(context), width: 2),
+                      ),
+                    ),
+                    onSubmitted: (_) => _triggerSearchNow(),
+                  ),
                 ),
               ),
-              onSubmitted: (_) => _triggerSearchNow(),
+              const SizedBox(width: 4),
+              AppFilterButton(
+                active: _activeFilterCount > 0,
+                count: _activeFilterCount,
+                onPressed: _showFiltersSheet,
+                size: 40,
+              ),
+              IconButton(
+                icon: Icon(Icons.more_vert, size: 22, color: AppPageColors.subtitleOf(context)),
+                tooltip: 'Options',
+                onPressed: _showOptionsMenu,
+              ),
+              IconButton(
+                icon: Icon(Icons.add_rounded, size: 24, color: AppPageColors.accentOf(context)),
+                tooltip: 'Add note',
+                onPressed: _addNote,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _quickChip('All decks', noQuick, () {
+                  setState(() {
+                    _dueOnly = false;
+                    _flagFilters = {};
+                    _stateFilters = {..._stateFilters}..remove('suspended');
+                  });
+                  _load();
+                }),
+                _quickChip('Due', _dueOnly, () => setState(() => _dueOnly = !_dueOnly)),
+                _quickChip('Flagged', flagged, () {
+                  _applyFlagFilter(flagged ? <int>{} : flagColors.keys.toSet());
+                }),
+                _quickChip('Suspended', suspended, _toggleSuspendedFilter),
+              ],
             ),
           ),
-          AppFilterButton(
-            active: _activeFilterCount > 0,
-            count: _activeFilterCount,
-            onPressed: _showFiltersSheet,
-            size: 36,
-          ),
-          if (_hasAnyFilters) ...[
-            const SizedBox(width: 4),
-            AppClearFiltersButton(onPressed: _clearAllFilters, size: 36),
-          ],
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.more_vert, size: 22),
-            tooltip: 'Options',
-            onPressed: _showOptionsMenu,
-          ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.add, size: 22, color: AppColors.brandPrimary),
-            tooltip: 'Add note',
-            onPressed: _addNote,
-          ),
         ],
+      ),
+    );
+  }
+
+  /// 34 dp pill; selected = solid teal.
+  Widget _quickChip(String label, bool selected, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Material(
+        color: selected ? AppPageColors.accentOf(context) : AppPageColors.cardBgOf(context),
+        shape: StadiumBorder(
+          side: selected ? BorderSide.none : BorderSide(color: AppPageColors.subtleBorderOf(context)),
+        ),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Semantics(
+            button: true,
+            selected: selected,
+            child: Container(
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  color: selected ? AppPageColors.onAccentOf(context) : AppPageColors.textPrimaryOf(context),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1644,20 +1703,16 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     final narrow = maxWidth < 560;
 
     if (narrow) {
-      const tableInset = 12.0;
+      const tableInset = 20.0;
       final viewportWidth = MediaQuery.sizeOf(context).width;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(tableInset, 0, tableInset, 8),
-            child: _mobileTableHeader(),
-          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: tableInset),
               child: ReorderableListView.builder(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 96),
                 buildDefaultDragHandles: false,
                 itemCount: _visibleCards.length,
                 onReorder: _onReorder,
@@ -1824,86 +1879,39 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     );
   }
 
-  Widget _mobileTableHeader() {
-    TextStyle headerStyle({bool active = false}) => TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-      color: active ? AppPageColors.accentOf(context) : AppPageColors.subtitleOf(context),
-    );
-
-    Widget headerCell(String label, CardBrowserSortField field, {double? width}) {
-      final active = _isSortedOn(field);
-      final cell = InkWell(
-        onTap: () => _applySort(field),
-        child: _sortHeaderLabel(
-          label,
-          field,
-          style: headerStyle(active: active),
-        ),
-      );
-      if (width != null) {
-        return SizedBox(width: width, child: cell);
-      }
-      return cell;
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: _browserHeaderDecoration(),
-      child: Row(
-        children: [
-          SizedBox(
-            width: _dragColumnWidth,
-            child: Icon(
-              Icons.drag_indicator_rounded,
-              size: 16,
-              color: AppPageColors.subtitleOf(context),
-            ),
-          ),
-          if (_selectMode)
-            SizedBox(
-              width: 28,
-              child: Checkbox(
-                value: _selectAllCheckboxValue,
-                tristate: true,
-                activeColor: AppColors.brandPrimary,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-                onChanged: (_) => _toggleSelectAllVisible(),
-              ),
-            ),
-          const SizedBox(width: 20),
-          Expanded(child: headerCell('Question', CardBrowserSortField.front)),
-          headerCell('Type', CardBrowserSortField.type, width: 72),
-          headerCell('Due', CardBrowserSortField.due, width: 56),
-          // The deck is fixed for this whole screen when opened scoped to
-          // one deck (e.g. from that deck's "Browse cards") — repeating its
-          // name on every single row added nothing, so this slot shows the
-          // card's SM-2 state (New/Learning/Review/Suspended) instead,
-          // which "Due" doesn't always make visible on its own (it shows a
-          // countdown once a card is scheduled, not the state name). Deck
-          // name itself is shown once, in the app bar, instead of per row.
-          if (_fixedDeckScope)
-            headerCell('State', CardBrowserSortField.state, width: 72)
-          else
-            headerCell('Deck', CardBrowserSortField.deck, width: 56),
-          const SizedBox(width: 32),
-        ],
-      ),
-    );
-  }
-
   Widget _mobileDenseRow(FlashcardModel card, int index) {
     final selected = _selected.contains(card.id);
     final flagColor = flagColorFor(card.flag);
+    final first = index == 0;
+    final last = index == _visibleCards.length - 1;
+    final radius = BorderRadius.vertical(
+      top: Radius.circular(first ? 20 : 0),
+      bottom: Radius.circular(last ? 20 : 0),
+    );
+    final side = BorderSide(color: AppPageColors.subtleBorderOf(context));
+    final answer = stripHtml(card.isImageOcclusion ? '' : card.back).trim();
+    final deck = _fixedDeckScope ? '' : _deckLabel(card);
+    final detail = [if (answer.isNotEmpty) answer, if (deck.isNotEmpty && deck != '—') deck].join(' · ');
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+    // The rows read as one white card: outer edges on every row, rounded
+    // corners on the first and last, hairlines between.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: selected
+            ? AppPageColors.tintOf(context, AppTint.teal).bg
+            : AppPageColors.cardBgOf(context),
+        borderRadius: radius,
+        border: Border(
+          left: side,
+          right: side,
+          top: first ? side : BorderSide.none,
+          bottom: last ? side : BorderSide(color: AppPageColors.rowDividerOf(context)),
+        ),
+      ),
       child: Material(
-        color: Colors.transparent,
+        type: MaterialType.transparency,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: radius,
           onTap: () {
             if (_selectMode) {
               _toggleSelected(card.id);
@@ -1919,63 +1927,57 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
               });
             }
           },
-          child: Ink(
-            decoration: _browserRowDecoration(selected: selected),
-            child: SizedBox(
-              width: double.infinity,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                child: Row(
-            children: [
-              _dragHandle(index),
-              if (_selectMode)
-                SizedBox(
-                  width: 28,
-                  child: Checkbox(
-                    value: selected,
-                    activeColor: AppColors.brandPrimary,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    onChanged: (_) => _toggleSelected(card.id),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 4, 14),
+            child: Row(
+              children: [
+                if (_selectMode)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: SizedBox(
+                      width: 24,
+                      child: Checkbox(
+                        value: selected,
+                        activeColor: AppPageColors.accentOf(context),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        onChanged: (_) => _toggleSelected(card.id),
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (flagColor != null) ...[
+                            Icon(Icons.flag_rounded, size: 14, color: flagColor),
+                            const SizedBox(width: 4),
+                          ] else if (card.noteMarked) ...[
+                            Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade700),
+                            const SizedBox(width: 4),
+                          ],
+                          Expanded(
+                            child: QuestionCell(card: card, fontSize: 15, fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                      if (detail.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          detail,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-              SizedBox(
-                width: 20,
-                child:
-                    flagColor != null
-                        ? Icon(Icons.flag, size: 14, color: flagColor)
-                        : card.noteMarked
-                        ? Icon(Icons.bookmark, size: 14, color: Colors.amber.shade700)
-                        : null,
-              ),
-              Expanded(
-                child: QuestionCell(card: card, fontSize: 13, fontWeight: FontWeight.w500),
-              ),
-              SizedBox(
-                width: 72,
-                child: Text(
-                  cardTypeLabel(card.cardType),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
-                ),
-              ),
-              SizedBox(
-                width: 56,
-                child: CardDueLabel(card: card, width: 56),
-              ),
-              SizedBox(
-                width: _fixedDeckScope ? 72 : 56,
-                child: Text(
-                  _fixedDeckScope ? cardStateLabel(card) : _deckLabel(card),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
-                ),
-              ),
-              SizedBox(
-                width: 32,
-                child: _CardRowMenu(
+                const SizedBox(width: 12),
+                CardStatusChip(card: card),
+                _CardRowMenu(
                   card: card,
                   decks: _decks,
                   noteTypes: _noteTypes,
@@ -1984,14 +1986,11 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
                       ({required bool down}) =>
                           _repositionInBrowserList(card.id, down: down),
                 ),
-              ),
-            ],
-              ),
+              ],
             ),
           ),
         ),
       ),
-    ),
     );
   }
 

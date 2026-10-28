@@ -1,23 +1,48 @@
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/config/brand_config.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/data/decks_help_content.dart';
 import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/flashcard_stats_model.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/widgets/tutor_scene.dart';
 import 'package:fluentdeck/services/flashcard_stats_export_service.dart';
 import 'package:fluentdeck/screens/learn_screen/review_log_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
 import 'package:fluentdeck/services/decks_help_hints_store.dart';
-import 'package:fluentdeck/services/main_navigation_coordinator.dart';
-import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/utils/statistics_labels.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/widgets/activity_preview_list.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
+
+/// Statistics as its own page (Deck overview → Statistics), with a back arrow.
+class StatisticsPage extends StatelessWidget {
+  const StatisticsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppPageColors.pageBgOf(context),
+      appBar: AppBar(
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.chevron_left_rounded, size: 28),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: const Text('Statistics', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+      ),
+      body: const StatisticsScreen(),
+    );
+  }
+}
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -34,7 +59,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   List<FlashcardDeckModel> _decks = const [];
 
   int? _deckFilter;
-  String _range = '12m';
+  String _range = '30d';
 
   @override
   void initState() {
@@ -124,12 +149,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     }
 
     final stats = _stats ?? const FlashcardDetailedStats();
-    final scopeLabel = StatisticsLabels.summary(
-      deckFilter: _deckFilter,
-      range: _range,
-      decks: _decks,
-    );
-    final matureRetention = stats.retention.mature;
 
     return AppLoadingSwitcher(
       loading: false,
@@ -138,116 +157,50 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         onRefresh: _load,
         color: AppColors.brandPrimary,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
           children: [
-            _DeckStatsHero(
-              reviewStreak: stats.reviewStreakDays,
-              todayReviews: stats.today.reviews,
-              todayDuration: stats.today.durationLabel,
+            _ScopeRangeRow(
+              scope: StatisticsLabels.scopeLabelForFilter(_deckFilter, _decks),
+              range: StatisticsLabels.rangeShort(_range),
+              onScope: _pickScope,
+              onRange: _pickRange,
             ),
-            const SizedBox(height: 16),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final tiles = [
-                  _QuickMetricTile(
-                    icon: Icons.style_outlined,
-                    label: 'Total cards',
-                    value: '${stats.totalCards}',
-                    color: AppColors.brandPrimary,
-                  ),
-                  _QuickMetricTile(
-                    icon: Icons.replay_rounded,
-                    label: 'Reviews',
-                    value: '${stats.totalReviewsInRange}',
-                    color: const Color(0xFF2196F3),
-                  ),
-                  _QuickMetricTile(
-                    icon: Icons.check_circle_outline_rounded,
-                    label: 'Mature retention',
-                    value: matureRetention == null ? '—' : '$matureRetention%',
-                    color: AppColors.greenCorrect,
-                  ),
-                  _QuickMetricTile(
-                    icon: Icons.fiber_new_rounded,
-                    label: 'New cards',
-                    value: '${stats.cardCounts.newCount}',
-                    color: const Color(0xFFFF9800),
-                  ),
-                ];
-                // One row on tablet/web; 2×2 on phones.
-                final perRow = constraints.maxWidth >= 600 ? 4 : 2;
-                return Column(
-                  children: [
-                    for (var i = 0; i < tiles.length; i += perRow) ...[
-                      if (i > 0) const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          for (var j = i; j < i + perRow; j++) ...[
-                            if (j > i) const SizedBox(width: 12),
-                            Expanded(child: tiles[j]),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            _FilterCard(
-              scopeLabel: scopeLabel,
-              scopeDropdown: _scopeDropdown,
-              rangeDropdown: _rangeDropdown,
-              onExport: _exportPdf,
-            ),
-            const SizedBox(height: 16),
-            _StatsSection(
-              title: 'Today',
-              icon: Icons.today_outlined,
-              subtitle: stats.today.reviews > 0
-                  ? '${(stats.today.avgDurationMs / 1000).toStringAsFixed(1)}s average per card'
-                  : null,
-              child: Text(
-                stats.today.reviews == 0
-                    ? 'No cards studied yet today — start a review session to build momentum.'
-                    : 'Studied ${stats.today.reviews} card${stats.today.reviews == 1 ? '' : 's'} in ${stats.today.durationLabel} today.',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: AppPageColors.subtitleOf(context),
-                  height: 1.45,
+            const SizedBox(height: 12),
+            _SummaryCards(stats: stats, range: _range),
+            const SizedBox(height: 12),
+            _ReviewsPerDayCard(series: stats.reviewsByDay),
+            const SizedBox(height: 12),
+            _CardStatesCard(counts: stats.cardCounts),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton(
+                onPressed: _exportPdf,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: AppPageColors.cardBgOf(context),
+                  foregroundColor: AppPageColors.textPrimaryOf(context),
+                  side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
+                child: const Text('Export as PDF'),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 28),
+            Text(
+              'More statistics',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppPageColors.textPrimaryOf(context),
+              ),
+            ),
+            const SizedBox(height: 12),
             _StatsSection(
               title: 'Activity calendar',
               icon: Icons.calendar_month_outlined,
               subtitle: 'Reviews per day',
               child: _CalendarHeatmap(calendar: stats.calendar),
-            ),
-            const SizedBox(height: 16),
-            _StatsSection(
-              title: 'Daily reviews',
-              icon: Icons.bar_chart_rounded,
-              subtitle: 'Questions answered per day',
-              child: SizedBox(
-                height: 160,
-                child: _LineChartSeries(
-                  series: stats.reviewsByDay,
-                  lineColor: const Color(0xFF2196F3),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _StatsSection(
-              title: 'Card breakdown',
-              icon: Icons.pie_chart_outline_rounded,
-              subtitle: '${stats.totalCards} cards in scope',
-              child: SizedBox(
-                height: 180,
-                child: _CardCountsPie(counts: stats.cardCounts),
-              ),
             ),
             const SizedBox(height: 16),
             _StatsSection(
@@ -354,255 +307,37 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Widget _scopeDropdown({required bool compact}) {
-    return AppSelectField<int?>(
-      label: 'Scope',
-      value: _deckFilter,
-      compact: compact,
-      showLabel: !compact,
+  Future<void> _pickScope() async {
+    final picked = await showAppSelectSheet<int?>(
+      context: context,
+      title: 'Statistics for',
+      selected: _deckFilter,
       options: [
-        const AppSelectOption<int?>(
-          value: null,
-          label: StatisticsLabels.collectionScope,
-        ),
-        ..._decks.map(
-          (d) => AppSelectOption<int?>(value: d.id, label: 'Deck: ${d.name}'),
-        ),
+        const AppSelectOption<int?>(value: null, label: 'All decks'),
+        for (final d in _decks) AppSelectOption<int?>(value: d.id, label: d.name),
       ],
-      onChanged: (v) {
-        setState(() => _deckFilter = v);
-        _load();
-      },
     );
+    if (picked == null || !mounted) return;
+    setState(() => _deckFilter = picked.value);
+    _load();
   }
 
-  Widget _rangeDropdown({required bool compact}) {
-    return AppSelectField<String>(
-      label: 'Range',
-      value: _range,
-      compact: compact,
-      showLabel: !compact,
-      options: const [
-        AppSelectOption(value: '12m', label: StatisticsLabels.range12Months),
-        AppSelectOption(value: 'all', label: StatisticsLabels.rangeAllHistory),
+  Future<void> _pickRange() async {
+    final picked = await showAppSelectSheet<String>(
+      context: context,
+      title: 'Range',
+      selected: _range,
+      options: [
+        for (final r in const ['30d', '90d', '12m', 'all'])
+          AppSelectOption(value: r, label: StatisticsLabels.rangeLabel(r)),
       ],
-      onChanged: (v) {
-        setState(() => _range = v);
-        _load();
-      },
     );
+    if (picked == null || !mounted) return;
+    setState(() => _range = picked.value);
+    _load();
   }
-}
 
-class _DeckStatsHero extends StatelessWidget {
-  const _DeckStatsHero({
-    required this.reviewStreak,
-    required this.todayReviews,
-    required this.todayDuration,
-  });
 
-  final int reviewStreak;
-  final int todayReviews;
-  final String todayDuration;
-
-  // Same hero as Decks and Profile: Rio studying on the right, a solid
-  // white button that opens the card browser.
-  @override
-  Widget build(BuildContext context) {
-    return AppHeroCard(
-      scene: TutorScene.reading,
-      value: '$todayReviews',
-      label: todayReviews == 1 ? 'card today' : 'cards today',
-      subtitle: todayReviews > 0
-          ? '$todayDuration spent reviewing'
-          : 'Start reviewing to track your progress',
-      icon: Icons.collections_bookmark_outlined,
-      onIconTap: () => MainNavigationCoordinator.goToTab(
-        MainTabId.decks,
-        subIndex: 1,
-      ),
-      badge: reviewStreak > 0
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.local_fire_department_rounded,
-                    size: 16,
-                    color: AppColors.primaryYellow,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$reviewStreak day review streak',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : null,
-    );
-  }
-}
-
-class _QuickMetricTile extends StatelessWidget {
-  const _QuickMetricTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(
-              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04,
-            ),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppPageColors.subtitleOf(context),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterCard extends StatelessWidget {
-  const _FilterCard({
-    required this.scopeLabel,
-    required this.scopeDropdown,
-    required this.rangeDropdown,
-    required this.onExport,
-  });
-
-  final String scopeLabel;
-  final Widget Function({required bool compact}) scopeDropdown;
-  final Widget Function({required bool compact}) rangeDropdown;
-  final VoidCallback onExport;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(
-              alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.03,
-            ),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.tune_rounded, size: 18, color: AppColors.brandPrimary),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Filters',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-              ),
-              IconButton(
-                tooltip: 'Export PDF',
-                visualDensity: VisualDensity.compact,
-                onPressed: onExport,
-                icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.brandPrimaryDeep),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            scopeLabel,
-            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
-          ),
-          const SizedBox(height: 12),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 400;
-              if (compact) {
-                return Column(
-                  children: [
-                    scopeDropdown(compact: true),
-                    const SizedBox(height: 10),
-                    rangeDropdown(compact: true),
-                  ],
-                );
-              }
-              return Row(
-                children: [
-                  Expanded(child: scopeDropdown(compact: false)),
-                  const SizedBox(width: 10),
-                  Expanded(child: rangeDropdown(compact: false)),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _StatsSection extends StatelessWidget {
@@ -687,126 +422,6 @@ class _EmptyHint extends StatelessWidget {
           height: 1.45,
         ),
       ),
-    );
-  }
-}
-
-class _CardCountsPie extends StatelessWidget {
-  const _CardCountsPie({required this.counts});
-
-  final FlashcardCardCounts counts;
-
-  @override
-  Widget build(BuildContext context) {
-    final total = counts.total;
-    if (total == 0) {
-      return const _EmptyHint(text: 'No cards yet — create a deck to get started.');
-    }
-
-    final legend = <({String label, int value, Color color})>[
-      (label: 'New', value: counts.newCount, color: const Color(0xFF2196F3)),
-      (label: 'Learning', value: counts.learning, color: const Color(0xFFFF9800)),
-      (label: 'Mature', value: counts.review, color: AppColors.greenCorrect),
-      (label: 'Suspended', value: counts.suspended, color: Colors.grey),
-      (label: 'Buried', value: counts.buried, color: Colors.blueGrey),
-    ].where((e) => e.value > 0).toList();
-
-    final sections =
-        legend
-            .map(
-              (e) => PieChartSectionData(
-                value: e.value.toDouble(),
-                title: '${e.value}',
-                color: e.color,
-                radius: 40,
-                titlePositionPercentageOffset: 0.62,
-                titleStyle: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            )
-            .toList();
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              AppChartReveal(
-      style: AppChartRevealStyle.grow,
-      child: PieChart(
-                PieChartData(
-                  sectionsSpace: 3,
-                  centerSpaceRadius: 36,
-                  sections: sections,
-                ),
-              ),
-    ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$total',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-                  ),
-                  Text(
-                    total == 1 ? 'card' : 'cards',
-                    style: TextStyle(fontSize: 11, color: AppPageColors.subtitleOf(context)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children:
-                legend
-                    .map(
-                      (e) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: e.color,
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                e.label,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppPageColors.subtitleOf(context),
-                                ),
-                              ),
-                            ),
-                            Text(
-                              '${e.value}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                    .toList(),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1441,6 +1056,292 @@ class _IntervalBucketsChart extends StatelessWidget {
             }).toList(),
       ),
     ),
+    );
+  }
+}
+
+/// Scope ("All decks" or one deck) and range ("30 days") as two pills.
+class _ScopeRangeRow extends StatelessWidget {
+  const _ScopeRangeRow({
+    required this.scope,
+    required this.range,
+    required this.onScope,
+    required this.onRange,
+  });
+
+  final String scope;
+  final String range;
+  final VoidCallback onScope;
+  final VoidCallback onRange;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget pill(String label, VoidCallback onTap, {bool flexible = false}) {
+      final text = Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppPageColors.textPrimaryOf(context)),
+      );
+      return Material(
+        color: AppPageColors.cardBgOf(context),
+        shape: StadiumBorder(side: BorderSide(color: AppPageColors.subtleBorderOf(context))),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Container(
+            height: 36,
+            padding: const EdgeInsets.only(left: 12, right: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                flexible ? Flexible(child: text) : text,
+                Icon(Icons.expand_more_rounded, size: 18, color: AppPageColors.mutedOf(context)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Flexible(child: pill(scope == StatisticsLabels.collectionScope ? 'All decks' : scope.replaceFirst('Deck: ', ''), onScope, flexible: true)),
+        const SizedBox(width: 8),
+        pill(range, onRange),
+      ],
+    );
+  }
+}
+
+class _StatCardFrame extends StatelessWidget {
+  const _StatCardFrame({required this.child, this.radius = 22});
+
+  final Widget child;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Reviews (with the change vs the period before) and share answered right.
+class _SummaryCards extends StatelessWidget {
+  const _SummaryCards({required this.stats, required this.range});
+
+  final FlashcardDetailedStats stats;
+  final String range;
+
+  @override
+  Widget build(BuildContext context) {
+    final b = stats.buttonCounts;
+    final answered = b.again + b.hard + b.good + b.easy;
+    final correct = answered == 0 ? null : ((answered - b.again) / answered * 100).round();
+    final prev = stats.previousReviewsInRange;
+    final period = switch (range) {
+      '30d' => 'last month',
+      '90d' => 'the 90 days before',
+      '12m' => 'the year before',
+      _ => '',
+    };
+    String? delta;
+    var up = true;
+    if (prev != null && prev > 0 && period.isNotEmpty) {
+      final pct = ((stats.totalReviewsInRange - prev) / prev * 100).round();
+      up = pct >= 0;
+      delta = '${up ? '+' : ''}$pct% vs $period';
+    } else if (prev == 0 && stats.totalReviewsInRange > 0 && period.isNotEmpty) {
+      delta = 'New vs $period';
+    }
+    final mature = stats.retention.mature;
+
+    Widget card(String label, String value, String? note, {Color? noteColor, FontWeight? noteWeight}) => Expanded(
+      child: _StatCardFrame(
+        radius: 20,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context))),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+            ),
+            if (note != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                note,
+                style: TextStyle(fontSize: 12, fontWeight: noteWeight, color: noteColor ?? AppPageColors.subtitleOf(context)),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          card(
+            'Reviews',
+            '${stats.totalReviewsInRange}',
+            delta,
+            noteColor: AppPageColors.tintOf(context, up ? AppTint.success : AppTint.danger).fg,
+            noteWeight: FontWeight.w600,
+          ),
+          const SizedBox(width: 10),
+          card(
+            'Correct',
+            correct == null ? '—' : '$correct%',
+            mature == null ? null : 'Mature cards $mature%',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The last 14 days as bars; today in solid teal.
+class _ReviewsPerDayCard extends StatelessWidget {
+  const _ReviewsPerDayCard({required this.series});
+
+  final List<FlashcardDayCount> series;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
+    final byDate = {for (final d in series) d.date: d.count};
+    final now = DateTime.now();
+    String key(DateTime d) =>
+        '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final counts = [for (var i = 13; i >= 0; i--) byDate[key(now.subtract(Duration(days: i)))] ?? 0];
+    final maxCount = counts.fold<int>(0, (a, b) => a > b ? a : b);
+    return _StatCardFrame(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Reviews per day',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+          ),
+          const SizedBox(height: 12),
+          Semantics(
+            label: 'Reviews per day, last 14 days: ${counts.join(', ')}',
+            child: SizedBox(
+              height: 120,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var i = 0; i < counts.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 4),
+                    Expanded(
+                      child: Container(
+                        height: maxCount == 0 ? 2 : 2 + 118 * counts[i] / maxCount,
+                        decoration: BoxDecoration(
+                          color: i >= counts.length - 2 ? accent : accent.withValues(alpha: 0.4),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(6), bottom: Radius.circular(3)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('2 weeks ago', style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context))),
+              Text('Today', style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// New · Learning · Young · Mature as one stacked bar with a legend.
+class _CardStatesCard extends StatelessWidget {
+  const _CardStatesCard({required this.counts});
+
+  final FlashcardCardCounts counts;
+
+  @override
+  Widget build(BuildContext context) {
+    final young = counts.young;
+    final mature = counts.mature;
+    final split = young != null && mature != null;
+    final parts = <(String, int, Color)>[
+      ('New', counts.newCount, BrandConfig.newCards),
+      ('Learning', counts.learning, AppColors.orangeHard),
+      if (split) ...[
+        ('Young', young, AppPageColors.accentOf(context)),
+        ('Mature', mature, AppPageColors.tintOf(context, AppTint.success).fg),
+      ] else
+        ('Review', counts.review, AppPageColors.accentOf(context)),
+    ];
+    final total = parts.fold<int>(0, (a, p) => a + p.$2);
+    return _StatCardFrame(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Card states',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(7),
+            child: SizedBox(
+              height: 14,
+              child: total == 0
+                  ? ColoredBox(color: AppPageColors.subtleBorderOf(context))
+                  : Row(
+                      children: [
+                        for (final p in parts)
+                          if (p.$2 > 0) Expanded(flex: p.$2, child: ColoredBox(color: p.$3)),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            runSpacing: 8,
+            children: [
+              for (final p in parts)
+                FractionallySizedBox(
+                  widthFactor: 0.5,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(color: p.$3, borderRadius: BorderRadius.circular(3)),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${p.$1} · ${p.$2}',
+                        style: TextStyle(fontSize: 13, color: AppPageColors.textPrimaryOf(context)),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

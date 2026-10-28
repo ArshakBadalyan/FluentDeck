@@ -31,4 +31,11 @@ class MainNavigationCoordinator {
   static void enterSpeakSession() {
     enterSpeakChatSession?.call();
   }
+
+  /// Switches the Today tab to one of its sub-tabs by id ('topics', 'roleplay', …).
+  static void Function(String id)? openSpeakSubTab;
+
+  static void goToSpeakSubTab(String id) {
+    openSpeakSubTab?.call(id);
+  }
 }

@@ -78,7 +78,7 @@ class _NotePreviewSheetState extends State<NotePreviewSheet> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F2F5),
+                  color: AppPageColors.fieldBgOf(context),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.2)),
                 ),

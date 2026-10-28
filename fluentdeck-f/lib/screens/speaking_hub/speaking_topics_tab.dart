@@ -4,8 +4,6 @@ import 'package:fluentdeck/app_colors.dart';
 import '../../models/speaking_session_context.dart';
 import '../../models/speaking_topic_model.dart';
 import '../../services/speaking_content_service.dart';
-import '../../services/speaking_scores_service.dart';
-import '../../services/speaking_session_service.dart';
 import '../../utils/speaking_item_icons.dart';
 import '../../utils/speaking_premium_gate.dart';
 import '../../ui_elements/app_skeletons.dart';
@@ -31,7 +29,6 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
   SpeakingTopicModel? _selected;
   bool _loading = true;
   String? _error;
-  Map<String, int?> _scoreCache = {};
 
   @override
   void initState() {
@@ -45,19 +42,12 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
       _error = null;
     });
     try {
-      await SpeakingSessionService.instance.refreshScoresFromServer();
       final catalog = await SpeakingContentService.instance.fetchTopicsCatalog();
       final allTopics = catalog.items;
-      final scores = <String, int?>{};
-      for (final topic in allTopics) {
-        scores[topic.referenceKey] =
-            await SpeakingScoresService.instance.getScore(topic.referenceKey);
-      }
 
       if (!mounted) return;
       setState(() {
         _allTopics = allTopics;
-        _scoreCache = scores;
         _loading = false;
       });
       _applyLevelFilter();
@@ -82,12 +72,6 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
               : firstUnlocked(filtered, (t) => t.isPremiumLocked) ??
                   (filtered.isNotEmpty ? filtered.first : null);
     });
-  }
-
-  String _cardSubtitle(SpeakingTopicModel topic) {
-    final vocab = topic.vocabPreview;
-    if (vocab.isEmpty) return topic.promptPreview;
-    return '${topic.promptPreview}\nVocabulary: $vocab';
   }
 
   Widget _buildList() {
@@ -130,21 +114,26 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
       child: RefreshIndicator(
       onRefresh: _load,
       color: AppColors.brandPrimary,
-      child: ListView.separated(
+      // Two-column grid of topic cards (Today · Topics).
+      child: GridView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         itemCount: _topics.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          mainAxisExtent: 156,
+        ),
         itemBuilder: (context, index) {
           final topic = _topics[index];
-          return SpeakingSelectionCard(
+          return SpeakingTopicGridCard(
             title: topic.title,
-            subtitle: _cardSubtitle(topic),
+            subtitle: topic.promptPreview,
             icon: resolveSpeakingListIcon(
               title: topic.title,
               iconKey: topic.iconKey,
             ),
-            score: _scoreCache[topic.referenceKey],
             selected: _selected?.referenceKey == topic.referenceKey,
             isPremiumLocked: topic.isPremiumLocked,
             onTap: () {
@@ -176,7 +165,7 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
         ),
         Expanded(child: _buildList()),
         SpeakingStartButton(
-          label: 'Start Conversation',
+          label: _selected == null ? 'Start conversation' : 'Talk about ${_selected!.title}',
           enabled: _selected != null && !_selected!.isPremiumLocked,
           onPressed:
               _selected == null || _selected!.isPremiumLocked

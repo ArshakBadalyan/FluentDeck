@@ -108,8 +108,8 @@
     "language": "Ngôn ngữ ứng dụng",
     "pages": {
       "speak": {
-        "title": "Học nói với trợ lý AI",
-        "body": "Nói to hoặc gõ. Trợ lý của bạn trả lời bằng giọng tự nhiên, sửa lỗi nhẹ nhàng và nhớ về những gì bạn nói.",
+        "title": "Nói chuyện với gia sư AI không bao giờ phán xét",
+        "body": "Nói thành tiếng hoặc gõ. Rio trả lời bằng giọng tự nhiên và nhẹ nhàng sửa lỗi cho bạn.",
         "chips": {
           "voice-or-text": "Giọng nói hoặc văn bản",
           "gentle-corrections": "Sửa lỗi nhẹ nhàng",
@@ -191,7 +191,29 @@
     "school-email-pick-school": "Chọn trường của bạn",
     "school-email-pick-school-required": "Hãy chọn trường của bạn để tiếp tục.",
     "teacher-invite-code": "Mã mời giáo viên",
-    "teacher-invite-code-hint": "Hỏi trường của bạn về mã giáo viên hàng năm (một mã cho mỗi trường mỗi năm)."
+    "teacher-invite-code-hint": "Hỏi trường của bạn về mã giáo viên hàng năm (một mã cho mỗi trường mỗi năm).",
+    "welcome-back": "Chào mừng trở lại",
+    "email-or-nickname": "Email hoặc biệt danh",
+    "forgot-password-short": "Quên mật khẩu?",
+    "sign-in-button": "Đăng nhập",
+    "or-continue-with": "hoặc tiếp tục với",
+    "new-here": "Bạn mới đến?",
+    "create-account": "Tạo tài khoản",
+    "start-free": "Bắt đầu nói miễn phí",
+    "sign-up-subtitle-minutes": "{count} phút với Rio mỗi ngày. Không cần thẻ.",
+    "language-pair": "Tôi nói → Tôi muốn nói",
+    "i-speak": "Tôi nói",
+    "i-want-to-speak": "Tôi muốn nói",
+    "email": "Email",
+    "password-min": "Dùng ít nhất {count} ký tự.",
+    "create-account-button": "Tạo tài khoản",
+    "legal-before": "Khi tiếp tục, bạn đồng ý với ",
+    "terms": "Điều khoản",
+    "legal-and": " và ",
+    "privacy": "Chính sách quyền riêng tư",
+    "have-account": "Đã có tài khoản?",
+    "sign-in-link": "Đăng nhập",
+    "legal-after": "."
   },
   "teacher": {
     "badge": "Giáo viên",
@@ -465,7 +487,13 @@
     "subtitle": "Nhập email của bạn, chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.",
     "forgot-password": "Quên Mật khẩu ?",
     "send-email": "Gửi email",
-    "back-to-start": "Quay lại trang chủ"
+    "back-to-start": "Quay lại trang chủ",
+    "title": "Đặt lại mật khẩu",
+    "subtitle-short": "Nhập email và chúng tôi sẽ gửi cho bạn một đường link.",
+    "send-link": "Gửi link đặt lại",
+    "check-inbox": "Kiểm tra hộp thư",
+    "check-inbox-body": "Link có hiệu lực trong 1 giờ. Không thấy? Hãy xem thư rác.",
+    "enter-code": "Nhập mã"
   },
   "reset-password": {
     "reset-password": "Đặt lại Mật khẩu",

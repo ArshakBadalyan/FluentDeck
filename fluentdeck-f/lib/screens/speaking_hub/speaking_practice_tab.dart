@@ -10,6 +10,7 @@ import '../../services/flashcard_service.dart';
 import '../../services/speaking_preferences_service.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/modern_page_widgets.dart';
+import '../../utils/deck_visuals.dart';
 import '../../widgets/speaking_hub_widgets.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 
@@ -60,21 +61,19 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
     }
   }
 
+  /// "42 words · 6 due today", or the deck's description when nothing is due.
   String _deckSubtitle(FlashcardDeckModel deck) {
-    final parts = <String>[];
-    if (deck.total > 0) {
-      parts.add('${deck.total} cards');
-    } else {
-      parts.add('No cards yet');
-    }
+    final parts = <String>[
+      deck.total > 0 ? '${deck.total} word${deck.total == 1 ? '' : 's'}' : 'No words yet',
+    ];
     if (deck.dueCount > 0) {
-      parts.add('${deck.dueCount} due');
-    }
-    if (deck.description.trim().isNotEmpty) {
+      parts.add('${deck.dueCount} due today');
+    } else if (deck.description.trim().isNotEmpty) {
       parts.add(deck.description.trim());
     }
     return parts.join(' · ');
   }
+
 
   Future<void> _startPractice() async {
     final deck = _selected;
@@ -191,7 +190,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
       color: AppColors.brandPrimary,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
         itemCount: _decks.length,
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
@@ -199,7 +198,8 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
           return SpeakingSelectionCard(
             title: deck.name,
             subtitle: _deckSubtitle(deck),
-            icon: Icons.style_outlined,
+            icon: deckIcon(deck.name),
+            iconTint: deckTint(deck.name),
             selected: _selected?.id == deck.id,
             trailing: _selected?.id == deck.id
                 ? Icon(Icons.check_circle_rounded, color: AppPageColors.accentOf(context))
@@ -218,15 +218,10 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
           child: Text(
             'Pick a deck. Rio will build a conversation that uses its words.',
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.4,
-              color: AppPageColors.subtitleOf(context),
-              fontFamily: 'Rubik',
-            ),
+            style: TextStyle(fontSize: 14, color: AppPageColors.subtitleOf(context)),
           ),
         ),
         Expanded(child: _buildList()),

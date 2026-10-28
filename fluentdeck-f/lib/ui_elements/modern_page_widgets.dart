@@ -9,6 +9,9 @@ import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
 import 'app_motion.dart';
 import 'package:fluentdeck/widgets/tutor_scene.dart';
 
+/// Soft tints from the redesign; see [AppPageColors.tintOf].
+enum AppTint { teal, voice, reward, success, warning, danger, info, pink, neutral }
+
 /// Shared visual language for Activity, Decks, and Profile screens.
 class AppPageColors {
   AppPageColors._();
@@ -36,7 +39,73 @@ class AppPageColors {
   static Color subtleBorderOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
           ? Colors.white.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.05);
+          : BrandConfig.border;
+
+  /// Hairline between rows inside a card.
+  static Color rowDividerOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.white.withValues(alpha: 0.06)
+          : BrandConfig.rowDivider;
+
+  /// Muted labels and inactive icons (nav, "or continue with").
+  static Color mutedOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? BrandConfig.darkTextSecondary
+          : BrandConfig.navInactive;
+
+  /// Icon color on a [tintOf] tile: teal and coral icons use the stronger
+  /// brand hue (#0D7C86, #E2553A); the rest use the tint's text color.
+  static Color tintIconOf(BuildContext context, AppTint tint) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    if (!dark && tint == AppTint.teal) return BrandConfig.primary;
+    if (!dark && tint == AppTint.voice) return BrandConfig.voiceDeep;
+    return tintOf(context, tint).fg;
+  }
+
+  /// Soft fill and the readable text on it, for chips, icon tiles, count
+  /// badges and notices. Dark mode uses the hue at low alpha with a lighter
+  /// foreground.
+  static ({Color bg, Color fg}) tintOf(BuildContext context, AppTint tint) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    switch (tint) {
+      case AppTint.teal:
+        return dark
+            ? (bg: BrandConfig.primaryOnDark.withValues(alpha: 0.16), fg: BrandConfig.primaryOnDark)
+            : (bg: BrandConfig.tealTint, fg: BrandConfig.primaryDeep);
+      case AppTint.voice:
+        return dark
+            ? (bg: BrandConfig.voice.withValues(alpha: 0.16), fg: const Color(0xFFFF9B80))
+            : (bg: BrandConfig.voiceTint, fg: BrandConfig.voiceTintText);
+      case AppTint.reward:
+        return dark
+            ? (bg: BrandConfig.reward.withValues(alpha: 0.16), fg: const Color(0xFFFFD54F))
+            : (bg: BrandConfig.rewardTint, fg: BrandConfig.rewardText);
+      case AppTint.success:
+        return dark
+            ? (bg: BrandConfig.correct.withValues(alpha: 0.14), fg: const Color(0xFF6EF09A))
+            : (bg: BrandConfig.successTint, fg: BrandConfig.successText);
+      case AppTint.warning:
+        return dark
+            ? (bg: BrandConfig.hard.withValues(alpha: 0.18), fg: const Color(0xFFFFB27A))
+            : (bg: BrandConfig.warningTint, fg: BrandConfig.warningText);
+      case AppTint.danger:
+        return dark
+            ? (bg: BrandConfig.wrong.withValues(alpha: 0.18), fg: const Color(0xFFFF8A80))
+            : (bg: BrandConfig.dangerTint, fg: BrandConfig.dangerText);
+      case AppTint.info:
+        return dark
+            ? (bg: BrandConfig.newCards.withValues(alpha: 0.18), fg: const Color(0xFF82B1FF))
+            : (bg: BrandConfig.infoTint, fg: BrandConfig.infoText);
+      case AppTint.pink:
+        return dark
+            ? (bg: const Color(0xFFE9407A).withValues(alpha: 0.16), fg: const Color(0xFFFF8FB3))
+            : (bg: BrandConfig.pinkTint, fg: BrandConfig.pinkText);
+      case AppTint.neutral:
+        return dark
+            ? (bg: Colors.white.withValues(alpha: 0.06), fg: BrandConfig.darkTextSecondary)
+            : (bg: BrandConfig.pageBg, fg: BrandConfig.navInactive);
+    }
+  }
 
   static Color subtitleOf(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark

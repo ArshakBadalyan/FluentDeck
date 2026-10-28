@@ -57,7 +57,7 @@ class ImageOcclusionReview extends StatelessWidget {
                         url: imageUrl,
                         fit: BoxFit.contain,
                         errorBuilder: (context) => Container(
-                          color: const Color(0xFFF2F2F5),
+                          color: AppPageColors.fieldBgOf(context),
                           alignment: Alignment.center,
                           child: const Text('Could not load image'),
                         ),

@@ -144,6 +144,37 @@ if (heroVideo && !reduceMotion && !navigator.connection?.saveData && window.matc
   heroVideo.addEventListener('playing', () => heroVideo.classList.add('playing'), { once: true });
   heroVideo.load();
   heroVideo.play().catch(() => {});
+  heroSound(heroVideo);
+}
+
+// Hero video sound: on by default and switched with the 🔊 button bottom-left (otter.js
+// shares the `otter-sound` choice and sends `riovox:sound`). Browsers only autoplay muted,
+// so the sound starts with the visitor's first click, tap or key press; it goes quiet while
+// the hero is scrolled out of view.
+function heroSound(video) {
+  const hero = video.closest('.hero');
+  let on = true;
+  try { on = localStorage.getItem('otter-sound') !== 'off'; } catch { /* private mode */ }
+  let inView = true;
+  let woke = false;
+  const apply = () => {
+    video.muted = !(on && inView && woke);
+    video.play().catch(() => {});
+  };
+  const wake = () => {
+    woke = true;
+    apply();
+    ['pointerdown', 'keydown'].forEach((type) => window.removeEventListener(type, wake, true));
+  };
+  ['pointerdown', 'keydown'].forEach((type) => window.addEventListener(type, wake, true));
+  window.addEventListener('riovox:sound', (e) => { on = !!e.detail?.on; apply(); });
+  new IntersectionObserver(([entry]) => { inView = entry.isIntersecting; apply(); }).observe(hero);
+  // Try sound straight away: browsers that allow it for this site (earlier visits, site
+  // settings) start with sound; the others refuse, and it waits for the first tap.
+  if (on) {
+    video.muted = false;
+    video.play().then(() => { woke = true; }).catch(() => { video.muted = true; video.play().catch(() => {}); });
+  }
 }
 const journey = document.querySelector('[data-journey]');
 const journeyCount = journey?.querySelector('[data-journey-count]');

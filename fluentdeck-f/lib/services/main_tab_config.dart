@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/config/brand_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 
 enum MainTabId {
@@ -37,10 +36,11 @@ class MainTabDefinition {
 class MainTabConfig {
   MainTabConfig._();
 
+  /// Today, Decks, Progress, Profile (Riovox App Redesign).
   static const defaultOrder = [
-    MainTabId.activity,
-    MainTabId.decks,
     MainTabId.speak,
+    MainTabId.decks,
+    MainTabId.activity,
     MainTabId.profile,
   ];
 
@@ -119,8 +119,10 @@ class MainTabConfig {
           title: 'Decks',
           navLabel: 'Decks',
           iconBuilder:
-              (active) =>
-                  Icon(Icons.style_outlined, color: _iconColor(active, context)),
+              (active) => Icon(
+                Icons.filter_none_rounded,
+                color: _iconColor(active, context),
+              ),
         );
       case MainTabId.activity:
         return MainTabDefinition(
@@ -128,13 +130,9 @@ class MainTabConfig {
           title: AppLocalizations.instance.t('activity.tabs.Progress'),
           navLabel: AppLocalizations.instance.t('activity.tabs.Progress'),
           iconBuilder:
-              (active) => SvgPicture.asset(
-                'assets/buttons/activity.svg',
-                width: 26,
-                colorFilter: ColorFilter.mode(
-                  _iconColor(active, context),
-                  BlendMode.srcIn,
-                ),
+              (active) => Icon(
+                Icons.bar_chart_rounded,
+                color: _iconColor(active, context),
               ),
         );
       case MainTabId.profile:
@@ -143,13 +141,9 @@ class MainTabConfig {
           title: AppLocalizations.instance.t('profile.profile'),
           navLabel: AppLocalizations.instance.t('profile.profile'),
           iconBuilder:
-              (active) => SvgPicture.asset(
-                'assets/buttons/profile.svg',
-                width: 26,
-                colorFilter: ColorFilter.mode(
-                  _iconColor(active, context),
-                  BlendMode.srcIn,
-                ),
+              (active) => Icon(
+                active ? Icons.person_rounded : Icons.person_outline_rounded,
+                color: _iconColor(active, context),
               ),
         );
     }

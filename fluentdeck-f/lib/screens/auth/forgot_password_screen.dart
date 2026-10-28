@@ -1,15 +1,19 @@
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/config/brand_config.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/routing/app_route_names.dart';
 import 'package:fluentdeck/routing/app_page_routes.dart';
 import 'package:fluentdeck/screens/auth/reset_password_screen.dart';
 import 'package:fluentdeck/ui_elements/auth_input_decoration.dart';
-import 'package:fluentdeck/ui_elements/auth_secondary_link.dart';
+import 'package:fluentdeck/ui_elements/primary_button.dart';
 import '../../services/auth_service.dart';
 import 'auth_screen.dart';
 
+/// Asks for the email, sends the reset email, then says to check the inbox;
+/// the button then opens the screen where the code from that email goes.
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -20,6 +24,13 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
   bool _loading = false;
+  bool _sent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -27,136 +38,123 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  Future<void> _send() async {
+    setState(() => _loading = true);
+    final res = await AuthService.forgotPassword(_emailController.text.trim());
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (res['status'] == 'success') {
+      setState(() => _sent = true);
+    } else {
+      AppToast.showSnackBar(context,
+        SnackBar(
+          content: Text(res['message'] ?? context.tr('forgot-password.send-email')),
+        ),
+      );
+    }
+  }
+
+  void _enterCode() {
+    Navigator.push(
+      context,
+      appMaterialPageRoute(
+        name: AppRouteNames.resetPassword,
+        builder: (_) => const ResetPasswordScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final success = AppPageColors.tintOf(context, AppTint.success);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: AppPageColors.pageBgOf(context),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 8),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: IconButton(
-                  tooltip: 'Back',
-                  icon: Icon(
-                    Icons.arrow_back_rounded,
-                    color: AppPageColors.textPrimaryOf(context),
-                  ),
-                  onPressed: () => Navigator.of(context).maybePop(),
-                ),
+              AuthBackButton(onPressed: () => Navigator.of(context).maybePop()),
+              const SizedBox(height: 14),
+              AuthHeading(
+                gap: 14,
+                title: context.tr('forgot-password.title'),
+                subtitle: context.tr('forgot-password.subtitle-short'),
               ),
-              const SizedBox(height: 12),
-
-              // Bold, left-aligned title with a one-line explanation.
-              Text(
-                context.tr('forgot-password.forgot-password'),
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
-                  color: AppPageColors.textPrimaryOf(context),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                context.tr('forgot-password.subtitle'),
-                style: TextStyle(
-                  fontSize: 16,
-                  height: 1.4,
-                  color: AppPageColors.subtitleOf(context),
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              TextField(
+              const SizedBox(height: 22),
+              AuthField(
+                label: context.tr('login-register.email'),
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: authInput(context, context.tr('inputs.your-email')),
-              ),
-
-              const SizedBox(height: 24),
-
-              SizedBox(
-                height: 56,
-                // FilledButton (not ElevatedButton+hardcoded colors): the
-                // app's own filledButtonTheme already pairs light/dark
-                // backgrounds with correctly readable text in both modes.
-                child: FilledButton(
-                  onPressed:
-                      _loading
-                          ? null
-                          : () async {
-                            setState(() => _loading = true);
-                            debugPrint(
-                              'FORGOT EMAIL = "$_emailController.text.trim()"',
-                            );
-
-                            final res = await AuthService.forgotPassword(
-                              _emailController.text.trim(),
-                            );
-                            debugPrint('FORGOT RESPONSE = $res');
-
-                            if (!mounted) return;
-                            setState(() => _loading = false);
-
-                            if (res['status'] == 'success') {
-                              Navigator.push(
-                                context,
-                                appMaterialPageRoute(
-                                  name: AppRouteNames.resetPassword,
-                                  builder:
-                                      (_) => const ResetPasswordScreen(),
-                                ),
-                              );
-                            } else {
-                              AppToast.showSnackBar(context, 
-                                SnackBar(
-                                  content: Text(
-                                    res['message'] ??
-                                        context.tr(
-                                          'forgot-password.send-email',
-                                        ),
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-
-                  style: FilledButton.styleFrom(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  child: Text(
-                    context.tr('forgot-password.send-email'),
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              AuthSecondaryLink(
-                label: context.tr('forgot-password.back-to-start'),
-                enabled: !_loading,
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    appMaterialPageRoute(
-                      name: AppRouteNames.auth,
-                      builder: (_) => const AuthScreen(),
-                    ),
-                  );
+                autocorrect: false,
+                autofillHints: const [AutofillHints.email],
+                onSubmitted: (_) {
+                  if (!_sent && _emailController.text.trim().contains('@')) _send();
                 },
               ),
-
-              const Spacer(),
+              const SizedBox(height: 14),
+              PrimaryButton(
+                text: context.tr(
+                  _sent ? 'forgot-password.enter-code' : 'forgot-password.send-link',
+                ),
+                isLoading: _loading,
+                enabled: !_loading && (_sent || _emailController.text.trim().contains('@')),
+                onPressed: _sent ? _enterCode : _send,
+              ),
+              AnimatedSize(
+                duration: AppMotion.duration(context, AppMotion.normal),
+                curve: AppMotion.standardCurve,
+                alignment: Alignment.topCenter,
+                child: !_sent
+                    ? const SizedBox(width: double.infinity)
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 26),
+                        child: AppFadeIn(
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: success.bg,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.mail_outline_rounded, size: 22, color: success.fg),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        context.tr('forgot-password.check-inbox'),
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: success.fg,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        context.tr('forgot-password.check-inbox-body'),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          height: 1.4,
+                                          color: dark
+                                              ? AppPageColors.textPrimaryOf(context)
+                                              : BrandConfig.successBody,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
             ],
           ),
         ),

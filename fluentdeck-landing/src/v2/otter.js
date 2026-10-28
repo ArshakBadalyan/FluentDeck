@@ -271,6 +271,8 @@ const sound = (() => {
       toggle.textContent = v ? '🔊' : '🔇';
       toggle.setAttribute('aria-label', v ? 'Turn otter sounds off' : 'Turn otter sounds on');
     }
+    // The hero video's sound follows this button too (main.js, heroSound).
+    window.dispatchEvent(new CustomEvent('riovox:sound', { detail: { on: v } }));
   }
   let toggle = null;
   function showToggle() {
@@ -284,7 +286,7 @@ const sound = (() => {
   function wake() { if (read() === null) set(true); }
   function init() {
     const saved = read();
-    on = saved === 'on';
+    on = saved !== 'off'; // on by default; browsers still hold sound back until the first tap
     showToggle();
     if (!on) toggle.setAttribute('aria-label', 'Turn on Rio\'s voice and sounds');
   }

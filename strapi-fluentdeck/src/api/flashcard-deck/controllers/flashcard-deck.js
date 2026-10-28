@@ -639,7 +639,7 @@ module.exports = createCoreController(
       if (!userId) return ctx.unauthorized('Authentication required');
 
       const deckId = ctx.query.deckId ? parseInt(String(ctx.query.deckId), 10) : null;
-      const range = ctx.query.range === 'all' ? 'all' : '12m';
+      const range = ['30d', '90d', '12m', 'all'].includes(ctx.query.range) ? ctx.query.range : '12m';
 
       ctx.body = await buildDetailedStats(strapi, userId, { deckId, range });
     },
