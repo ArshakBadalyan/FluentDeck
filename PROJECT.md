@@ -26,8 +26,8 @@
 
 | Component | Path | Stack |
 |-----------|------|-------|
-| Mobile/Web app | `fluentdeck-f/` | Flutter / Dart |
-| Backend API | `strapi-fluentdeck/` | Strapi 5.49 / Node 20 / PostgreSQL |
+| Mobile/Web app | `riovox-app/` | Flutter / Dart |
+| Backend API | `riovox-api/` | Strapi 5.49 / Node 20 / PostgreSQL |
 
 Dart package `riovox` (`import 'package:riovox/...'`); app ID `app.riovox` (iOS and Android).
 
@@ -35,8 +35,8 @@ Dart package `riovox` (`import 'package:riovox/...'`); app ID `app.riovox` (iOS 
 
 ```
 Riovox/
-├── fluentdeck-f/          # Flutter app (iOS, Android, Web)
-├── strapi-fluentdeck/     # Strapi backend (22 API modules)
+├── riovox-app/          # Flutter app (iOS, Android, Web)
+├── riovox-api/     # Strapi backend (22 API modules)
 └── PROJECT.md             # This file
 ```
 
@@ -56,15 +56,15 @@ Riovox/
 
 | Task | Location |
 |------|----------|
-| New screen | `fluentdeck-f/lib/screens/` |
-| API call | `fluentdeck-f/lib/services/api_service.dart` + domain service |
-| Backend endpoint | `strapi-fluentdeck/src/api/<module>/routes/` |
-| Freemium limits | `strapi-fluentdeck/src/utils/app-feature-config.js` |
-| AI tutor | `strapi-fluentdeck/src/utils/ai-tutor.js` |
-| Flashcard SM-2 | `strapi-fluentdeck/src/utils/sm2.js` |
+| New screen | `riovox-app/lib/screens/` |
+| API call | `riovox-app/lib/services/api_service.dart` + domain service |
+| Backend endpoint | `riovox-api/src/api/<module>/routes/` |
+| Freemium limits | `riovox-api/src/utils/app-feature-config.js` |
+| AI tutor | `riovox-api/src/utils/ai-tutor.js` |
+| Flashcard SM-2 | `riovox-api/src/utils/sm2.js` |
 | Decks settings behavior & known gaps | `docs/decks-settings-behavior.md` |
-| Permissions bootstrap | `strapi-fluentdeck/src/index.js` |
-| App startup | `fluentdeck-f/lib/main.dart` → `app_start.dart` → `english_main_screen.dart` |
+| Permissions bootstrap | `riovox-api/src/index.js` |
+| App startup | `riovox-app/lib/main.dart` → `app_start.dart` → `english_main_screen.dart` |
 
 ---
 
@@ -72,13 +72,13 @@ Riovox/
 
 ```bash
 # Backend (Node 20 — use nvm)
-cd strapi-fluentdeck
+cd riovox-api
 cp .env.example .env    # fill DATABASE_*, OPENAI_API_KEY, JWT_SECRET, APP_KEYS
 nvm use && npm install --legacy-peer-deps && npm run develop    # http://localhost:1337
 
 # Frontend
-cd fluentdeck-f
-cp .env.example assets/fluentdeck_config.txt    # set API_URL=http://localhost:1337/api
+cd riovox-app
+cp .env.example assets/riovox_config.txt    # set API_URL=http://localhost:1337/api
 flutter pub get && flutter run
 ```
 
@@ -95,13 +95,13 @@ flutter pub get && flutter run
 | Auth | JWT in SharedPreferences, Bearer via `ApiService` |
 | Offline flashcards | Isar local DB + sync pull/push to Strapi |
 | AI | All OpenAI calls proxied through Strapi (never from client) |
-| Config | Baked at build time: `cp .env.example assets/fluentdeck_config.txt` |
+| Config | Baked at build time: `cp .env.example assets/riovox_config.txt` |
 
 ---
 
 ## Flutter App
 
-**Path:** `fluentdeck-f/` · **Version:** 2.0.9+20009 · **Platforms:** Android, iOS, Web
+**Path:** `riovox-app/` · **Version:** 2.0.9+20009 · **Platforms:** Android, iOS, Web
 
 ### Navigation Map
 
@@ -185,7 +185,7 @@ Strapi · Firebase Analytics · OneSignal (mobile) · AdMob + UMP · Microsoft C
 
 ## Strapi Backend
 
-**Path:** `strapi-fluentdeck/` · **Strapi 4.26.1** · **PostgreSQL**
+**Path:** `riovox-api/` · **Strapi 4.26.1** · **PostgreSQL**
 
 ### API Modules (22)
 
@@ -214,11 +214,11 @@ Strapi · Firebase Analytics · OneSignal (mobile) · AdMob + UMP · Microsoft C
 
 **Subscriptions:** Monthly $9.99 and Yearly $79.99 (7-day trial); Quarterly is legacy-only. AI usage is metered as practice time, not turns. Plans, time metering and the AI cost per hour are in `docs/subscription-and-ai-costs.md`. Pricing strategy, landing-page review, SEO and launch campaign: `docs/business-and-marketing-plan.md`. Ads by region, Groq speech-to-text, Kokoro voice, and TTS prices / self-hosting options: `docs/ads-and-ai-cost-switches.md`.
 
-**Marketing site:** `fluentdeck-landing/` is a static Vite site, run separately (`npm run dev`), with real app screenshots in `public/media/`. It replaces the old single-file `landing/index.html`.
+**Marketing site:** `riovox-landing/` is a static Vite site, run separately (`npm run dev`), with real app screenshots in `public/media/`. It replaces the old single-file `landing/index.html`.
 
 **UI:** Material 2 theme (`useMaterial3: false`) and Material motion. Phases and rules are in `docs/motion-and-material-plan.md`.
 
-**App languages:** 11 interface languages (Armenian planned later) (Settings → General), strings in `fluentdeck-f/assets/locales/`, translated with `strapi-fluentdeck/scripts/translate-app-locales.js` (local Qwen or OpenAI). See `docs/app-languages.md`.
+**App languages:** 11 interface languages (Armenian planned later) (Settings → General), strings in `riovox-app/assets/locales/`, translated with `riovox-api/scripts/translate-app-locales.js` (local Qwen or OpenAI). See `docs/app-languages.md`.
 
 **flashcard-deck:** name, hierarchy (`parentDeck`), filtered decks, deck options JSON
 
@@ -384,7 +384,7 @@ second step matters offline.
   ⚠️ Its description promises separate new/learning/review counts, which it
   doesn't show. Either the description or the feature should change.
 
-**Two bugs fixed** in `fluentdeck-f/lib/utils/review_queue_order.dart`:
+**Two bugs fixed** in `riovox-app/lib/utils/review_queue_order.dart`:
 
 - **"After reviews" did nothing offline.** Offline, the queue is built from
   cached cards in no particular order, and this mode left it unchanged. It now
@@ -394,10 +394,10 @@ second step matters offline.
 
 **Tests:**
 
-- `fluentdeck-f/test/new_card_position_test.dart` (8 tests): every mode,
+- `riovox-app/test/new_card_position_test.dart` (8 tests): every mode,
   leftovers in Mixed, order kept within each group, applying it twice changes
   nothing, and the labels.
-- `strapi-fluentdeck/tests/flashcard-review-queue.test.js`: before/after
+- `riovox-api/tests/flashcard-review-queue.test.js`: before/after
   ordering, and the learn-ahead window, which never includes new cards.
 - The new-card test caught the never-studied bug before it was fixed.
 
@@ -431,7 +431,7 @@ apply, or remove the duplicated global settings.
   (`canCreateCustomDeck`); the app now shows it up front.
 - **Not gated in the app:** "Create filtered deck" inside the card browser
   still relies on the server's refusal, which shows the same upgrade message.
-- `fluentdeck-f/test/deck_limit_test.dart` (6 tests): counting rules,
+- `riovox-app/test/deck_limit_test.dart` (6 tests): counting rules,
   premium, and the message.
 
 ### Open decisions
@@ -447,7 +447,7 @@ apply, or remove the duplicated global settings.
 
 ## Configuration
 
-### Flutter (`fluentdeck-f`)
+### Flutter (`riovox-app`)
 
 Baked at build time: `cp .env.example assets/english_config.txt` (rebuild after changes)
 
@@ -459,7 +459,7 @@ Baked at build time: `cp .env.example assets/english_config.txt` (rebuild after 
 | `CLARITY_PROJECT_ID` | No | Session replay (mobile) |
 | `ADMOB_*` | No | Interstitial ads |
 
-### Strapi (`strapi-fluentdeck`)
+### Strapi (`riovox-api`)
 
 **Core:** `HOST`, `PORT`, `APP_KEYS`, `JWT_SECRET`, `ADMIN_JWT_SECRET`, `API_TOKEN_SALT`
 
@@ -475,7 +475,7 @@ Baked at build time: `cp .env.example assets/english_config.txt` (rebuild after 
 
 **Ops:** `CRON_ENABLED`, `PUBLIC_URL`
 
-Example files: `strapi-fluentdeck/.env.example`, `fluentdeck-f/.env.example`
+Example files: `riovox-api/.env.example`, `riovox-app/.env.example`
 
 ---
 
@@ -510,12 +510,12 @@ flutter build web --release --base-href /web/ --pwa-strategy none
 ### Staging
 
 ```bash
-cd strapi-fluentdeck
+cd riovox-api
 ./deploy/scripts/compose-staging.sh up --build
 # postgres + strapi + nginx
 ```
 
-See `strapi-fluentdeck/STAGING-DEPLOYMENT.md`, `fluentdeck-f/deploy/CLIENT-STAGING.local.md`
+See `riovox-api/STAGING-DEPLOYMENT.md`, `riovox-app/deploy/CLIENT-STAGING.local.md`
 
 ### Test API
 

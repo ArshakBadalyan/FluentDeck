@@ -14,16 +14,16 @@ All AI calls go through Strapi. The Flutter client never holds OpenAI keys.
 
 | File | Role |
 |------|------|
-| `strapi-fluentdeck/src/utils/ai-tutor.js` | `TUTOR_SYSTEM_PROMPT`, `getTutorReply`, response parsing |
-| `strapi-fluentdeck/src/api/ai/controllers/ai.js` | HTTP handlers: tutor, transcribe, tts, memory |
-| `strapi-fluentdeck/src/api/ai/routes/custom.js` | `/ai/tutor`, `/ai/transcribe`, `/ai/tts`, etc. |
-| `strapi-fluentdeck/src/utils/tutor-vocab-context.js` | Training words block, deck labels |
-| `strapi-fluentdeck/src/utils/tutor-memory.js` | Learner memory format/persistence |
-| `strapi-fluentdeck/src/utils/auto-save-corrections.js` | Save corrections as My Notes (flashcard notes, `source: speaking`) |
-| `strapi-fluentdeck/src/utils/speaking-note-actions.js` | Deck note creation from tutor |
-| `strapi-fluentdeck/src/utils/open-ai.js` | Shared OpenAI client, other AI tasks |
-| `strapi-fluentdeck/src/utils/ai-rate-limit.js` | Usage limits |
-| `fluentdeck-f/lib/services/tutor_memory_service.dart` | Client memory sync |
+| `riovox-api/src/utils/ai-tutor.js` | `TUTOR_SYSTEM_PROMPT`, `getTutorReply`, response parsing |
+| `riovox-api/src/api/ai/controllers/ai.js` | HTTP handlers: tutor, transcribe, tts, memory |
+| `riovox-api/src/api/ai/routes/custom.js` | `/ai/tutor`, `/ai/transcribe`, `/ai/tts`, etc. |
+| `riovox-api/src/utils/tutor-vocab-context.js` | Training words block, deck labels |
+| `riovox-api/src/utils/tutor-memory.js` | Learner memory format/persistence |
+| `riovox-api/src/utils/auto-save-corrections.js` | Save corrections as My Notes (flashcard notes, `source: speaking`) |
+| `riovox-api/src/utils/speaking-note-actions.js` | Deck note creation from tutor |
+| `riovox-api/src/utils/open-ai.js` | Shared OpenAI client, other AI tasks |
+| `riovox-api/src/utils/ai-rate-limit.js` | Usage limits |
+| `riovox-app/lib/services/tutor_memory_service.dart` | Client memory sync |
 
 ## Tutor response format
 

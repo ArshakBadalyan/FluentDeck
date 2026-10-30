@@ -15,14 +15,14 @@ Anki-style spaced repetition. **Backend is source of truth** for persisted revie
 
 | Layer | File | Role |
 |-------|------|------|
-| Backend SM-2 | `strapi-fluentdeck/src/utils/sm2.js` | `applySm2Rating`, states, intervals |
-| Global defaults | `strapi-fluentdeck/src/utils/flashcard-scheduling-defaults.js` | CMS → env → builtin `[2,8,10]` min |
-| Review actions | `strapi-fluentdeck/src/utils/flashcard-review-actions.js` | Answer submission pipeline |
-| Review queue | `strapi-fluentdeck/src/utils/flashcard-review-queue.js` | Due cards ordering |
-| Routes | `strapi-fluentdeck/src/api/flashcard-deck/routes/custom.js` | `/flashcards/*` HTTP API |
-| Flutter preview | `fluentdeck-f/lib/utils/sm2_preview.dart` | Interval button labels |
-| Flutter defaults | `fluentdeck-f/lib/services/deck_scheduling_defaults.dart` | Cached CMS defaults |
-| Models | `fluentdeck-f/lib/models/flashcard_model.dart` | `DeckOptionsModel`, review state |
+| Backend SM-2 | `riovox-api/src/utils/sm2.js` | `applySm2Rating`, states, intervals |
+| Global defaults | `riovox-api/src/utils/flashcard-scheduling-defaults.js` | CMS → env → builtin `[2,8,10]` min |
+| Review actions | `riovox-api/src/utils/flashcard-review-actions.js` | Answer submission pipeline |
+| Review queue | `riovox-api/src/utils/flashcard-review-queue.js` | Due cards ordering |
+| Routes | `riovox-api/src/api/flashcard-deck/routes/custom.js` | `/flashcards/*` HTTP API |
+| Flutter preview | `riovox-app/lib/utils/sm2_preview.dart` | Interval button labels |
+| Flutter defaults | `riovox-app/lib/services/deck_scheduling_defaults.dart` | Cached CMS defaults |
+| Models | `riovox-app/lib/models/flashcard_model.dart` | `DeckOptionsModel`, review state |
 | UI | `review_session_screen.dart`, `deck_edit_sheet.dart`, `flashcards_screen.dart` | Review & deck options |
 
 ## Review states

@@ -3,13 +3,13 @@ name: flutter-ui-design
 description: >-
   Distinctive Flutter/Material 2 UI for Riovox screens and widgets. Use when
   building or reshaping app UI, bottom sheets, flashcard views, review sessions,
-  skeletons, themes, or polish in fluentdeck-f/. Extends frontend-design for
+  skeletons, themes, or polish in riovox-app/. Extends frontend-design for
   this product's Lagoon teal brand and learning-app context.
 ---
 
 # Flutter UI Design (Riovox)
 
-Apply intentional design when changing UI in `fluentdeck-f/`. This skill adapts [frontend-design](https://github.com/anthropics/claude-code/tree/main/plugins/frontend-design) for Flutter, not generic web/CSS.
+Apply intentional design when changing UI in `riovox-app/`. This skill adapts [frontend-design](https://github.com/anthropics/claude-code/tree/main/plugins/frontend-design) for Flutter, not generic web/CSS.
 
 ## Ground it in the product
 

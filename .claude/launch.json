@@ -2,11 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "fluentdeck-web",
+      "name": "riovox-web",
       "runtimeExecutable": "bash",
       "runtimeArgs": [
         "-c",
-        "cd fluentdeck-f && flutter run -d web-server --release --web-port 8765 --web-hostname 127.0.0.1"
+        "cd riovox-app && flutter run -d web-server --release --web-port 8765 --web-hostname 127.0.0.1"
       ],
       "port": 8765
     }

@@ -2,17 +2,17 @@
 name: strapi-api
 description: >-
   Add or change Strapi 5 API endpoints, routes, controllers, permissions, and
-  content-types in strapi-fluentdeck. Use when creating REST routes, custom
+  content-types in riovox-api. Use when creating REST routes, custom
   handlers, bootstrap permissions, schema.json changes, or Flutter API integration.
 ---
 
 # Strapi API (Riovox)
 
-Strapi **5.49**, Node 20, PostgreSQL. Package name `fluentdeck-api`.
+Strapi **5.49**, Node 20, PostgreSQL. Package name `riovox-api`.
 
 ## Module layout
 
-Each API lives under `strapi-fluentdeck/src/api/<module>/`:
+Each API lives under `riovox-api/src/api/<module>/`:
 
 ```
 <module>/
@@ -24,7 +24,7 @@ Each API lives under `strapi-fluentdeck/src/api/<module>/`:
 └── services/<module>.js
 ```
 
-Business logic often belongs in `strapi-fluentdeck/src/utils/` — keep controllers thin.
+Business logic often belongs in `riovox-api/src/utils/` — keep controllers thin.
 
 ## Custom route pattern
 
@@ -63,7 +63,7 @@ Use `ctx.state.user` for authenticated routes. Return structured JSON the Flutte
 
 ## Permissions bootstrap
 
-New actions **must** be registered in `strapi-fluentdeck/src/index.js` → `bootstrap()` → `linkPermissionToRole()`:
+New actions **must** be registered in `riovox-api/src/index.js` → `bootstrap()` → `linkPermissionToRole()`:
 
 ```javascript
 await linkPermissionToRole('api::flashcard-deck.flashcard-deck.submitReview');
@@ -81,10 +81,10 @@ Without this, authenticated users get 403. Match the action string to Strapi's g
 
 ## Flutter client integration
 
-1. Add method in domain service under `fluentdeck-f/lib/services/`
+1. Add method in domain service under `riovox-app/lib/services/`
 2. Use `ApiService` for Bearer JWT and base URL
 3. Default header: `Strapi-Response-Format: v4` (see `strapi_response.dart`)
-4. Config: `assets/fluentdeck_config.txt` → `API_URL`
+4. Config: `assets/riovox_config.txt` → `API_URL`
 
 ## Existing API clusters
 

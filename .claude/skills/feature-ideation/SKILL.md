@@ -5,7 +5,7 @@ description: >-
   (including brand color / visual identity changes) grounded in the existing
   app. Use when the user asks "what should I build next", wants feature ideas,
   a feature spec, a redesign direction, or a color/palette recommendation for
-  fluentdeck-f/ or the landing page. Hands off to flutter-ui-design,
+  riovox-app/ or the landing page. Hands off to flutter-ui-design,
   strapi-api, ai-tutor, and flashcard-sm2 for implementation.
 ---
 
@@ -18,9 +18,9 @@ Generate ideas that fit **this** app, not generic language-app ideas. Every prop
 Read before proposing:
 
 - `PROJECT.md` — architecture, existing features, freemium limits.
-- `fluentdeck-f/lib/app_colors.dart`, `app_theme.dart`, and `AppPageColors` in `ui_elements/modern_page_widgets.dart` — current design tokens.
-- `fluentdeck-f/lib/screens/` — the tab the idea lives in (learn, speaking_hub, activity, profile).
-- `fluentdeck-landing/index.html` — brand as marketed.
+- `riovox-app/lib/app_colors.dart`, `app_theme.dart`, and `AppPageColors` in `ui_elements/modern_page_widgets.dart` — current design tokens.
+- `riovox-app/lib/screens/` — the tab the idea lives in (learn, speaking_hub, activity, profile).
+- `riovox-landing/index.html` — brand as marketed.
 
 Existing building blocks to reuse: SM-2 decks + review queue, AI speaking tutor with corrections and tutor memory, saved phrases, speaking games/topics, achievements, daily goal + streak, language-level snapshots, notes import, Isar offline sync, AdMob + subscription tiers.
 

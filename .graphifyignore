@@ -20,4 +20,4 @@ brand/
 # generated or duplicated
 .cursor/
 .agents/
-strapi-fluentdeck/.strapi/
+riovox-api/.strapi/

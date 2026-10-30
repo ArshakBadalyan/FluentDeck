@@ -1,0 +1,25 @@
+{
+  "name": "riovox-landing",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Riovox marketing site: AI English speaking practice.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:app": "cd ../riovox-app && flutter build web --release --base-href /app/",
+    "build:all": "npm run build && npm run build:app && node scripts/copy-app.mjs",
+    "serve": "node server.mjs",
+    "media": "python3 scripts/build-media.py"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "5.4.11"
+  },
+  "dependencies": {
+    "motion": "^12.23.12",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

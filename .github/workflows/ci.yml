@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: fluentdeck-f
+        working-directory: riovox-app
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - run: cp .env.example assets/fluentdeck_config.txt
+      - run: cp .env.example assets/riovox_config.txt
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
@@ -25,14 +25,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: strapi-fluentdeck
+        working-directory: riovox-api
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: yarn
-          cache-dependency-path: strapi-fluentdeck/yarn.lock
+          cache-dependency-path: riovox-api/yarn.lock
       - run: yarn install --frozen-lockfile
       - run: yarn test:apkg
       - run: node --test tests/flashcard-review-queue.test.js

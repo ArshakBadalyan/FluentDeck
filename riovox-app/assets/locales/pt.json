@@ -1,0 +1,898 @@
+{
+  "top-bar": {
+    "questions": "perguntas",
+    "today-goal": "Meta de Hoje",
+    "notifications": "Notificações",
+    "explain-one-part-hint": "Repetir dicas de tela para esta página"
+  },
+  "messages": {
+    "slow-connection": "Parece que sua conexão com a internet está lenta. Por favor, tenha paciência.",
+    "stable-connection": "Sua internet está estável agora, vamos continuar",
+    "no-connection-title": "Sem Conexão",
+    "no-connection-text": "Você tem um problema de conexão com a internet, precisamos esperar até que ela esteja estável."
+  },
+  "app-update": {
+    "force-title": "Atualização necessária 📲✨",
+    "force-body": "Esta versão não pode se conectar corretamente mais — precisamos que você esteja na versão mais recente. Toque em Atualizar e você receberá a versão mais recente do Riovox: mais rápida e melhor do que nunca! 🚀",
+    "soft-title": "Nova atualização disponível",
+    "soft-default-body": "Coisas legais estão esperando — recursos, ajustes e vibes legais. Atualize quando puder e continue melhorando seu inglês. 🔥✨",
+    "update-action": "Atualizar",
+    "later-action": "Mais tarde"
+  },
+  "buttons": {
+    "skip": "Pular",
+    "send": "Responder",
+    "next": "Próximo",
+    "description": "solução",
+    "wrong-answer": "resposta errada",
+    "save": "salvar",
+    "start": "Começar",
+    "close": "Fechar",
+    "ok": "OK",
+    "retry": "Tentar novamente"
+  },
+  "inputs": {
+    "E-mail-address": "Endereço de e-mail",
+    "name": "Nome",
+    "surname": "Sobrenome",
+    "nickname": "Apelido",
+    "date-of-birth": "Data de nascimento",
+    "country": "País",
+    "your-country": "Em qual país você mora?",
+    "city": "Cidade",
+    "your-city": "Em qual cidade você mora?",
+    "educational-institution": "Instituição de ensino",
+    "your-educational-institution": "Qual é o nome da sua escola?",
+    "class/course": "Turma",
+    "your-class/course": "Sua turma (ex: 7a ou 7.1)",
+    "class-error": "Por favor, preencha primeiro o nome da sua escola",
+    "E-mail": "E-mail",
+    "E-mail-optional": "E-mail (para recuperação de senha)",
+    "E-mail-nickname": "E-mail ou Apelido",
+    "your-email": "Seu e-mail",
+    "paste-email": "Cole o código do e-mail",
+    "password": "Senha",
+    "enter-password": "Digite sua senha",
+    "enter-password-again": "Digite sua senha novamente",
+    "confirm-password": "confirmar senha",
+    "new-password": "Nova senha",
+    "confirm-new-password": "Confirmar nova senha",
+    "enter-the-keyword": "Digite a palavra-chave",
+    "enter-the-result": "Digite o resultado"
+  },
+  "popups": {
+    "leave-page-popup": {
+      "first-title": "Tem certeza de que deseja",
+      "second-title": "sair desta página ?",
+      "first-text": "Se você sair desta página, suas alterações",
+      "second-text": "não serão salvas",
+      "save": "Salvar",
+      "leave": "Sair",
+      "save-failed": "Não foi possível salvar suas alterações. Por favor, tente novamente."
+    },
+    "delete-page-popup": {
+      "first-title": "Tem certeza de que deseja",
+      "second-title": "excluir sua conta ?",
+      "first-text": "Se você deletar sua conta agora",
+      "second-text": "você não poderá desfazer essa ação, todos os seus dados serão apagados permanentemente.",
+      "delete": "Deletar",
+      "cancel": "Cancelar"
+    },
+    "success-message-popup": {
+      "title": "Pronto",
+      "got-it": "Entendi"
+    }
+  },
+  "over": {
+    "points": "pontos",
+    "week": "semana",
+    "month": "mês",
+    "next": "próximo",
+    "prev": "anterior",
+    "loading": "Carregando",
+    "search": "pesquisar",
+    "class": "Classe",
+    "no-search-results": "Infelizmente, não há resultados para sua pesquisa. Por favor, altere sua pesquisa ou escolha da lista abaixo."
+  },
+  "home": {
+    "welcome": "Bem-vindo",
+    "play-game": "Jogar",
+    "improve-your-skills": "melhore suas habilidades",
+    "be-the-first": "Seja o primeiro no Mundo",
+    "start-playing": "Começar a jogar"
+  },
+  "onboarding": {
+    "skip": "Pular",
+    "next": "Próximo",
+    "get-started": "Começar",
+    "language": "Idioma do app",
+    "pages": {
+      "speak": {
+        "title": "Converse com um tutor de IA que nunca julga",
+        "body": "Fale em voz alta ou digite. O Rio responde com voz natural e corrige seus erros com gentileza.",
+        "chips": {
+          "voice-or-text": "Voz ou texto",
+          "gentle-corrections": "Correções gentis",
+          "remembers-you": "Lembra de você"
+        }
+      },
+      "practice": {
+        "title": "Pratique o que você precisa",
+        "body": "Escolha um tópico, encene situações reais como uma entrevista de emprego ou uma viagem, jogue jogos de fala ou crie seus próprios cenários.",
+        "chips": {
+          "topics": "Tópicos",
+          "role-plays": "Cenários",
+          "games": "Jogos de fala",
+          "languages": "16 idiomas"
+        }
+      },
+      "flashcards": {
+        "title": "Seus erros se tornam cartões",
+        "body": "Correções e novas palavras podem ser salvas automaticamente em suas anotações. Revise-os em pilhas que trazem cada cartão de volta antes que você esqueça, ou importe suas outras pilhas.",
+        "chips": {
+          "auto-saved": "Salvo para você",
+          "spaced-repetition": "Revisões inteligentes",
+          "anki-import": "Importar outras pilhas"
+        }
+      },
+      "progress": {
+        "title": "Veja seu progresso",
+        "body": "Defina uma meta diária, mantenha sua sequência e assista ao seu nível (A1–C2) crescer em cada idioma que você pratica.",
+        "chips": {
+          "daily-goal": "Meta diária",
+          "streak": "Sequência",
+          "cefr-level": "Seu nível"
+        }
+      },
+      "plan": {
+        "title": "Comece de graça",
+        "body": "Tudo que você precisa para começar é grátis. Atualize a qualquer momento para mais conversação.",
+        "free-title": "Grátis",
+        "free-body": "{time} de conversação com IA por dia, mais cartões e decks.",
+        "premium-title": "Premium",
+        "premium-body": "Até {time} de conversação com IA por dia, sem anúncios e todo o conteúdo de fala."
+      }
+    }
+  },
+  "login-register": {
+    "sign-in": "Entrar",
+    "sign-in-subtitle": "O Rio guardou o seu progresso. Entre para continuar falando.",
+    "sign-up-subtitle": "Pratique a conversação com o Rio de graça. Sem cartão.",
+    "sign-up": "Cadastrar-se",
+    "registration": "Cadastro",
+    "only-nickname": "Apenas apelido",
+    "remember-me": "Lembrar-me",
+    "forgot-password": "Esqueceu a senha ?",
+    "sign-in-using": "Entrar usando",
+    "sign-up-using": "Cadastrar-se usando",
+    "google": "Google",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "apple": "Apple",
+    "apple-unavailable": "Entrar com Apple não está disponível neste dispositivo.",
+    "apple-auth-failed": "Entrar com Apple falhou. Por favor, tente novamente.",
+    "apple-web-unavailable": "Entrar com Apple está disponível apenas no app iOS ou Android.",
+    "google-auth-failed": "Entrar com Google falhou. Por favor, tente novamente.",
+    "google-web-unavailable": "Entrar com Google está disponível apenas no app iOS ou Android.",
+    "dont-have-account": "Ainda não tem uma conta?",
+    "already-have-account": "Já tem uma conta?",
+    "user-cancelled-login": "Usuário cancelou o login ou não autorizou completamente.",
+    "user-cancelled-register": "Usuário cancelou o cadastro ou não autorizou completamente.",
+    "account-type-student": "Aluno",
+    "email-invalid": "Digite um endereço de e-mail válido.",
+    "welcome-back": "Que bom te ver de novo",
+    "email-or-nickname": "E-mail ou apelido",
+    "forgot-password-short": "Esqueceu a senha?",
+    "sign-in-button": "Entrar",
+    "or-continue-with": "ou continue com",
+    "new-here": "Novo por aqui?",
+    "create-account": "Crie uma conta",
+    "start-free": "Comece a falar de graça",
+    "sign-up-subtitle-minutes": "{count} minutos com o Rio todos os dias. Sem cartão.",
+    "language-pair": "Eu falo → Quero falar",
+    "i-speak": "Eu falo",
+    "i-want-to-speak": "Quero falar",
+    "email": "E-mail",
+    "password-min": "Use pelo menos {count} caracteres.",
+    "create-account-button": "Criar conta",
+    "legal-before": "Ao continuar, você concorda com os ",
+    "terms": "Termos",
+    "legal-and": " e a ",
+    "privacy": "Política de Privacidade",
+    "have-account": "Já tem conta?",
+    "sign-in-link": "Entrar",
+    "legal-after": "."
+  },
+  "forgot-password": {
+    "subtitle": "Digite seu e-mail e enviaremos um link para redefini-la.",
+    "forgot-password": "Esqueceu a senha ?",
+    "send-email": "Enviar e-mail",
+    "back-to-start": "Voltar à página inicial",
+    "title": "Redefina sua senha",
+    "subtitle-short": "Digite seu e-mail e enviaremos um link.",
+    "send-link": "Enviar link",
+    "check-inbox": "Confira seu e-mail",
+    "check-inbox-body": "O link vale por 1 hora. Não chegou? Veja no spam.",
+    "enter-code": "Inserir o código"
+  },
+  "reset-password": {
+    "reset-password": "Redefinir senha",
+    "error-msg": "A senha e a confirmação da senha devem ser iguais",
+    "back-to-login": "Voltar para login"
+  },
+  "activity": {
+    "Activity": "Atividade",
+    "tabs": {
+      "My Status": "Meu Status",
+      "Top List": "Top List",
+      "My Answers": "Minhas Respostas",
+      "Progress": "Progresso"
+    },
+    "my-status": {
+      "set-everyday-goal": "Definir objetivo diário",
+      "daily-goal-placeholder": "Escolha um objetivo diário",
+      "daily-goal-card-hint": "Escolha um número que você consiga cumprir — você pode alterá-lo a qualquer momento.",
+      "last-quiz": "Último Quiz",
+      "experience-points": "Pontos de experiência",
+      "last-update": "Última atualização:",
+      "past-categories": "Categorias passadas",
+      "categories-were-answered": "Categorias respondidas",
+      "you-are-in": "Você está em Riovox",
+      "welcome-app": "Bem-vindo ao Riovox! 👋",
+      "no-goal": "Sem objetivo",
+      "today-activity": "Atividade de hoje",
+      "wrong": "Errado",
+      "skipped": "Pulei",
+      "correct": "Correto",
+      "check-progress": "Verificar Progresso",
+      "goal-set": "Sua meta diária foi definida",
+      "goal-cleared": "Sua meta diária foi concluída."
+    },
+    "top-list": {
+      "lists": [
+        {
+          "title": "Na sua Classe",
+          "fieldName": "classe"
+        },
+        {
+          "title": "Na sua Escola",
+          "fieldName": "escola"
+        },
+        {
+          "title": "Na sua Cidade",
+          "fieldName": "cidade"
+        },
+        {
+          "title": "No seu País",
+          "fieldName": "país"
+        },
+        {
+          "title": "No Mundo",
+          "fieldName": "mundo"
+        }
+      ],
+      "place": "local",
+      "please": "Por favor",
+      "update": "atualizar",
+      "your": "seu",
+      "from": "de",
+      "people": "pessoas",
+      "back-to-the-top-list": "Voltar à Lista de Destaque",
+      "there-is-no-any-user": "Não há nenhum usuário com este nome de usuário"
+    },
+    "my-answers": {
+      "summary": "Resumo",
+      "questions-passed": "perguntas respondidas",
+      "of": "de",
+      "correct-answers": "respostas corretas",
+      "wrong-answers": "respostas erradas",
+      "skipped-answers": "respostas puladas"
+    },
+    "progress": {
+      "you-have-registered": "Você se registrou em"
+    }
+  },
+  "topics": {
+    "topics": "Tópicos",
+    "previous": "Anterior",
+    "next": "Próximo",
+    "classes": "classes",
+    "grades": {
+      "1-2": "Anos 1-2",
+      "2-3": "Anos 2-3",
+      "3-4": "Anos 3-4",
+      "4-5": "Anos 4-5",
+      "5-6": "Anos 5-6",
+      "6-7": "Anos 6-7",
+      "7-8": "7º-8º ano",
+      "8-9": "8º-9º ano",
+      "9-10": "9º-10º ano",
+      "10-11": "10º-11º ano",
+      "11-12": "11º-12º ano"
+    }
+  },
+  "question": {
+    "question": "pergunta",
+    "continue": "Continuar",
+    "point": "ponto",
+    "start-practice": "Iniciar prática",
+    "back-to-categories": "Voltar às categorias",
+    "train-topic-in-remix": "Treinar este tópico em Themen-Mix",
+    "right-answered": "resposta correta",
+    "check-skipped": "Verificar puladas",
+    "single-skipped-text": "Você passou por grande parte do tópico, mas pulou 1 pergunta. Você pode verificar mais uma vez ou deixar para depois.",
+    "leave-for-now": "Deixar para depois",
+    "your-score-on-this-topic": "Sua pontuação neste tópico",
+    "will-be-update": "Você terminou este tópico. Suas conquistas serão atualizadas em breve.",
+    "skipped-first-text": "Você passou por grande parte do tópico, mas pulou",
+    "skipped-second-text": "perguntas. Você pode verificar mais uma vez ou deixar para depois.",
+    "exercise-solution": "Solução do exercício",
+    "step-of": "Passo {current} de {total}",
+    "next-mc-step": "Próximo passo",
+    "tap-to-continue": "Toque em qualquer lugar para continuar",
+    "back-step": "Voltar",
+    "wrong-answer-title": "Incorreto",
+    "wrong-answer-hint": "Continue tentando — você vai conseguir na próxima.",
+    "second-answer-wrong-retry": "Esse resultado ainda não está correto. Você tem mais uma tentativa.",
+    "lesson-material": "Material de estudo",
+    "wrong-solution-coach-1": "Dê uma olhada na solução do exercício!",
+    "wrong-solution-coach-2": "Abra a solução — veja como é feito.",
+    "wrong-solution-coach-3": "Um toque para a solução.",
+    "wrong-solution-coach-4": "A solução detalhada mostra o caminho.",
+    "wrong-solution-coach-5": "A solução pode te ajudar a seguir em frente.",
+    "wrong-solution-coach-6": "Dá uma olhada rápida no método?",
+    "wrong-solution-coach-7": "Tente a solução do exercício.",
+    "wrong-solution-coach-8": "Vale a pena dar uma olhada.",
+    "wrong-solution-coach-9": "Todo o passo a passo está aqui.",
+    "wrong-solution-coach-10": "Pegue os passos aqui.",
+    "no-solution": "Desculpe, não temos solução disponível agora.",
+    "multiselect-hint": "Mais de uma resposta está correta. Selecione todas que se aplicam.",
+    "whiteboard-button": "Quadro Branco",
+    "report-flag-tooltip": "Relatar um problema",
+    "report-title": "Relatar um Problema",
+    "report-option-unreadable": "O exercício ou as opções de resposta não são legíveis.",
+    "report-option-no-correct": "Não há resposta correta.",
+    "report-option-marked-wrong": "A resposta correta está marcada como incorreta.",
+    "report-option-topic-mismatch": "O exercício não corresponde ao tema.",
+    "report-option-several-correct": "Várias respostas estão corretas.",
+    "report-option-other": "Outro.",
+    "report-details-hint": "ex: Há um erro de digitação…",
+    "report-submit": "ENVIAR",
+    "report-cancel": "CANCELAR",
+    "report-sent": "Obrigado. Seu relatório foi enviado.",
+    "report-send-error": "Não foi possível enviar seu relatório. Tente novamente mais tarde.",
+    "report-validation": "Selecione pelo menos uma opção ou adicione uma nota curta.",
+    "report-sending": "Enviando…",
+    "lightbox-choose-answer": "Escolher esta resposta",
+    "lightbox-selected": "Selecionado"
+  },
+  "practice": {
+    "practice": "Praticar",
+    "player-vs-machine": "Jogador VS Máquina",
+    "player-vs-friend": "Jogador VS Amigo",
+    "play-with-friends": "Jogador VS Jogador",
+    "can-practice-with-friends": "Você pode praticar com um aluno\nque tenha uma classificação similar",
+    "practice-with-friends-questions": "Quantidade de perguntas: 10-30",
+    "try-again": "Tentar novamente",
+    "practice-with-friends-load": "Estamos procurando pelo seu oponente\nPor favor, aguarde um pouco",
+    "your-score": "Sua pontuação:",
+    "machine-score": "Pontuação da máquina:",
+    "nickname-score": "Pontuação de {nickname}:",
+    "friend-score": "Pontuação do amigo:",
+    "friend-think": "está pensando agora...",
+    "answered-all-text": "Você respondeu a todas as perguntas",
+    "opponent-default": "Oponente",
+    "mode-scores": {
+      "10": "+10, +5, -2",
+      "20": "+20, +10, -4",
+      "30": "+30, +15, -6"
+    },
+    "questions-count": "{count} perguntas",
+    "your-answer": "Sua resposta",
+    "popup-go-topic": {
+      "Oops": "Oops!",
+      "first-text": "Você precisa responder pelo menos",
+      "second-text": "perguntas para jogar contra a máquina. Por favor, continue seu aprendizado na página de Tópicos por enquanto."
+    },
+    "no-players-popup": {
+      "title": "Não há jogadores disponíveis",
+      "text": "Desculpe, não há jogadores disponíveis neste momento 🤷‍♀️. Tente mais tarde.",
+      "go-to-practice": "Ir para a página de prática",
+      "try-again": "Tentar novamente"
+    },
+    "left-by-rival-popup": {
+      "title": "Ops!",
+      "text": "Seu oponente deixou o jogo. Você é o vencedor."
+    },
+    "leave-page-popup": {
+      "first-text": "Seu progresso será perdido e você perderá",
+      "stay": "Ficar"
+    },
+    "finish-game-popup": {
+      "save-btn-text": "Nova Partida",
+      "leave-btn-text": "Meu Status",
+      "win": {
+        "title": "Você venceu",
+        "text": "Você ganhou {points} pontos"
+      },
+      "draw": {
+        "title": "Você empatou",
+        "text": "Você ganhou {points} pontos"
+      },
+      "lose": {
+        "title": "Você perdeu",
+        "text": "Você perdeu {points} pontos"
+      }
+    },
+    "result-win": "Vitória",
+    "result-draw": "Empate",
+    "result-lose": "Derrota",
+    "remix": {
+      "tab-label": "Mistura de tópicos",
+      "session-title": "Tópicos misturados",
+      "pick-intro-title": "Escolha os tópicos que você quer praticar",
+      "pick-intro-subtitle": "Apenas os tópicos que você concluiu em Temas são listados abaixo. Selecione um ou mais, então toque em Continuar.",
+      "search-hint": "Procure tópicos concluídos…",
+      "empty-class": "Nenhum tópico concluído nesta classe.",
+      "none-completed": "Conclua pelo menos um tópico em Temas para praticar aqui.",
+      "no-classes": "As classes não puderam ser carregadas.",
+      "load-error": "Algo deu errado ao carregar. Arraste para atualizar ou tente novamente.",
+      "exercises-count": "Número de exercícios: {count}",
+      "selected-count-singular": "{n} tópico",
+      "selected-count-plural": "{n} tópicos",
+      "continue-step": "Continuar",
+      "step2-title": "Tópicos selecionados",
+      "remove-topic": "Remover tópico",
+      "search-empty": "Nenhum tópico corresponde à sua pesquisa.",
+      "class-unknown": "Classe {id}",
+      "start": "Iniciar prática",
+      "load-questions-error": "Não foi possível carregar os exercícios. Verifique sua conexão ou seleção de tópicos.",
+      "summary-score-label": "Sua pontuação nesta rodada",
+      "summary-correct-wrong": "Correto: {correct} · Errado: {wrong}",
+      "summary-skipped": "Pulado: {count}",
+      "summary-session-size": "Exercícios nesta rodada: {total}",
+      "done": "Pronto"
+    }
+  },
+  "push-prompt": {
+    "invite-title-20": "20 tarefas – ótimo trabalho! 💪",
+    "invite-body-20": "Quer receber lembretes tranquilos quando houver algo novo ou quando sua meta diária estiver esperando? Vamos mostrar a janela do sistema a seguir – você decide!",
+    "invite-title-200": "200 concluídos – você está em forma! 🚀",
+    "invite-body-200": "Isso é muitas repetições! Se quiser, enviaremos ocasionalmente motivação e novidades por push. Totalmente opcional. ✨",
+    "yes-activate": "Sim, vamos lá!",
+    "not-now": "Talvez depois",
+    "opened-settings-hint": "Legal! Nas configurações, ative as notificações para o Riovox e está tudo pronto. ⚙️",
+    "native-denied-hint": "Sem problema – você pode ativar push a qualquer momento em Perfil → Notificações. 😊",
+    "banner-title": "Ligar notificações?",
+    "banner-subtitle": "Receba dicas amigáveis e lembretes – um toque, depois a janela do sistema. 🔔",
+    "banner-cta": "Ativar agora",
+    "thank-you": "Obrigado! 🎉 Você está conectado – só receberemos notificações quando valer a pena."
+  },
+  "screen-tutorial": {
+    "sheet": {
+      "this-page-title": "Esta página",
+      "this-page-subtitle": "Apenas as áreas da tela que você está vendo. Para navegação, controles de cabeçalho e a lista completa — abra Perfil → Sobre → Mostrar dicas.",
+      "all-tips-title": "Dicas de tela",
+      "all-tips-subtitle": "Tudo que explicamos, incluindo a navegação inferior e o cabeçalho roxo.",
+      "no-page-tips": "Não há dicas rápidas listadas para esta área."
+    },
+    "common": {
+      "skip": "Pular",
+      "next": "Próximo",
+      "done": "Concluído",
+      "back": "Voltar",
+      "step_counter": "Passo {current} de {total}",
+      "accessibility_coach": "Superfície de tour guiada"
+    },
+    "shared_app_chrome": {
+      "bottom_nav": {
+        "title": "Seções principais",
+        "body": "Use a barra inferior para alternar entre Atividade, Tópicos, Prática e Perfil. A aba em que você está permanece selecionada até você escolher outro ícone."
+      },
+      "sub_tabs": {
+        "title": "Banda de abas superior",
+        "body": "Abaixo do cabeçalho roxo, essas abas alteram o que você vê nesta tela—status vs. quadros de classificação, níveis de classe, modos de prática ou áreas de perfil—sem sair da seção principal."
+      },
+      "today_goal": {
+        "title": "Meta do dia no cabeçalho",
+        "body": "A linha abaixo do título da tela mostra sua meta diária de perguntas e como ela se alinha com sua meta de conta."
+      },
+      "notifications": {
+        "title": "Painel de notificações",
+        "body": "Toque no sino para abrir o painel lateral com suas notificações e atualizações recentes."
+      }
+    },
+    "shared_practice": {
+      "sub_tabs": {
+        "title": "Modos de prática",
+        "body": "Mude entre Remix (tópicos mistos), contra a máquina ou contra um amigo. Cada aba usa o mesmo cabeçalho, mas ações diferentes abaixo."
+      }
+    },
+    "shared_profile": {
+      "main_nav": {
+        "title": "Perfil na barra inferior",
+        "body": "Abra Perfil a partir da navegação inferior para gerenciar conta, alertas, segurança e informações do aplicativo."
+      },
+      "sub_tabs": {
+        "title": "Seções do perfil",
+        "body": "Essas abas dividem as configurações longas em Conta, Notificações, Segurança, Sobre, compartilhamento e Som, para que você possa pular direto para o que precisa."
+      }
+    },
+    "activity_status": {
+      "s1_title": "Mais estatísticas de atividade",
+      "s1_body": "Lista Top, Minhas Respostas e Progresso: classificações, quebras de respostas e gráficos para o seu progresso e desempenho.",
+      "s2_title": "Meta diária",
+      "s2_body": "Defina um número mínimo de exercícios para resolver todos os dias — ajuda você a manter a consistência."
+    },
+    "activity_answers": {
+      "s4_title": "Visão geral das respostas",
+      "s4_body": "Cada guia mostra totais, correção, pulos ou erros agregados do seu histórico de prática."
+    },
+    "activity_progress": {
+      "s3_title": "Semana vs. mês",
+      "s3_body": "Troque o período no topo, então deslize as setas mais tarde para revisitar semanas ou meses anteriores.",
+      "s4_title": "Gráfico de atividade",
+      "s4_body": "As barras codificam a intensidade com que você estudou cada dia. Toque em um pico para examinar a quebra para aquele dia."
+    },
+    "topics_browse": {
+      "s2_title": "Sua turma",
+      "s2_body": "Selecione a aba da sua turma sob o cabeçalho roxo para ver os tópicos para aquele ano letivo.",
+      "s3_title": "Pesquisa",
+      "s3_body": "Use a pesquisa para encontrar um tópico pelo nome.",
+      "s5_title": "Linhas de tópicos",
+      "s5_body": "Encontre cada tópico verificando o exercício de exemplo. Marque “Aula” se estiver disponível."
+    },
+    "learning_exercise": {
+      "s1_title": "Exercício (pergunta)",
+      "s1_body": "Leia o enunciado aqui—às vezes uma pergunta tem partes extras; use os pontos ou deslize quando elas aparecerem.",
+      "s2_title": "Respostas",
+      "s2_body": "Toque em uma opção (ou em várias, se aparecerem caixas de seleção) e use o botão amarelo Enviar abaixo para enviar. Depois de enviar, as cores mostram as escolhas corretas, incorretas ou descartadas.",
+      "s3_title": "Solução detalhada",
+      "s3_body": "Quando você estiver preso ou tiver dado uma resposta errada, toque em “Solução do exercício”—ela abre ajuda passo a passo em uma folha."
+    },
+    "practice_remix_intro": {
+      "s1_title": "Mistura de tópicos (Remix)",
+      "s1_body": "Aqui você combina exercícios de tópicos que já terminou em Themen.",
+      "s2_title": "Desbloqueie o seletor primeiro",
+      "s2_body": "Termine pelo menos dois tópicos em Tópicos primeiro. Depois, essa aba revela a pesquisa, a lista agrupada por classe e Continuar para criar sua mistura."
+    },
+    "practice_remix": {
+      "s3_title": "Pesquisar tópicos passados",
+      "s3_body": "Digite para filtrar as classes que você já concluiu para poder combiná-las em uma rodada de remix.",
+      "s4_title": "Continuar",
+      "s4_body": "Depois de selecionar pelo menos um tópico, toque em Continuar para revisar suas escolhas e definir quantos exercícios você quer.",
+      "s5_title": "Tópicos por classe escolar",
+      "s5_body": "A lista agrupa tópicos sob cabeçalhos de classe—rolo pelas seções para misturar áreas de outro ano ou rastrear."
+    },
+    "practice_remix_configure": {
+      "s1_title": "Número de exercícios",
+      "s1_body": "Arraste o slider para escolher quantos exercícios essa rodada de remix deve incluir. Toque em Iniciar prática quando estiver pronto."
+    },
+    "practice_vs_machine": {
+      "s3_title": "Escolha a duração da rodada",
+      "s3_body": "Cada linha inicia um duelo com a IA com 10, 20 ou 30 perguntas. Sua pontuação aparece quando a rodada termina."
+    },
+    "practice_vs_player": {
+      "s3_title": "Comece um duelo com um amigo",
+      "s3_body": "Toque em Começar, escolha quantas perguntas sincronizar e o MatcheApp te emparelha para uma sessão estilo versus ao vivo."
+    },
+    "profile_account": {
+      "s3_title": "Formulário de conta",
+      "s3_body": "Rolo para atualizar e-mail, nome, escola, turma e idioma. Salvar aplica tudo de uma vez; ações destrutivas ficam na parte inferior."
+    },
+    "profile_notifications": {
+      "s3_title": "Interruptor principal de notificações",
+      "s3_body": "Deslize o interruptor para se inscrever ou se desinscrever das notificações OneSignal. O texto de status abaixo reflete o estado da assinatura em tempo real."
+    },
+    "profile_security": {
+      "s3_title": "Fluxo de senha",
+      "s3_body": "Digite e confirme uma nova senha, depois toque em Salvar. Ícones de visibilidade ajudam a verificar a digitação em teclados pequenos."
+    },
+    "profile_about": {
+      "s3_title": "Lista de informações",
+      "s3_body": "Abra informações legais, licenças, notas de lançamento ou avaliações da loja por meio dessas linhas.",
+      "s4_title": "Dicas de tela",
+      "s4_body": "Use “Mostrar dicas” para a lista completa de dicas. Administradores também veem “Redefinir todas as dicas de tela” nesta tela de informações para reiniciar cada tour guiado do zero."
+    },
+    "profile_share": {
+      "s3_title": "Caixas de e-mail de responsáveis",
+      "s3_body": "Adicione até quatro endereços de e-mail de responsáveis para compartilhar relatórios de forma responsável. Entradas salvas aparecem primeiro; campos vazios aceitam novos e-mails."
+    },
+    "profile_sound": {
+      "s3_title": "Som e volume",
+      "s3_body": "Ative/desative efeitos de sons de feedback e arraste o controle deslizante para definir o volume. Um breve exemplo toca quando o som retorna do silêncio."
+    },
+    "segments": {
+      "activity_answers": "Anéis de estatísticas de respostas",
+      "activity_progress_chart": "Gráfico de progresso",
+      "activity_progress_period": "Semana / mês",
+      "chrome_bottom_nav": "Navegação inferior",
+      "chrome_notifications": "Sineta de notificações",
+      "chrome_search": "Pesquisa de tópicos",
+      "chrome_sub_tabs": "Abas sob o cabeçalho roxo",
+      "chrome_today_goal": "Linha de objetivo do dia no cabeçalho",
+      "practice_machine_list": "Rodadas contra a máquina",
+      "practice_player_start": "Jogar com amigo — Iniciar",
+      "practice_remix_continue": "Remix — Continuar",
+      "practice_remix_exercise_count": "Remix — contagem de exercícios (barra de rolagem)",
+      "practice_remix_search": "Pesquisa de tópico Remix",
+      "practice_remix_class_topics": "Tópicos por classe Remix (lista)",
+      "profile_about_list": "Linhas sobre e legais",
+      "profile_about_replay_hint": "Repetir / resetar tours (texto)",
+      "profile_account_form": "Campos do formulário de conta",
+      "profile_notifications_toggle": "Interruptor de notificações push",
+      "profile_security_fields": "Campos de senha e salvar",
+      "profile_share_emails": "E-mails de relatório / pais",
+      "profile_sound_mixer": "Controles de som e volume",
+      "topics_class_tabs": "Abas de ano escolar",
+      "topics_list": "Lista de cartões de tópicos",
+      "topics_search": "Pesquisar tópicos"
+    }
+  },
+  "profile": {
+    "profile": "Perfil",
+    "tabs": [
+      "Conta",
+      "Notificações",
+      "Segurança",
+      "Sobre Nós",
+      "Enviar Relatórios",
+      "Som"
+    ],
+    "classes-tab": "Minhas classes",
+    "notifications": {
+      "title": "Notificações Push",
+      "description": "Receba lembretes e atualizações sobre seus objetivos e progresso diários.",
+      "push-label": "Notificações Push",
+      "status-on": "Você está recebendo notificações push",
+      "status-off": "Notificações push estão desativadas"
+    },
+    "account": {
+      "logout-warning": "Aviso de saída",
+      "logout-text": "Por favor, forneça seu e-mail e senha para poder fazer login novamente posteriormente. Caso contrário, sua conta e todos os dados relacionados serão deletados imediatamente após a saída. Esta ação não pode ser revertida",
+      "log-out": "Sair",
+      "delete": "Excluir conta",
+      "save-and-logout": "Salvar e sair",
+      "delete-account": "Excluir conta",
+      "delete-error": "Erro ao excluir",
+      "language": "Idioma",
+      "app-language-title": "Idioma do app",
+      "app-language-hint": "Menus e botões. O idioma que você pratica é definido nas configurações de fala do AI.",
+      "language-de": "Alemão",
+      "language-en": "Inglês"
+    },
+    "security": {
+      "popup-text": "Senha alterada com sucesso",
+      "password-min-length": "A senha deve ter no mínimo 6 caracteres",
+      "change-error": "Erro ao alterar senha"
+    },
+    "about-us": {
+      "replay-intro-this-tab": "Mostrar dicas para esta aba novamente",
+      "reset-intro-tours": "Redefinir todas as dicas de tela",
+      "reset-intro-title": "Redefinir todas as dicas?",
+      "reset-intro-body": "Na próxima vez que você abrir cada tela principal, veremos novamente a introdução dela.",
+      "reset-intro-confirm": "Redefinir",
+      "terms-of-services": "Termos de serviço",
+      "privacy": "Privacidade",
+      "privacy-settings": "Configurações de privacidade",
+      "imprint": "Impressão",
+      "software-licenses": "Licenças de software",
+      "release-notes": "Notas de lançamento",
+      "write-review": "Avalie o app",
+      "app-review-title": "O que você pensa sobre o Riovox?",
+      "app-review-subtitle": "Toque nas estrelas para escolher uma classificação.",
+      "app-review-feedback-hint": "O que poderíamos melhorar? Por favor, compartilhe detalhes aqui …",
+      "app-review-open-store": "Continuar na loja",
+      "app-review-submit": "Enviar feedback",
+      "app-review-cancel": "Cancelar",
+      "app-review-thanks-feedback": "Obrigado pelo seu feedback!",
+      "app-review-send-error": "Não foi possível enviar. Verifique sua conexão e tente novamente.",
+      "app-review-open-store-failed": "Não foi possível abrir a loja.",
+      "explain-one-part": "Explique uma parte…",
+      "show-tips": "Mostrar dicas…",
+      "explain-one-part-title": "Escolha o que explicar",
+      "explain-one-part-subtitle": "Nós destacamos esse controle na tela. As opções correspondem à aba que você está agora."
+    },
+    "send-reports": {
+      "introduction-text": "Compartilhe seu sucesso com seus pais, professores e amigos por e-mail.",
+      "saved-email": "E-mails salvos:",
+      "parent-email": "Digite o e-mail do seu pai",
+      "not-saved-email": "Você ainda não salvou nenhum e-mail de pais",
+      "add-four-email-text": "Você pode adicionar no máximo 4 e-mails, mas pode editar um dos e-mails existentes ou removê-lo.",
+      "enter-new-email": "Por favor, insira novo E-mail",
+      "leave-popup-title": "Você tem certeza que deseja <br> excluir este E-mail ?",
+      "leave-popup-text": "Se você fechar esta janela, o E-mail não será removido",
+      "email-can-not-be-empty": "O E-mail não pode estar vazio",
+      "saved-successfully": "Você salvou com sucesso",
+      "success-text": "Você atualizou com sucesso o E-mail do responsável",
+      "remove-success-text": "Você removeu com sucesso o E-mail do responsável",
+      "successfully-updated": "Atualizado com sucesso",
+      "no": "Não",
+      "yes": "Sim"
+    },
+    "sound": {
+      "sound": "Som",
+      "sound-volume": "Volume do som"
+    }
+  },
+  "notification": {
+    "there-arnt-notification": "Ainda não há notificações",
+    "welcome-app": "Bem-vindo ao Riovox",
+    "play-more-games": "Jogue mais jogos, melhore suas habilidades e seja o primeiro no mundo!",
+    "mark-all-read": "Marcar tudo como lido",
+    "open-classes-hint": "Abra as Classes para revisar pedidos de entrada ou saída.",
+    "open-profile-hint": "Abra o Perfil → Minhas classes para ver seu status de classe."
+  },
+  "common": {
+    "more-options": "Mais opções",
+    "me": "Eu",
+    "no-questions-available": "Nenhuma pergunta disponível",
+    "fill-all-fields": "Por favor, preencha todos os campos",
+    "app-name-left": "Fluent",
+    "app-name-right": "Deck",
+    "version-prefix": "v"
+  },
+  "admin": {
+    "confirm-delete": "Toque novamente para confirmar",
+    "generate": "Gerar",
+    "review": "Revisar",
+    "publish": "Publicar",
+    "unpublish": "Despublicar",
+    "delete": "Excluir",
+    "done": "Pronto",
+    "submit": "Enviar",
+    "remove": "Remover",
+    "add-exercise": "Adicionar Exercício",
+    "number-of-questions-label": "Número de perguntas:",
+    "topic-name-label": "Nome do tópico",
+    "exercise-example-label": "Exemplo de exercício {index}",
+    "correct-answer-label": "Resposta correta",
+    "wrong-answers-label": "Respostas incorretas",
+    "second-answer-label": "Segunda resposta",
+    "multistep-follow-correct": "Passo de acompanhamento {step} (correto)",
+    "multistep-follow-wrong": "Passo de acompanhamento {step} (respostas incorretas)",
+    "multistep-prompt-header": "Modo: múltipla escolha em etapas. Combine o número de opções incorretas em cada etapa com o modelo abaixo. Gere a cadeia completa de etapas para cada novo exercício.",
+    "multistep-stem-logic-line": "Fluxo: para o passo de acompanhamento n, a linha visível para o aluno é a resposta correta do passo anterior (resposta principal correta → passo 1, resposta correta do passo 1 → passo 2, …). As opções em cada etapa devem ser passos plausíveis a partir desse resultado anterior.",
+    "multistep-api-field-map": "Nomes de campos da API que o modelo deve retornar para cada novo exercício: passo principal: exercício, respostaCorreta, respostasIncorretas (array de respostas incorretas). Acompanhamento 1: resposta_1, respostas_incorretas_1. Acompanhamento 2: resposta_2, respostas_incorretas_2. Acompanhamento 3: resposta_3, respostas_incorretas_3. Acompanhamento 4: resposta_4, respostas_incorretas_4. Não use respostaCorreta1 ou respostasIncorretas1 — use resposta_1 e respostas_incorretas_1. Após todas as etapas: segundaResposta = resultado final apenas se o tópico usar (caso contrário, deixe em branco).",
+    "multistep-wrong-counts-line": "Modelo de contagem de opções incorretas por etapa (seus novos exercícios devem usar as mesmas contagens): {detail}",
+    "multistep-second-answer-final": "Segunda resposta (apenas se o tópico usar: resultado final após o último passo; deixe em branco caso contrário)",
+    "generate-lesson": "Material de estudo",
+    "lesson-generated-title": "Material de estudo salvo",
+    "lesson-generated-body": "A lição foi gerada e salva para este tópico. Você pode revisá-la no Strapi ou abri-la no app.",
+    "lesson-generated-error-title": "Geração falhou",
+    "lesson-generated-error-body": "A lição não pôde ser gerada. Verifique sua conexão, direitos de administrador e configuração do OpenAI, e tente novamente.",
+    "open-in-strapi": "Abrir no Strapi",
+    "statistics": {
+      "tab-label": "Estatísticas",
+      "title": "Estatísticas do app",
+      "period": "{range_summary} · {granularity} · {start} — {end}",
+      "registrations-chart": "Registros ({suffix})",
+      "answered-chart": "Exercícios respondidos ({suffix}), corretos ou incorretos — pulos não contados",
+      "solved-chart": "Respostas corretas apenas ({suffix})",
+      "load-error": "Não foi possível carregar as estatísticas. Verifique os direitos de administrador ou tente novamente.",
+      "retry": "Tentar novamente",
+      "no-data": "Nenhum dado para este intervalo.",
+      "range-label": "Intervalo",
+      "range": {
+        "last-30": "Últimos 30 dias",
+        "current-month": "Mês atual",
+        "last-month": "Mês anterior",
+        "custom": "Personalizado"
+      },
+      "custom-start": "De",
+      "granularity": {
+        "period-month": "buckets mensais"
+      }
+    }
+  },
+  "search": {
+    "keywords": [
+      "números racionais",
+      "multiplicação",
+      "números decimais",
+      "porcentagem",
+      "racional",
+      "divisão",
+      "adição",
+      "subtração",
+      "métodos escritos",
+      "comparar",
+      "com arredondamento",
+      "sem arredondamento",
+      "tarefas comutativas",
+      "dinheiro",
+      "tempo",
+      "arredondamento",
+      "conversão de unidades",
+      "único dígito",
+      "parênteses",
+      "Exponenciais",
+      "com x",
+      "Binomial",
+      "Linear",
+      "Raiz",
+      "Quadrática"
+    ]
+  },
+  "privacy-content": {
+    "summary": "Esta política de privacidade descreve como o Riovox coleta, usa e compartilha dados pessoais.",
+    "intro-title": "Introdução",
+    "intro-text": "Nós, a equipe do Riovox, levamos a proteção de seus dados pessoais muito a sério e seguimos rigorosamente as leis de proteção de dados. Esta política de privacidade informa sobre o tipo, escopo e propósito da coleta e uso de dados pessoais em nosso aplicativo móvel Riovox.",
+    "collection-title": "Coleta e processamento de dados pessoais",
+    "collection-text": "Usar nosso app geralmente é possível sem fornecer dados pessoais. Para certas funções, como autenticação, um nome de usuário é necessário. Informações pessoais adicionais podem ser fornecidas voluntariamente pelo usuário. Armazenamos e processamos esses dados apenas para o propósito para o qual foram submetidos.",
+    "cookies-title": "Cookies",
+    "cookies-text": "O Riovox não usa cookies ou tecnologias similares para coletar dados pessoais.",
+    "third-party-title": "Uso de serviços de terceiros",
+    "third-party-text": "Nosso app usa vários serviços de terceiros para melhorar a funcionalidade e otimizar a experiência do usuário:",
+    "third-party-bullet-1": "Microsoft Clarity para análise e comportamento do usuário",
+    "third-party-bullet-2": "Google Analytics para análise e comportamento do usuário",
+    "third-party-bullet-3": "Google Places API para informações de localização",
+    "third-party-note": "Por favor, note que esses serviços têm suas próprias políticas de privacidade independentes da nossa.",
+    "deletion-title": "Exclusão de dados",
+    "deletion-text": "Usuários que desejam que seus dados sejam removidos do nosso aplicativo podem solicitar isso através do formulário de contato em nosso site.",
+    "security-title": "Segurança",
+    "security-text": "Implementamos medidas técnicas e organizacionais para proteger seus dados contra manipulação, perda e acesso não autorizado.",
+    "changes-title": "Alterações nesta política de privacidade",
+    "changes-text": "Reservamos o direito de atualizar esta política de privacidade para sempre atender aos requisitos legais atuais.",
+    "contact-title": "Contato",
+    "contact-email": "support@riovox.app",
+    "contact-website": "https://riovox.app",
+    "date": "Data da política de privacidade: 20.04.2026"
+  },
+  "errors": {
+    "network": "Verifique sua conexão com a internet e tente novamente.",
+    "unexpected": "Algo deu errado. Por favor, tente novamente.",
+    "unauthorized": "Por favor, faça login novamente para continuar.",
+    "server": "O servidor está indisponível no momento. Tente novamente mais tarde.",
+    "request-failed": "Não conseguimos completar essa solicitação. Por favor, tente novamente."
+  },
+  "speaking-activity": {
+    "error-generic": "Não foi possível carregar a atividade de fala. Por favor, tente novamente.",
+    "session-history": {
+      "title": "Histórico de sessões",
+      "empty": "Complete uma sessão de fala e toque em Finalizar e pontuar para ver o histórico aqui.",
+      "view-all": "Ver tudo ({count})"
+    },
+    "saved-phrases": {
+      "title": "Frases salvas",
+      "empty": "Salve palavras de uma conversa para vê-las aqui.",
+      "view-all": "Ver tudo ({count})"
+    },
+    "review-log": {
+      "title": "Registro de revisão",
+      "view-all": "Ver tudo ({count})"
+    },
+    "session-detail": {
+      "title": "Detalhes da sessão",
+      "score": "Pontuação da sessão",
+      "mode": "Modo",
+      "completed": "Concluído",
+      "duration": "Duração",
+      "duration-minutes": "{minutes} min",
+      "turns": "Vezes",
+      "summary": "Resumo",
+      "feedback": "Feedback do tutor",
+      "transcript-hint": "Transcrições detalhadas estão salvas em Falar → Histórico neste dispositivo."
+    },
+    "streak": {
+      "day": "dia de sequência",
+      "days": "dias de sequência"
+    }
+  },
+  "speaking-premium": {
+    "locked-message": "Este item está disponível com Premium. Atualize para desbloquear todos os cenários, tópicos e jogos.",
+    "badge": "Premium"
+  },
+  "versions": [
+    {
+      "v": "2.0.9",
+      "date": "2026-10-15",
+      "changes": [
+        "Novo visual: design azul lago, novo ícone e animação de carregamento.",
+        "Tutor de fala AI com chat, jogos de papo, temas e jogos de fala.",
+        "Salve frases das suas conversas e revise mais tarde.",
+        "Cartões flash com revisão espaçada inteligente."
+      ]
+    }
+  ]
+}

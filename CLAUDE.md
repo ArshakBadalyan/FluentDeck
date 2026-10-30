@@ -6,9 +6,9 @@ AI-powered English learning — Flutter app + Strapi 5 API.
 
 | Path | Role |
 |------|------|
-| `fluentdeck-f/` | Flutter app (iOS, Android, Web) |
-| `strapi-fluentdeck/` | Strapi 5.49 backend, Node 20 |
-| `fluentdeck-landing/` | Marketing site (Vite, static); see its README |
+| `riovox-app/` | Flutter app (iOS, Android, Web) |
+| `riovox-api/` | Strapi 5.49 backend, Node 20 |
+| `riovox-landing/` | Marketing site (Vite, static); see its README |
 
 Full architecture: `PROJECT.md`. Agent skills: `docs/AGENT-SKILLS.md`.
 
@@ -22,8 +22,8 @@ Full architecture: `PROJECT.md`. Agent skills: `docs/AGENT-SKILLS.md`.
 ## Dev
 
 ```bash
-cd strapi-fluentdeck && nvm use && npm run develop
-cd fluentdeck-f && flutter pub get && flutter run
+cd riovox-api && nvm use && npm run develop
+cd riovox-app && flutter pub get && flutter run
 ```
 
 ## Skills
@@ -32,11 +32,11 @@ Project skills live in `.claude/skills/`. Invoke with `/skill-name` in Claude Co
 
 | Skill | Use for |
 |-------|---------|
-| `fluentdeck-project` | Navigation, architecture, general edits |
+| `riovox-project` | Navigation, architecture, general edits |
 | `flashcard-sm2` | Decks, review, SM-2 scheduling |
 | `strapi-api` | New/changed backend endpoints |
 | `ai-tutor` | Tutor prompts, speaking AI, TTS |
-| `flutter-ui-design` | App UI in fluentdeck-f |
+| `flutter-ui-design` | App UI in riovox-app |
 | `pr-commit` | Commits, PRs, git workflow |
 | `feature-ideation` | Feature ideas, specs, redesign & color direction |
 
