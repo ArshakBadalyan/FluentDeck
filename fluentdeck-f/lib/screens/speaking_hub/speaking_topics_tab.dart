@@ -123,7 +123,8 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          mainAxisExtent: 156,
+          // Room for a two-line title and two lines of description.
+          mainAxisExtent: 178,
         ),
         itemBuilder: (context, index) {
           final topic = _topics[index];

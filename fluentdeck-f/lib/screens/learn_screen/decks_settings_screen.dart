@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_settings_section.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_settings_section_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/decks_settings_widgets.dart';
+import 'package:fluentdeck/screens/learn_screen/widgets/review_settings_groups.dart';
+import 'package:fluentdeck/models/flashcard_model.dart';
+import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/services/deck_backup_service.dart';
 import 'package:fluentdeck/services/deck_notification_service.dart';
 import 'package:fluentdeck/services/flashcard_sync_service.dart';
@@ -12,14 +15,20 @@ import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
-/// Decks settings hub.
+/// Decks settings hub. Standalone it is "Review settings": Daily limits and
+/// Learning steps for [deckId], the While reviewing switches, then the
+/// sections under "More settings".
 class DecksSettingsScreen extends StatefulWidget {
   const DecksSettingsScreen({
     super.key,
     this.embedInShell = false,
     this.inlineInScroll = false,
     this.sections = decksProfileHubSections,
+    this.deckId,
   });
+
+  /// The deck whose limits and steps show at the top; null hides them.
+  final int? deckId;
 
   /// When true, renders without [Scaffold] for Profile → Settings.
   final bool embedInShell;
@@ -40,6 +49,9 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
   String _lastBackupLabel = 'Never';
   FlashcardSyncLog _syncLog = const FlashcardSyncLog();
   bool _syncing = false;
+  FlashcardDeckModel? _deck;
+
+  bool get _standalone => !widget.embedInShell && !widget.inlineInScroll;
 
   @override
   void initState() {
@@ -64,15 +76,31 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
 
   Future<void> _load() async {
     final settings = await ReviewSettingsStore.instance.load();
+    final deck = _standalone ? await _loadDeck() : null;
     final lastMs = await DeckBackupService.instance.getLastBackupMs();
     await FlashcardSyncService.instance.loadLog();
     if (!mounted) return;
     setState(() {
       _settings = settings;
+      _deck = deck;
       _lastBackupLabel = DeckBackupService.instance.formatLastBackup(lastMs);
       _syncLog = FlashcardSyncService.instance.log;
       _loading = false;
     });
+  }
+
+  Future<FlashcardDeckModel?> _loadDeck() async {
+    final id = widget.deckId;
+    if (id == null) return null;
+    try {
+      final decks = await FlashcardService.instance.fetchDecksWithCache();
+      for (final d in decks) {
+        if (d.id == id) return d;
+      }
+    } catch (_) {
+      // Offline: the deck groups stay hidden; the rest still works.
+    }
+    return null;
   }
 
   Future<void> _save(ReviewSettings settings) async {
@@ -172,6 +200,28 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
       return Column(mainAxisSize: MainAxisSize.min, children: tiles);
     }
 
+    if (_standalone) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        children: [
+          ReviewSettingsGroups(deck: _deck, settings: _settings, onSettingsChanged: _save),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              'MORE SETTINGS',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
+                color: AppPageColors.subtitleOf(context),
+              ),
+            ),
+          ),
+          ...tiles,
+        ],
+      );
+    }
+
     return ListView(
       padding: EdgeInsets.symmetric(vertical: widget.embedInShell ? 0 : 8),
       children: [
@@ -204,8 +254,20 @@ class _DecksSettingsScreenState extends State<DecksSettingsScreen> {
     }
 
     return Scaffold(
+      backgroundColor: AppPageColors.pageBgOf(context),
       appBar: AppBar(
-        title: const Text('Decks settings'),
+        backgroundColor: AppPageColors.pageBgOf(context),
+        foregroundColor: AppPageColors.textPrimaryOf(context),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.chevron_left_rounded, size: 28),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: const Text('Review settings', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
       ),
       body: body,
     );

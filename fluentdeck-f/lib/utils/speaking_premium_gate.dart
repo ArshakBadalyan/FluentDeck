@@ -1,8 +1,7 @@
 import 'package:fluentdeck/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/services/main_navigation_coordinator.dart';
-import 'package:fluentdeck/services/main_tab_config.dart';
+import 'package:fluentdeck/screens/profile_screen/profile_subscription_tab.dart';
 
 void showSpeakingPremiumSnackBar(BuildContext context) {
   showPremiumUpgradeSnackBar(
@@ -21,10 +20,7 @@ void showPremiumUpgradeSnackBar(BuildContext context, String message) {
       action: SnackBarAction(
         label: 'Upgrade',
         onPressed: () {
-          MainNavigationCoordinator.goToTab(
-            MainTabId.profile,
-            subIndex: kProfileSubscriptionTabIndex,
-          );
+          openPremiumScreen(context);
         },
       ),
     ),

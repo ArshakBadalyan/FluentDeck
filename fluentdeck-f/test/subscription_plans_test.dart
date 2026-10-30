@@ -212,15 +212,13 @@ void main() {
       expect(find.byType(Slider), findsNothing);
       expect(find.text('Daily conversations'), findsNothing);
       expect(find.text('\$9.99 / month'), findsOneWidget);
-      expect(find.text('\$79.99 / year'), findsOneWidget);
-      expect(find.text('≈ \$6.67 / month'), findsOneWidget);
-      expect(find.text('7-day free trial for new subscribers'), findsOneWidget);
-      expect(
-        find.text('Up to 4 h of AI conversation a day'),
-        findsNWidgets(3), // two plan cards + "What you get"
-      );
-      expect(find.text('Unlimited custom role-plays (1 free)'), findsOneWidget);
-      expect(find.text('Today · 30 min of 5 min AI practice'), findsOneWidget);
+      // Design: "price · ≈ per month" on one line, trial on the button.
+      expect(find.text('\$79.99 / year · ≈ \$6.67 a month'), findsOneWidget);
+      expect(find.text('Start 7-day free trial'), findsOneWidget);
+      // Free plan: the Premium pitch instead of the full feature list.
+      expect(find.text('Speak as much as you want'), findsOneWidget);
+      expect(find.text('Up to 4 h with Rio every day'), findsOneWidget);
+      expect(find.text('Restore purchases'), findsOneWidget);
     });
 
     testWidgets('a legacy quarterly subscriber sees their plan name', (

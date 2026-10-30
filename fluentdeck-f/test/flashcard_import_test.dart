@@ -346,21 +346,15 @@ void main() {
 
     tearDown(AppToast.dismissAll);
 
-    testWidgets('without a web URL the browse button says Coming soon', (
+    testWidgets('without a web URL community decks say Coming soon', (
       tester,
     ) async {
       await pumpShared(tester);
       expect(find.text('Coming soon'), findsOneWidget);
-      expect(find.text('Open shared decks'), findsNothing);
-
-      await tester.tap(find.text('Coming soon'));
-      await tester.pump();
-      expect(find.text('Shared decks page is coming soon.'), findsOneWidget);
-      AppToast.dismissAll();
-      await tester.pumpAndSettle();
+      expect(find.text('Browse'), findsNothing);
     });
 
-    testWidgets('with SHARED_DECKS_WEB_URL the browse button opens the site', (
+    testWidgets('with SHARED_DECKS_WEB_URL a Browse button shows', (
       tester,
     ) async {
       dotenv.testLoad(
@@ -368,16 +362,24 @@ void main() {
             'API_URL=https://api.test/api\nSHARED_DECKS_WEB_URL=https://fluentdeck.com/decks',
       );
       await pumpShared(tester);
-      expect(find.text('Open shared decks'), findsOneWidget);
-      expect(find.text('Opens fluentdeck.com in your browser'), findsOneWidget);
+      expect(find.text('Browse'), findsOneWidget);
+      expect(find.text('Find a deck on the web, then import it here'), findsOneWidget);
       expect(find.text('Coming soon'), findsNothing);
     });
 
-    testWidgets('Import a file opens the import sheet with every format', (
+    testWidgets('Empty deck shows only when the caller can create one', (
       tester,
     ) async {
       await pumpShared(tester);
-      await tester.tap(find.text('Import a file'));
+      expect(find.text('Empty deck'), findsNothing);
+      expect(find.text('Import Anki'), findsOneWidget);
+    });
+
+    testWidgets('Import Anki opens the import sheet with every format', (
+      tester,
+    ) async {
+      await pumpShared(tester);
+      await tester.tap(find.text('Import Anki'));
       await tester.pumpAndSettle();
 
       expect(find.text('Import flashcards'), findsOneWidget);
@@ -399,7 +401,7 @@ void main() {
       final popped = await pumpShared(tester);
       picker.file = _file('words.csv', utf8.encode('Front,Back\nhi,bonjour'));
 
-      await tester.tap(find.text('Import a file'));
+      await tester.tap(find.text('Import Anki'));
       await tester.pumpAndSettle();
       await tester.runAsync(
         () => withServer(() async {
@@ -430,7 +432,7 @@ void main() {
       final popped = await pumpShared(tester);
       picker.file = _file('words.csv', utf8.encode('a,b'));
 
-      await tester.tap(find.text('Import a file'));
+      await tester.tap(find.text('Import Anki'));
       await tester.pumpAndSettle();
       await tester.runAsync(
         () => withServer(() async {

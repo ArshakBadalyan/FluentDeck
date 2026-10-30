@@ -5,6 +5,9 @@ import 'package:fluentdeck/localization/app_localizations.dart';
 import '../../app_colors.dart';
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/deck_backup_service.dart';
+import '../../services/main_navigation_coordinator.dart';
+import '../../services/main_tab_config.dart';
 import '../../services/user_progress_service.dart';
 import '../../screens/auth/auth_screen.dart';
 import '../../ui_elements/dialogs/type_to_confirm_dialog.dart';
@@ -27,12 +30,39 @@ class _ProfileSecurityTabState extends State<ProfileSecurityTab> {
   bool _saving = false;
   bool _resetting = false;
   bool _deletingAccount = false;
+  bool _backingUp = false;
+
+  /// The new-password fields show once "Change" is tapped.
+  bool _changingPassword = false;
+  String? _email;
 
   @override
   void initState() {
     super.initState();
     passwordCtrl.addListener(_onTextChanged);
     confirmCtrl.addListener(_onTextChanged);
+    _loadEmail();
+  }
+
+  Future<void> _loadEmail() async {
+    final res = await AuthService.getUser();
+    if (!mounted || res['status'] != 'success') return;
+    final email = (res['user']?['email'] ?? '').toString().trim();
+    setState(() => _email = email.isEmpty ? null : email);
+  }
+
+  Future<void> _backUpDecks() async {
+    setState(() => _backingUp = true);
+    try {
+      await DeckBackupService.instance.performBackup();
+      if (!mounted) return;
+      AppToast.showSnackBar(context, const SnackBar(content: Text('Backup created')));
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showSnackBar(context, SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _backingUp = false);
+    }
   }
 
   void _onTextChanged() {
@@ -157,115 +187,202 @@ class _ProfileSecurityTabState extends State<ProfileSecurityTab> {
     );
   }
 
-  Widget _dangerButton({
-    required String label,
-    required String busyLabel,
-    required bool busy,
-    required VoidCallback onPressed,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _resetting || _deletingAccount ? null : onPressed,
-        icon:
-            busy
-                ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                : const Icon(Icons.delete_outline_rounded),
-        label: Text(busy ? busyLabel : label),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.redWrong,
-          side: BorderSide(color: AppColors.redWrong.withValues(alpha: 0.5)),
-          padding: const EdgeInsets.symmetric(vertical: 14),
+  @override
+  Widget build(BuildContext context) {
+    final busy = _resetting || _deletingAccount;
+    return AppPageBackground(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _RowsCard(
+              rows: [
+                _SecurityRow(
+                  title: 'Email',
+                  subtitle: _email ?? '—',
+                  action: 'Change',
+                  onTap: () => MainNavigationCoordinator.goToTab(MainTabId.profile, subIndex: 0),
+                ),
+                _SecurityRow(
+                  title: 'Password',
+                  subtitle: 'At least 6 characters',
+                  action: _changingPassword ? 'Cancel' : 'Change',
+                  onTap: () => setState(() => _changingPassword = !_changingPassword),
+                ),
+              ],
+            ),
+            if (_changingPassword) ...[
+              const SizedBox(height: 12),
+              AppTextField(
+                controller: passwordCtrl,
+                label: context.tr('inputs.new-password'),
+                obscureText: _hidePassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _hidePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: AppPageColors.subtitleOf(context),
+                  ),
+                  tooltip: _hidePassword ? 'Show password' : 'Hide password',
+                  onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                ),
+              ),
+              const SizedBox(height: 14),
+              AppTextField(
+                controller: confirmCtrl,
+                label: context.tr('inputs.confirm-new-password'),
+                obscureText: _hideConfirm,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _hideConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: AppPageColors.subtitleOf(context),
+                  ),
+                  tooltip: _hideConfirm ? 'Show password' : 'Hide password',
+                  onPressed: () => setState(() => _hideConfirm = !_hideConfirm),
+                ),
+              ),
+              const SizedBox(height: 16),
+              PrimaryButton(
+                text:
+                    _saving
+                        ? '${context.tr('buttons.save').toUpperCase()}...'
+                        : context.tr('buttons.save').toUpperCase(),
+                enabled: _isFormValid && !_saving,
+                onPressed: _changePassword,
+              ),
+            ],
+            const SizedBox(height: 18),
+            Text(
+              'YOUR DATA',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
+                color: AppPageColors.subtitleOf(context),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _RowsCard(
+              rows: [
+                _SecurityRow(
+                  title: _backingUp ? 'Backing up…' : 'Back up decks',
+                  onTap: _backingUp ? null : _backUpDecks,
+                ),
+                _SecurityRow(
+                  title: _resetting ? 'Deleting…' : 'Delete all learning data',
+                  subtitle: 'Decks, notes, speaking history and stats. Your account stays.',
+                  danger: true,
+                  onTap: busy ? null : _confirmResetLearningData,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 52,
+              child: OutlinedButton(
+                onPressed: busy ? null : _confirmDeleteAccount,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.redWrong,
+                  backgroundColor: AppPageColors.cardBgOf(context),
+                  side: BorderSide(color: AppColors.redWrong.withValues(alpha: 0.4)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+                child: Text(
+                  _deletingAccount ? 'Deleting account…' : context.tr('profile.account.delete-account'),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Deleting removes your decks and history for good.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// White card holding rows split by hairlines.
+class _RowsCard extends StatelessWidget {
+  const _RowsCard({required this.rows});
+
+  final List<Widget> rows;
 
   @override
   Widget build(BuildContext context) {
-    return AppPageBackground(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Material(
+      color: AppPageColors.cardBgOf(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) Divider(height: 1, thickness: 1, color: AppPageColors.rowDividerOf(context)),
+            rows[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Title and detail, then a teal action word or a chevron.
+class _SecurityRow extends StatelessWidget {
+  const _SecurityRow({
+    required this.title,
+    required this.onTap,
+    this.subtitle,
+    this.action,
+    this.danger = false,
+  });
+
+  final String title;
+  final String? subtitle;
+  final String? action;
+  final bool danger;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
           children: [
-            AppSectionCard(
-              title: context.tr('inputs.new-password'),
-              icon: Icons.lock_outline_rounded,
-              subtitle: 'Choose a strong password with at least 6 characters',
+            Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppTextField(
-                    controller: passwordCtrl,
-                    label: context.tr('inputs.new-password'),
-                    obscureText: _hidePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _hidePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: AppPageColors.subtitleOf(context),
-                      ),
-                      tooltip: _hidePassword ? 'Show password' : 'Hide password',
-                      onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: subtitle == null ? FontWeight.w500 : FontWeight.w700,
+                      color: danger ? AppColors.redWrong : AppPageColors.textPrimaryOf(context),
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  AppTextField(
-                    controller: confirmCtrl,
-                    label: context.tr('inputs.confirm-new-password'),
-                    obscureText: _hideConfirm,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _hideConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: AppPageColors.subtitleOf(context),
-                      ),
-                      tooltip: _hideConfirm ? 'Show password' : 'Hide password',
-                      onPressed: () => setState(() => _hideConfirm = !_hideConfirm),
-                    ),
-                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(subtitle!, style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context))),
+                  ],
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            PrimaryButton(
-              text:
-                  _saving
-                      ? '${context.tr('buttons.save').toUpperCase()}...'
-                      : context.tr('buttons.save').toUpperCase(),
-              enabled: _isFormValid && !_saving,
-              onPressed: _changePassword,
-            ),
-            const SizedBox(height: 28),
-            AppSectionCard(
-              title: 'Delete learning data',
-              icon: Icons.delete_forever_outlined,
-              subtitle:
-                  'Start fresh: removes decks, cards, My Notes, speaking history and '
-                  'all Activity stats. Your account and settings stay.',
-              child: _dangerButton(
-                label: 'Delete all learning data',
-                busyLabel: 'Deleting…',
-                busy: _resetting,
-                onPressed: _confirmResetLearningData,
-              ),
-            ),
-            const SizedBox(height: 16),
-            AppSectionCard(
-              title: context.tr('profile.account.delete-account'),
-              icon: Icons.person_remove_outlined,
-              subtitle:
-                  'Permanently deletes your account and all its data. '
-                  'This cannot be undone.',
-              child: _dangerButton(
-                label: context.tr('profile.account.delete-account'),
-                busyLabel: 'Deleting account…',
-                busy: _deletingAccount,
-                onPressed: _confirmDeleteAccount,
-              ),
-            ),
+            if (action != null)
+              Text(
+                action!,
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppPageColors.accentOf(context)),
+              )
+            else
+              Icon(Icons.chevron_right_rounded, size: 20, color: AppPageColors.mutedOf(context)),
           ],
         ),
       ),

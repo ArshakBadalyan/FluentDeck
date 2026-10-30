@@ -20,6 +20,7 @@ import '../../services/main_tab_config.dart';
 import '../../services/notifications_service.dart';
 import '../../services/speaking_content_service.dart';
 import '../../ui_elements/app_motion.dart';
+import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../utils/practice_time_format.dart';
 import '../../utils/strapi_response.dart';
@@ -126,6 +127,24 @@ class _SpeakingChatTabState extends State<SpeakingChatTab> {
   void _openHistory() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const ConversationHistoryScreen()),
+    );
+  }
+
+  /// "+ Your own": asks for a topic, then starts a topic chat about it.
+  Future<void> _startOwnTopic() async {
+    final topic = await showFrostedBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => const _OwnTopicSheet(),
+    );
+    if (topic == null || !mounted) return;
+    widget.onStart(
+      SpeakingSessionContext(
+        mode: SpeakingMode.topic,
+        title: topic,
+        starterPrompt: topic,
+      ),
     );
   }
 
@@ -249,7 +268,7 @@ class _SpeakingChatTabState extends State<SpeakingChatTab> {
                           _TopicChip(
                             label: '+ Your own',
                             highlighted: true,
-                            onTap: () => MainNavigationCoordinator.goToSpeakSubTab('topics'),
+                            onTap: _startOwnTopic,
                           ),
                         ],
                       ),
@@ -780,6 +799,78 @@ class _ShortcutCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Asks for a topic and returns it trimmed, or null if dismissed.
+class _OwnTopicSheet extends StatefulWidget {
+  const _OwnTopicSheet();
+
+  @override
+  State<_OwnTopicSheet> createState() => _OwnTopicSheetState();
+}
+
+class _OwnTopicSheetState extends State<_OwnTopicSheet> {
+  final _controller = TextEditingController();
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final topic = _controller.text.trim();
+    if (topic.length < 3 || topic.length > 120) {
+      setState(() => _error = 'Use 3 to 120 characters');
+      return;
+    }
+    Navigator.pop(context, topic);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        20,
+        20,
+        16 + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'What do you want to talk about?',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, fontFamily: 'Rubik'),
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: _controller,
+            hint: 'e.g. My trip to Japan',
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            errorText: _error,
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: _submit,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.brandPrimary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: const Text('Start talking'),
+          ),
+        ],
       ),
     );
   }

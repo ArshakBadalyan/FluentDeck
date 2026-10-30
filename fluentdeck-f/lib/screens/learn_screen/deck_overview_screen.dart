@@ -7,12 +7,14 @@ import 'package:fluentdeck/models/flashcard_model.dart';
 import 'package:fluentdeck/models/flashcard_stats_model.dart';
 import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
+import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/deck_edit_sheet.dart';
 import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dart';
 import 'package:fluentdeck/services/flashcard_service.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:animations/animations.dart';
 
 /// Deck overview — opened by tapping deck name or count buttons.
 class DeckOverviewScreen extends StatefulWidget {
@@ -140,10 +142,27 @@ class _DeckOverviewScreenState extends State<DeckOverviewScreen> {
             onPressed: () => Navigator.pop(context, _changed),
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.tune_rounded),
-              tooltip: 'Deck options',
-              onPressed: () => _editDeck(context),
+            // One menu, as in the design: review settings and deck options.
+            PopupMenuButton<String>(
+              tooltip: 'More',
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (value) {
+                if (value == 'settings') {
+                  Navigator.of(context).push(
+                    AppSharedAxisRoute<void>(
+                      transitionType: SharedAxisTransitionType.scaled,
+                      page: DecksSettingsScreen(deckId: deck.id),
+                    ),
+                  ).then((_) => _refreshDeck());
+                } else {
+                  _editDeck(context);
+                }
+              },
+              itemBuilder: (_) => [
+                if (!deck.isFiltered)
+                  const PopupMenuItem(value: 'settings', child: Text('Review settings')),
+                const PopupMenuItem(value: 'edit', child: Text('Deck options')),
+              ],
             ),
             const SizedBox(width: 4),
           ],

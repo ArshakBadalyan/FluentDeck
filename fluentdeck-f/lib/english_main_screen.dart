@@ -8,7 +8,6 @@ import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/screens/activity_screen/activity_shell_screen.dart';
 import 'package:fluentdeck/screens/speaking_hub/speaking_hub_screen.dart';
 import 'package:fluentdeck/screens/learn_screen/decks_shell_screen.dart';
-import 'package:fluentdeck/screens/profile_screen/about_us/profile_about_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_account_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_security_tab.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_settings_tab.dart';
@@ -114,7 +113,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     'Settings',
     'Subscription',
     'Security',
-    'About',
   ];
 
   MainTabId get _currentTab => MainTabConfig.tabAt(_currentIndex);
@@ -381,7 +379,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
         ProfileSettingsTab(),
         ProfileSubscriptionTab(),
         ProfileSecurityTab(),
-        ProfileAboutTab(showResetAllScreenTips: false),
       ],
     );
   }

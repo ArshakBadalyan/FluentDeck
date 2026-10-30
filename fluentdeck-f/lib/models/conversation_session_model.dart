@@ -7,12 +7,17 @@ class ConversationSessionModel {
   final List<ConversationTurnModel> transcript;
   final int correctionsCount;
 
+  /// What the chat was about ("Job interview", "Free conversation"); null
+  /// for chats saved before topics were stored.
+  final String? topicTitle;
+
   const ConversationSessionModel({
     this.id,
     this.userId,
     required this.startedAt,
     this.transcript = const [],
     this.correctionsCount = 0,
+    this.topicTitle,
   });
 
   factory ConversationSessionModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +39,7 @@ class ConversationSessionModel {
                   .toList()
               : const [],
       correctionsCount: json['correctionsCount'] as int? ?? 0,
+      topicTitle: json['topicTitle'] as String?,
     );
   }
 
@@ -43,5 +49,6 @@ class ConversationSessionModel {
     'startedAt': startedAt.toIso8601String(),
     'transcript': transcript.map((t) => t.toJson()).toList(),
     'correctionsCount': correctionsCount,
+    if (topicTitle != null) 'topicTitle': topicTitle,
   };
 }

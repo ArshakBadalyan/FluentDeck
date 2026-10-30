@@ -94,6 +94,8 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
   }
 
   String _title(ConversationSessionModel session) {
+    final topic = session.topicTitle?.trim();
+    if (topic != null && topic.isNotEmpty) return topic;
     final userTurn = session.transcript.where((t) => t.isUser && t.text.trim().isNotEmpty).firstOrNull;
     return userTurn?.text.trim() ?? 'Conversation';
   }

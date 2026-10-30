@@ -207,6 +207,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
               index: 1,
               child: _GroupedList(
                 children: [
+                  _WriteYourOwnRow(onTap: _showCreateDialog),
                   for (final scenario in rest)
                     _RolePlayRow(
                       scenario: scenario,
@@ -214,7 +215,6 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
                       onTap: () => _start(scenario),
                       onDelete: scenario.isLocal ? () => _deleteCustom(scenario) : null,
                     ),
-                  _WriteYourOwnRow(onTap: _showCreateDialog),
                 ],
               ),
             ),
@@ -421,7 +421,7 @@ class _RolePlayRow extends StatelessWidget {
   }
 }
 
-/// Last row: a dashed "+" tile and "Write your own scenario".
+/// First row: a dashed "+" tile and "Write your own scenario".
 class _WriteYourOwnRow extends StatelessWidget {
   const _WriteYourOwnRow({required this.onTap});
 

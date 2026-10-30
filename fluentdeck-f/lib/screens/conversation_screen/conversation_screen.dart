@@ -4,6 +4,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:fluentdeck/screens/activity_screen/speaking_session_detail_screen.dart';
+import 'package:fluentdeck/models/speaking_session_record_model.dart';
+import 'package:fluentdeck/widgets/tutor_scene.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/config/brand_config.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
@@ -418,6 +421,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
             _service.sessionStartedAt ??
             _service.turns.firstOrNull?.timestamp ??
             DateTime.now(),
+        level: result.level,
+        newWords: result.newWords,
       );
     } catch (e) {
       if (!mounted) return;
@@ -439,30 +444,21 @@ class _ConversationScreenState extends State<ConversationScreen> {
         ? await MilestoneTracker.instance.streakMilestone(saved.streakDays)
         : null;
     if (!mounted) return;
-    final streakNote = saved != null && saved.streakDays > 0 && milestone == null
-        ? '\n\n${saved.streakDays} day speaking streak!'
-        : '';
-    const rio = RioImage(
-      RioPose.determined,
-      height: 110,
-      motion: RioMotion.pop,
-    );
-    await showAppDialog<void>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Text('Score: ${evaluation.score} / 10'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (milestone != null) ...[
-              AppConfettiBurst(
-                colors: const [
+    if (milestone != null) {
+      await showAppDialog<void>(
+        context: context,
+        builder: (dialogCtx) => AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AppConfettiBurst(
+                colors: [
                   AppColors.primaryYellow,
                   AppColors.orangeHard,
                   AppColors.brandPrimary,
                   AppColors.voice,
                 ],
-                child: rio,
+                child: RioImage(RioPose.determined, height: 110, motion: RioMotion.pop),
               ),
               const SizedBox(height: 12),
               Text(
@@ -474,11 +470,47 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   color: AppPageColors.tintOf(dialogCtx, AppTint.reward).fg,
                 ),
               ),
-            ] else
-              rio,
-            const SizedBox(height: 12),
-            Text('${evaluation.feedback}$streakNote'),
-          ],
+            ],
+          ),
+        ),
+      );
+      if (!mounted) return;
+    }
+
+    // Progress · Session result: the score, skills and this chat's fixes.
+    final startedAt = _service.sessionStartedAt ?? _service.turns.firstOrNull?.timestamp;
+    final record = saved?.session ??
+        SpeakingSessionRecord(
+          id: 0,
+          mode: ctx.mode,
+          referenceKey: ctx.referenceKey,
+          title: ctx.title,
+          score: evaluation.score,
+          fluencyScore: evaluation.fluency,
+          grammarScore: evaluation.grammar,
+          vocabularyScore: evaluation.vocabulary,
+          feedback: evaluation.feedback,
+          summary: evaluation.summary,
+          durationMinutes: startedAt == null ? 0 : DateTime.now().difference(startedAt).inMinutes,
+          turnCount: _service.turns.length,
+          completedAt: DateTime.now(),
+          level: evaluation.level,
+          newWords: evaluation.newWords,
+        );
+    final corrections = [
+      for (final turn in _service.turns)
+        if (turn.isUser) ...turn.corrections,
+    ];
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (pageCtx) => SpeakingSessionDetailScreen(
+          session: record,
+          corrections: corrections,
+          onPracticeAgain: () async {
+            Navigator.of(pageCtx).pop();
+            await _service.archiveAndStartNew();
+            _service.startSession(ctx);
+          },
         ),
       ),
     );
@@ -607,6 +639,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     : null,
                 onTypeTap: () =>
                     setState(() => _service.typeMessagesEnabled = true),
+                onSpeakTap: () {
+                  FocusScope.of(context).unfocus();
+                  setState(() => _service.typeMessagesEnabled = false);
+                },
                 onHelpTap: () => _service.sendTextMessage(
                   'Can you help me say it? Give me an example of what I could say next.',
                 ),
@@ -696,6 +732,22 @@ class _TurnBubbleState extends State<_TurnBubble> {
   ConversationTurnModel get turn => widget.turn;
   bool get isUser => turn.isUser;
 
+  @override
+  void initState() {
+    super.initState();
+    RioPreferences.instance.showCorrections.addListener(_onShowCorrectionsChanged);
+  }
+
+  @override
+  void dispose() {
+    RioPreferences.instance.showCorrections.removeListener(_onShowCorrectionsChanged);
+    super.dispose();
+  }
+
+  void _onShowCorrectionsChanged() {
+    if (mounted) setState(() {});
+  }
+
   bool get _hasTranslateAction =>
       !isUser &&
       widget.translationLanguage != null &&
@@ -755,9 +807,10 @@ class _TurnBubbleState extends State<_TurnBubble> {
 
   @override
   Widget build(BuildContext context) {
-    final cardCorrections = turn.corrections
-        .where((correction) => correction.showsCard)
-        .toList();
+    final showCorrections = RioPreferences.instance.showCorrections.value;
+    final cardCorrections = showCorrections
+        ? turn.corrections
+        : const <GrammarCorrection>[];
     final showInstantOkBadge =
         isUser && turn.corrections.isEmpty && turn.text.trim().isNotEmpty;
     final translation = !isUser && _showTranslation
@@ -772,7 +825,7 @@ class _TurnBubbleState extends State<_TurnBubble> {
       fontSize: 15,
       height: 1.35,
     );
-    final messageSpans = isUser && turn.corrections.any((c) => c.showsInline)
+    final messageSpans = isUser && showCorrections && turn.corrections.any((c) => c.showsInline)
         ? buildCorrectedMessageSpans(
             text: turn.text,
             corrections: turn.corrections,
@@ -1064,11 +1117,9 @@ class _TurnBubbleState extends State<_TurnBubble> {
             ),
           if (isUser && cardCorrections.isNotEmpty)
             // Corrections arrive after the message; ease them in.
-            ...cardCorrections.indexed.map(
-              (e) => AppStaggeredFadeIn(
-                index: e.$1,
-                child: _CorrectionCard(correction: e.$2),
-              ),
+            AppStaggeredFadeIn(
+              index: 0,
+              child: _CorrectionCard(corrections: cardCorrections),
             ),
         ],
       ),
@@ -1076,48 +1127,19 @@ class _TurnBubbleState extends State<_TurnBubble> {
   }
 }
 
+/// "Say it better" for one message: the first fix, and "+N more" to expand
+/// the rest when the message had several mistakes.
 class _CorrectionCard extends StatefulWidget {
-  const _CorrectionCard({required this.correction});
+  const _CorrectionCard({required this.corrections});
 
-  final GrammarCorrection correction;
+  final List<GrammarCorrection> corrections;
 
   @override
   State<_CorrectionCard> createState() => _CorrectionCardState();
 }
 
 class _CorrectionCardState extends State<_CorrectionCard> {
-  bool _saving = false;
-  bool _saved = false;
-
-  bool get _isSaved => _saved || widget.correction.autoSaved;
-
-  Future<void> _saveToNotes() async {
-    if (_saving || _isSaved) return;
-    setState(() => _saving = true);
-    try {
-      final result = await NoteService.instance.saveFromCorrection(
-        correctedText: widget.correction.correctedText,
-        originalText: widget.correction.originalText,
-        explanation: widget.correction.explanation,
-        errorType: widget.correction.errorType,
-      );
-      if (!mounted) return;
-      if (result.ok) {
-        setState(() => _saved = true);
-        final msg = result.flashcardCreated
-            ? 'Saved to notes and From speaking deck'
-            : 'Saved to notes';
-        AppToast.showSnackBar(context, SnackBar(content: Text(msg)));
-      } else {
-        AppToast.showSnackBar(
-          context,
-          SnackBar(content: Text(result.message ?? 'Could not save')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -1155,38 +1177,38 @@ class _CorrectionCardState extends State<_CorrectionCard> {
     );
   }
 
-  /// "Say it better": what you said → the better way, always visible; tap
-  /// for the explanation. Saving turns it into a flashcard.
   Widget _sayItBetter(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     const coral = Color(0xFFC2410C);
-    final strike = isDark ? const Color(0xFFFF8A80) : const Color(0xFFB42318);
-    final better = isDark ? AppColors.greenCorrect : const Color(0xFF0B6B3A);
-    final c = widget.correction;
+    final first = widget.corrections.first;
+    final rest = widget.corrections.skip(1).toList();
     return Material(
       color: AppPageColors.cardBgOf(context),
       borderRadius: BorderRadius.circular(20),
       child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.voice.withValues(alpha: isDark ? 0.45 : 0.35),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.voiceDeep.withValues(alpha: isDark ? 0 : 0.08),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
-              ),
-            ],
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppColors.voice.withValues(alpha: isDark ? 0.45 : 0.35),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.voiceDeep.withValues(alpha: isDark ? 0 : 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: AnimatedSize(
+          duration: AppMotion.duration(context, AppMotion.fast),
+          alignment: Alignment.topCenter,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'SAY IT BETTER',
+                rest.isEmpty ? 'SAY IT BETTER' : 'SAY IT BETTER · ${widget.corrections.length} FIXES',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -1195,100 +1217,193 @@ class _CorrectionCardState extends State<_CorrectionCard> {
                 ),
               ),
               const SizedBox(height: 10),
-              Text.rich(
-                TextSpan(
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.45,
-                    color: AppPageColors.textPrimaryOf(context),
-                  ),
-                  children: [
-                    if (c.originalText.trim().isNotEmpty) ...[
-                      TextSpan(
-                        text: c.originalText,
-                        style: TextStyle(
-                          color: strike,
-                          decoration: TextDecoration.lineThrough,
-                          decorationColor: strike,
-                        ),
-                      ),
-                      const TextSpan(text: '  →  '),
-                    ],
-                    TextSpan(
-                      text: c.correctedText,
-                      style: TextStyle(fontWeight: FontWeight.w700, color: better),
-                    ),
-                  ],
-                ),
+              _CorrectionItem(
+                correction: first,
+                extra: rest.isEmpty ? null : _moreButton(context, rest.length),
               ),
-              if (c.explanation.trim().isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Text(
-                  c.explanation,
-                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
-                ),
-              ],
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () => ConversationService.instance.speakText(c.correctedText),
-                    icon: const Icon(Icons.volume_up_rounded, size: 16),
-                    label: const Text('Hear it'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppPageColors.textPrimaryOf(context),
-                      backgroundColor: AppPageColors.cardBgOf(context),
-                      side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
-                      shape: const StadiumBorder(),
-                      minimumSize: const Size(0, 36),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
+              if (_expanded)
+                for (final c in rest) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(height: 1, color: AppPageColors.subtleBorderOf(context)),
                   ),
-              if (_isSaved)
-                Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: AppPageColors.tintOf(context, AppTint.success).bg,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.check_rounded, size: 16, color: better),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Saved as a card',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: better),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                OutlinedButton.icon(
-                  onPressed: _saving ? null : _saveToNotes,
-                  icon: Icon(
-                    _saving ? Icons.hourglass_top_rounded : Icons.bookmark_add_outlined,
-                    size: 16,
-                  ),
-                  label: Text(_saving ? 'Saving…' : 'Save as a card'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppPageColors.textPrimaryOf(context),
-                    side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
-                    shape: const StadiumBorder(),
-                    minimumSize: const Size(0, 36),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ),
+                  _CorrectionItem(correction: c),
                 ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Right of "Save as a card": "+2 more" / "Show less".
+  Widget _moreButton(BuildContext context, int count) {
+    final tint = AppPageColors.tintOf(context, AppTint.voice);
+    return TextButton.icon(
+      onPressed: () => setState(() => _expanded = !_expanded),
+      icon: Icon(_expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, size: 18),
+      label: Text(_expanded ? 'Show less' : '+$count more'),
+      style: TextButton.styleFrom(
+        foregroundColor: tint.fg,
+        backgroundColor: tint.bg,
+        shape: const StadiumBorder(),
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+/// One fix: what you said → the better way, why, then Hear it and Save.
+class _CorrectionItem extends StatefulWidget {
+  const _CorrectionItem({required this.correction, this.extra});
+
+  final GrammarCorrection correction;
+
+  /// Shown after the buttons (the card's "+N more").
+  final Widget? extra;
+
+  @override
+  State<_CorrectionItem> createState() => _CorrectionItemState();
+}
+
+class _CorrectionItemState extends State<_CorrectionItem> {
+  bool _saving = false;
+  bool _saved = false;
+
+  bool get _isSaved => _saved || widget.correction.autoSaved;
+
+  Future<void> _saveToNotes() async {
+    if (_saving || _isSaved) return;
+    setState(() => _saving = true);
+    try {
+      final result = await NoteService.instance.saveFromCorrection(
+        correctedText: widget.correction.correctedText,
+        originalText: widget.correction.originalText,
+        explanation: widget.correction.explanation,
+        errorType: widget.correction.errorType,
+      );
+      if (!mounted) return;
+      if (result.ok) {
+        setState(() => _saved = true);
+        final msg = result.flashcardCreated
+            ? 'Saved to notes and From speaking deck'
+            : 'Saved to notes';
+        AppToast.showSnackBar(context, SnackBar(content: Text(msg)));
+      } else {
+        AppToast.showSnackBar(
+          context,
+          SnackBar(content: Text(result.message ?? 'Could not save')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final strike = isDark ? const Color(0xFFFF8A80) : const Color(0xFFB42318);
+    final better = isDark ? AppColors.greenCorrect : const Color(0xFF0B6B3A);
+    final c = widget.correction;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text.rich(
+          TextSpan(
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.45,
+              color: AppPageColors.textPrimaryOf(context),
+            ),
+            children: [
+              if (c.originalText.trim().isNotEmpty) ...[
+                TextSpan(
+                  text: c.originalText,
+                  style: TextStyle(
+                    color: strike,
+                    decoration: TextDecoration.lineThrough,
+                    decorationColor: strike,
+                  ),
+                ),
+                const TextSpan(text: '  →  '),
+              ],
+              TextSpan(
+                text: c.correctedText,
+                style: TextStyle(fontWeight: FontWeight.w700, color: better),
               ),
             ],
           ),
-      ),
+        ),
+        if (c.explanation.trim().isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Text(
+            c.explanation,
+            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+          ),
+        ],
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => ConversationService.instance.speakText(c.correctedText),
+              icon: const Icon(Icons.volume_up_rounded, size: 16),
+              label: const Text('Hear it'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppPageColors.textPrimaryOf(context),
+                backgroundColor: AppPageColors.cardBgOf(context),
+                side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+                shape: const StadiumBorder(),
+                minimumSize: const Size(0, 36),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+            ),
+            if (_isSaved)
+              Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: AppPageColors.tintOf(context, AppTint.success).bg,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_rounded, size: 16, color: better),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Saved as a card',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: better),
+                    ),
+                  ],
+                ),
+              )
+            else
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _saveToNotes,
+                icon: Icon(
+                  _saving ? Icons.hourglass_top_rounded : Icons.bookmark_add_outlined,
+                  size: 16,
+                ),
+                label: Text(_saving ? 'Saving…' : 'Save as a card'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppPageColors.textPrimaryOf(context),
+                  side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+                  shape: const StadiumBorder(),
+                  minimumSize: const Size(0, 36),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+            if (widget.extra != null) widget.extra!,
+          ],
+        ),
+      ],
     );
   }
 }
@@ -1405,6 +1520,7 @@ class _InputBar extends StatelessWidget {
     this.typeMessagesEnabled = false,
     this.onCancel,
     this.onTypeTap,
+    this.onSpeakTap,
     this.onHelpTap,
   });
 
@@ -1422,6 +1538,9 @@ class _InputBar extends StatelessWidget {
 
   /// "Type instead": shows the text field (voice-only mode).
   final VoidCallback? onTypeTap;
+
+  /// "Speak instead": back from the text field to the big mic.
+  final VoidCallback? onSpeakTap;
 
   /// "Help me say it": asks Rio for an example of what to say next.
   final VoidCallback? onHelpTap;
@@ -1535,6 +1654,11 @@ class _InputBar extends StatelessWidget {
                       minLines: 1,
                       maxLines: 5,
                       onSubmitted: (_) => onSendText(),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        color: AppPageColors.textPrimaryOf(context),
+                      ),
                       // Same look as the app's other fields (AppTextField): white, thin
                       // border, teal when focused; a light placeholder.
                       decoration: InputDecoration(
@@ -1571,7 +1695,15 @@ class _InputBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _micButton(context, size: 44),
+                  if (onSpeakTap != null && !isRecording)
+                    _sideButton(
+                      context,
+                      icon: Icons.mic_none_rounded,
+                      tooltip: 'Speak instead',
+                      onTap: isProcessing ? null : onSpeakTap,
+                    )
+                  else
+                    _micButton(context, size: 44),
                   const SizedBox(width: 8),
                   // A filled teal circle (IconButton.filled's style is
                   // ignored under the app's Material 2 theme).
@@ -1682,10 +1814,13 @@ class _SessionHeader extends StatelessWidget {
   final VoidCallback onExit;
   final VoidCallback onSettings;
 
+  /// "2:48", or "3:59:58" once an hour or more is left.
   static String _clock(int seconds) {
     final s = seconds.clamp(0, 359999);
-    final m = s ~/ 60;
-    return '$m:${(s % 60).toString().padLeft(2, '0')}';
+    final h = s ~/ 3600;
+    final m = (s % 3600) ~/ 60;
+    final ss = (s % 60).toString().padLeft(2, '0');
+    return h > 0 ? '$h:${m.toString().padLeft(2, '0')}:$ss' : '$m:$ss';
   }
 
   @override
@@ -1851,9 +1986,8 @@ class _CorrectionsPanel extends StatelessWidget {
     final strike = isDark ? const Color(0xFFFF8A80) : const Color(0xFFB42318);
     final better = isDark ? AppColors.greenCorrect : const Color(0xFF0B6B3A);
     final items = corrections.reversed.toList();
-    return Container(
-      width: 300,
-      margin: const EdgeInsets.fromLTRB(0, 12, 16, 12),
+    final catches = corrections.where((c) => c.autoSaved).length;
+    final list = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppPageColors.cardBgOf(context),
@@ -1937,6 +2071,79 @@ class _CorrectionsPanel extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+    return SizedBox(
+      width: 300,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 12, 16, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: list),
+            if (catches > 0) ...[
+              const SizedBox(height: 16),
+              _CatchesCard(count: catches),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Rio with his catch: how many corrections from this chat became cards.
+class _CatchesCard extends StatelessWidget {
+  const _CatchesCard({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: SizedBox(
+        height: 200,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              TutorScene.fishing.asset,
+              fit: BoxFit.cover,
+              alignment: TutorScene.fishing.focus,
+              semanticLabel: 'Rio holding up a fish he caught',
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(18, 28, 18, 18),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Color(0xD904191B), Color(0x0004191B)],
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      count == 1 ? '1 catch in this chat' : '$count catches in this chat',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "They'll come back in your deck reviews.",
+                      style: TextStyle(fontSize: 13, color: Color(0xFFCFEDEF)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

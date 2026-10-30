@@ -73,7 +73,7 @@ class ConversationService {
   DateTime? sessionStartedAt;
   DateTime? _recordingStartedAt;
   Timer? _recordingTimer;
-  StreamSubscription<Amplitude>? _amplitudeSub;
+  Timer? _amplitudeTimer;
 
   /// Recent mic levels (0–1, oldest first) while recording, for the live
   /// waveform. A notifier of its own so only the bars repaint, not the chat.
@@ -327,6 +327,12 @@ class ConversationService {
     _notify();
   }
 
+  /// The topic or role-play name saved with the chat in history.
+  String? get _historyTopicTitle {
+    final title = sessionContext.title.trim();
+    return title.isEmpty ? null : title;
+  }
+
   /// Saves the current chat to history (when long enough), then starts fresh.
   Future<void> archiveAndStartNew() async {
     if (turns.length >= 2) {
@@ -335,6 +341,7 @@ class ConversationService {
       await ConversationHistoryService.instance.saveCurrentSession(
         snapshot,
         sessionId: activeHistorySessionId,
+        topicTitle: _historyTopicTitle,
       );
     }
     activeHistorySessionId = null;
@@ -414,6 +421,7 @@ class ConversationService {
     await ConversationHistoryService.instance.saveCurrentSession(
       turnsToSave,
       sessionId: activeHistorySessionId,
+      topicTitle: _historyTopicTitle,
     );
   }
 
@@ -774,24 +782,30 @@ class ConversationService {
     _recordingTimer?.cancel();
     _recordingTimer = null;
     _recordingStartedAt = null;
-    _amplitudeSub?.cancel();
-    _amplitudeSub = null;
+    _amplitudeTimer?.cancel();
+    _amplitudeTimer = null;
     recordingLevels.value = const [];
   }
 
   /// dBFS (about -160 silent … 0 loudest) → 0–1; speech sits around -40…-10.
   static double _levelFromDb(double db) => ((db + 50) / 45).clamp(0.0, 1.0);
 
+  /// Polls the mic level while recording. Not onAmplitudeChanged: that stream
+  /// is single-subscription per recorder, so it can't be re-listened after the
+  /// first recording and the waveform stayed flat from then on.
   void _listenToAmplitude() {
-    _amplitudeSub?.cancel();
-    _amplitudeSub = _recorder
-        .onAmplitudeChanged(const Duration(milliseconds: 80))
-        .listen((amp) {
-          final next = [...recordingLevels.value, _levelFromDb(amp.current)];
-          recordingLevels.value = next.length > recordingLevelCount
-              ? next.sublist(next.length - recordingLevelCount)
-              : next;
-        }, onError: (_) {});
+    _amplitudeTimer?.cancel();
+    _amplitudeTimer = Timer.periodic(const Duration(milliseconds: 80), (_) async {
+      if (!isRecording) return;
+      try {
+        final amp = await _recorder.getAmplitude();
+        if (!isRecording) return;
+        final next = [...recordingLevels.value, _levelFromDb(amp.current)];
+        recordingLevels.value = next.length > recordingLevelCount
+            ? next.sublist(next.length - recordingLevelCount)
+            : next;
+      } catch (_) {}
+    });
   }
 
   Future<String?> _recordingPath() async {

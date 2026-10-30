@@ -17,6 +17,11 @@ class RioPreferences {
   /// the chat bubbles. Off by default (the chat is the main view).
   final ValueNotifier<bool> showRioStage = ValueNotifier<bool>(false);
   static const _stageKey = 'show_rio_stage';
+
+  /// "Show corrections": the "Say it better" cards and inline fixes under
+  /// your messages. On by default; corrections are still saved when off.
+  final ValueNotifier<bool> showCorrections = ValueNotifier<bool>(true);
+  static const _correctionsKey = 'show_corrections';
   bool _loaded = false;
 
   Future<void> load() async {
@@ -25,12 +30,19 @@ class RioPreferences {
     final prefs = await SharedPreferences.getInstance();
     showRio.value = prefs.getBool(_key) ?? true;
     showRioStage.value = prefs.getBool(_stageKey) ?? false;
+    showCorrections.value = prefs.getBool(_correctionsKey) ?? true;
   }
 
   Future<void> setShowRioStage(bool value) async {
     showRioStage.value = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_stageKey, value);
+  }
+
+  Future<void> setShowCorrections(bool value) async {
+    showCorrections.value = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_correctionsKey, value);
   }
 
   Future<void> setShowRio(bool value) async {

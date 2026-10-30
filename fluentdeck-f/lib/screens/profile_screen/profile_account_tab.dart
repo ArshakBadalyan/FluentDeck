@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/app_colors.dart';
 import 'package:fluentdeck/screens/profile_screen/profile_achievements_navigation.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_stats_header.dart';
+import 'package:fluentdeck/models/speaking_preferences.dart';
+import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/services/achievement_service.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
 import 'package:fluentdeck/models/user_note_model.dart';
@@ -15,9 +16,8 @@ import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
-import '../../services/main_navigation_coordinator.dart';
-import '../../services/main_tab_config.dart';
 import '../../services/subscription_service.dart';
+import 'profile_subscription_tab.dart';
 import '../../ui_elements/dialogs/account_info_save_dialog.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/primary_button.dart';
@@ -42,6 +42,10 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
   AchievementSnapshot? _achievementSnapshot;
   SubscriptionStatus _subscriptionStatus = SubscriptionStatus.none;
   StudySettingsModel? _studySettings;
+  SpeakingPreferences _speakingPrefs = const SpeakingPreferences();
+
+  /// The name and email form shows once the pencil is tapped.
+  bool _editing = false;
   /// Field values as last loaded/saved; Save stays disabled until one differs.
   List<String> _savedValues = const [];
 
@@ -92,6 +96,10 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
       _studySettings = await NoteService.instance.fetchStudySettings();
     } catch (_) {}
 
+    try {
+      _speakingPrefs = await SpeakingPreferencesService.instance.load();
+    } catch (_) {}
+
     final res = await AuthService.getUser();
 
     if (res['status'] == 'success') {
@@ -121,6 +129,19 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
     if (nick.isNotEmpty) return nick;
     return 'Learner';
   }
+
+  /// "Spanish → English · Free plan".
+  String get _identitySubtitle {
+    final target = SpeakingPreferences.practiceLanguageOptions[_speakingPrefs.practiceLanguage] ??
+        _speakingPrefs.practiceLanguage.toUpperCase();
+    final native = _speakingPrefs.translationLanguage == 'none'
+        ? null
+        : SpeakingPreferences.translationLanguageOptions[_speakingPrefs.translationLanguage];
+    final plan = _subscriptionStatus.isPremium ? 'Premium' : 'Free plan';
+    return '${native == null ? target : '$native → $target'} · $plan';
+  }
+
+  static String _streakLabel(int days) => days == 1 ? '1 day' : '$days days';
 
   void _openAchievements() => openProfileAchievements(context);
 
@@ -200,29 +221,62 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
       },
       child: AppPageBackground(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_achievementSnapshot != null)
-                  ProfileStatsHeader(
-                    snapshot: _achievementSnapshot!,
-                    displayName: _displayName,
-                    onViewAchievements: _openAchievements,
-                    savedWordsValue:
-                        _studySettings == null
-                            ? null
-                            : _studySettings!.noteLimit == null
-                            ? '${_studySettings!.noteCount}'
-                            : '${_studySettings!.noteCount}/${_studySettings!.noteLimit}',
+                _IdentityCard(
+                  name: _displayName,
+                  subtitle: _identitySubtitle,
+                  editing: _editing,
+                  onEdit: () => setState(() => _editing = !_editing),
+                ),
+                const SizedBox(height: 12),
+                if (_achievementSnapshot != null) ...[
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _StatTile(
+                            icon: Icons.local_fire_department_rounded,
+                            value: _streakLabel(_achievementSnapshot!.progress?.streakDays ?? 0),
+                            label: 'Practice streak',
+                            tint: AppTint.reward,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _StatTile(
+                            icon: Icons.workspace_premium_outlined,
+                            value: '${_achievementSnapshot!.unlockedCount} of ${_achievementSnapshot!.achievements.length}',
+                            label: 'Badges earned',
+                            onTap: _openAchievements,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                if (_achievementSnapshot != null) const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                ],
+                _InfoRows(
+                  rows: [
+                    ('Daily goal', '${_speakingPrefs.correctSentenceGoal} sentences'),
+                    if (_achievementSnapshot?.progress != null)
+                      ('Words spoken', '${_achievementSnapshot!.progress!.uniqueWordsUsed}'),
+                    if (_studySettings != null)
+                      (
+                        'Saved words',
+                        _studySettings!.noteLimit == null
+                            ? '${_studySettings!.noteCount}'
+                            : '${_studySettings!.noteCount} of ${_studySettings!.noteLimit} free',
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 if (!_subscriptionStatus.isPremium)
                   _GoPremiumBanner(
-                    onTap: () => MainNavigationCoordinator.goToTab(
-                      MainTabId.profile,
-                      subIndex: kProfileSubscriptionTabIndex,
-                    ),
+                    onTap: () => openPremiumScreen(context),
                   )
                 else
                 AppSectionCard(
@@ -267,12 +321,10 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                             : 'Upgrade to Premium',
                     icon: Icons.workspace_premium_rounded,
                     onTap:
-                        () => MainNavigationCoordinator.goToTab(
-                          MainTabId.profile,
-                          subIndex: kProfileSubscriptionTabIndex,
-                        ),
+                        () => openPremiumScreen(context),
                   ),
                 ),
+                if (_editing) ...[
                 const SizedBox(height: 16),
                 AppSectionCard(
                   title: 'Account',
@@ -320,6 +372,7 @@ class _ProfileAccountTabState extends State<ProfileAccountTab> {
                 enabled: !_saving && !_processing && _hasChanges,
                 onPressed: () => _saveProfile(),
               ),
+                ],
             ],
           ),
         ),
@@ -386,6 +439,158 @@ class _GoPremiumBanner extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Avatar initial, name, languages and plan, and the edit pencil.
+class _IdentityCard extends StatelessWidget {
+  const _IdentityCard({
+    required this.name,
+    required this.subtitle,
+    required this.editing,
+    required this.onEdit,
+  });
+
+  final String name;
+  final String subtitle;
+  final bool editing;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
+    final initial = name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase();
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: accent,
+            child: Text(
+              initial,
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppPageColors.onAccentOf(context)),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+                ),
+                const SizedBox(height: 2),
+                Text(subtitle, style: TextStyle(fontSize: 14, color: AppPageColors.subtitleOf(context))),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: editing ? 'Close' : 'Edit profile',
+            icon: Icon(editing ? Icons.close_rounded : Icons.edit_outlined, color: accent),
+            onPressed: onEdit,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Icon, big value, small label; the reward tint fills it soft yellow.
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.value,
+    required this.label,
+    this.tint,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String value;
+  final String label;
+  final AppTint? tint;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = tint == null ? null : AppPageColors.tintOf(context, tint!);
+    final iconColor = AppPageColors.tintIconOf(context, tint ?? AppTint.reward);
+    final content = Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 22, color: iconColor),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 13, color: colors?.fg ?? AppPageColors.subtitleOf(context))),
+        ],
+      ),
+    );
+    return AppPressScale(
+      enabled: onTap != null,
+      child: Material(
+        color: colors?.bg ?? AppPageColors.cardBgOf(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: colors == null ? BorderSide(color: AppPageColors.subtleBorderOf(context)) : BorderSide.none,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: onTap == null ? content : InkWell(onTap: onTap, child: content),
+      ),
+    );
+  }
+}
+
+/// Label on the left, bold value on the right, rows split by hairlines.
+class _InfoRows extends StatelessWidget {
+  const _InfoRows({required this.rows});
+
+  final List<(String, String)> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) Divider(height: 1, thickness: 1, color: AppPageColors.rowDividerOf(context)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(rows[i].$1, style: TextStyle(fontSize: 15, color: AppPageColors.textPrimaryOf(context))),
+                  ),
+                  Text(
+                    rows[i].$2,
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

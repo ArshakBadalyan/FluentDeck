@@ -72,7 +72,7 @@ class _DeckEditSheetState extends State<_DeckEditSheet> {
 
   bool get _canRename => !widget.deck.isDefault;
   bool get _canNest => !widget.deck.isDefault && !widget.deck.isFiltered;
-  bool get _canEditOptions => !widget.deck.isDefault && !widget.deck.isFiltered;
+  bool get _canEditOptions => !widget.deck.isFiltered;
   bool get _canDelete => widget.deck.isDeletable;
   bool _deleting = false;
 

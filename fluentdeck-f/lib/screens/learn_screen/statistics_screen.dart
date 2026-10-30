@@ -1309,6 +1309,8 @@ class _CardStatesCard extends StatelessWidget {
               child: total == 0
                   ? ColoredBox(color: AppPageColors.subtleBorderOf(context))
                   : Row(
+                      // Stretch: an empty ColoredBox is otherwise 0 dp tall.
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         for (final p in parts)
                           if (p.$2 > 0) Expanded(flex: p.$2, child: ColoredBox(color: p.$3)),

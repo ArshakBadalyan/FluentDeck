@@ -1233,6 +1233,7 @@ export interface ApiSpeakingSessionSpeakingSession
         },
         number
       >;
+    level: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1243,6 +1244,7 @@ export interface ApiSpeakingSessionSpeakingSession
       ['chat', 'role_play', 'topic', 'game', 'lesson']
     > &
       Schema.Attribute.Required;
+    newWords: Schema.Attribute.JSON;
     publishedAt: Schema.Attribute.DateTime;
     referenceKey: Schema.Attribute.String;
     score: Schema.Attribute.Integer &

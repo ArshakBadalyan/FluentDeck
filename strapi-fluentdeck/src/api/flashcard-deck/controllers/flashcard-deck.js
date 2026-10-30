@@ -189,7 +189,8 @@ module.exports = createCoreController(
           data.parentDeck = parentId;
         }
       }
-      if (deckOptions !== undefined && !deck.isDefault) {
+      // Default decks keep their name and place, but scheduling is the user's call.
+      if (deckOptions !== undefined && !isFiltered) {
         const { normalizeDeckOptions } = require('../../../utils/flashcard-review-actions');
         data.deckOptions = normalizeDeckOptions(deckOptions);
       }

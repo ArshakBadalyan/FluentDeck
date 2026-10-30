@@ -1,4 +1,5 @@
 import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/utils/api_exception.dart';
@@ -16,6 +17,7 @@ import 'package:fluentdeck/utils/speaking_premium_gate.dart';
 import 'package:fluentdeck/widgets/cefr_level_chips.dart';
 import 'package:fluentdeck/widgets/cloze_field_editor.dart';
 import 'package:fluentdeck/widgets/html_field_editor.dart';
+import 'package:fluentdeck/widgets/record_audio_button.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
 import 'package:fluentdeck/models/occlusion_model.dart';
@@ -89,6 +91,8 @@ class CardEditScreen extends StatefulWidget {
 class _CardEditScreenState extends State<CardEditScreen> {
   final _mediaCtrl = TextEditingController();
   final _tagsCtrl = TextEditingController();
+  final _tagInputCtrl = TextEditingController();
+  final _mediaPlayer = AudioPlayer();
   final _topicCtrl = TextEditingController();
   final Map<String, TextEditingController> _fieldCtrls = {};
   final Map<int, TextEditingController> _maskLabelCtrls = {};
@@ -139,6 +143,8 @@ class _CardEditScreenState extends State<CardEditScreen> {
   void dispose() {
     _mediaCtrl.dispose();
     _tagsCtrl.dispose();
+    _tagInputCtrl.dispose();
+    _mediaPlayer.dispose();
     _topicCtrl.dispose();
     for (final c in _fieldCtrls.values) {
       c.dispose();
@@ -367,6 +373,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
   }
 
   List<String> _parseTags() {
+    _commitTagInput();
     final tags =
         _tagsCtrl.text
             .split(',')
@@ -424,11 +431,14 @@ class _CardEditScreenState extends State<CardEditScreen> {
     return null;
   }
 
-  Future<void> _pickMedia() async {
+  /// Toolbar image button: a picture for the card (shown above it in review).
+  Future<void> _pickImage() => _pickMedia(imagesOnly: true);
+
+  Future<void> _pickMedia({bool imagesOnly = false}) async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: const [
-        'mp3', 'wav', 'm4a', 'ogg',
+      allowedExtensions: [
+        if (!imagesOnly) ...['mp3', 'wav', 'm4a', 'ogg'],
         'png', 'jpg', 'jpeg', 'gif', 'webp',
       ],
       withData: true,
@@ -902,16 +912,7 @@ class _CardEditScreenState extends State<CardEditScreen> {
             const SizedBox(height: 12),
             _mediaField(),
             const SizedBox(height: 12),
-            if (widget.sheetMode)
-              _labeledField(
-                'Tags (comma-separated)',
-                TextField(
-                  controller: _tagsCtrl,
-                  decoration: _filledDecoration(),
-                ),
-              )
-            else
-              _plainField('Tags (comma-separated)', _tagsCtrl),
+            _tagsField(),
           ],
           // Save lives in the header; a live preview closes the form.
           if (!widget.sheetMode && !_needsFullEditor && !_isImageOcclusion) ...[
@@ -953,6 +954,17 @@ class _CardEditScreenState extends State<CardEditScreen> {
                   'Your card will show here.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 15, color: AppPageColors.mutedOf(context)),
+                )
+              : !cloze.hasMatch(raw)
+              // Bold, italic, underline and red as the card will show them.
+              ? BasicHtmlText(
+                  html: ctrl.text.trim(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w500,
+                    color: AppPageColors.textPrimaryOf(context),
+                  ),
                 )
               : Text.rich(
                   TextSpan(children: spans),
@@ -1112,7 +1124,12 @@ class _CardEditScreenState extends State<CardEditScreen> {
     final type = _activeType;
     if (type == null || type.fields.isEmpty) {
       return [
-        HtmlFieldEditor(label: 'Front', controller: _fieldCtrl('Front'), required: true),
+        HtmlFieldEditor(
+          label: 'Front',
+          controller: _fieldCtrl('Front'),
+          required: true,
+          toolbarActions: _mediaToolbarActions(),
+        ),
         const SizedBox(height: 16),
         HtmlFieldEditor(label: 'Back', controller: _fieldCtrl('Back'), maxLines: 5, required: true),
       ];
@@ -1121,12 +1138,15 @@ class _CardEditScreenState extends State<CardEditScreen> {
     final widgets = <Widget>[];
     for (final field in type.fields) {
       final isClozeText = _isCloze && field.name == 'Text';
+      // One recording per card, so the mic sits on the first field only.
+      final actions = field == type.fields.first ? _mediaToolbarActions() : const <Widget>[];
       widgets.add(
         isClozeText
             ? ClozeFieldEditor(
                 controller: _fieldCtrl(field.name),
                 maxLines: 5,
                 required: field.required,
+                toolbarActions: actions,
               )
             : HtmlFieldEditor(
                 label: field.name,
@@ -1134,12 +1154,43 @@ class _CardEditScreenState extends State<CardEditScreen> {
                 maxLines: field.name == 'Back' ? 5 : 3,
                 required: field.required,
                 trailing: _fieldAiAction(field.name),
+                toolbarActions: actions,
               ),
       );
       widgets.add(const SizedBox(height: 16));
     }
     if (widgets.isNotEmpty) widgets.removeLast();
     return widgets;
+  }
+
+  /// Image and mic for the first field's toolbar (one picture or clip per card).
+  List<Widget> _mediaToolbarActions() => [
+    IconButton(
+      icon: const Icon(Icons.image_outlined, size: 20),
+      color: AppPageColors.accentOf(context),
+      tooltip: 'Add a picture',
+      onPressed: _pickImage,
+      visualDensity: VisualDensity.compact,
+    ),
+    _recordButton(),
+  ];
+
+  /// Records the card's audio and puts the uploaded clip in Media URL, which
+  /// review plays from the card's listen button.
+  Widget _recordButton() {
+    return RecordAudioButton(
+      onError: _snack,
+      onRecorded: (bytes, filename) async {
+        final url = await FlashcardService.instance.uploadMedia(bytes, filename);
+        if (!mounted) return;
+        if (url == null || url.isEmpty) {
+          _snack('Upload failed');
+          return;
+        }
+        setState(() => _mediaCtrl.text = url);
+        _snack('Audio added to this card');
+      },
+    );
   }
 
   String _plainFront() =>
@@ -1320,28 +1371,175 @@ class _CardEditScreenState extends State<CardEditScreen> {
     );
   }
 
+  static const _imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
+
+  bool get _mediaIsImage {
+    final url = _mediaCtrl.text.trim().toLowerCase().split('?').first;
+    return _imageExtensions.any(url.endsWith);
+  }
+
+  /// Audio or picture for the card: add a file or paste a link (record from
+  /// the toolbar mic).
+  /// Shows what is attached instead of the raw URL.
   Widget _mediaField() {
+    final url = _mediaCtrl.text.trim();
+    final accent = AppPageColors.accentOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Media URL (audio/image)', style: TextStyle(fontWeight: FontWeight.w600)),
+        const Text('Audio or picture', style: TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _mediaCtrl,
-                decoration: _filledDecoration(),
+        if (url.isEmpty)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _pickMedia,
+                icon: const Icon(Icons.attach_file_rounded, size: 18),
+                label: const Text('Add file'),
+                style: _pickButtonStyle(),
               ),
+              TextButton(onPressed: _pasteMediaLink, child: const Text('Paste a link')),
+              // One recorder per screen: the mic lives in the first field's toolbar.
+              Text(
+                'or use 🎤 / 🖼 above',
+                style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
+              ),
+            ],
+          )
+        else
+          Container(
+            padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+            decoration: BoxDecoration(
+              color: AppPageColors.cardBgOf(context),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppPageColors.subtleBorderOf(context)),
             ),
-            const SizedBox(width: 8),
-            OutlinedButton.icon(
-              onPressed: _pickMedia,
-              icon: const Icon(Icons.upload_file, size: 18),
-              label: const Text('Pick'),
-              style: _pickButtonStyle(),
+            child: Row(
+              children: [
+                if (_mediaIsImage)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      url,
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(Icons.image_outlined, color: accent),
+                    ),
+                  )
+                else
+                  IconButton(
+                    tooltip: 'Play',
+                    icon: Icon(Icons.play_circle_fill_rounded, color: accent, size: 32),
+                    onPressed: () async {
+                      await _mediaPlayer.stop();
+                      await _mediaPlayer.play(UrlSource(url));
+                    },
+                  ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _mediaIsImage ? 'Picture attached' : 'Audio attached',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Remove',
+                  icon: Icon(Icons.close_rounded, color: AppPageColors.subtitleOf(context)),
+                  onPressed: () {
+                    _mediaPlayer.stop();
+                    setState(() => _mediaCtrl.clear());
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
+      ],
+    );
+  }
+
+  Future<void> _pasteMediaLink() async {
+    final ctrl = TextEditingController();
+    final link = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Paste a link'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          keyboardType: TextInputType.url,
+          decoration: const InputDecoration(hintText: 'https://… (.mp3 or .jpg)'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: const Text('Add')),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (link == null || link.isEmpty || !mounted) return;
+    setState(() => _mediaCtrl.text = link);
+  }
+
+  List<String> get _tagList => _tagsCtrl.text
+      .split(',')
+      .map((t) => t.trim())
+      .where((t) => t.isNotEmpty)
+      .toList();
+
+  /// Adds whatever is typed in the tag box (split on commas) to the tags.
+  void _commitTagInput() {
+    final typed = _tagInputCtrl.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty);
+    if (typed.isEmpty) return;
+    final tags = _tagList;
+    for (final t in typed) {
+      if (!tags.contains(t)) tags.add(t);
+    }
+    _tagInputCtrl.clear();
+    setState(() => _tagsCtrl.text = tags.join(', '));
+  }
+
+  /// Tags as removable chips, with a box to add more (Enter or comma adds).
+  Widget _tagsField() {
+    final tags = _tagList;
+    final accent = AppPageColors.accentOf(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Tags', style: widget.sheetMode ? _fieldLabelStyle : const TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        if (tags.isNotEmpty) ...[
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final tag in tags)
+                InputChip(
+                  label: Text(tag),
+                  onDeleted: () => setState(
+                    () => _tagsCtrl.text = (tags..remove(tag)).join(', '),
+                  ),
+                  backgroundColor: accent.withValues(alpha: 0.1),
+                  labelStyle: TextStyle(color: accent, fontWeight: FontWeight.w600, fontSize: 13),
+                  deleteIconColor: accent,
+                  side: BorderSide.none,
+                  visualDensity: VisualDensity.compact,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        TextField(
+          controller: _tagInputCtrl,
+          decoration: _filledDecoration().copyWith(hintText: 'Add a tag, e.g. travel'),
+          textInputAction: TextInputAction.done,
+          onChanged: (v) {
+            if (v.contains(',')) _commitTagInput();
+          },
+          onSubmitted: (_) => _commitTagInput(),
         ),
       ],
     );

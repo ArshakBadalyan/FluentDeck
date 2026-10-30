@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/speaking_session_context.dart';
 import '../models/speaking_session_record_model.dart';
 import '../utils/strapi_response.dart';
@@ -19,6 +21,9 @@ class SpeakingSessionCompleteResult {
 class SpeakingSessionService {
   SpeakingSessionService._();
   static final SpeakingSessionService instance = SpeakingSessionService._();
+
+  /// Bumped after each saved session, so Progress screens can reload.
+  final ValueNotifier<int> savedCount = ValueNotifier(0);
 
   String _modeKey(SpeakingMode mode) {
     switch (mode) {
@@ -45,6 +50,8 @@ class SpeakingSessionService {
     required String summary,
     required int turnCount,
     required DateTime startedAt,
+    String? level,
+    List<String> newWords = const [],
   }) async {
     final durationMinutes =
         ((DateTime.now().difference(startedAt).inSeconds) / 60).ceil().clamp(
@@ -65,6 +72,8 @@ class SpeakingSessionService {
       'durationMinutes': durationMinutes,
       'turnCount': turnCount,
       'completedAt': DateTime.now().toUtc().toIso8601String(),
+      if (level != null) 'level': level,
+      if (newWords.isNotEmpty) 'newWords': newWords,
     };
 
     final data = await ApiService.post('speaking-sessions/complete', body);
@@ -99,6 +108,7 @@ class SpeakingSessionService {
       );
     }
 
+    savedCount.value++;
     final progress = data['progress'];
     return SpeakingSessionCompleteResult(
       session: session,

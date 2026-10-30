@@ -121,11 +121,12 @@ function extractClozeIndices(text) {
   return [...indices].sort((a, b) => a - b);
 }
 
+/** The active deletion becomes "[...]", or "[hint]" for {{c1::word::hint}} (as in Anki). */
 function renderClozeFront(text, activeIndex) {
   return String(text).replace(
-    /\{\{c(\d+)::([^}]+?)(?:::[^}]+)?\}\}/g,
-    (match, n, content) => {
-      if (parseInt(n, 10) === activeIndex) return '[...]';
+    /\{\{c(\d+)::([^}]+?)(?:::([^}]+))?\}\}/g,
+    (match, n, content, hint) => {
+      if (parseInt(n, 10) === activeIndex) return hint && hint.trim() ? `[${hint.trim()}]` : '[...]';
       return content;
     },
   );

@@ -17,6 +17,12 @@ class SpeakingSessionRecord {
   final int turnCount;
   final DateTime completedAt;
 
+  /// CEFR level at the time ("B1"); null for older sessions.
+  final String? level;
+
+  /// Notable words the learner used; empty for older sessions.
+  final List<String> newWords;
+
   const SpeakingSessionRecord({
     required this.id,
     this.mode = SpeakingMode.chat,
@@ -31,6 +37,8 @@ class SpeakingSessionRecord {
     this.durationMinutes = 0,
     this.turnCount = 0,
     required this.completedAt,
+    this.level,
+    this.newWords = const [],
   });
 
   String get modeLabel {
@@ -86,6 +94,11 @@ class SpeakingSessionRecord {
       completedAt:
           DateTime.tryParse(json['completedAt']?.toString() ?? '') ??
           DateTime.now(),
+      level: json['level'] as String?,
+      newWords: [
+        for (final w in json['newWords'] as List? ?? const [])
+          if (w.toString().trim().isNotEmpty) w.toString().trim(),
+      ],
     );
   }
 }

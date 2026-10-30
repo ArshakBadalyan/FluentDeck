@@ -96,6 +96,12 @@ class SessionEvaluationResult {
   final int? grammar;
   final int? vocabulary;
 
+  /// Notable words or phrases the learner used; empty when none.
+  final List<String> newWords;
+
+  /// The learner's CEFR level the chat was scored at, e.g. "B1".
+  final String? level;
+
   const SessionEvaluationResult({
     required this.score,
     required this.feedback,
@@ -103,6 +109,8 @@ class SessionEvaluationResult {
     this.fluency,
     this.grammar,
     this.vocabulary,
+    this.newWords = const [],
+    this.level,
   });
 
   factory SessionEvaluationResult.fromJson(Map<String, dynamic> json) {
@@ -113,6 +121,11 @@ class SessionEvaluationResult {
       vocabulary: (json['vocabulary'] as num?)?.round(),
       feedback: json['feedback']?.toString() ?? '',
       summary: json['summary']?.toString() ?? '',
+      newWords: [
+        for (final w in json['newWords'] as List? ?? const [])
+          if (w.toString().trim().isNotEmpty) w.toString().trim(),
+      ],
+      level: json['level'] as String?,
     );
   }
 }

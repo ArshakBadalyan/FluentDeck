@@ -51,6 +51,8 @@ module.exports = createCoreController(
           durationMinutes: body.durationMinutes,
           turnCount: body.turnCount,
           completedAt: body.completedAt,
+          level: body.level,
+          newWords: body.newWords,
         });
 
         const bestScores = await bestScoresByReference(strapi, userId);

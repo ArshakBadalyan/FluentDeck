@@ -3,6 +3,8 @@ import 'package:fluentdeck/ui_elements/screen_tutorial_targets.dart';
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/services/analytics_service.dart';
 import 'package:fluentdeck/services/click_tracking.dart';
+import 'package:fluentdeck/services/flashcard_service.dart';
+import 'package:fluentdeck/services/user_progress_service.dart';
 import 'package:fluentdeck/services/interaction_haptics.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
@@ -161,12 +163,57 @@ class _NavItem extends StatelessWidget {
 }
 
 /// Wide screens: the main tabs as a left side menu (icon + label rows), with
-/// the app name on top. Same tabs and taps as [EnglishBottomNav].
-class EnglishSideNav extends StatelessWidget {
+/// the app name on top, cards due on Decks, and the streak at the bottom.
+/// Same tabs and taps as [EnglishBottomNav].
+class EnglishSideNav extends StatefulWidget {
   const EnglishSideNav({super.key, required this.currentIndex, required this.onTap});
 
   final int currentIndex;
   final ValueChanged<int> onTap;
+
+  @override
+  State<EnglishSideNav> createState() => _EnglishSideNavState();
+}
+
+class _EnglishSideNavState extends State<EnglishSideNav> {
+  int? _due;
+  int? _streak;
+
+  int get currentIndex => widget.currentIndex;
+  ValueChanged<int> get onTap => widget.onTap;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  @override
+  void didUpdateWidget(EnglishSideNav oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reviews and conversations happen on the tabs; refresh on each switch.
+    if (oldWidget.currentIndex != widget.currentIndex) _refresh();
+  }
+
+  Future<void> _refresh() async {
+    int? due;
+    int? streak;
+    try {
+      final decks = await FlashcardService.instance.fetchDecksWithCache();
+      // Parent decks already include their sub-decks' cards.
+      due = decks
+          .where((d) => d.parentDeckId == null && !d.isFiltered)
+          .fold<int>(0, (sum, d) => sum + d.reviewDueCount + d.learningCount);
+    } catch (_) {}
+    try {
+      streak = (await UserProgressService.instance.fetchForCurrentUser())?.streakDays;
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _due = due;
+      _streak = streak;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -236,6 +283,25 @@ class EnglishSideNav extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            if (tabs[i].id == MainTabId.decks && (_due ?? 0) > 0) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppPageColors.tintOf(context, AppTint.voice).bg,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  _due! > 99 ? '99+' : '$_due',
+                                  semanticsLabel: '$_due cards due',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppPageColors.tintOf(context, AppTint.voice).fg,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                            ],
                           ],
                         ),
                       ),
@@ -243,8 +309,54 @@ class EnglishSideNav extends StatelessWidget {
                   ),
                 ),
               ),
+            const Spacer(),
+            if ((_streak ?? 0) > 0) _StreakCard(days: _streak!),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Soft-yellow streak note at the foot of the side menu.
+class _StreakCard extends StatelessWidget {
+  const _StreakCard({required this.days});
+
+  final int days;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = AppPageColors.tintOf(context, AppTint.reward);
+    // Material: the side menu has none above it, so text would fall back to
+    // the debug style (huge, double-underlined).
+    return Material(
+      color: tint.bg,
+      borderRadius: BorderRadius.circular(18),
+      child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.local_fire_department_rounded, size: 18, color: AppPageColors.tintIconOf(context, AppTint.reward)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  '$days-day streak',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: tint.fg),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Practice today to keep it going.',
+            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+          ),
+        ],
+      ),
       ),
     );
   }

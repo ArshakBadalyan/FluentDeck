@@ -35,6 +35,9 @@ class _ConversationChatSettingsSheetState
   bool _saving = false;
   bool _isPremium = false;
 
+  /// The less-used switches stay folded so the sheet stays short.
+  bool _moreOptions = false;
+
   static const _levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   static const _premiumOnlyLevels = {'B2', 'C1', 'C2'};
 
@@ -270,6 +273,12 @@ class _ConversationChatSettingsSheetState
                       const SizedBox(height: 16),
                       _CheckGroup(
                         rows: [
+                          _CheckRow(
+                            title: 'Show corrections',
+                            subtitle: '“Say it better” after your message',
+                            listenable: RioPreferences.instance.showCorrections,
+                            onChanged: RioPreferences.instance.setShowCorrections,
+                          ),
                           if (_prefs.translationLanguage != 'none')
                             _CheckRow(
                               title: 'Translate into ${SpeakingPreferences.translationLanguageOptions[_prefs.translationLanguage] ?? 'your language'}',
@@ -283,6 +292,21 @@ class _ConversationChatSettingsSheetState
                             value: _prefs.soundOn && _prefs.autoPlayVoice,
                             onChanged: (v) => _save(_prefs.copyWith(soundOn: v, autoPlayVoice: v)),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () => setState(() => _moreOptions = !_moreOptions),
+                          icon: Icon(_moreOptions ? Icons.expand_less_rounded : Icons.expand_more_rounded),
+                          label: Text(_moreOptions ? 'Fewer options' : 'More options'),
+                          style: TextButton.styleFrom(foregroundColor: AppPageColors.accentOf(context)),
+                        ),
+                      ),
+                      if (_moreOptions)
+                      _CheckGroup(
+                        rows: [
                           _CheckRow(
                             title: 'Auto-start recording',
                             subtitle: 'Open the mic after Rio finishes speaking',

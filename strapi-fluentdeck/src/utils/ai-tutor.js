@@ -1,6 +1,7 @@
 const fs = require("fs");
 const OpenAI = require("openai");
 const { toFile } = require("openai");
+const { sanitizeNewWords, normalizeCefrLevel } = require("./speaking-session-utils");
 
 const TUTOR_MODEL = process.env.AI_TUTOR_MODEL || "gpt-4o-mini";
 const TTS_MODEL = process.env.AI_TTS_MODEL || "tts-1";
@@ -102,6 +103,7 @@ Correction display rules for CORRECTIONS_JSON:
 - spelling / typo (wrong character in a word): errorType "spelling", inlineStyle "highlight" — app shows the word in red only.
 - wrong word choice (needs a different word): errorType "vocabulary", inlineStyle "replace" — app shows red strikethrough plus green correct word.
 - grammar / phrasing / sentence structure: errorType "grammar" or "phrasing", inlineStyle "none" — app shows a separate correction card, not inline in the bubble.
+- List EVERY mistake in the user's message in CORRECTIONS_JSON, one item per mistake (e.g. "hiu, how ars you?" → one item for "hiu", one for "ars"). Your REPLY still mentions at most one; the app shows the full list. Most important mistake first.
 
 Rules:
 - Never be condescending or robotic. You are a supportive conversation partner, not a grammar checker.
@@ -920,8 +922,10 @@ Also rate three skills separately, each 0-10 on the same scale:
 - grammar: accuracy of verb forms, word order, agreement
 - vocabulary: range and precision of the words used
 
+Also list "newWords": up to 6 words or short phrases the USER (not the Tutor) used well in this session that are worth noticing at their level, beyond the most basic vocabulary. Copy them in the base form, in the language the user spoke. Use [] if there are none.
+
 Respond ONLY with valid JSON (no markdown):
-{"score": <integer 0-10>, "fluency": <integer 0-10>, "grammar": <integer 0-10>, "vocabulary": <integer 0-10>, "feedback": "<2-3 encouraging sentences>", "summary": "<one line for activity history>"}`;
+{"score": <integer 0-10>, "fluency": <integer 0-10>, "grammar": <integer 0-10>, "vocabulary": <integer 0-10>, "feedback": "<2-3 encouraging sentences>", "summary": "<one line for activity history>", "newWords": ["<word or phrase>", ...]}`;
 
 function formatTranscriptForEvaluation(history) {
   if (!Array.isArray(history) || history.length === 0) {
@@ -957,7 +961,7 @@ Evaluate the learner's spoken English in this session.`;
       { role: "user", content: userPrompt },
     ],
     temperature: 0.3,
-    max_tokens: 300,
+    max_tokens: 400,
   });
 
   const raw = completion.choices?.[0]?.message?.content ?? "";
@@ -987,6 +991,8 @@ Evaluate the learner's spoken English in this session.`;
     vocabulary: subScore(parsed.vocabulary),
     feedback: String(parsed.feedback ?? "").trim() || "Nice work — keep practicing!",
     summary: String(parsed.summary ?? "").trim() || `${title} session`,
+    newWords: sanitizeNewWords(parsed.newWords),
+    level: normalizeCefrLevel(userLevel),
   };
 }
 

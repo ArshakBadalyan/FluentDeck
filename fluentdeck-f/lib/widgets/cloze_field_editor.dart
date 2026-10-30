@@ -13,11 +13,14 @@ class ClozeFieldEditor extends StatefulWidget {
     required this.controller,
     this.maxLines = 5,
     this.required = false,
+    this.toolbarActions = const [],
   });
 
   final TextEditingController controller;
   final int maxLines;
   final bool required;
+  /// Extra buttons after "Hide selected" (e.g. record audio).
+  final List<Widget> toolbarActions;
 
   @override
   State<ClozeFieldEditor> createState() => _ClozeFieldEditorState();
@@ -63,9 +66,10 @@ class _ClozeFieldEditorState extends State<ClozeFieldEditor> {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: AppPageColors.fieldBgOf(context),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppPageColors.subtleBorderOf(context), width: 1),
+            // White with a teal outline, like the other card fields.
+            color: AppPageColors.cardBgOf(context),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppPageColors.accentOf(context), width: 2),
           ),
           child: Column(
             children: [
@@ -82,6 +86,7 @@ class _ClozeFieldEditorState extends State<ClozeFieldEditor> {
                         disabledForegroundColor: AppPageColors.subtitleOf(context),
                       ),
                     ),
+                    ...widget.toolbarActions,
                   ],
                 ),
               ),
@@ -91,7 +96,7 @@ class _ClozeFieldEditorState extends State<ClozeFieldEditor> {
                 decoration: InputDecoration(
                   hintText: 'Type a sentence, select a word, then tap "Hide selected"',
                   filled: true,
-                  fillColor: AppPageColors.fieldBgOf(context),
+                  fillColor: AppPageColors.cardBgOf(context),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                 ),

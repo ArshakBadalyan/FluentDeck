@@ -23,7 +23,6 @@ import 'package:fluentdeck/services/speaking_session_service.dart';
 import 'package:fluentdeck/services/user_progress_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/activity_preview_list.dart';
 import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/widgets/tutor_scene.dart';
 
@@ -49,12 +48,14 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
   void initState() {
     super.initState();
     SpeakingPreferencesService.instance.addListener(_onPrefsChanged);
+    SpeakingSessionService.instance.savedCount.addListener(_load);
     _load();
   }
 
   @override
   void dispose() {
     SpeakingPreferencesService.instance.removeListener(_onPrefsChanged);
+    SpeakingSessionService.instance.savedCount.removeListener(_load);
     if (_goalSaveDebounce?.isActive ?? false) {
       _goalSaveDebounce!.cancel();
       final goal = _pendingGoal;
@@ -136,8 +137,13 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
     });
   }
 
-  String _formatSessionTime(DateTime dt) {
-    return DateFormat('MMM d, yyyy · h:mm a').format(dt.toLocal());
+  static const _sessionPreviewCount = 5;
+
+  /// "1h 42m", or "18 min" under an hour.
+  static String _speakingTimeLabel(int minutes) {
+    if (minutes < 60) return '$minutes min';
+    final m = minutes % 60;
+    return m == 0 ? '${minutes ~/ 60}h' : '${minutes ~/ 60}h ${m}m';
   }
 
   @override
@@ -189,7 +195,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
         onRefresh: _load,
         color: AppColors.brandPrimary,
         child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
             children: [
             _StreakHero(
               streakDays: progress.streakDays,
@@ -198,51 +204,66 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
               today: _speakingPrefs.correctSentencesToday,
               onGoalChanged: _onGoalChanged,
             ),
+            const SizedBox(height: 12),
+            // Speaking time · unique words · fixes saved (Progress · Speaking).
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _StatTile(value: _speakingTimeLabel(progress.totalSpeakingMinutes), label: 'Speaking time')),
+                  const SizedBox(width: 10),
+                  Expanded(child: _StatTile(value: '${progress.uniqueWordsUsed}', label: 'Unique words')),
+                  const SizedBox(width: 10),
+                  Expanded(child: _StatTile(value: '${_savedPhrases.length}', label: 'Fixes saved')),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _SavedPhrasesRow(
+              count: _savedPhrases.length,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const SpeakingSavedPhrasesScreen()),
+              ),
+            ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: _MetricTile(
-                    icon: Icons.school_outlined,
-                    label: 'AI tutor level',
-                    value: tutorLevel,
-                    color: AppColors.brandPrimary,
+                  child: Text(
+                    'Sessions',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _MetricTile(
-                    icon: Icons.mic_none_rounded,
-                    label: 'Speaking time',
-                    value: '${progress.totalSpeakingMinutes} min',
-                    color: const Color(0xFF2196F3),
+                if (_history.length > _sessionPreviewCount)
+                  TextButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const SpeakingSessionHistoryScreen()),
+                    ),
+                    child: const Text('See all'),
                   ),
-                ),
               ],
+            ),
+            const SizedBox(height: 8),
+            if (_history.isEmpty)
+              _EmptyHint(text: l10n.t('speaking-activity.session-history.empty'))
+            else
+              _SessionList(
+                sessions: _history.take(_sessionPreviewCount).toList(),
+                onOpen: (session) => Navigator.of(context).push(SpeakingSessionDetailScreen.route(session)),
+              ),
+            const SizedBox(height: 28),
+            Text(
+              'More statistics',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _MetricTile(
-                    icon: Icons.check_circle_outline,
-                    label: 'Perfect sentences',
-                    value: '${progress.perfectSentencesCount}',
-                    color: const Color(0xFF1B9E4B),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _MetricTile(
-                    icon: Icons.abc_rounded,
-                    label: 'Words used',
-                    value: '${progress.uniqueWordsUsed}',
-                    color: const Color(0xFFFF9800),
-                  ),
-                ),
-              ],
+            _MetricTile(
+              icon: Icons.school_outlined,
+              label: 'AI tutor level',
+              value: tutorLevel,
+              color: AppColors.brandPrimary,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             _ActivitySection(
               title: 'Score trend',
               icon: Icons.show_chart_rounded,
@@ -282,64 +303,6 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                     ),
             ),
             const SizedBox(height: 24),
-            _ActivitySection(
-              title: l10n.t('speaking-activity.session-history.title'),
-              icon: Icons.history_rounded,
-              child: _history.isEmpty
-                  ? _EmptyHint(
-                      text: l10n.t('speaking-activity.session-history.empty'),
-                    )
-                  : ActivityPreviewList(
-                      itemCount: _history.length,
-                      itemHeight: 68,
-                      itemSpacing: 10,
-                      onViewAll: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const SpeakingSessionHistoryScreen(),
-                          ),
-                        );
-                      },
-                      itemBuilder: (context, index) {
-                        final session = _history[index];
-                        return _HistoryCard(
-                          title: '${session.historyTitle} — ${session.modeLabel}',
-                          subtitle: _formatSessionTime(session.completedAt),
-                          score: session.score,
-                          onTap:
-                              () => Navigator.of(context).push(
-                                SpeakingSessionDetailScreen.route(session),
-                              ),
-                        );
-                      },
-                    ),
-            ),
-            const SizedBox(height: 16),
-            _ActivitySection(
-              title: l10n.t('speaking-activity.saved-phrases.title'),
-              icon: Icons.bookmark_outline_rounded,
-              child: _savedPhrases.isEmpty
-                  ? const _EmptyHint(
-                      text:
-                          'Save corrections from speaking conversations to build your phrase list.',
-                    )
-                  : ActivityPreviewList(
-                      itemCount: _savedPhrases.length,
-                      itemHeight: 46,
-                      itemSpacing: 8,
-                      onViewAll: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const SpeakingSavedPhrasesScreen(),
-                          ),
-                        );
-                      },
-                      itemBuilder: (context, index) {
-                        return _PhraseCard(text: _savedPhrases[index].word);
-                      },
-                    ),
-            ),
-            const SizedBox(height: 16),
             _ActivitySection(
               title: 'Top weak areas',
               icon: Icons.insights_outlined,
@@ -483,6 +446,157 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
         ),
       ),
     ),
+    );
+  }
+}
+
+/// Big number over a grey label in a white card.
+class _StatTile extends StatelessWidget {
+  const _StatTile({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppPageColors.cardBgOf(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context))),
+        ],
+      ),
+    );
+  }
+}
+
+/// Soft-yellow link to Saved phrases with the count.
+class _SavedPhrasesRow extends StatelessWidget {
+  const _SavedPhrasesRow({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = AppPageColors.tintOf(context, AppTint.reward);
+    return AppPressScale(
+      child: Material(
+        color: tint.bg,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(Icons.bookmark_border_rounded, size: 22, color: tint.fg),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Saved phrases',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+                  ),
+                ),
+                Text('$count', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: tint.fg)),
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right_rounded, size: 20, color: AppPageColors.mutedOf(context)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Sessions as rows in one card: title, "Today · 6 min · 14 turns", score.
+class _SessionList extends StatelessWidget {
+  const _SessionList({required this.sessions, required this.onOpen});
+
+  final List<SpeakingSessionRecord> sessions;
+  final ValueChanged<SpeakingSessionRecord> onOpen;
+
+  static String _dayLabel(DateTime completedAt) {
+    final local = completedAt.toLocal();
+    final now = DateTime.now();
+    final day = DateTime(local.year, local.month, local.day);
+    final diff = DateTime(now.year, now.month, now.day).difference(day).inDays;
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    return DateFormat('MMM d').format(local);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final teal = AppPageColors.tintOf(context, AppTint.teal);
+    return Material(
+      color: AppPageColors.cardBgOf(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var i = 0; i < sessions.length; i++) ...[
+            if (i > 0) Divider(height: 1, thickness: 1, color: AppPageColors.rowDividerOf(context)),
+            InkWell(
+              onTap: () => onOpen(sessions[i]),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            sessions[i].historyTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${_dayLabel(sessions[i].completedAt)} · ${sessions[i].durationMinutes} min · ${sessions[i].turnCount} turns',
+                            style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: teal.bg, borderRadius: BorderRadius.circular(999)),
+                      child: Text(
+                        sessions[i].level ?? '${sessions[i].score}/10',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: teal.fg),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -854,120 +968,6 @@ class _EmptyHint extends StatelessWidget {
           fontSize: 14,
           height: 1.45,
         ),
-      ),
-    );
-  }
-}
-
-class _HistoryCard extends StatelessWidget {
-  const _HistoryCard({
-    required this.title,
-    required this.subtitle,
-    required this.score,
-    this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final int score;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = AppPageColors.accentOf(context);
-    // Neutral row; the score pill carries the colour.
-    return Material(
-      color: AppPageColors.cardBgOf(context),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.forum_outlined, color: accent, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  '$score/10',
-                  style: TextStyle(color: accent, fontWeight: FontWeight.w700, fontSize: 13),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PhraseCard extends StatelessWidget {
-  const _PhraseCard({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppPageColors.cardBgOf(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppPageColors.subtleBorderOf(context)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.bookmark_rounded,
-            size: 18,
-            color: AppColors.primaryYellow,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15, height: 1.4),
-            ),
-          ),
-        ],
       ),
     );
   }

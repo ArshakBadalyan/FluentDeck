@@ -1,5 +1,30 @@
 'use strict';
 
+const CEFR_LEVELS = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
+
+/** "b1" → "B1"; anything that isn't a CEFR level → null. */
+function normalizeCefrLevel(value) {
+  const level = String(value ?? '').trim().toUpperCase();
+  return CEFR_LEVELS.has(level) ? level : null;
+}
+
+/** Up to 8 distinct, non-empty words or short phrases (≤ 40 chars each). */
+function sanitizeNewWords(value) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  const words = [];
+  for (const item of value) {
+    const word = String(item ?? '').replace(/\s+/g, ' ').trim();
+    if (!word || word.length > 40) continue;
+    const key = word.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    words.push(word);
+    if (words.length === 8) break;
+  }
+  return words;
+}
+
 function formatSession(row) {
   return {
     id: row.id,
@@ -15,6 +40,8 @@ function formatSession(row) {
     durationMinutes: row.durationMinutes ?? row.duration_minutes ?? 0,
     turnCount: row.turnCount ?? row.turn_count ?? 0,
     completedAt: row.completedAt ?? row.completed_at,
+    level: normalizeCefrLevel(row.level),
+    newWords: sanitizeNewWords(row.newWords ?? row.new_words),
   };
 }
 
@@ -123,6 +150,8 @@ async function createCompletedSession(strapi, userId, payload) {
       durationMinutes,
       turnCount: Math.max(0, Number(payload.turnCount) || 0),
       completedAt: now,
+      level: normalizeCefrLevel(payload.level),
+      newWords: sanitizeNewWords(payload.newWords),
       user: userId,
     },
   });
@@ -160,6 +189,8 @@ async function bestScoresByReference(strapi, userId) {
 }
 
 module.exports = {
+  normalizeCefrLevel,
+  sanitizeNewWords,
   formatSession,
   computeSpeakingStreak,
   recordSpeakingPractice,

@@ -40,6 +40,7 @@ class ConversationHistoryService {
   Future<int?> saveCurrentSession(
     List<ConversationTurnModel> turns, {
     int? sessionId,
+    String? topicTitle,
   }) async {
     if (turns.length < 2) return null;
 
@@ -59,6 +60,7 @@ class ConversationHistoryService {
       startedAt: turns.first.timestamp ?? DateTime.now(),
       transcript: List<ConversationTurnModel>.from(turns),
       correctionsCount: correctionsCount,
+      topicTitle: topicTitle,
     );
 
     final sessions = await listSessions();

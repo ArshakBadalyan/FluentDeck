@@ -1,5 +1,4 @@
 import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/screens/profile_screen/about_us/help_faq_page.dart';
 import 'package:fluentdeck/localization/app_localizations.dart';
@@ -13,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:fluentdeck/ui_elements/riovox_wordmark.dart';
 import 'package:fluentdeck/widgets/rio.dart';
+import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'app_review_sheet.dart';
 import 'privacy_policy_page.dart';
 import 'software_page.dart';
@@ -104,93 +104,116 @@ class _ProfileAboutTabState extends State<ProfileAboutTab> {
 
   @override
   Widget build(BuildContext context) {
+    final rows = <Widget>[
+      AppNavRow(
+        title: 'Help and FAQ',
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const HelpFaqPage()),
+        ),
+      ),
+      AppNavRow(title: 'Contact support', onTap: _contactSupport),
+      AppNavRow(
+        title: "What's new",
+        onTap: () => _openPage(context, const ReleaseNotesPopup()),
+      ),
+      AppNavRow(
+        title: context.tr('profile.about-us.privacy'),
+        onTap: () => _openPage(context, const PrivacyPopup()),
+      ),
+      if (_showPrivacyOptions)
+        AppNavRow(
+          title: context.tr('profile.about-us.privacy-settings'),
+          onTap: _openPrivacyOptions,
+        ),
+      AppNavRow(
+        title: 'Open-source software',
+        onTap: () => _openPage(context, const SoftwarePage()),
+      ),
+      if (!_hideScreenExplanation)
+        AppNavRow(
+          title: context.tr('profile.about-us.show-tips'),
+          onTap: _openExplainOnePartSheet,
+        ),
+      if (widget.showResetAllScreenTips && !_hideScreenExplanation)
+        AppNavRow(
+          title: context.tr('profile.about-us.reset-intro-tours'),
+          onTap: _confirmResetAllTutorialTours,
+        ),
+    ];
     return AppPageBackground(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
         children: [
           const _AboutHeader(),
           const SizedBox(height: 12),
-          // Split into "ways to get help" vs. "legal/app info" — a single
-          // flat 8-row list made it hard to scan for what you wanted.
-          AppSectionCard(
-            title: 'Help & support',
-            icon: Icons.help_outline_rounded,
-            subtitle: 'Guides, FAQs, and ways to reach us',
-            padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
+          Material(
+            color: AppPageColors.cardBgOf(context),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
-                AppNavRow(
-                  title: 'Help & FAQ',
-                  icon: Icons.help_outline_rounded,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const HelpFaqPage()),
-                  ),
-                ),
-                AppNavRow(
-                  title: 'Contact support',
-                  icon: Icons.mail_outline_rounded,
-                  onTap: _contactSupport,
-                ),
-                if (!_hideScreenExplanation)
-                  AppNavRow(
-                    title: context.tr('profile.about-us.show-tips'),
-                    icon: Icons.lightbulb_outline_rounded,
-                    onTap: _openExplainOnePartSheet,
-                  ),
-                if (widget.showResetAllScreenTips && !_hideScreenExplanation)
-                  AppNavRow(
-                    title: context.tr('profile.about-us.reset-intro-tours'),
-                    icon: Icons.restart_alt_rounded,
-                    onTap: _confirmResetAllTutorialTours,
-                  ),
-                if (!kIsWeb)
-                  AppNavRow(
-                    title: context.tr('profile.about-us.write-review'),
-                    icon: Icons.star_outline_rounded,
-                    onTap: () => showAppReviewSheet(context),
-                  ),
+                for (var i = 0; i < rows.length; i++) ...[
+                  if (i > 0) Divider(height: 1, thickness: 1, color: AppPageColors.rowDividerOf(context)),
+                  rows[i],
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          AppSectionCard(
-            title: 'Legal & about',
-            icon: Icons.info_outline_rounded,
-            subtitle: 'Privacy, licenses, and release notes',
-            padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
-            child: Column(
-              children: [
-                AppNavRow(
-                  title: context.tr('profile.about-us.privacy'),
-                  icon: Icons.privacy_tip_outlined,
-                  onTap: () => _openPage(context, const PrivacyPopup()),
-                ),
-                if (_showPrivacyOptions)
-                  AppNavRow(
-                    title: context.tr('profile.about-us.privacy-settings'),
-                    icon: Icons.settings_outlined,
-                    onTap: _openPrivacyOptions,
-                  ),
-                AppNavRow(
-                  title: context.tr('profile.about-us.software-licenses'),
-                  icon: Icons.code_outlined,
-                  onTap: () => _openPage(context, const SoftwarePage()),
-                ),
-                AppNavRow(
-                  title: context.tr('profile.about-us.release-notes'),
-                  icon: Icons.new_releases_outlined,
-                  onTap: () => _openPage(context, const ReleaseNotesPopup()),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 12),
+          _RateCard(onTap: () => showAppReviewSheet(context)),
         ],
       ),
     );
   }
 }
 
-/// Rio, the app name and the installed version.
+/// Soft-yellow "Enjoying Riovox?" card that opens the review sheet.
+class _RateCard extends StatelessWidget {
+  const _RateCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = AppPageColors.tintOf(context, AppTint.reward);
+    return AppPressScale(
+      child: Material(
+        color: tint.bg,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(Icons.star_rounded, size: 24, color: AppPageColors.tintIconOf(context, AppTint.reward)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Enjoying Riovox?',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+                      ),
+                      const SizedBox(height: 2),
+                      Text('A quick rating helps a lot', style: TextStyle(fontSize: 13, color: tint.fg)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AboutHeader extends StatelessWidget {
   const _AboutHeader();
 

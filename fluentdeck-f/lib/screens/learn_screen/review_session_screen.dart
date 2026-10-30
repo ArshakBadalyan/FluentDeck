@@ -23,6 +23,7 @@ import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
 import 'package:fluentdeck/services/review_settings_store.dart';
 import 'package:fluentdeck/models/speaking_preferences.dart';
 import 'package:fluentdeck/services/note_service.dart';
+import 'package:fluentdeck/services/phrase_audio_service.dart';
 import 'package:fluentdeck/services/speaking_preferences_service.dart';
 import 'package:fluentdeck/ui_elements/app_skeletons.dart';
 import 'package:fluentdeck/utils/review_queue_order.dart';
@@ -88,6 +89,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     _elapsedTimer?.cancel();
     WakelockPlus.disable();
     _audioPlayer.dispose();
+    PhraseAudioService.instance.stop();
     _typeAnswerCtrl.dispose();
     _adManager.dispose();
     super.dispose();
@@ -681,6 +683,43 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
 
   String _backHtml(FlashcardModel card) => _answerParts(card).definition;
 
+  static final _clozeGap = RegExp(r'\[([^\[\]]*)\]');
+
+  /// Cloze question as in the design: the gap as "___", and the hint from
+  /// {{c1::word::hint}} (sent as "[hint]") shown under it as "(hint)".
+  ({String html, String? hint}) _clozeFront(FlashcardModel card) {
+    final raw = _frontHtml(card);
+    String? hint;
+    final html = raw.replaceAllMapped(_clozeGap, (m) {
+      final inside = (m.group(1) ?? '').trim();
+      if (inside.isNotEmpty && inside != '...') hint ??= inside;
+      return '___';
+    });
+    return (html: html, hint: hint);
+  }
+
+  /// Cloze answer: the sentence with the filled-in word in teal italic serif.
+  Widget _clozeAnswer(String html, TextStyle base) {
+    final accent = AppPageColors.accentOf(context);
+    final spans = <InlineSpan>[];
+    var index = 0;
+    for (final m in RegExp(r'<b>(.*?)</b>', dotAll: true).allMatches(html)) {
+      spans.add(TextSpan(text: stripHtml(html.substring(index, m.start))));
+      spans.add(TextSpan(
+        text: stripHtml(m.group(1) ?? ''),
+        style: base.copyWith(
+          fontFamily: 'Instrument Serif',
+          fontStyle: FontStyle.italic,
+          fontSize: (base.fontSize ?? 22) * 1.36,
+          color: accent,
+        ),
+      ));
+      index = m.end;
+    }
+    spans.add(TextSpan(text: stripHtml(html.substring(index))));
+    return Text.rich(TextSpan(style: base, children: spans), textAlign: TextAlign.center);
+  }
+
   /// Splits the answer into definition + example. Older cards stored the
   /// example inside Back as "…\n\nExample: …", so fall back to parsing that.
   ({String definition, String example}) _answerParts(FlashcardModel card) {
@@ -955,16 +994,33 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   }
 
   Future<void> _openReviewSettings() async {
+    // An all-decks session (Today → cards due) has no deckId; use the current
+    // card's deck so Daily limits and Learning steps still show.
+    final currentDeckId = _index < _queue.length ? _queue[_index].deckId : 0;
+    final deckId = widget.deckId ?? (currentDeckId > 0 ? currentDeckId : null);
     await Navigator.of(context).push(
       AppSharedAxisRoute<void>(
         transitionType: SharedAxisTransitionType.scaled,
-        page: const DecksSettingsScreen(),
+        page: DecksSettingsScreen(deckId: deckId),
       ),
     );
     final settings = await ReviewSettingsStore.instance.load();
     if (mounted) {
       setState(() => _settings = settings);
       _applyWakelock();
+    }
+    // Steps and intervals may have changed; apply them to the next answer.
+    try {
+      final decks = await FlashcardService.instance.fetchDecks();
+      if (!mounted) return;
+      setState(() {
+        _deckOptionsById = {
+          for (final d in decks)
+            d.id: d.deckOptions ?? DeckSchedulingDefaults.deckOptions,
+        };
+      });
+    } catch (_) {
+      // Offline: keep the options loaded at session start.
     }
   }
 
@@ -1394,7 +1450,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                                       const SizedBox(height: 28),
                                       // The question stays; the answer opens under a hairline.
                                       BasicHtmlText(
-                                        html: _frontHtml(card),
+                                        html: _isCloze(card) ? _clozeFront(card).html : _frontHtml(card),
                                         style: TextStyle(
                                           fontSize: (cardTheme?.fontSize ?? 26) * textScale,
                                           fontWeight: cardTheme?.fontWeight ?? FontWeight.w700,
@@ -1404,6 +1460,14 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
+                                      if (_isCloze(card) && _clozeFront(card).hint != null) ...[
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          '(${_clozeFront(card).hint})',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(fontSize: 14 * textScale, color: AppPageColors.subtitleOf(context)),
+                                        ),
+                                      ],
                                       if (_revealed) ...[
                                         const SizedBox(height: 20),
                                         Container(
@@ -1414,7 +1478,18 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                                         const SizedBox(height: 20),
                                         AppFadeIn(
                                           duration: AppMotion.fast,
-                                          child: BasicHtmlText(
+                                          child: _isCloze(card) && _backHtml(card).contains('<b>')
+                                              ? _clozeAnswer(
+                                                  _backHtml(card),
+                                                  TextStyle(
+                                                    fontSize: 22 * textScale,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: cardTheme?.textColor ??
+                                                        AppPageColors.textPrimaryOf(context),
+                                                    height: 1.35,
+                                                  ),
+                                                )
+                                              : BasicHtmlText(
                                             html: _backHtml(card),
                                             style: TextStyle(
                                               fontSize: 22 * textScale,
@@ -1613,7 +1688,28 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     );
   }
 
-  /// Where the card came from, and a listen button when it has audio.
+  /// What the listen button reads aloud when the card has no audio: the
+  /// question, or the whole sentence once a cloze card is revealed.
+  String _listenText(FlashcardModel card) {
+    if (_isCloze(card)) {
+      return stripHtml(_revealed ? _backHtml(card) : _clozeFront(card).html.replaceAll('___', '…'));
+    }
+    return stripHtml(_frontHtml(card));
+  }
+
+  Future<void> _listen(FlashcardModel card, {required String url, required bool hasAudio}) async {
+    if (hasAudio) return _playMedia(url);
+    try {
+      await PhraseAudioService.instance.play(_listenText(card));
+    } catch (_) {
+      if (mounted) {
+        AppToast.showSnackBar(context, const SnackBar(content: Text('Could not play audio')));
+      }
+    }
+  }
+
+  /// Where the card came from, and a listen button (the card's audio, or the
+  /// text read aloud).
   Widget _cardSourceRow(FlashcardModel card) {
     final deck = (card.deckName ?? '').trim();
     final fromSpeaking = deck.isNotEmpty && deckTint(deck) == AppTint.voice;
@@ -1648,17 +1744,16 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
             ),
           ),
         const Spacer(),
-        if (hasAudio)
-          Material(
-            color: AppPageColors.cardBgOf(context),
-            shape: CircleBorder(side: BorderSide(color: AppPageColors.subtleBorderOf(context))),
-            child: IconButton(
-              tooltip: 'Listen',
-              constraints: const BoxConstraints.tightFor(width: 44, height: 44),
-              icon: Icon(Icons.volume_up_rounded, size: 20, color: AppPageColors.accentOf(context)),
-              onPressed: () => _playMedia(url),
-            ),
+        Material(
+          color: AppPageColors.cardBgOf(context),
+          shape: CircleBorder(side: BorderSide(color: AppPageColors.subtleBorderOf(context))),
+          child: IconButton(
+            tooltip: 'Listen',
+            constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+            icon: Icon(Icons.volume_up_rounded, size: 20, color: AppPageColors.accentOf(context)),
+            onPressed: () => _listen(card, url: url, hasAudio: hasAudio),
           ),
+        ),
       ],
     );
   }

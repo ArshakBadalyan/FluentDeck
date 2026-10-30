@@ -34,10 +34,11 @@ import 'package:fluentdeck/ui_elements/app_motion.dart';
 import 'package:fluentdeck/widgets/rio.dart';
 
 class _DeckRow {
-  const _DeckRow({required this.deck, required this.depth});
+  const _DeckRow({required this.deck, required this.depth, this.hasSubdecks = false});
 
   final FlashcardDeckModel deck;
   final int depth;
+  final bool hasSubdecks;
 }
 
 List<_DeckRow> _orderedDeckRows(List<FlashcardDeckModel> decks) {
@@ -56,7 +57,7 @@ List<_DeckRow> _orderedDeckRows(List<FlashcardDeckModel> decks) {
   final rows = <_DeckRow>[];
   void walk(int? parentId, int depth) {
     for (final deck in children[parentId] ?? const <FlashcardDeckModel>[]) {
-      rows.add(_DeckRow(deck: deck, depth: depth));
+      rows.add(_DeckRow(deck: deck, depth: depth, hasSubdecks: children.containsKey(deck.id)));
       if (!deck.isFiltered) walk(deck.id, depth + 1);
     }
   }
@@ -285,7 +286,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   Future<void> _openSharedDecks() async {
     final imported = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) => SharedDecksScreen(decks: _decks),
+        builder: (_) => SharedDecksScreen(decks: _decks, onCreateEmptyDeck: _createDeck),
       ),
     );
     if (imported == true && mounted) await _load();
@@ -307,7 +308,8 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     if (saved == true && mounted) await _load();
   }
 
-  Future<void> _createDeck() async {
+  /// True once a deck was created.
+  Future<bool> _createDeck() async {
     final name = await showAppPromptDialog(
       context,
       title: 'New deck',
@@ -317,25 +319,27 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       hintText: 'e.g. Travel vocabulary',
       confirmLabel: 'Create',
     );
-    if (name == null) return;
+    if (name == null) return false;
 
     try {
       await FlashcardService.instance.createDeck(name: name);
-      if (!mounted) return;
+      if (!mounted) return true;
       await _load();
+      return true;
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       if (e.statusCode == 403) {
         showPremiumUpgradeSnackBar(context, e.message);
       } else {
         AppToast.showSnackBar(context, SnackBar(content: Text(e.message)));
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       AppToast.showSnackBar(context, 
         SnackBar(content: Text(e.toString())),
       );
     }
+    return false;
   }
 
   Future<void> _createFilteredDeck() async {
@@ -416,12 +420,12 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         subtitle: 'Create a new flashcard note',
                         onTap: () => Navigator.pop(ctx, 'note'),
                       ),
-                      _deckCreateTile(
-                        ctx,
-                        icon: Icons.folder_outlined,
-                        title: 'Create deck',
-                        subtitle: 'New collection for your cards',
-                        action: 'deck',
+                      // Decks · Add a deck: empty deck, Anki import, shared decks.
+                      AppSheetActionTile(
+                        icon: Icons.create_new_folder_outlined,
+                        title: 'Add a deck',
+                        subtitle: 'Empty deck, Anki import or shared decks',
+                        onTap: () => Navigator.pop(ctx, 'shared'),
                       ),
                       _deckCreateTile(
                         ctx,
@@ -429,12 +433,6 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         title: 'Filtered deck',
                         subtitle: 'Study cards matching a saved search',
                         action: 'filtered',
-                      ),
-                      AppSheetActionTile(
-                        icon: Icons.public_outlined,
-                        title: 'Shared decks',
-                        subtitle: 'Browse community decks or import a deck file',
-                        onTap: () => Navigator.pop(ctx, 'shared'),
                       ),
                     ],
                   ),
@@ -839,6 +837,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                 child: _DeckListTile(
                                 deck: row.deck,
                                 depth: row.depth,
+                                hasSubdecks: row.hasSubdecks,
                                 dragHandle: _deckDragHandle(index),
                                 enableSwipeActions: widget.enableDeckSwipeActions,
                                 onShowOptions: () => _showDeckOptions(row.deck),
@@ -975,6 +974,7 @@ class _DeckListTile extends StatelessWidget {
     required this.dragHandle,
     required this.onShowOptions,
     required this.onStudy,
+    this.hasSubdecks = false,
     this.enableSwipeActions = false,
     this.onDelete,
     this.isLast = false,
@@ -982,6 +982,9 @@ class _DeckListTile extends StatelessWidget {
 
   final FlashcardDeckModel deck;
   final int depth;
+
+  /// Counts aren't rolled up, so a parent with no cards of its own isn't "empty".
+  final bool hasSubdecks;
   final Widget dragHandle;
   final bool enableSwipeActions;
   final VoidCallback onShowOptions;
@@ -993,7 +996,8 @@ class _DeckListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final allDone = deck.newCount + deck.learningCount + deck.reviewDueCount == 0;
+    final isEmpty = !deck.isFiltered && !hasSubdecks && deck.total == 0;
+    final allDone = !isEmpty && deck.newCount + deck.learningCount + deck.reviewDueCount == 0;
     final tile = Material(
       type: MaterialType.transparency,
       child: InkWell(
@@ -1034,7 +1038,12 @@ class _DeckListTile extends StatelessWidget {
                   ),
                 ),
               ),
-              if (allDone)
+              if (isEmpty)
+                Text(
+                  'No cards yet',
+                  style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context)),
+                )
+              else if (allDone)
                 Text(
                   'All done',
                   style: TextStyle(

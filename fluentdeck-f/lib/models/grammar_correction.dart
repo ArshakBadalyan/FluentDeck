@@ -42,20 +42,6 @@ class GrammarCorrection {
     );
   }
 
-  bool get showsCard {
-    if (inlineStyle == CorrectionInlineStyle.replace) return true;
-    if (inlineStyle == CorrectionInlineStyle.highlight) return false;
-    return _isSentenceLevel;
-  }
-
-  bool get _isSentenceLevel {
-    final type = errorType.toLowerCase();
-    return type == 'grammar' ||
-        type == 'phrasing' ||
-        type == 'pronunciation' ||
-        originalText.contains(' ');
-  }
-
   factory GrammarCorrection.fromJson(Map<String, dynamic> json) {
     return GrammarCorrection(
       originalText:

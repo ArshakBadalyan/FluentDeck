@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluentdeck/services/main_navigation_coordinator.dart';
 import 'package:fluentdeck/services/main_tab_config.dart';
+import 'package:fluentdeck/services/theme_settings_store.dart';
 import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
 
+import 'about_us/profile_about_tab.dart';
 import 'profile_notifications_tab.dart';
 import 'profile_settings_category_screen.dart';
 import 'profile_sound_tab.dart';
@@ -116,49 +118,216 @@ class ProfileSettingsTabState extends State<ProfileSettingsTab> {
   Widget build(BuildContext context) {
     return AppPageBackground(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
         children: [
+          _SettingsCard(
+            children: [
+              _SettingsRow(
+                icon: Icons.mic_none_rounded,
+                tint: AppTint.voice,
+                title: 'Speaking',
+                subtitle: 'Learning language, tutor voice, chat and daily goal',
+                onTap: () => _open(ProfileSettingsCategory.aiSpeaking),
+              ),
+              _SettingsRow(
+                icon: Icons.style_outlined,
+                tint: AppTint.teal,
+                title: 'Decks and flashcards',
+                subtitle: 'Study screen, review, sync, backups and gestures',
+                onTap: () => _open(ProfileSettingsCategory.decks),
+              ),
+              _SettingsRow(
+                icon: Icons.language_rounded,
+                tint: AppTint.success,
+                title: 'Languages',
+                subtitle: 'App language and accessibility',
+                onTap: () => _open(ProfileSettingsCategory.general),
+              ),
+              _SettingsRow(
+                icon: Icons.notifications_none_rounded,
+                tint: AppTint.reward,
+                title: 'Notifications',
+                subtitle: 'Push notifications and daily reminders',
+                onTap: () => _openPage('Notifications', const ProfileNotificationsTab()),
+              ),
+              _SettingsRow(
+                icon: Icons.volume_up_outlined,
+                tint: AppTint.info,
+                title: 'Sound and haptics',
+                subtitle: 'Sound effects, music and volume',
+                onTap: () => _openPage('Sound and haptics', const ProfileSoundTab()),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
           Text(
-            'Choose a category to manage your preferences.',
+            'APPEARANCE',
             style: TextStyle(
               fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
               color: AppPageColors.subtitleOf(context),
-              height: 1.4,
             ),
           ),
-          const SizedBox(height: 14),
-          AppSettingsCategoryTile(
-            icon: Icons.record_voice_over_outlined,
-            title: 'AI Speaking',
-            subtitle: 'Learning language, tutor voice, chat, and daily goals',
-            onTap: () => _open(ProfileSettingsCategory.aiSpeaking),
-          ),
-          AppSettingsCategoryTile(
-            icon: Icons.style_outlined,
-            title: 'Decks & flashcards',
-            subtitle: 'Study screen, review, sync, backups, and gestures',
-            onTap: () => _open(ProfileSettingsCategory.decks),
-          ),
-          AppSettingsCategoryTile(
-            icon: Icons.tune_rounded,
-            title: 'General',
-            subtitle: 'App language, theme, and accessibility',
-            onTap: () => _open(ProfileSettingsCategory.general),
-          ),
-          AppSettingsCategoryTile(
-            icon: Icons.notifications_none_rounded,
-            title: 'Notifications',
-            subtitle: 'Push notifications and daily study reminders',
-            onTap: () => _openPage('Notifications', const ProfileNotificationsTab()),
-          ),
-          AppSettingsCategoryTile(
-            icon: Icons.volume_up_outlined,
-            title: 'Sound',
-            subtitle: 'Sound effects, music, and volume',
-            onTap: () => _openPage('Sound', const ProfileSoundTab()),
+          const SizedBox(height: 10),
+          const _ThemePicker(),
+          const SizedBox(height: 18),
+          _SettingsCard(
+            children: [
+              _SettingsRow(
+                title: 'About Riovox',
+                trailingText: 'Help, privacy, version',
+                onTap: () => _openPage('About Riovox', const ProfileAboutTab()),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+/// White card holding rows split by hairlines.
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppPageColors.cardBgOf(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppPageColors.subtleBorderOf(context)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) Divider(height: 1, thickness: 1, color: AppPageColors.rowDividerOf(context)),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Tinted icon tile, title and detail, chevron.
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
+    required this.title,
+    required this.onTap,
+    this.icon,
+    this.tint = AppTint.teal,
+    this.subtitle,
+    this.trailingText,
+  });
+
+  final IconData? icon;
+  final AppTint tint;
+  final String title;
+  final String? subtitle;
+  final String? trailingText;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppPageColors.tintOf(context, tint).bg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 20, color: AppPageColors.tintIconOf(context, tint)),
+              ),
+              const SizedBox(width: 14),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(subtitle!, style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context))),
+                  ],
+                ],
+              ),
+            ),
+            if (trailingText != null)
+              Text(trailingText!, style: TextStyle(fontSize: 13, color: AppPageColors.subtitleOf(context))),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right_rounded, size: 20, color: AppPageColors.mutedOf(context)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Light · Dark · System as three buttons; the chosen one is outlined teal.
+class _ThemePicker extends StatelessWidget {
+  const _ThemePicker();
+
+  @override
+  Widget build(BuildContext context) {
+    final store = ThemeSettingsStore.instance;
+    return ListenableBuilder(
+      listenable: store,
+      builder: (context, _) {
+        final teal = AppPageColors.tintOf(context, AppTint.teal);
+        return Row(
+          children: [
+            for (final (i, mode) in const [ThemeMode.light, ThemeMode.dark, ThemeMode.system].indexed) ...[
+              if (i > 0) const SizedBox(width: 8),
+              Expanded(
+                child: Semantics(
+                  selected: store.themeMode == mode,
+                  child: Material(
+                    color: store.themeMode == mode ? teal.bg : AppPageColors.cardBgOf(context),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: store.themeMode == mode
+                          ? BorderSide(color: AppPageColors.accentOf(context), width: 2)
+                          : BorderSide(color: AppPageColors.subtleBorderOf(context)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () => store.setThemeMode(mode),
+                      child: SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: Text(
+                            mode == ThemeMode.system ? 'System' : store.label(mode),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: store.themeMode == mode ? FontWeight.w600 : FontWeight.w500,
+                              color: store.themeMode == mode ? teal.fg : AppPageColors.textPrimaryOf(context),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
