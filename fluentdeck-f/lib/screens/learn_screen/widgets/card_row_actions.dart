@@ -1,21 +1,21 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/flashcard_note_model.dart';
-import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
-import 'package:fluentdeck/services/card_tag_undo_store.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/api_exception.dart';
-import 'package:fluentdeck/utils/card_browser_utils.dart';
-import 'package:fluentdeck/utils/html_text_utils.dart';
-import 'package:fluentdeck/widgets/card_preview_sheet.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_note_model.dart';
+import 'package:riovox/screens/learn_screen/card_edit_screen.dart';
+import 'package:riovox/services/card_tag_undo_store.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/api_exception.dart';
+import 'package:riovox/utils/card_browser_utils.dart';
+import 'package:riovox/utils/html_text_utils.dart';
+import 'package:riovox/widgets/card_preview_sheet.dart';
 
 /// Card browser row ⋮ menu actions.
 class CardRowActions {

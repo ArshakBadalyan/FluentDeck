@@ -1,14 +1,14 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/config/brand_config.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/routing/app_route_names.dart';
-import 'package:fluentdeck/routing/app_page_routes.dart';
-import 'package:fluentdeck/screens/auth/reset_password_screen.dart';
-import 'package:fluentdeck/ui_elements/auth_input_decoration.dart';
-import 'package:fluentdeck/ui_elements/primary_button.dart';
+import 'package:riovox/config/brand_config.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/routing/app_route_names.dart';
+import 'package:riovox/routing/app_page_routes.dart';
+import 'package:riovox/screens/auth/reset_password_screen.dart';
+import 'package:riovox/ui_elements/auth_input_decoration.dart';
+import 'package:riovox/ui_elements/primary_button.dart';
 import '../../services/auth_service.dart';
 import 'auth_screen.dart';
 

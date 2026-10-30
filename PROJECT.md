@@ -29,7 +29,7 @@
 | Mobile/Web app | `fluentdeck-f/` | Flutter / Dart |
 | Backend API | `strapi-fluentdeck/` | Strapi 5.49 / Node 20 / PostgreSQL |
 
-Evolved from legacy **MatheApp** (`fluentdeck-f`). Internal Dart package is now `fluentdeck`; Android ID `com.fluentdeck.app`.
+Dart package `riovox` (`import 'package:riovox/...'`); app ID `app.riovox` (iOS and Android).
 
 ### Monorepo Structure
 
@@ -65,10 +65,6 @@ Riovox/
 | Decks settings behavior & known gaps | `docs/decks-settings-behavior.md` |
 | Permissions bootstrap | `strapi-fluentdeck/src/index.js` |
 | App startup | `fluentdeck-f/lib/main.dart` → `app_start.dart` → `english_main_screen.dart` |
-
-### Legacy Warning
-
-Backend MatheApp classroom utilities were removed. Math API modules are **removed** from `src/api/`. Trust `src/api/` and this doc, not old `strapi-fluentdeck/README.md` teacher/classroom sections.
 
 ---
 
@@ -250,7 +246,7 @@ Custom routes: `register-nicknamed-user`, `delete-nicknamed-user`, `users/me/spe
 
 ### Bootstrap (on start)
 
-Link permissions · Seed lessons/speaking/vocabulary · Migrate flashcard notes · Optional `DROP_LEGACY_MATH_TABLES=true`
+Link permissions · Seed lessons/speaking/vocabulary · Migrate flashcard notes
 
 ### Entity Relationships
 
@@ -475,9 +471,9 @@ Baked at build time: `cp .env.example assets/english_config.txt` (rebuild after 
 
 **OneSignal:** `ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_KEY`, template IDs
 
-**Email:** `SMTP_USERNAME`, `SMTP_PASSWORD`
+**Email:** `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `EMAIL_FROM`, `EMAIL_REPLY_TO`
 
-**Ops:** `CRON_ENABLED`, `DROP_LEGACY_MATH_TABLES`, `MY_HEROKU_URL`
+**Ops:** `CRON_ENABLED`, `PUBLIC_URL`
 
 Example files: `strapi-fluentdeck/.env.example`, `fluentdeck-f/.env.example`
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:riovox/app_colors.dart';
 
 import '../../models/speaking_game_model.dart';
 import '../../models/speaking_session_context.dart';
@@ -11,7 +11,7 @@ import '../../utils/speaking_premium_gate.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../widgets/speaking_hub_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
 
 class SpeakingGamesTab extends StatefulWidget {
   const SpeakingGamesTab({super.key, required this.onStart});

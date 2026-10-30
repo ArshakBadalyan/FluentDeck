@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/config/brand_config.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/config/brand_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:riovox/localization/app_localizations.dart';
 
 enum MainTabId {
   activity,

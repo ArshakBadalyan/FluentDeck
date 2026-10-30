@@ -1,4 +1,4 @@
-import 'package:fluentdeck/services/main_tab_config.dart';
+import 'package:riovox/services/main_tab_config.dart';
 
 /// Index of the "Settings" tab within Profile's sub-tabs
 /// (Account, Settings, Subscription, Security, About).

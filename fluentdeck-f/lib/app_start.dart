@@ -2,25 +2,25 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluentdeck/clarity_user_sync.dart'
-    if (dart.library.html) 'package:fluentdeck/clarity_user_sync_stub.dart';
-import 'package:fluentdeck/english_main_screen.dart';
-import 'package:fluentdeck/screens/auth/auth_screen.dart';
-import 'package:fluentdeck/screens/onboarding/english_onboarding_screen.dart';
-import 'package:fluentdeck/services/analytics_service.dart';
-import 'package:fluentdeck/services/auth_service.dart';
-import 'package:fluentdeck/services/english_level_service.dart';
-import 'package:fluentdeck/services/deck_backup_service.dart';
-import 'package:fluentdeck/services/deck_notification_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_service.dart';
-import 'package:fluentdeck/services/push_notification_service.dart';
-import 'package:fluentdeck/services/token_storage.dart';
-import 'package:fluentdeck/services/mobile_app_update_gate.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/web_entry.dart';
-import 'package:fluentdeck/widgets/mobile_force_update_screen.dart';
-import 'package:fluentdeck/widgets/mobile_soft_update_host.dart';
+import 'package:riovox/clarity_user_sync.dart'
+    if (dart.library.html) 'package:riovox/clarity_user_sync_stub.dart';
+import 'package:riovox/english_main_screen.dart';
+import 'package:riovox/screens/auth/auth_screen.dart';
+import 'package:riovox/screens/onboarding/english_onboarding_screen.dart';
+import 'package:riovox/services/analytics_service.dart';
+import 'package:riovox/services/auth_service.dart';
+import 'package:riovox/services/english_level_service.dart';
+import 'package:riovox/services/deck_backup_service.dart';
+import 'package:riovox/services/deck_notification_service.dart';
+import 'package:riovox/services/flashcard_sync_service.dart';
+import 'package:riovox/services/push_notification_service.dart';
+import 'package:riovox/services/token_storage.dart';
+import 'package:riovox/services/mobile_app_update_gate.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/web_entry.dart';
+import 'package:riovox/widgets/mobile_force_update_screen.dart';
+import 'package:riovox/widgets/mobile_soft_update_host.dart';
 
 class AppStart extends StatefulWidget {
   const AppStart({super.key});

@@ -1,4 +1,4 @@
-package com.fluentdeck.app
+package app.riovox
 
 import io.flutter.embedding.android.FlutterActivity
 

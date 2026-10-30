@@ -1,14 +1,15 @@
-import 'package:fluentdeck/ui_elements/riovox_wordmark.dart';
-import 'package:fluentdeck/ui_elements/screen_tutorial_targets.dart';
+import 'package:riovox/ui_elements/riovox_wordmark.dart';
+import 'package:riovox/ui_elements/screen_tutorial_targets.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/services/analytics_service.dart';
-import 'package:fluentdeck/services/click_tracking.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/user_progress_service.dart';
-import 'package:fluentdeck/services/interaction_haptics.dart';
-import 'package:fluentdeck/services/main_tab_config.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/services/analytics_service.dart';
+import 'package:riovox/services/click_tracking.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/user_progress_service.dart';
+import 'package:riovox/services/interaction_haptics.dart';
+import 'package:riovox/services/main_tab_config.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/fly_to_decks.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 class EnglishBottomNav extends StatelessWidget {
   const EnglishBottomNav({
@@ -69,7 +70,9 @@ class EnglishBottomNav extends StatelessWidget {
                     child: _NavItem(
                       label: tabs[i].navLabel,
                       selected: selected == i,
-                      icon: tabs[i].iconBuilder(selected == i),
+                      icon: tabs[i].id == MainTabId.decks
+                          ? NewCardsBadgeBubble(child: tabs[i].iconBuilder(selected == i))
+                          : tabs[i].iconBuilder(selected == i),
                       onTap: () {
                         InteractionHaptics.pulse();
                         ClickTracker.recordNamedTap();
@@ -141,7 +144,7 @@ class _NavItem extends StatelessWidget {
                 scale: selected ? 1.06 : 1,
                 duration: duration,
                 curve: AppMotion.spring,
-                child: SizedBox(width: 24, height: 24, child: FittedBox(child: icon)),
+                child: SizedBox(width: 24, height: 24, child: icon),
               ),
             ),
             const SizedBox(height: 3),

@@ -22,6 +22,8 @@ import 'conversation_history_service.dart';
 import 'daily_goal_tracker.dart';
 import 'speaking_preferences_service.dart';
 import 'tts_cache_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/speaking_preferences.dart';
 
 enum ConversationProcessingStage { idle, transcribing, thinking, speaking }
 
@@ -46,6 +48,11 @@ class ConversationService {
       );
   SpeakingSessionContext sessionContext = SpeakingSessionContext.freeChat();
   bool isEvaluatingSession = false;
+
+  /// After End & score the chat is closed: its history stays readable, but
+  /// no new messages. Remembered per chat on this device.
+  bool isSessionScored = false;
+  static const _scoredChatsKey = 'scored_chat_ids_v1';
   bool isPlayingTts = false;
 
   /// True only while tutor audio is actually coming out of the speaker
@@ -208,7 +215,7 @@ class ConversationService {
 
     final sessionEpoch = _chatSessionEpoch;
     final audioEnabled =
-        soundOnEnabled && (!isAutomatic || autoPlayVoiceEnabled);
+        tutorHasVoice && soundOnEnabled && (!isAutomatic || autoPlayVoiceEnabled);
 
     if (audioEnabled) {
       for (final index in turnIndices) {
@@ -248,6 +255,7 @@ class ConversationService {
 
   /// Reads [text] aloud in the tutor's voice ("Hear it" on a correction).
   Future<void> speakText(String text) async {
+    if (!tutorHasVoice) return;
     if (!_chatActive || text.trim().isEmpty || isPlayingTts) return;
     final sessionEpoch = _chatSessionEpoch;
     isPlayingTts = true;
@@ -323,6 +331,7 @@ class ConversationService {
     );
     sessionContext = SpeakingSessionContext.freeChat();
     isEvaluatingSession = false;
+    isSessionScored = false;
     sessionStartedAt = null;
     _notify();
   }
@@ -397,6 +406,7 @@ class ConversationService {
         ),
       );
     activeHistorySessionId = session.id;
+    isSessionScored = session.id != null && (await _scoredChatIds()).contains('${session.id}');
     sessionContext = SpeakingSessionContext.freeChat();
     sessionStartedAt = session.startedAt;
     errorMessage = null;
@@ -445,6 +455,7 @@ class ConversationService {
 
     errorMessage = null;
     isEvaluatingSession = false;
+    isSessionScored = false;
     _notify();
   }
 
@@ -456,6 +467,10 @@ class ConversationService {
     _chatActive = true;
     await _bootstrapSessionOpening();
   }
+
+  /// False for languages the tutor can't speak yet (Indonesian, Armenian):
+  /// the chat is text only.
+  bool get tutorHasVoice => SpeakingPreferences.hasTutorVoice(_effectiveResponseLanguage);
 
   String get _effectiveResponseLanguage => responseLanguage.trim().isNotEmpty
       ? responseLanguage.trim()
@@ -713,7 +728,24 @@ class ConversationService {
         SpeakingSessionContext.defaultChatGreeting;
   }
 
-  bool get canEvaluateSession => turns.length >= 2 && !isProcessing;
+  bool get canEvaluateSession => turns.length >= 2 && !isProcessing && !isSessionScored;
+
+  Future<Set<String>> _scoredChatIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getStringList(_scoredChatsKey) ?? const []).toSet();
+  }
+
+  /// Closes the chat after End & score (saved first so history keeps it).
+  Future<void> markSessionScored() async {
+    isSessionScored = true;
+    _notify();
+    await _persistActiveSession();
+    final id = activeHistorySessionId;
+    if (id == null) return;
+    final ids = await _scoredChatIds()..add('$id');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_scoredChatsKey, ids.toList());
+  }
 
   Future<SessionEvaluationResult?> evaluateCurrentSession() async {
     if (!canEvaluateSession) return null;
@@ -815,6 +847,7 @@ class ConversationService {
   }
 
   Future<void> startRecording() async {
+    if (isSessionScored) return;
     if (isProcessing || isRecording) return;
     errorMessage = null;
 
@@ -923,7 +956,7 @@ class ConversationService {
 
   Future<void> sendTextMessage(String text) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty || isProcessing || isRecording) return;
+    if (trimmed.isEmpty || isProcessing || isRecording || isSessionScored) return;
     errorMessage = null;
     await _sendUserMessage(trimmed);
   }
@@ -1384,6 +1417,8 @@ class ConversationService {
       if (sessionOpening) 'sessionOpening': true,
     });
     if (sessionEpoch != _chatSessionEpoch || !_chatActive) return;
+    // No voice for this reply (no voice server, or it failed): text only.
+    if (data is Map && data['voiceAvailable'] == false) return;
     if (data is! Map || data['audioBase64'] is! String) {
       throw Exception('Unexpected TTS response');
     }

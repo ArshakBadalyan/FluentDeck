@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/grammar_correction.dart';
-import 'package:fluentdeck/models/speaking_session_context.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/grammar_correction.dart';
+import 'package:riovox/models/speaking_session_context.dart';
 import 'package:intl/intl.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/models/speaking_session_record_model.dart';
-import 'package:fluentdeck/routing/app_route_names.dart';
-import 'package:fluentdeck/services/conversation_history_service.dart';
-import 'package:fluentdeck/services/conversation_service.dart';
-import 'package:fluentdeck/services/main_navigation_coordinator.dart';
-import 'package:fluentdeck/services/main_tab_config.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/user_facing_api_error.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/models/speaking_session_record_model.dart';
+import 'package:riovox/routing/app_route_names.dart';
+import 'package:riovox/services/conversation_history_service.dart';
+import 'package:riovox/services/conversation_service.dart';
+import 'package:riovox/services/main_navigation_coordinator.dart';
+import 'package:riovox/services/main_tab_config.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/user_facing_api_error.dart';
+import 'package:riovox/widgets/rio.dart';
 
 /// Progress · Session result: score ring with the verdict and feedback, the
 /// three skills, this chat's corrections, and Practice again.
@@ -21,6 +23,7 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
     required this.session,
     this.corrections = const [],
     this.onPracticeAgain,
+    this.onDone,
   });
 
   final SpeakingSessionRecord session;
@@ -32,6 +35,9 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
 
   /// Shows "Practice again" (same topic, new chat).
   final VoidCallback? onPracticeAgain;
+
+  /// Shows "Back to Today": leave this result and the chat, to the main menu.
+  final VoidCallback? onDone;
 
   String _whenLabel(BuildContext context) {
     final local = session.completedAt.toLocal();
@@ -88,7 +94,7 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
+      body: AppContentWidth(child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
         children: [
           _ScoreHero(score: session.score, feedback: session.feedback),
@@ -98,7 +104,18 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
               children: [
                 for (var i = 0; i < skills.length; i++) ...[
                   if (i > 0) const SizedBox(width: 10),
-                  Expanded(child: _SkillBox(label: skills[i].$1, score: skills[i].$2!)),
+                  // One after another, each bar filling as it lands.
+                  Expanded(
+                    child: AppStaggeredFadeIn(
+                      index: i + 2,
+                      baseDelay: const Duration(milliseconds: 180),
+                      child: _SkillBox(
+                        label: skills[i].$1,
+                        score: skills[i].$2!,
+                        delay: Duration(milliseconds: 500 + 180 * i),
+                      ),
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -107,8 +124,12 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
             const SizedBox(height: 18),
             const _Heading('Corrections'),
             const SizedBox(height: 10),
-            for (final c in corrections) ...[
-              _CorrectionCard(correction: c),
+            for (final (i, c) in corrections.indexed) ...[
+              AppStaggeredFadeIn(
+                index: i + 4,
+                baseDelay: const Duration(milliseconds: 120),
+                child: _CorrectionCard(correction: c),
+              ),
               const SizedBox(height: 10),
             ],
           ],
@@ -120,8 +141,11 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final word in session.newWords)
-                  Container(
+                for (final (i, word) in session.newWords.indexed)
+                  AppStaggeredFadeIn(
+                    index: i + 4,
+                    baseDelay: const Duration(milliseconds: 120),
+                    child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: AppPageColors.cardBgOf(context),
@@ -132,6 +156,7 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
                       word,
                       style: TextStyle(fontSize: 15, color: AppPageColors.textPrimaryOf(context)),
                     ),
+                  ),
                   ),
               ],
             ),
@@ -152,8 +177,24 @@ class SpeakingSessionDetailScreen extends StatelessWidget {
               ),
             ),
           ],
+          if (onDone != null) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: onDone,
+                icon: const Icon(Icons.home_rounded),
+                label: const Text('Back to Today', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppPageColors.accentOf(context),
+                  side: BorderSide(color: AppPageColors.accentOf(context), width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                ),
+              ),
+            ),
+          ],
         ],
-      ),
+      )),
     );
   }
 
@@ -246,7 +287,7 @@ class _ScoreHero extends StatelessWidget {
               tween: Tween(begin: 0, end: value),
               duration: MediaQuery.disableAnimationsOf(context)
                   ? Duration.zero
-                  : const Duration(milliseconds: 600),
+                  : const Duration(milliseconds: 1100),
               curve: Curves.easeOutCubic,
               builder: (context, v, _) => Stack(
                 fit: StackFit.expand,
@@ -259,8 +300,9 @@ class _ScoreHero extends StatelessWidget {
                     backgroundColor: accent.withValues(alpha: 0.14),
                   ),
                   Center(
+                    // Counts up with the ring.
                     child: Text(
-                      '$score',
+                      '${value == 0 ? 0 : (v / value * score).round()}',
                       semanticsLabel: 'Score $score out of 10',
                       style: TextStyle(
                         fontSize: 22,
@@ -291,6 +333,17 @@ class _ScoreHero extends StatelessWidget {
                 ],
               ],
             ),
+          ),
+          const SizedBox(width: 8),
+          // Rio reacts to the score.
+          RioImage(
+            score >= 8
+                ? RioPose.excited
+                : score >= 5
+                ? RioPose.happy
+                : RioPose.determined,
+            height: 72,
+            motion: RioMotion.pop,
           ),
         ],
       ),
@@ -364,10 +417,13 @@ String speakingSessionLoadError(BuildContext context, Object error) {
 /// One skill (Fluency / Grammar / Vocabulary) as a word plus its 0-10 score:
 /// green when strong, orange when it needs work.
 class _SkillBox extends StatelessWidget {
-  const _SkillBox({required this.label, required this.score});
+  const _SkillBox({required this.label, required this.score, this.delay = Duration.zero});
 
   final String label;
   final int score;
+
+  /// When the bar starts filling (so the three fill one after another).
+  final Duration delay;
 
   @override
   Widget build(BuildContext context) {
@@ -395,7 +451,35 @@ class _SkillBox extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: AppPageColors.subtitleOf(context)),
           ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: _fillBar(context, base),
+          ),
         ],
+      ),
+    );
+  }
+
+  /// A thin bar that fills to the score after [delay].
+  Widget _fillBar(BuildContext context, Color color) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    const fill = Duration(milliseconds: 700);
+    final total = delay + fill;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: (score / 10).clamp(0.0, 1.0)),
+      duration: still ? Duration.zero : total,
+      curve: still
+          ? Curves.linear
+          : Interval(delay.inMilliseconds / total.inMilliseconds, 1, curve: Curves.easeOutCubic),
+      builder: (context, v, _) => ClipRRect(
+        borderRadius: BorderRadius.circular(99),
+        child: LinearProgressIndicator(
+          value: v,
+          minHeight: 5,
+          color: color,
+          backgroundColor: color.withValues(alpha: 0.15),
+        ),
       ),
     );
   }

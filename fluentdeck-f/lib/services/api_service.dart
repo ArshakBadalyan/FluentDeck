@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:fluentdeck/services/token_storage.dart';
-import 'package:fluentdeck/utils/api_exception.dart';
+import 'package:riovox/services/token_storage.dart';
+import 'package:riovox/utils/api_exception.dart';
 
 class ApiService {
   static Future<void> Function()? onUnauthorized;

@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Shows a modal bottom sheet with a light frosted-glass surface.
 Future<T?> showFrostedBottomSheet<T>({

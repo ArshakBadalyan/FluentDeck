@@ -1,4 +1,4 @@
-name: fluentdeck
+name: riovox
 description: "AI English conversation tutor — practice speaking with personalized feedback."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -90,12 +90,12 @@ dev_dependencies:
   in_app_purchase_platform_interface: ^1.4.1
 
 flutter_native_splash:
-  color: "#ffffff"
+  color: "#EEF8FB"
   image: assets/icon/splash.png
 
   android_12:
     image: assets/icon/splash.png
-    color: "#ffffff"
+    color: "#EEF8FB"
 
   fullscreen: true
 
@@ -103,6 +103,18 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon/app_icon_big.png"
+  # The icon has no background; the App Store requires an opaque icon, so iOS
+  # uses a copy with the light backdrop filled in.
+  image_path_ios: "assets/icon/app_icon_ios.png"
+  remove_alpha_ios: true
+  # Android 8+ masks icons to a circle/squircle: Rio sits inside the safe zone.
+  adaptive_icon_background: "#EEF8FB"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  web:
+    generate: true
+    image_path: "assets/icon/app_icon_big.png"
+    background_color: "#EEF8FB"
+    theme_color: "#0D7C86"
 
 
 
@@ -122,6 +134,11 @@ flutter:
     - assets/audios/
     # Rio the otter (conversation screen); frames shared with fluentdeck-landing/public/media/otter.
     - assets/rio/
+    - assets/rio/video/
+    # Professor Rio (Otter Professor sheet): faces and poses, cut out.
+    - assets/professor/
+    # Tutor people (one per TTS voice), small copies of assets/tutors/*.png.
+    - assets/tutors/avatars/
     # English tutor otter scenes (card art), from the character sheet's "In Action".
     - assets/tutor/
   fonts:

@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Rio the otter's poses (assets/rio/). The talking frames live in rio_stage.dart.
 enum RioPose {
@@ -15,6 +15,12 @@ enum RioPose {
   sleepy('rio-sleepy'),
   surprised('rio-surprised'),
   determined('rio-determined'),
+
+  /// Fist pump with an orange burst (from the KEEP GOING clip): level up.
+  cheer('rio-cheer'),
+
+  /// Waving with a gold star (score sheet, GOOD row): a 5–7 score.
+  star('rio-star'),
 
   /// Full body, facing you, paw up: onboarding's welcome.
   wave('rio-wave');
@@ -46,9 +52,21 @@ class RioImage extends StatefulWidget {
     this.height = 120,
     this.motion = RioMotion.float,
     this.semanticLabel,
-  });
+  }) : asset = null;
+
+  /// Any cut-out character image (e.g. Professor Rio) with Rio's motions.
+  const RioImage.asset(
+    String this.asset, {
+    super.key,
+    this.height = 120,
+    this.motion = RioMotion.float,
+    this.semanticLabel,
+  }) : pose = RioPose.happy;
 
   final RioPose pose;
+
+  /// Overrides [pose] when set.
+  final String? asset;
   final double height;
   final RioMotion motion;
   final String? semanticLabel;
@@ -70,7 +88,9 @@ class _RioImageState extends State<RioImage>
   @override
   void didUpdateWidget(RioImage old) {
     super.didUpdateWidget(old);
-    if (old.motion != widget.motion || old.pose != widget.pose) _start();
+    if (old.motion != widget.motion || old.pose != widget.pose || old.asset != widget.asset) {
+      _start();
+    }
   }
 
   void _start() {
@@ -103,7 +123,7 @@ class _RioImageState extends State<RioImage>
   @override
   Widget build(BuildContext context) {
     final image = Image.asset(
-      widget.pose.asset,
+      widget.asset ?? widget.pose.asset,
       height: widget.height,
       fit: BoxFit.contain,
       semanticLabel: widget.semanticLabel,

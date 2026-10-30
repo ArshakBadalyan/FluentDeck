@@ -265,9 +265,12 @@ module.exports = (plugin) => {
 
     const emailToSend = {
       to: user.email,
-      from: process.env.SMTP_USERNAME
-        ? `"${i18n.__("daily-report.sender")}" <${process.env.SMTP_USERNAME}>`
-        : plugins.email.config.settings.defaultFrom,
+      // EMAIL_FROM (e.g. "Riovox <no-reply@riovox.app>") wins; else the SMTP login.
+      from: process.env.EMAIL_FROM
+        ? process.env.EMAIL_FROM
+        : process.env.SMTP_USERNAME
+          ? `"${i18n.__("daily-report.sender")}" <${process.env.SMTP_USERNAME}>`
+          : plugins.email.config.settings.defaultFrom,
       replyTo: resetPasswordSettings.response_email,
       subject: emailObject,
       text: emailBody,

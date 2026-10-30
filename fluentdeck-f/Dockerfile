@@ -1,5 +1,5 @@
 # Flutter web image for Hetzner staging (optional --profile web).
-# Requires assets/mathe_config.txt before build (see deploy/mathe_config.staging.example).
+# Requires assets/fluentdeck_config.txt before build (see deploy/fluentdeck_config.staging.example).
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app

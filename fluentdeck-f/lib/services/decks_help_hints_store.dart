@@ -8,6 +8,9 @@ class DecksHelpHintsStore {
   static const cardBrowserKey = 'decks_help_hint_card_browser_v1';
   static const statisticsKey = 'decks_help_hint_statistics_v1';
 
+  /// The "Getting started" quick tips, shown once after the first sign-in.
+  static const gettingStartedKey = 'decks_help_hint_getting_started_v1';
+
   Future<bool> hasSeen(String key) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(key) ?? false;

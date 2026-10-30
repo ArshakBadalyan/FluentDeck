@@ -1,17 +1,17 @@
 # Hetzner staging — run from this directory after cloning both repos side by side:
 #
-#   /opt/mathapp-staging/
-#     strapi-math/          ← this repo
+#   /opt/riovox-staging/
+#     strapi-fluentdeck/          ← this repo
 #     fluentdeck-f/           ← Flutter (only for --profile web)
 #
-#   cd strapi-math/deploy
+#   cd strapi-fluentdeck/deploy
 #   cp ../.env.staging.example ../.env.staging   # fill values in .env.staging
 #   docker compose --env-file ../.env.staging -f docker-compose.staging.yml up -d --build
 #
 # Optional Flutter web:
 #   docker compose -f docker-compose.staging.yml --profile web up -d --build
 
-name: mathapp-staging
+name: riovox-staging
 
 services:
   postgres:

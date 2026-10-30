@@ -1,5 +1,5 @@
-import 'package:fluentdeck/screens/auth/auth_screen.dart';
-import 'package:fluentdeck/utils/web_entry.dart';
+import 'package:riovox/screens/auth/auth_screen.dart';
+import 'package:riovox/utils/web_entry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

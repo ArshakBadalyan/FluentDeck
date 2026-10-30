@@ -1,6 +1,6 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:riovox/app_colors.dart';
 
 import '../../models/conversation_prompt_model.dart';
 import '../../models/speaking_session_context.dart';
@@ -14,7 +14,7 @@ import '../../ui_elements/modern_page_widgets.dart';
 import '../../utils/speaking_item_icons.dart';
 import '../../utils/speaking_premium_gate.dart';
 import '../../widgets/speaking_hub_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
 
 /// Free users can keep this many custom role-plays before Premium is required.
 const int kFreeCustomRolePlayLimit = 1;
@@ -189,7 +189,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
       child: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.brandPrimary,
-        child: ListView(
+        child: AppContentWidth(child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           children: [
@@ -219,7 +219,7 @@ class _SpeakingRolePlayTabState extends State<SpeakingRolePlayTab> {
               ),
             ),
           ],
-        ),
+        )),
       ),
     );
   }

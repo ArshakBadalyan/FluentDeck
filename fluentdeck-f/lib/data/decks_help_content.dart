@@ -208,13 +208,10 @@ const decksFaqItems = <DecksFaqItem>[
   DecksFaqItem(
     question: 'Can I use math (LaTeX) in cards?',
     answer:
-        'Yes. Use \\( inline \\) or \\[ display \\] math in note fields. The editor toolbar has a Σ button to insert math. '
+        'Yes. Type \\( inline \\) or \\[ display \\] math in note fields. '
         'Math renders in review and preview.',
   ),
 ];
-
-const cardBrowserContextualHint =
-    'Search and filter all your cards here. Tap a card to preview, long-press for options, or use select mode for bulk actions.';
 
 const statisticsContextualHint =
     'Track reviews, retention, and future due dates. Scope is Collection or a single deck; export a PDF report anytime.';

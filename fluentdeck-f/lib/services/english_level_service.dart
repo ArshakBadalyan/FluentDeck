@@ -1,9 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluentdeck/models/user_progress_model.dart';
-import 'package:fluentdeck/screens/onboarding/english_onboarding_screen.dart';
-import 'package:fluentdeck/services/auth_service.dart';
-import 'package:fluentdeck/services/token_storage.dart';
-import 'package:fluentdeck/services/user_progress_service.dart';
+import 'package:riovox/models/user_progress_model.dart';
+import 'package:riovox/screens/onboarding/english_onboarding_screen.dart';
+import 'package:riovox/services/auth_service.dart';
+import 'package:riovox/services/token_storage.dart';
+import 'package:riovox/services/user_progress_service.dart';
 
 class EnglishLevelService {
   EnglishLevelService._();

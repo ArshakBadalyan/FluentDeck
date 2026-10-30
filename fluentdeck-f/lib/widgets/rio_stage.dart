@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/models/tutor_persona.dart';
+import 'package:riovox/services/rio_preferences.dart';
+import 'package:riovox/widgets/professor.dart';
 
 /// What Rio is doing on the conversation screen.
 enum RioMood { idle, speaking, listening, thinking, cheering }
@@ -29,23 +32,27 @@ class RioStage extends StatefulWidget {
 }
 
 class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
-  static const _happy = 'assets/rio/rio-happy.webp';
-  static const _talkMid = 'assets/rio/rio-talk-mid.webp';
-  static const _talk = 'assets/rio/rio-talk.webp';
-  static const _curious = 'assets/rio/rio-curious.webp';
-  static const _excited = 'assets/rio/rio-excited.webp';
-  // Mouth shapes in a loose, speech-like order (closed / half / open).
-  static const _mouth = [
-    _talkMid,
-    _talk,
-    _talkMid,
-    _happy,
-    _talk,
-    _talkMid,
-    _talk,
-    _talkMid,
-    _happy,
+  // Professor Rio: faces instead of full-body frames.
+  static final _profMouth = [
+    ProfessorFace.determined.asset,
+    ProfessorFace.happy.asset,
+    ProfessorFace.determined.asset,
+    ProfessorFace.encouraging.asset,
+    ProfessorFace.excited.asset,
+    ProfessorFace.determined.asset,
+    ProfessorFace.happy.asset,
+    ProfessorFace.encouraging.asset,
+    ProfessorFace.laughing.asset,
   ];
+
+  // Rio (the professor otter) changes faces; a person shows their portrait.
+  TutorPersona get _tutor => RioPreferences.instance.tutor.value;
+  String get _idleF => _tutor.isRio ? ProfessorFace.encouraging.asset : _tutor.image;
+  String get _curiousF => _tutor.isRio ? ProfessorFace.thoughtful.asset : _tutor.image;
+  String get _cheerF => _tutor.isRio ? ProfessorFace.laughing.asset : _tutor.image;
+  String get _talkF => _tutor.isRio ? ProfessorFace.happy.asset : _tutor.image;
+  List<String> get _mouthF => _tutor.isRio ? _profMouth : [_tutor.image];
+  String get _name => _tutor.name;
 
   late final AnimationController _breath = AnimationController(
     vsync: this,
@@ -58,16 +65,33 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
   final _random = math.Random();
   Timer? _mouthTimer;
   int _mouthStep = 0;
-  String _frame = _happy;
+  late String _frame = _idleF;
   bool _still = false;
   bool _started = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    for (final f in [_happy, _talkMid, _talk, _curious, _excited]) {
+  void initState() {
+    super.initState();
+    RioPreferences.instance.tutor.addListener(_onTutorChanged);
+  }
+
+  void _onTutorChanged() {
+    if (!mounted) return;
+    _precache();
+    setState(() => _applyMood(hop: true));
+  }
+
+  void _precache() {
+    final frames = {..._mouthF, _idleF, _curiousF, _cheerF};
+    for (final f in frames) {
       precacheImage(AssetImage(f), context);
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precache();
     final still = MediaQuery.disableAnimationsOf(context);
     if (still) {
       _breath.stop();
@@ -97,15 +121,15 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
     _mouthTimer = null;
     if (widget.mood == RioMood.speaking && !_still) {
       // First shape now (a rebuild follows anyway), the rest on the timer.
-      _frame = _mouth[0];
+      _frame = _mouthF[0];
       _mouthStep = 1;
       _mouthTimer = Timer(const Duration(milliseconds: 110), _nextMouth);
     } else {
       _frame = switch (widget.mood) {
-        RioMood.listening || RioMood.thinking => _curious,
-        RioMood.cheering => _excited,
-        RioMood.speaking => _talkMid, // reduce motion: one "talking" frame
-        RioMood.idle => _happy,
+        RioMood.listening || RioMood.thinking => _curiousF,
+        RioMood.cheering => _cheerF,
+        RioMood.speaking => _talkF, // reduce motion: one "talking" frame
+        RioMood.idle => _idleF,
       };
     }
     if (hop && !_still) _hop.forward(from: 0);
@@ -113,7 +137,7 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
 
   void _nextMouth() {
     if (!mounted) return;
-    setState(() => _frame = _mouth[_mouthStep % _mouth.length]);
+    setState(() => _frame = _mouthF[_mouthStep % _mouthF.length]);
     _mouthStep += 1;
     _mouthTimer = Timer(
       Duration(milliseconds: 80 + _random.nextInt(70)),
@@ -128,6 +152,7 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    RioPreferences.instance.tutor.removeListener(_onTutorChanged);
     _mouthTimer?.cancel();
     _breath.dispose();
     _hop.dispose();
@@ -135,8 +160,8 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
   }
 
   String get _line => switch (widget.mood) {
-    RioMood.idle => 'Hi, I\'m Rio! Tap the mic and say hello 👋',
-    RioMood.speaking => 'Rio is speaking…',
+    RioMood.idle => 'Hi, I\'m $_name! Tap the mic and say hello 👋',
+    RioMood.speaking => '$_name is speaking…',
     RioMood.listening => 'I\'m listening…',
     RioMood.thinking => 'Hmm, let me think…',
     RioMood.cheering => 'You did it! 🎉',
@@ -183,14 +208,14 @@ class _RioStageState extends State<RioStage> with TickerProviderStateMixin {
     final size = widget.size;
     if (size != null) {
       return Semantics(
-        label: 'Rio the otter. $_line',
+        label: '$_name, your tutor. $_line',
         button: widget.onTap != null,
         child: _animatedRio(width: size * 0.8, height: size),
       );
     }
     final accent = AppPageColors.accentOf(context);
     return Semantics(
-      label: 'Rio the otter. $_line',
+      label: '$_name, your tutor. $_line',
       button: widget.onTap != null,
       child: Container(
         height: 118,

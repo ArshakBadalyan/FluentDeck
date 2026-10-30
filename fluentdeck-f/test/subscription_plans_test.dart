@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:fluentdeck/models/app_feature_config_model.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_subscription_tab.dart';
-import 'package:fluentdeck/services/conversation_limit_service.dart';
-import 'package:fluentdeck/services/subscription_service.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
-import 'package:fluentdeck/utils/practice_time_format.dart';
-import 'package:fluentdeck/widgets/ai_daily_usage_bar.dart';
+import 'package:riovox/models/app_feature_config_model.dart';
+import 'package:riovox/screens/profile_screen/profile_subscription_tab.dart';
+import 'package:riovox/services/conversation_limit_service.dart';
+import 'package:riovox/services/subscription_service.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
+import 'package:riovox/utils/practice_time_format.dart';
+import 'package:riovox/widgets/ai_daily_usage_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

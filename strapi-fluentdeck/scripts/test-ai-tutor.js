@@ -3,7 +3,7 @@
 
 /**
  * Validates tutor prompt output without starting Strapi.
- * Usage: cd strapi-math && node scripts/test-ai-tutor.js
+ * Usage: cd strapi-fluentdeck && node scripts/test-ai-tutor.js
  */
 
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });

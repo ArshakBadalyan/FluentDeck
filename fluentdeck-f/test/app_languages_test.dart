@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:fluentdeck/config/app_language.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_settings_general_section.dart';
+import 'package:riovox/config/app_language.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/screens/profile_screen/profile_settings_general_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

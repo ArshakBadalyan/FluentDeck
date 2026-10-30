@@ -1,4 +1,4 @@
-# Math App — Staging deployment (complete guide)
+# Riovox — Staging deployment (complete guide)
 
 **Single reference** for staging on Hetzner: Docker (Strapi + PostgreSQL + nginx), database setup and restores from `.sql` / `.dump`, optional GitHub Actions auto-deploy, IP-only URLs (no DNS).
 
@@ -35,8 +35,8 @@
                               │
 ┌─────────────────────────────▼──────────────────────────────┐
 │  Hetzner VPS (SERVER_IP)                                    │
-│  /opt/mathapp-staging/                                      │
-│    strapi-math/  →  Docker: postgres + strapi + nginx :80   │
+│  /opt/riovox-staging/                                      │
+│    strapi-fluentdeck/  →  Docker: postgres + strapi + nginx :80   │
 │    fluentdeck-f/   →  optional (Flutter web profile)          │
 └────────────────────────────────────────────────────────────┘
 
@@ -55,7 +55,7 @@ Optional CI:
 ### What you need before starting
 
 - Hetzner Cloud account
-- GitHub access to `strapi-math` (and `fluentdeck-f` if using web/mobile staging config)
+- GitHub access to `strapi-fluentdeck` (and `fluentdeck-f` if using web/mobile staging config)
 - SSH key
 - Staging-only secrets (never reuse production)
 
@@ -70,8 +70,8 @@ Replace `SERVER_IP` with your staging Hetzner **public IPv4** everywhere below.
 | Variable | Example | Where |
 |----------|---------|--------|
 | `SERVER_IP` | `SERVER_IP` | Hetzner console, `servers.md` |
-| `SSH_USER` | `mathe_app_user` | VPS login |
-| `INSTALL_ROOT` | `/opt/mathapp-staging` | App path on VPS |
+| `SSH_USER` | `riovox` | VPS login |
+| `INSTALL_ROOT` | `/opt/riovox-staging` | App path on VPS |
 | `STAGING_BRANCH` | `develop` (default) | Git branch pulled on VPS; must match workflow env |
 | `STAGING_HOST` (GitHub secret) | `SERVER_IP` | Actions SSH deploy target |
 | `POSTGRES_DB` | `strapi` | `.env.staging` |
@@ -85,13 +85,13 @@ Replace `SERVER_IP` with your staging Hetzner **public IPv4** everywhere below.
 | Strapi admin | `http://SERVER_IP/admin` |
 | API | `http://SERVER_IP/api` |
 | Flutter `API_URL` | `http://SERVER_IP/api` |
-| `MY_HEROKU_URL` in `.env.staging` | `http://SERVER_IP` |
+| `PUBLIC_URL` in `.env.staging` | `http://SERVER_IP` |
 | GitHub Actions | Repo → **Actions** → workflow **Deploy staging** |
 
 ### Important paths
 
 ```text
-strapi-math/
+strapi-fluentdeck/
   .env.staging.example     # template (committed)
   .env.staging             # secrets (gitignored, on server only)
   deploy/
@@ -111,30 +111,30 @@ strapi-math/
 
 1. [Hetzner Cloud](https://console.hetzner.cloud/) → **Add server**
 2. Ubuntu **24.04**, e.g. **CPX21** (3 vCPU, 4 GB)
-3. Add your SSH key, name e.g. `mathapp-staging`
+3. Add your SSH key, name e.g. `riovox-staging`
 4. Copy **IPv4** → `SERVER_IP` in `deploy/docs/servers.md`
 
 > **DNS:** not used for this project on staging. All access is by IP.
 
 ### A2. Create SSH user
 
-> Ubuntu usernames must be **lowercase** (`mathe_app_user`). Names like `mathAppUser` are rejected by `adduser`.
+> Ubuntu usernames must be **lowercase** (`riovox`). Names like `RiovoxUser` are rejected by `adduser`.
 
 ```bash
 ssh root@SERVER_IP
 
-adduser mathe_app_user
-usermod -aG sudo mathe_app_user
-mkdir -p /home/mathe_app_user/.ssh
-nano /home/mathe_app_user/.ssh/authorized_keys   # paste your public key
-chown -R mathe_app_user:mathe_app_user /home/mathe_app_user/.ssh
-chmod 700 /home/mathe_app_user/.ssh
-chmod 600 /home/mathe_app_user/.ssh/authorized_keys
+adduser riovox
+usermod -aG sudo riovox
+mkdir -p /home/riovox/.ssh
+nano /home/riovox/.ssh/authorized_keys   # paste your public key
+chown -R riovox:riovox /home/riovox/.ssh
+chmod 700 /home/riovox/.ssh
+chmod 600 /home/riovox/.ssh/authorized_keys
 exit
 ```
 
 ```bash
-ssh mathe_app_user@SERVER_IP
+ssh riovox@SERVER_IP
 ```
 
 ### A3. Install Docker
@@ -152,7 +152,7 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-sudo usermod -aG docker mathe_app_user
+sudo usermod -aG docker riovox
 ```
 
 Log out and back in:
@@ -173,8 +173,8 @@ echo "y" | sudo ufw enable
 ### A5. Install directory
 
 ```bash
-sudo mkdir -p /opt/mathapp-staging
-sudo chown mathe_app_user:mathe_app_user /opt/mathapp-staging
+sudo mkdir -p /opt/riovox-staging
+sudo chown riovox:riovox /opt/riovox-staging
 ```
 
 ---
@@ -199,7 +199,7 @@ Strapi connects via compose:
 DATABASE_URL=postgres://strapi:POSTGRES_PASSWORD@postgres:5432/strapi
 ```
 
-Data is stored in Docker volume `mathapp-staging_pgdata` (survives container restart; removed only with `compose down -v`).
+Data is stored in Docker volume `riovox-staging_pgdata` (survives container restart; removed only with `compose down -v`).
 
 ### First start creates empty DB
 
@@ -212,7 +212,7 @@ When you run `compose-staging.sh up` the first time:
 ### Useful DB commands (on server)
 
 ```bash
-cd /opt/mathapp-staging/strapi-math/deploy
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 
 # SQL shell
 bash scripts/compose-staging.sh exec postgres psql -U strapi -d strapi
@@ -236,14 +236,14 @@ sudo apt install -y postgresql-client
 ### C1. Clone repository
 
 ```bash
-ssh mathe_app_user@SERVER_IP
-cd /opt/mathapp-staging
+ssh riovox@SERVER_IP
+cd /opt/riovox-staging
 
-git clone https://github.com/sahakyan-dev/strapi-math.git strapi-math
+git clone https://github.com/ArshakBadalyan/FluentDeck.git FluentDeck
 # Optional Flutter web on same VPS:
-# git clone https://github.com/sahakyan-dev/fluentdeck-f.git fluentdeck-f
+# The Flutter app (fluentdeck-f/) is in the same FluentDeck repo.
 
-cd strapi-math
+cd strapi-fluentdeck
 git checkout develop
 git pull origin develop
 ```
@@ -253,7 +253,7 @@ Private repo: after [F2](#f2-deploy-ssh-key-pair-actions--staging-vps), complete
 ### C2. Nginx (accept HTTP by IP)
 
 ```bash
-cd /opt/mathapp-staging/strapi-math/deploy/nginx
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy/nginx
 sed -i 's/server_name .*/server_name _;/' default.conf web.conf
 grep server_name default.conf web.conf
 ```
@@ -261,7 +261,7 @@ grep server_name default.conf web.conf
 ### C3. Create `.env.staging` (once)
 
 ```bash
-cd /opt/mathapp-staging/strapi-math
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck
 cp .env.staging.example .env.staging
 nano .env.staging
 ```
@@ -271,7 +271,7 @@ nano .env.staging
 | Key | Value |
 |-----|--------|
 | `POSTGRES_PASSWORD` | Strong password |
-| `MY_HEROKU_URL` | `http://SERVER_IP` |
+| `PUBLIC_URL` | `http://SERVER_IP` |
 | `APP_KEYS` | Four random strings, comma-separated |
 | `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT` | Random each |
 
@@ -288,7 +288,7 @@ Never commit `.env.staging`.
 ### C4. Build and start stack
 
 ```bash
-cd /opt/mathapp-staging/strapi-math/deploy
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 bash scripts/compose-staging.sh up -d --build
 ```
 
@@ -328,7 +328,7 @@ Use this when you want staging data from **local dev**, a **`.sql` file**, or a 
 
 ### D1. Create dump on your laptop (local Postgres)
 
-Use values from your **local** `strapi-math/.env` (`DATABASE_*` or `DATABASE_URL`).
+Use values from your **local** `strapi-fluentdeck/.env` (`DATABASE_*` or `DATABASE_URL`).
 
 **Plain SQL file** (good for `.sql` backups):
 
@@ -363,7 +363,7 @@ If dev Postgres runs in Docker:
 
 ```bash
 docker ps | grep postgres
-docker exec -t mathapp-staging-postgres-1 pg_dump -U postgres -d postgres -f /tmp/backup.sql
+docker exec -t riovox-staging-postgres-1 pg_dump -U postgres -d postgres -f /tmp/backup.sql
 docker cp CONTAINER_NAME:/tmp/backup.sql ~/local-strapi.sql
 ```
 
@@ -376,9 +376,9 @@ docker exec -t CONTAINER_NAME pg_dump -U USER -d DB -Fc > ~/local-strapi.dump
 ### D3. Copy file to staging server
 
 ```bash
-scp ~/local-strapi.sql mathe_app_user@SERVER_IP:~/
+scp ~/local-strapi.sql riovox@SERVER_IP:~/
 # or
-scp ~/local-strapi.dump mathe_app_user@SERVER_IP:~/
+scp ~/local-strapi.dump riovox@SERVER_IP:~/
 ```
 
 ### D4. Restore **`.sql` file** into staging Docker Postgres
@@ -386,8 +386,8 @@ scp ~/local-strapi.dump mathe_app_user@SERVER_IP:~/
 On **SERVER_IP**:
 
 ```bash
-ssh mathe_app_user@SERVER_IP
-cd /opt/mathapp-staging/strapi-math/deploy
+ssh riovox@SERVER_IP
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 
 # Stop Strapi (keep Postgres)
 bash scripts/compose-staging.sh stop strapi
@@ -407,8 +407,8 @@ If the dump was created for another DB name/user (e.g. local `postgres`/`postgre
 ### D5. Restore **`.dump`** (custom format) into staging
 
 ```bash
-ssh mathe_app_user@SERVER_IP
-cd /opt/mathapp-staging/strapi-math/deploy
+ssh riovox@SERVER_IP
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 
 bash scripts/compose-staging.sh stop strapi
 bash scripts/compose-staging.sh up -d postgres
@@ -424,7 +424,7 @@ bash scripts/compose-staging.sh up -d --build
 **SQL:**
 
 ```bash
-cd /opt/mathapp-staging/strapi-math/deploy
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 bash scripts/compose-staging.sh exec postgres \
   pg_dump -U strapi -d strapi > ~/staging-backup-$(date +%F).sql
 ```
@@ -439,26 +439,26 @@ bash scripts/compose-staging.sh exec postgres \
 Download:
 
 ```bash
-scp mathe_app_user@SERVER_IP:~/staging-backup-* ./
+scp riovox@SERVER_IP:~/staging-backup-* ./
 ```
 
 ### D7. Restore staging backup file
 
 Same as D4 (`.sql`) or D5 (`.dump`) using your backup filename.
 
-### D8. Heroku / external dump (one-time)
+### D8. External dump (one-time)
 
 ```bash
 # laptop
-heroku pg:backups:download -a YOUR_HEROKU_APP -o heroku.dump
-scp heroku.dump mathe_app_user@SERVER_IP:~/
+pg_dump -Fc "$OLD_DATABASE_URL" > backup.dump
+scp backup.dump riovox@SERVER_IP:~/
 
 # server — try pg_restore first; if plain SQL, use psql in D4
-cd /opt/mathapp-staging/strapi-math/deploy
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 bash scripts/compose-staging.sh stop strapi
 bash scripts/compose-staging.sh up -d postgres
 bash scripts/compose-staging.sh exec -T postgres \
-  pg_restore -U strapi -d strapi --clean --if-exists < ~/heroku.dump
+  pg_restore -U strapi -d strapi --clean --if-exists < ~/backup.dump
 bash scripts/compose-staging.sh up -d --build
 ```
 
@@ -468,7 +468,7 @@ After restore: open `http://SERVER_IP/admin` with **existing** users from the du
 
 ## Part E — S3 (optional)
 
-1. Create staging-only bucket (e.g. `math-app-staging`).
+1. Create staging-only bucket (e.g. `riovox-staging`).
 2. IAM user with access limited to that bucket.
 3. In `.env.staging` on server:
 
@@ -476,17 +476,17 @@ After restore: open `http://SERVER_IP/admin` with **existing** users from the du
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 AWS_REGION=eu-west-3
-AWS_BUCKET=math-app-staging
+AWS_BUCKET=riovox-staging
 ```
 
 4. Restart Strapi:
 
 ```bash
-cd /opt/mathapp-staging/strapi-math/deploy
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 bash scripts/compose-staging.sh up -d strapi
 ```
 
-5. **Bucket policy** (public read for media URLs) — set `Resource` to your bucket objects ARN, e.g. `arn:aws:s3:::math-app-staging/*`.
+5. **Bucket policy** (public read for media URLs) — set `Resource` to your bucket objects ARN, e.g. `arn:aws:s3:::riovox-staging/*`.
 
 6. **CORS** — include at least:
 
@@ -507,7 +507,7 @@ Auto-deploy **staging only** when you push to **`develop`**. Production is never
 ```text
 Push/merge on GitHub (`develop`)
   → workflow "Deploy staging" (.github/workflows/deploy-staging.yml)
-  → GitHub-hosted runner SSHs to mathe_app_user@SERVER_IP
+  → GitHub-hosted runner SSHs to riovox@SERVER_IP
   → deploy/ci/deploy-staging.sh on VPS (git pull + docker compose)
   → deploy/ci/health-check.sh (curl /admin and /api/categories)
 ```
@@ -518,7 +518,7 @@ Push/merge on GitHub (`develop`)
 | Deploy scripts | [`deploy/ci/`](deploy/ci/) |
 | GitHub secrets | `STAGING_HOST`, `STAGING_SSH_KEY`; optional failure email (F3) |
 | Trigger | `on.push` to deploy branch |
-| Target on VPS | `/opt/mathapp-staging` only |
+| Target on VPS | `/opt/riovox-staging` only |
 | Detailed CI guide | [`deploy/docs/GITHUB-ACTIONS-SETUP.md`](deploy/docs/GITHUB-ACTIONS-SETUP.md) |
 
 ### F0. Branches, production safety, and `develop` = staging
@@ -537,12 +537,12 @@ test on http://SERVER_IP/admin
 develop → main (production)     →  no workflow; deploy prod manually on prod server
 ```
 
-Even when the workflow runs, it only uses `/opt/mathapp-staging` and refuses paths containing `production`. It does **not** deploy `/opt/mathapp-production`.
+Even when the workflow runs, it only uses `/opt/riovox-staging` and refuses paths containing `production`. It does **not** deploy `/opt/riovox-production`.
 
 | Guard | Where |
 |-------|--------|
 | Trigger limited to `develop` only | `.github/workflows/deploy-staging.yml` |
-| `STAGING_INSTALL_ROOT=/opt/mathapp-staging` | workflow + `deploy/ci/deploy-staging.sh` |
+| `STAGING_INSTALL_ROOT=/opt/riovox-staging` | workflow + `deploy/ci/deploy-staging.sh` |
 | `STAGING_HOST` must be staging IPv4 | workflow validation |
 
 **Config mistakes (not caused by merging to `main`):**
@@ -575,7 +575,7 @@ The **public** key does **not** go into GitHub Secrets. If you only paste the pr
 **Generate keys (laptop):**
 
 ```bash
-cd strapi-math/deploy/ci
+cd strapi-fluentdeck/deploy/ci
 chmod +x generate-deploy-key.sh
 ./generate-deploy-key.sh
 ```
@@ -584,11 +584,11 @@ chmod +x generate-deploy-key.sh
 
 ```bash
 # From laptop (if you can SSH as yourself today):
-ssh-copy-id -i deploy/ci/keys/github-actions-staging-deploy.pub mathe_app_user@SERVER_IP
+ssh-copy-id -i deploy/ci/keys/github-actions-staging-deploy.pub riovox@SERVER_IP
 ```
 
 ```bash
-# On VPS as mathe_app_user:
+# On VPS as riovox:
 mkdir -p ~/.ssh && chmod 700 ~/.ssh
 grep -qF "$(cat /path/to/github-actions-staging-deploy.pub)" ~/.ssh/authorized_keys 2>/dev/null || \
   cat /path/to/github-actions-staging-deploy.pub >> ~/.ssh/authorized_keys
@@ -598,7 +598,7 @@ chmod 600 ~/.ssh/authorized_keys
 **Test (laptop):**
 
 ```bash
-ssh -i deploy/ci/keys/github-actions-staging-deploy mathe_app_user@SERVER_IP 'echo OK'
+ssh -i deploy/ci/keys/github-actions-staging-deploy riovox@SERVER_IP 'echo OK'
 ```
 
 Must print `OK` before Actions can deploy.
@@ -609,7 +609,7 @@ Reuse `deploy/ci/keys/github-actions-staging-deploy` — no separate `github-sta
 
 **1. GitHub repo deploy key** (same `.pub` as in `authorized_keys`):
 
-**strapi-math** → **Settings** → **Deploy keys** → **Add deploy key**
+**strapi-fluentdeck** → **Settings** → **Deploy keys** → **Add deploy key**
 
 | Field | Value |
 |-------|--------|
@@ -622,8 +622,8 @@ If `DEPLOY_WEB=true`, add the **same** `.pub` to **fluentdeck-f** → Deploy key
 **2. Private key on the VPS** (from laptop; never commit):
 
 ```bash
-scp deploy/ci/keys/github-actions-staging-deploy mathe_app_user@SERVER_IP:~/.ssh/github-actions-staging-deploy
-ssh mathe_app_user@SERVER_IP 'chmod 600 ~/.ssh/github-actions-staging-deploy'
+scp deploy/ci/keys/github-actions-staging-deploy riovox@SERVER_IP:~/.ssh/github-actions-staging-deploy
+ssh riovox@SERVER_IP 'chmod 600 ~/.ssh/github-actions-staging-deploy'
 ```
 
 Or paste the same file you put in secret `STAGING_SSH_KEY`:
@@ -636,7 +636,7 @@ cat deploy/ci/keys/github-actions-staging-deploy
 **3. SSH config for `git@github.com`:**
 
 ```bash
-ssh mathe_app_user@SERVER_IP
+ssh riovox@SERVER_IP
 
 cat > ~/.ssh/config <<'EOF'
 Host github.com
@@ -648,14 +648,14 @@ EOF
 chmod 600 ~/.ssh/config
 
 ssh -T git@github.com
-# expect: Hi sahakyan-dev/strapi-math! You've successfully authenticated...
+# expect: Hi ArshakBadalyan/FluentDeck! You've successfully authenticated...
 ```
 
 **4. SSH remote and test pull:**
 
 ```bash
-cd /opt/mathapp-staging/strapi-math
-git remote set-url origin git@github.com:sahakyan-dev/strapi-math.git
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck
+git remote set-url origin git@github.com:ArshakBadalyan/FluentDeck.git
 git fetch origin
 git pull --ff-only origin develop
 ```
@@ -664,7 +664,7 @@ Re-run **Actions → Deploy staging**.
 
 ### F3. GitHub repository secrets (Actions only)
 
-**strapi-math** → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
+**strapi-fluentdeck** → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
 
 | Secret | Value |
 |--------|--------|
@@ -676,7 +676,7 @@ Re-run **Actions → Deploy staging**.
 | Secret | Value |
 |--------|--------|
 | `STAGING_NOTIFY_EMAILS` | Comma-separated addresses (e.g. you + CEO) |
-| `SMTP_USERNAME` | SMTP user (`mail.schulmatheapp.de`, same as Strapi mail) |
+| `SMTP_USERNAME` | SMTP user (`mail.riovox.app`, same as Strapi mail) |
 | `SMTP_PASSWORD` | SMTP password |
 
 When deploy fails, workflow job `notify-failure` sends one email to that list. Skipped if `STAGING_NOTIFY_EMAILS` is empty. Details: [`deploy/docs/GITHUB-ACTIONS-SETUP.md`](deploy/docs/GITHUB-ACTIONS-SETUP.md).
@@ -696,7 +696,7 @@ Paste **everything** from `-----BEGIN OPENSSH PRIVATE KEY-----` through `-----EN
 Use a **deploy key**, not a personal login key. Do **not** use `-C "your_email@example.com"` — that pattern is for human GitHub accounts, not CI.
 
 ```bash
-cd strapi-math/deploy/ci
+cd strapi-fluentdeck/deploy/ci
 mkdir -p keys && chmod 700 keys
 ssh-keygen -t ed25519 \
   -f keys/github-actions-staging-deploy \
@@ -705,7 +705,7 @@ ssh-keygen -t ed25519 \
 chmod 600 keys/github-actions-staging-deploy
 ```
 
-Then add `keys/github-actions-staging-deploy.pub` to `mathe_app_user` on the VPS ([F2](#f2-ssh-key-vps--github-secret)) and paste the **private** file into `STAGING_SSH_KEY` as above.
+Then add `keys/github-actions-staging-deploy.pub` to `riovox` on the VPS ([F2](#f2-ssh-key-vps--github-secret)) and paste the **private** file into `STAGING_SSH_KEY` as above.
 
 Never commit keys or tokens to Git.
 
@@ -735,8 +735,8 @@ Optional helper: [`deploy/ci/setup-github-ssh.sh`](deploy/ci/setup-github-ssh.sh
 cat ~/.ssh/id_ed25519_github.pub   # add this line on GitHub → SSH keys
 ssh -T git@github.com            # expect: Hi <user>! You've successfully authenticated...
 
-cd strapi-math
-git remote set-url origin git@github.com:sahakyan-dev/strapi-math.git
+cd strapi-fluentdeck
+git remote set-url origin git@github.com:ArshakBadalyan/FluentDeck.git
 git push origin develop
 ```
 
@@ -745,8 +745,8 @@ git push origin develop
 Workflow files need a token with **`repo`** and **`workflow`** scopes.
 
 ```bash
-cd strapi-math
-git remote set-url origin https://github.com/sahakyan-dev/strapi-math.git
+cd strapi-fluentdeck
+git remote set-url origin https://github.com/ArshakBadalyan/FluentDeck.git
 git push origin develop
 ```
 
@@ -795,8 +795,8 @@ Staging CI must not touch production — see [`PRODUCTION-DEPLOYMENT.md` Part F]
 ### Manual (SSH)
 
 ```bash
-ssh mathe_app_user@SERVER_IP
-cd /opt/mathapp-staging/strapi-math
+ssh riovox@SERVER_IP
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck
 git pull origin develop
 cd deploy
 bash scripts/compose-staging.sh up -d --build
@@ -809,7 +809,7 @@ Push/merge to `develop` → workflow runs → same commands as above.
 ### Full stack restart
 
 ```bash
-cd /opt/mathapp-staging/strapi-math/deploy
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 bash scripts/compose-staging.sh down
 bash scripts/compose-staging.sh up -d --build
 ```
@@ -833,7 +833,7 @@ Repo `fluentdeck-f`:
 ```bash
 cp .env.staging.example .env.staging
 nano .env.staging          # API_URL=http://SERVER_IP/api
-cp .env.staging assets/mathe_config.txt
+cp .env.staging assets/fluentdeck_config.txt
 flutter pub get
 flutter run
 ```
@@ -843,12 +843,12 @@ See `fluentdeck-f/deploy/CLIENT-STAGING.local.md` if present.
 ### Flutter web on same VPS (optional)
 
 ```bash
-cd /opt/mathapp-staging/fluentdeck-f
+cd /opt/riovox-staging/fluentdeck-f
 cp .env.staging.example .env.staging
 # API_URL=http://SERVER_IP/api
-cp .env.staging assets/mathe_config.txt
+cp .env.staging assets/fluentdeck_config.txt
 
-cd /opt/mathapp-staging/strapi-math/deploy
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 docker compose --env-file ../.env.staging \
   -f docker-compose.staging.yml \
   -f docker-compose.staging.web.yml \
@@ -868,15 +868,15 @@ Use when you want a **clean redeploy** on the same VPS (Docker can stay installe
 **Warning:** `down -v` **deletes all Postgres data** on staging. Back up first if needed ([Part D](#part-d--load-database-data) backup commands).
 
 ```bash
-ssh mathe_app_user@SERVER_IP
+ssh riovox@SERVER_IP
 
 # 1. Stop containers and remove DB volume
-cd /opt/mathapp-staging/strapi-math/deploy
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 bash scripts/compose-staging.sh down -v
 
-# 2. Remove app clones (keeps /opt/mathapp-staging directory)
-cd /opt/mathapp-staging
-rm -rf strapi-math fluentdeck-f
+# 2. Remove app clones (keeps /opt/riovox-staging directory)
+cd /opt/riovox-staging
+rm -rf strapi-fluentdeck fluentdeck-f
 
 # 3. Optional: remove leftover Docker images (free disk)
 docker image prune -f
@@ -884,14 +884,14 @@ docker image prune -f
 
 Then deploy again from **[Part C](#part-c--deploy-strapi-first-time)** (clone, new `.env.staging`, `up -d --build`).
 
-Keep: `mathe_app_user`, Docker, UFW, SSH keys.  
+Keep: `riovox`, Docker, UFW, SSH keys.  
 Create **new** `.env.staging` secrets (new `POSTGRES_PASSWORD`, new `APP_KEYS`, etc.).
 
 ---
 
 ```bash
-ssh mathe_app_user@SERVER_IP
-cd /opt/mathapp-staging/strapi-math/deploy
+ssh riovox@SERVER_IP
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck/deploy
 
 bash scripts/compose-staging.sh ps
 bash scripts/compose-staging.sh logs -f strapi
@@ -903,7 +903,7 @@ docker system df
 ### Rollback code on staging
 
 ```bash
-cd /opt/mathapp-staging/strapi-math
+cd /opt/riovox-staging/FluentDeck/strapi-fluentdeck
 git log -5 --oneline
 git checkout <previous-sha>
 cd deploy && bash scripts/compose-staging.sh up -d --build
@@ -916,7 +916,7 @@ cd deploy && bash scripts/compose-staging.sh up -d --build
 | Problem | Fix |
 |---------|-----|
 | Cannot open `http://SERVER_IP/admin` | `compose-staging.sh ps`; UFW port 80; `logs nginx` / `logs strapi` |
-| Admin UI broken (no CSS) | `MY_HEROKU_URL` must be exactly `http://SERVER_IP` |
+| Admin UI broken (no CSS) | `PUBLIC_URL` must be exactly `http://SERVER_IP` |
 | 502 from nginx | Strapi not healthy: `logs strapi`, restart strapi service |
 | `POSTGRES_PASSWORD` error | Set in `.env.staging` before `compose up` |
 | `pg_restore` / `psql` errors | Match user/db `strapi`/`strapi`; stop strapi first; check dump format (.sql vs .dump) |
@@ -931,7 +931,7 @@ cd deploy && bash scripts/compose-staging.sh up -d --build
 | Push rejected: `without workflow scope` | PAT needs **`workflow`** + **`repo`**, or push via SSH / GitHub web UI |
 | Push to `develop` but wrong code on staging | Align `STAGING_BRANCH` in workflow with branch you push |
 | Merge to `main` triggered staging | Should not happen — only `develop` triggers staging CI |
-| Wrong environment | Never use `/opt/mathapp-production` or production secrets on staging |
+| Wrong environment | Never use `/opt/riovox-production` or production secrets on staging |
 
 ---
 
@@ -940,11 +940,11 @@ cd deploy && bash scripts/compose-staging.sh up -d --build
 ```text
 SERVER
 [ ] Hetzner VPS, SERVER_IP in deploy/docs/servers.md
-[ ] mathe_app_user + Docker + UFW 80
-[ ] /opt/mathapp-staging/strapi-math on branch develop
+[ ] riovox + Docker + UFW 80
+[ ] /opt/riovox-staging/FluentDeck/strapi-fluentdeck on branch develop
 
 DOCKER APP
-[ ] .env.staging on server (POSTGRES_*, MY_HEROKU_URL=http://SERVER_IP, Strapi secrets)
+[ ] .env.staging on server (POSTGRES_*, PUBLIC_URL=http://SERVER_IP, Strapi secrets)
 [ ] nginx server_name _
 [ ] compose-staging.sh up -d --build OK
 [ ] http://SERVER_IP/admin OK

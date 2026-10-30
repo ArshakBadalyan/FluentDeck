@@ -4,27 +4,27 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/language_levels_snapshot.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
-import 'package:fluentdeck/models/speaking_session_context.dart';
-import 'package:fluentdeck/models/speaking_session_record_model.dart';
-import 'package:fluentdeck/models/user_note_model.dart';
-import 'package:fluentdeck/models/user_progress_model.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/screens/activity_screen/speaking_saved_phrases_screen.dart';
-import 'package:fluentdeck/screens/activity_screen/speaking_session_detail_screen.dart';
-import 'package:fluentdeck/screens/activity_screen/speaking_session_history_screen.dart';
-import 'package:fluentdeck/services/conversation_service.dart';
-import 'package:fluentdeck/services/language_levels_service.dart';
-import 'package:fluentdeck/services/note_service.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/services/speaking_session_service.dart';
-import 'package:fluentdeck/services/user_progress_service.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/widgets/tutor_scene.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/language_levels_snapshot.dart';
+import 'package:riovox/models/speaking_preferences.dart';
+import 'package:riovox/models/speaking_session_context.dart';
+import 'package:riovox/models/speaking_session_record_model.dart';
+import 'package:riovox/models/user_note_model.dart';
+import 'package:riovox/models/user_progress_model.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/screens/activity_screen/speaking_saved_phrases_screen.dart';
+import 'package:riovox/screens/activity_screen/speaking_session_detail_screen.dart';
+import 'package:riovox/screens/activity_screen/speaking_session_history_screen.dart';
+import 'package:riovox/services/conversation_service.dart';
+import 'package:riovox/services/language_levels_service.dart';
+import 'package:riovox/services/note_service.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/services/speaking_session_service.dart';
+import 'package:riovox/services/user_progress_service.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/widgets/tutor_scene.dart';
 
 class EnglishActivityScreen extends StatefulWidget {
   const EnglishActivityScreen({super.key});
@@ -194,7 +194,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
       child: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.brandPrimary,
-        child: ListView(
+        child: AppContentWidth(child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
             children: [
             _StreakHero(
@@ -443,7 +443,7 @@ class _EnglishActivityScreenState extends State<EnglishActivityScreen> {
                     ),
             ),
           ],
-        ),
+        )),
       ),
     ),
     );

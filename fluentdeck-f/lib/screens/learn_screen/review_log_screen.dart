@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/flashcard_stats_model.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/html_text_utils.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/flashcard_stats_model.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/html_text_utils.dart';
+import 'package:riovox/widgets/professor.dart';
+import 'package:riovox/widgets/rio.dart';
 
 class ReviewLogScreen extends StatefulWidget {
   const ReviewLogScreen({super.key, this.deckId});
@@ -82,10 +84,17 @@ class _ReviewLogScreenState extends State<ReviewLogScreen> {
               ? Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'No review log entries yet.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppPageColors.subtitleOf(context), height: 1.45),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RioImage.asset(ProfessorFace.thoughtful.asset, height: 96),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No review log entries yet.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppPageColors.subtitleOf(context), height: 1.45),
+                      ),
+                    ],
                   ),
                 ),
               )

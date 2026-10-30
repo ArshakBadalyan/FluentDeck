@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:riovox/app_colors.dart';
 
 import '../../models/speaking_session_context.dart';
 import '../../models/speaking_topic_model.dart';
@@ -8,7 +8,7 @@ import '../../utils/speaking_item_icons.dart';
 import '../../utils/speaking_premium_gate.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../widgets/speaking_hub_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
 
 class SpeakingTopicsTab extends StatefulWidget {
   const SpeakingTopicsTab({super.key, required this.onStart});
@@ -114,13 +114,14 @@ class _SpeakingTopicsTabState extends State<SpeakingTopicsTab> {
       child: RefreshIndicator(
       onRefresh: _load,
       color: AppColors.brandPrimary,
-      // Two-column grid of topic cards (Today · Topics).
+      // Grid of topic cards (Today · Topics): two columns on phones, more on
+      // web/tablet instead of two huge cards.
       child: GridView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         itemCount: _topics.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 240,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           // Room for a two-line title and two lines of description.

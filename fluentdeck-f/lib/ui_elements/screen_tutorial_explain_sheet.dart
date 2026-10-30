@@ -1,10 +1,10 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/services/screen_tutorial_segments.dart';
-import 'package:fluentdeck/services/screen_tutorial_service.dart';
-import 'package:fluentdeck/ui_elements/screen_tutorial_overlay.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/services/screen_tutorial_segments.dart';
+import 'package:riovox/services/screen_tutorial_service.dart';
+import 'package:riovox/ui_elements/screen_tutorial_overlay.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Modal list of spotlight segments for the **current** main + sub-tab
 /// (`ScreenTutorialReplayCoordinator`).

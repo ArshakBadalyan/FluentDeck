@@ -1,4 +1,4 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 

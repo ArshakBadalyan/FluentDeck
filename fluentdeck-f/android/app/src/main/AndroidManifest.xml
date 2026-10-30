@@ -44,7 +44,7 @@
             android:value="2" />
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-4463307428680168~1797861467"/>
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
         <!-- Shows scheduled local notifications (daily review reminder) when
              their alarm fires; without it they are silently dropped. -->
         <receiver android:exported="false"

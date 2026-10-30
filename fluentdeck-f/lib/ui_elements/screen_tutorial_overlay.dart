@@ -2,14 +2,14 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/services/screen_tutorial_segments.dart';
-import 'package:fluentdeck/services/screen_tutorial_service.dart';
-import 'package:fluentdeck/services/user_session.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/screen_tutorial_targets.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/services/screen_tutorial_segments.dart';
+import 'package:riovox/services/screen_tutorial_service.dart';
+import 'package:riovox/services/user_session.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/screen_tutorial_targets.dart';
 
 /// Air between spotlight edge and arrow tip ([_PointerGlyph]); all steps share this.
 const double _kCoachArrowTipGap = 14;

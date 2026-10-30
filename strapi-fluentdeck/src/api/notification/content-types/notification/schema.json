@@ -33,12 +33,19 @@
       "enum": [
         "congrats",
         "unfinished_goal",
-        "assignment",
-        "class_membership"
+        "achievement"
       ]
     },
     "metadata": {
       "type": "json"
+    },
+    "seen": {
+      "type": "boolean",
+      "default": false
+    },
+    "markedUnread": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

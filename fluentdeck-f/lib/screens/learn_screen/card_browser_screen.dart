@@ -1,34 +1,33 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/utils/html_text_utils.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/data/decks_help_content.dart';
-import 'package:fluentdeck/models/flashcard_note_model.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/utils/card_browser_utils.dart';
-import 'package:fluentdeck/utils/learning_language_utils.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/card_browser_options_menu.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/card_browser_bulk_actions.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/card_row_actions.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
-import 'package:fluentdeck/services/card_browser_order_store.dart';
-import 'package:fluentdeck/services/card_tag_undo_store.dart';
-import 'package:fluentdeck/services/decks_help_hints_store.dart';
-import 'package:fluentdeck/widgets/card_preview_sheet.dart';
-import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
-import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/utils/html_text_utils.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/flashcard_note_model.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/screens/learn_screen/card_edit_screen.dart';
+import 'package:riovox/screens/learn_screen/review_session_screen.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/utils/card_browser_utils.dart';
+import 'package:riovox/utils/learning_language_utils.dart';
+import 'package:riovox/screens/learn_screen/widgets/filtered_deck_dialog.dart';
+import 'package:riovox/screens/learn_screen/widgets/card_browser_options_menu.dart';
+import 'package:riovox/screens/learn_screen/widgets/card_browser_bulk_actions.dart';
+import 'package:riovox/screens/learn_screen/widgets/card_row_actions.dart';
+import 'package:riovox/services/card_browser_order_store.dart';
+import 'package:riovox/services/card_tag_undo_store.dart';
+import 'package:riovox/widgets/card_preview_sheet.dart';
+import 'package:riovox/widgets/synced_learning_language_hint.dart';
+import 'package:riovox/widgets/swipe_action_backgrounds.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/frosted_bottom_sheet.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/widgets/rio.dart';
+import 'package:riovox/widgets/rio_empty_state.dart';
 
 class CardBrowserScreen extends StatefulWidget {
   const CardBrowserScreen({
@@ -285,17 +284,8 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
     _deckFilter = widget.deckId;
     _searchCtrl.addListener(_onSearchTextChanged);
     _init();
-    if (widget.embedInShell) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        DecksContextualHelpButton.maybeShowFirstVisitHint(
-          context,
-          hintKey: DecksHelpHintsStore.cardBrowserKey,
-          message: cardBrowserContextualHint,
-          helpSectionId: 'card-browser',
-        );
-      });
-    }
+    // No pop-up here: the first-sign-in "Getting started" tips cover it, and
+    // the ? button opens the card browser help.
   }
 
   @override
@@ -1674,7 +1664,10 @@ class _CardBrowserScreenState extends State<CardBrowserScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_off_rounded, size: 48, color: AppPageColors.subtitleOf(context)),
+              // A filter hiding everything: curious Rio; an empty deck: sleepy Rio.
+              filtered
+                  ? const RioImage(RioPose.curious, height: 96, motion: RioMotion.float)
+                  : const RioSleeping(height: 96),
               const SizedBox(height: 12),
               Text(
                 filtered ? 'No cards match your filters' : 'No cards in this deck yet',

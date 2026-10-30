@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/screens/learn_screen/shared_decks_screen.dart';
-import 'package:fluentdeck/services/flashcard_import_service.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
-import 'package:fluentdeck/utils/api_exception.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/screens/learn_screen/shared_decks_screen.dart';
+import 'package:riovox/services/flashcard_import_service.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
+import 'package:riovox/utils/api_exception.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -359,7 +359,7 @@ void main() {
     ) async {
       dotenv.testLoad(
         fileInput:
-            'API_URL=https://api.test/api\nSHARED_DECKS_WEB_URL=https://fluentdeck.com/decks',
+            'API_URL=https://api.test/api\nSHARED_DECKS_WEB_URL=https://riovox.app/decks',
       );
       await pumpShared(tester);
       expect(find.text('Browse'), findsOneWidget);
@@ -372,14 +372,14 @@ void main() {
     ) async {
       await pumpShared(tester);
       expect(find.text('Empty deck'), findsNothing);
-      expect(find.text('Import Anki'), findsOneWidget);
+      expect(find.text('Import other deck'), findsOneWidget);
     });
 
-    testWidgets('Import Anki opens the import sheet with every format', (
+    testWidgets('Import other deck opens the import sheet with every format', (
       tester,
     ) async {
       await pumpShared(tester);
-      await tester.tap(find.text('Import Anki'));
+      await tester.tap(find.text('Import other deck'));
       await tester.pumpAndSettle();
 
       expect(find.text('Import flashcards'), findsOneWidget);
@@ -401,7 +401,7 @@ void main() {
       final popped = await pumpShared(tester);
       picker.file = _file('words.csv', utf8.encode('Front,Back\nhi,bonjour'));
 
-      await tester.tap(find.text('Import Anki'));
+      await tester.tap(find.text('Import other deck'));
       await tester.pumpAndSettle();
       await tester.runAsync(
         () => withServer(() async {
@@ -432,7 +432,7 @@ void main() {
       final popped = await pumpShared(tester);
       picker.file = _file('words.csv', utf8.encode('a,b'));
 
-      await tester.tap(find.text('Import Anki'));
+      await tester.tap(find.text('Import other deck'));
       await tester.pumpAndSettle();
       await tester.runAsync(
         () => withServer(() async {

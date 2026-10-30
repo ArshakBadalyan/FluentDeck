@@ -1,20 +1,21 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/language_levels_snapshot.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
-import 'package:fluentdeck/models/speaking_session_record_model.dart';
-import 'package:fluentdeck/services/conversation_service.dart';
-import 'package:fluentdeck/services/language_levels_service.dart';
-import 'package:fluentdeck/services/milestone_tracker.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/services/speaking_session_service.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/widgets/tutor_scene.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/language_levels_snapshot.dart';
+import 'package:riovox/models/speaking_preferences.dart';
+import 'package:riovox/models/speaking_session_record_model.dart';
+import 'package:riovox/services/conversation_service.dart';
+import 'package:riovox/services/language_levels_service.dart';
+import 'package:riovox/services/milestone_tracker.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/services/speaking_session_service.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/widgets/tutor_scene.dart';
+import 'package:riovox/widgets/level_up_celebration.dart';
 
 /// Activity tab: current learning language, AI tutor level, analytics estimate, history.
 class LanguageLevelsActivityTab extends StatefulWidget {
@@ -79,12 +80,7 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
         _levelUp = levelUp;
       });
       if (levelUp) {
-        AppToast.showSnackBar(
-          context,
-          SnackBar(
-            content: Text('Level up! You reached ${snapshot.estimatedLevel}.'),
-          ),
-        );
+        await showLevelUpCelebration(context, snapshot.estimatedLevel!);
       }
     } catch (e) {
       if (!mounted) return;
@@ -144,7 +140,7 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
         child: RefreshIndicator(
           onRefresh: _load,
           color: AppColors.brandPrimary,
-          child: ListView(
+          child: AppContentWidth(child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
               if (_levelUp)
@@ -250,7 +246,7 @@ class _LanguageLevelsActivityTabState extends State<LanguageLevelsActivityTab> {
                 ),
               ],
             ],
-          ),
+          )),
         ),
       ),
     );
@@ -293,9 +289,8 @@ class _HeroCard extends StatelessWidget {
         ],
       ),
       child: SceneBackdrop(
-        // Close-up, centred Rio cheering "you can do it" — reads well in the
-        // narrow strip this tall card leaves for the picture.
-        scene: TutorScene.encouraging,
+        // Professor Rio reading by the lake: the mentor watching your level.
+        scene: TutorScene.mentor,
         color: AppColors.heroGradient.last,
         widthFactor: 0.5,
         // The text keeps clear of the picture on the right, so it stays
@@ -483,7 +478,7 @@ class _LanguageHistoryScreenState extends State<LanguageHistoryScreen> {
       title: 'Add a language',
       selected: _current,
       options: [
-        for (final e in SpeakingPreferences.practiceLanguageOptions.entries)
+        for (final e in SpeakingPreferences.selectablePracticeLanguages().entries)
           if (!have.contains(e.key))
             AppSelectOption(value: e.key, label: e.value),
       ],

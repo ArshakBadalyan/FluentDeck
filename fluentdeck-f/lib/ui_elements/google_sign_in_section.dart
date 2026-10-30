@@ -1,9 +1,9 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 import '../services/google_auth_service.dart';
 import '../services/audio_service.dart';

@@ -159,11 +159,15 @@ class AppPressScale extends StatefulWidget {
     required this.child,
     this.enabled = true,
     this.pressedScale = 0.97,
+    this.bounce = false,
   });
 
   final Widget child;
   final bool enabled;
   final double pressedScale;
+
+  /// Springs back past full size on release (answer buttons).
+  final bool bounce;
 
   @override
   State<AppPressScale> createState() => _AppPressScaleState();
@@ -204,8 +208,10 @@ class _AppPressScaleState extends State<AppPressScale> {
       onPointerCancel: (_) => _setPressed(false),
       child: AnimatedScale(
         scale: active && _pressed ? widget.pressedScale : 1,
-        duration: active ? AppMotion.press : Duration.zero,
-        curve: AppMotion.standardCurve,
+        duration: !active
+            ? Duration.zero
+            : (widget.bounce && !_pressed ? const Duration(milliseconds: 380) : AppMotion.press),
+        curve: widget.bounce && !_pressed ? Curves.elasticOut : AppMotion.standardCurve,
         child: widget.child,
       ),
     );

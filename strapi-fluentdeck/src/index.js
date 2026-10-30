@@ -39,6 +39,10 @@ module.exports = {
       "api::speaking-session.speaking-session.scoreMap",
       "api::notification.notification.listMine",
       "api::notification.notification.markRead",
+      "api::notification.notification.markUnread",
+      "api::notification.notification.markAllSeen",
+      "api::notification.notification.unreadSummary",
+      "api::notification.notification.achievementUnlocked",
       "api::user-progress.user-progress.find",
       "api::user-progress.user-progress.findOne",
       "api::user-progress.user-progress.create",
@@ -230,18 +234,5 @@ module.exports = {
       strapi.log.warn(`[bootstrap] flashcard note migration: ${e?.message}`);
     }
 
-    if (process.env.DROP_LEGACY_MATH_TABLES === "true") {
-      try {
-        const { dropLegacyTables } = require("../scripts/drop-legacy-math-tables");
-        const dropped = await dropLegacyTables(strapi.db.connection);
-        if (dropped > 0) {
-          strapi.log.info(
-            `[bootstrap] Dropped ${dropped} legacy math table(s).`,
-          );
-        }
-      } catch (e) {
-        strapi.log.warn(`[bootstrap] drop legacy tables: ${e?.message}`);
-      }
-    }
   },
 };

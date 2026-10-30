@@ -89,8 +89,8 @@ function mergeUserIdentityHistoryIntoUpdateData(existing, incoming) {
 }
 
 /**
- * Detects the Flutter/ f7 "soft delete" anonymize payload
- * (Del{timestamp} / Del{timestamp}@schulmatheapp.de).
+ * Detects the app's "soft delete" anonymize payload: username Del{timestamp}
+ * and email Del{timestamp}@<any domain> (the app sends @example.com).
  */
 function isAnonymizeDeletePayload(incoming) {
   if (!incoming || typeof incoming !== "object") {
@@ -104,7 +104,7 @@ function isAnonymizeDeletePayload(incoming) {
   if (!/^Del\d+$/i.test(u.trim())) {
     return false;
   }
-  if (!/^Del\d+@schulmatheapp\.de$/i.test(e.trim())) {
+  if (!/^Del\d+@[^@\s]+$/i.test(e.trim())) {
     return false;
   }
   return true;

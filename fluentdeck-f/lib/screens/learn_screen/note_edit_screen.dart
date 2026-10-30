@@ -1,16 +1,16 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
-import 'package:fluentdeck/models/user_note_model.dart';
-import 'package:fluentdeck/services/note_service.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/services/subscription_service.dart';
-import 'package:fluentdeck/ui_elements/primary_button.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/speaking_premium_gate.dart';
-import 'package:fluentdeck/widgets/cefr_level_chips.dart';
-import 'package:fluentdeck/widgets/synced_learning_language_hint.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/speaking_preferences.dart';
+import 'package:riovox/models/user_note_model.dart';
+import 'package:riovox/services/note_service.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/services/subscription_service.dart';
+import 'package:riovox/ui_elements/primary_button.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/speaking_premium_gate.dart';
+import 'package:riovox/widgets/cefr_level_chips.dart';
+import 'package:riovox/widgets/synced_learning_language_hint.dart';
 
 class NoteEditScreen extends StatefulWidget {
   const NoteEditScreen({super.key, this.note});

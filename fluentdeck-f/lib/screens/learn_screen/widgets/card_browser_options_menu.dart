@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/card_browser_utils.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/ui_elements/frosted_bottom_sheet.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/card_browser_utils.dart';
 
 /// Browser state shown in menu labels (checkmarks / subtitles).
 class CardBrowserOptionsState {

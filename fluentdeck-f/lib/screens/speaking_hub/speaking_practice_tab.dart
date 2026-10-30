@@ -1,6 +1,6 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:riovox/app_colors.dart';
 
 import '../../models/conversation_training_session.dart';
 import '../../models/flashcard_model.dart';
@@ -12,7 +12,7 @@ import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../utils/deck_visuals.dart';
 import '../../widgets/speaking_hub_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
 
 class SpeakingPracticeTab extends StatefulWidget {
   const SpeakingPracticeTab({super.key, required this.onStart});
@@ -188,7 +188,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
       child: RefreshIndicator(
       onRefresh: _load,
       color: AppColors.brandPrimary,
-      child: ListView.separated(
+      child: AppContentWidth(child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
         itemCount: _decks.length,
@@ -207,7 +207,7 @@ class _SpeakingPracticeTabState extends State<SpeakingPracticeTab> {
             onTap: () => setState(() => _selected = deck),
           );
         },
-      ),
+      )),
     ),
     );
   }

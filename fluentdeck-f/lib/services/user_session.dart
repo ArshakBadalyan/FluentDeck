@@ -9,12 +9,6 @@ class UserSession {
     return (await SharedPreferences.getInstance()).getBool('is_admin') ?? false;
   }
 
-  Future<bool> get isTeacher async {
-    final type =
-        (await SharedPreferences.getInstance()).getString('account_type');
-    return type == 'teacher';
-  }
-
   Future<bool> get hideScreenExplanation async {
     return (await SharedPreferences.getInstance())
             .getBool('hide_screen_explanation') ??

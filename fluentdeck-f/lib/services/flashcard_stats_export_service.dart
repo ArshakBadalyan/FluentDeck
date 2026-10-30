@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/flashcard_stats_model.dart';
-import 'package:fluentdeck/utils/statistics_labels.dart';
-import 'package:fluentdeck/utils/file_download.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_stats_model.dart';
+import 'package:riovox/utils/statistics_labels.dart';
+import 'package:riovox/utils/file_download.dart';
 
 class FlashcardStatsExportService {
   FlashcardStatsExportService._();

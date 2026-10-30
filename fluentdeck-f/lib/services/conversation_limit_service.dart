@@ -1,7 +1,7 @@
-import 'package:fluentdeck/services/api_service.dart';
-import 'package:fluentdeck/services/app_feature_config_service.dart';
-import 'package:fluentdeck/services/auth_service.dart';
-import 'package:fluentdeck/services/subscription_service.dart';
+import 'package:riovox/services/api_service.dart';
+import 'package:riovox/services/app_feature_config_service.dart';
+import 'package:riovox/services/auth_service.dart';
+import 'package:riovox/services/subscription_service.dart';
 
 /// Daily AI practice time. All amounts are seconds (server `unit: 'seconds'`).
 class ConversationUsageStatus {

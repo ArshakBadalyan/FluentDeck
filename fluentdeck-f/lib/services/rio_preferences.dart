@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/tutor_persona.dart';
+
 /// "Show tutor" on the conversation screen: the tutor character (Rio by
 /// default) or the plain chat. A display choice, so it is kept on this device
 /// only (not in the account's speaking preferences). On by default.
@@ -22,6 +24,11 @@ class RioPreferences {
   /// your messages. On by default; corrections are still saved when off.
   final ValueNotifier<bool> showCorrections = ValueNotifier<bool>(true);
   static const _correctionsKey = 'show_corrections';
+
+  /// "Your tutor": Rio (default) or one of the people, shown in the chat
+  /// (avatar, reactions, video-call view).
+  final ValueNotifier<TutorPersona> tutor = ValueNotifier<TutorPersona>(TutorPersona.rio);
+  static const _tutorKey = 'tutor_persona';
   bool _loaded = false;
 
   Future<void> load() async {
@@ -31,6 +38,13 @@ class RioPreferences {
     showRio.value = prefs.getBool(_key) ?? true;
     showRioStage.value = prefs.getBool(_stageKey) ?? false;
     showCorrections.value = prefs.getBool(_correctionsKey) ?? true;
+    tutor.value = TutorPersona.byId(prefs.getString(_tutorKey));
+  }
+
+  Future<void> setTutor(TutorPersona value) async {
+    tutor.value = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tutorKey, value.id);
   }
 
   Future<void> setShowRioStage(bool value) async {

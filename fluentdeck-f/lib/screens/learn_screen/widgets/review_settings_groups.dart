@@ -1,14 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/services/deck_scheduling_defaults.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/review_settings_store.dart';
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/sm2_preview.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/services/deck_scheduling_defaults.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/review_settings_store.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/sm2_preview.dart';
 
 /// The top of Review settings (Decks · Review settings): Daily limits and
 /// Learning steps for [deck], then the While reviewing switches. The deck

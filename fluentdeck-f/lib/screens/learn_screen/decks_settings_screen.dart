@@ -1,19 +1,19 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_settings_section.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_settings_section_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/decks_settings_widgets.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/review_settings_groups.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/deck_backup_service.dart';
-import 'package:fluentdeck/services/deck_notification_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_store.dart';
-import 'package:fluentdeck/services/review_settings_store.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/screens/learn_screen/decks_settings_section.dart';
+import 'package:riovox/screens/learn_screen/decks_settings_section_screen.dart';
+import 'package:riovox/screens/learn_screen/widgets/decks_settings_widgets.dart';
+import 'package:riovox/screens/learn_screen/widgets/review_settings_groups.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/deck_backup_service.dart';
+import 'package:riovox/services/deck_notification_service.dart';
+import 'package:riovox/services/flashcard_sync_service.dart';
+import 'package:riovox/services/flashcard_sync_store.dart';
+import 'package:riovox/services/review_settings_store.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Decks settings hub. Standalone it is "Review settings": Daily limits and
 /// Learning steps for [deckId], the While reviewing switches, then the

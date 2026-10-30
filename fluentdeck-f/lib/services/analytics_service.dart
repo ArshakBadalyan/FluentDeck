@@ -1,13 +1,17 @@
 import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 
 class AnalyticsService {
   AnalyticsService._();
   static final instance = AnalyticsService._();
 
-  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
+  /// `null` when Firebase isn't configured (see `firebase_options.dart`);
+  /// every call is then a no-op.
+  late final FirebaseAnalytics? _analytics =
+      Firebase.apps.isEmpty ? null : FirebaseAnalytics.instance;
 
   /// Last route name reported by [routeObserver]. Used by ClickTracker so
   /// each tap event can be tagged with the screen the user is on without
@@ -19,8 +23,12 @@ class AnalyticsService {
   /// own tiny one and update [currentScreen] on every push/pop/replace.
   late final NavigatorObserver routeObserver = _ScreenNameObserver(this);
 
-  FirebaseAnalyticsObserver get observer =>
-      FirebaseAnalyticsObserver(analytics: _analytics);
+  NavigatorObserver get observer {
+    final analytics = _analytics;
+    return analytics == null
+        ? NavigatorObserver()
+        : FirebaseAnalyticsObserver(analytics: analytics);
+  }
 
   /// [screenClass] helps GA4 distinguish the main shell from generic `FlutterViewController`.
   Future<void> logScreenView(
@@ -28,14 +36,16 @@ class AnalyticsService {
     String? screenClass,
   }) {
     currentScreen = screenName;
-    return _analytics.logScreenView(
-      screenName: screenName,
-      screenClass: screenClass ?? screenName,
-    );
+    return _analytics?.logScreenView(
+          screenName: screenName,
+          screenClass: screenClass ?? screenName,
+        ) ??
+        Future.value();
   }
 
   Future<void> logEvent(String name, {Map<String, Object>? parameters}) {
-    return _analytics.logEvent(name: name, parameters: parameters);
+    return _analytics?.logEvent(name: name, parameters: parameters) ??
+        Future.value();
   }
 
   /// Generic UI tap. Use a stable [targetId] (snake_case, dot-namespaced is
@@ -61,28 +71,30 @@ class AnalyticsService {
         params[entry.key] = entry.value;
       }
     }
-    return _analytics.logEvent(name: 'ui_tap', parameters: params);
+    return _analytics?.logEvent(name: 'ui_tap', parameters: params) ??
+        Future.value();
   }
 
   /// GA4 recommended `login` (uses Firebase SDK mapping for `method`).
   Future<void> logLoginEvent({required String method}) {
-    return _analytics.logLogin(loginMethod: method);
+    return _analytics?.logLogin(loginMethod: method) ?? Future.value();
   }
 
   /// GA4 recommended `sign_up` (uses Firebase SDK mapping for `method`).
   Future<void> logSignUpEvent({required String method}) {
-    return _analytics.logSignUp(signUpMethod: method);
+    return _analytics?.logSignUp(signUpMethod: method) ?? Future.value();
   }
 
   Future<void> setUserId(String? id) {
-    return _analytics.setUserId(id: id);
+    return _analytics?.setUserId(id: id) ?? Future.value();
   }
 
   Future<void> setUserProperty({
     required String name,
     required String? value,
   }) {
-    return _analytics.setUserProperty(name: name, value: value);
+    return _analytics?.setUserProperty(name: name, value: value) ??
+        Future.value();
   }
 }
 

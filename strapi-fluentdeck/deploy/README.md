@@ -11,6 +11,6 @@
 
 ```bash
 # Staging on server
-cd strapi-math/deploy
+cd strapi-fluentdeck/deploy
 bash scripts/compose-staging.sh up -d --build
 ```

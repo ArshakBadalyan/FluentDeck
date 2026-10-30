@@ -1,8 +1,8 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
-import 'package:fluentdeck/services/note_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/screens/learn_screen/decks_settings_screen.dart';
+import 'package:riovox/services/note_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 import 'profile_settings_general_section.dart';
 import 'profile_settings_speaking_tab.dart';

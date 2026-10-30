@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/data/decks_help_content.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/data/decks_help_content.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/widgets/professor.dart';
 
 /// In-app Decks help and FAQ (Phase 5G).
 class DecksHelpScreen extends StatefulWidget {
@@ -107,13 +108,9 @@ class _GuideTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(
-          'Learn how Decks works — study, import, sync, and review flashcards.',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppPageColors.subtitleOf(context),
-            height: 1.4,
-          ),
+        const ProfessorTip(
+          pose: ProfessorPose.sharing,
+          text: 'Learn how Decks works: study, import, sync, and review flashcards.',
         ),
         const SizedBox(height: 12),
         ...decksHelpSections.map(

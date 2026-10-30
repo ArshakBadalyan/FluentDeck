@@ -1,5 +1,5 @@
-import 'package:fluentdeck/services/screen_tutorial_service.dart';
-import 'package:fluentdeck/ui_elements/screen_tutorial_targets.dart';
+import 'package:riovox/services/screen_tutorial_service.dart';
+import 'package:riovox/ui_elements/screen_tutorial_targets.dart';
 
 /// Short, on-demand replays (Profile → pick one). Auto tab tours stay unique.
 abstract final class ScreenTutorialSegmentIds {
@@ -9,7 +9,6 @@ abstract final class ScreenTutorialSegmentIds {
   static const chromeNotifications = 'seg.chrome.notifications';
   static const chromeSearch = 'seg.chrome.search';
 
-  static const activityTopList = 'seg.activity.top_list';
   static const activityAnswers = 'seg.activity.answers';
   static const activityProgressPeriod = 'seg.activity.progress_period';
   static const activityProgressChart = 'seg.activity.progress_chart';
@@ -74,12 +73,6 @@ abstract final class ScreenTutorialSegmentCatalog {
       case 0:
         switch (subIndex) {
           case 0:
-            break;
-          case 1:
-            push(
-              ScreenTutorialSegmentIds.activityTopList,
-              'screen-tutorial.segments.activity_top_list',
-            );
             break;
           case 2:
             push(
@@ -193,13 +186,6 @@ final Map<String, List<ScreenTutorialStep>> _segmentSteps = {
       titleKey: 'screen-tutorial.topics_browse.s3_title',
       bodyKey: 'screen-tutorial.topics_browse.s3_body',
       targetId: ScreenTutorialTargetIds.mainAppBarSearch,
-    ),
-  ],
-  ScreenTutorialSegmentIds.activityTopList: [
-    const ScreenTutorialStep(
-      titleKey: 'screen-tutorial.activity_top_list.complete_title',
-      bodyKey: 'screen-tutorial.activity_top_list.complete_body',
-      targetId: ScreenTutorialTargetIds.activityTopListBody,
     ),
   ],
   ScreenTutorialSegmentIds.activityAnswers: [

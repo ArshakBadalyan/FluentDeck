@@ -26,38 +26,6 @@ class TokenStorage {
     return prefs.getBool(_isAdmin);
   }
 
-  static Future<void> saveAccountType(String accountType) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_accountType, accountType);
-  }
-
-  static Future<String?> getAccountType() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_accountType);
-  }
-
-  static Future<bool> getIsTeacher() async {
-    final type = await getAccountType();
-    return type == 'teacher';
-  }
-
-  static Future<void> saveTeacherApproved(bool approved) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_teacherApproved, approved);
-  }
-
-  /// `true` when approved; `null` when not a teacher or unknown (legacy session).
-  static Future<bool?> getTeacherApproved() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!prefs.containsKey(_teacherApproved)) return null;
-    return prefs.getBool(_teacherApproved);
-  }
-
-  static Future<bool> getIsApprovedTeacher() async {
-    if (!await getIsTeacher()) return false;
-    return await getTeacherApproved() == true;
-  }
-
   static Future<void> saveHideScreenExplanation(bool hide) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_hideScreenExplanation, hide);

@@ -1,14 +1,14 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/services/push_notification_analytics.dart';
-import 'package:fluentdeck/services/push_notification_service.dart';
-import 'package:fluentdeck/ui_elements/dialogs/push_notification_invite_dialog.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/services/push_notification_analytics.dart';
+import 'package:riovox/services/push_notification_service.dart';
+import 'package:riovox/ui_elements/dialogs/push_notification_invite_dialog.dart';
 
 /// Milestone prompts for push notifications.
 class PushPromptCoordinator {

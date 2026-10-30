@@ -174,7 +174,7 @@ class MobileAppUpdateBootstrap {
 }
 
 String _fallbackPlayStoreListing() =>
-    'https://play.google.com/store/apps/details?id=com.fluentdeck.app';
+    'https://play.google.com/store/apps/details?id=app.riovox';
 
 String _fallbackAppStoreListing() =>
     'https://apps.apple.com/app/id6447060725';

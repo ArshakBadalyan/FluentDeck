@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluentdeck/models/conversation_session_model.dart';
-import 'package:fluentdeck/models/conversation_turn_model.dart';
-import 'package:fluentdeck/services/token_storage.dart';
+import 'package:riovox/models/conversation_session_model.dart';
+import 'package:riovox/models/conversation_turn_model.dart';
+import 'package:riovox/services/token_storage.dart';
 
 const _storageKeyPrefix = 'conversation_history_v1_';
 

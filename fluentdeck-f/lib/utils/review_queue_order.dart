@@ -1,6 +1,6 @@
-import 'package:fluentdeck/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_model.dart';
 
-import 'package:fluentdeck/services/review_settings_store.dart';
+import 'package:riovox/services/review_settings_store.dart';
 
 /// Reorders a fetched review queue per New study screen settings. Also runs
 /// on the offline fallback queue (cached cards in no particular order), so

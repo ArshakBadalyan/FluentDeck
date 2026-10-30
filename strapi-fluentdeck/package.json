@@ -7,7 +7,6 @@
     "develop": "node scripts/ensure-migrations-baseline.js && strapi develop",
     "start": "node scripts/ensure-migrations-baseline.js && strapi start",
     "build": "strapi build",
-    "heroku-postbuild": "strapi build",
     "strapi": "strapi",
     "test:apkg": "node tests/apkg-import.test.js",
     "test:queue": "node --test tests/flashcard-review-queue.test.js",

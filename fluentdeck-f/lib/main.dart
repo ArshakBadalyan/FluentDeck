@@ -1,4 +1,4 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,22 +7,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/services/admob_service.dart';
-import 'package:fluentdeck/services/analytics_service.dart';
-import 'package:fluentdeck/services/click_tracking.dart';
-import 'package:fluentdeck/services/consent_service.dart';
-import 'package:fluentdeck/services/audio_service.dart';
-import 'package:fluentdeck/services/interaction_haptics.dart';
-import 'package:fluentdeck/services/deck_notification_service.dart';
-import 'package:fluentdeck/services/push_notification_service.dart';
-import 'package:fluentdeck/services/subscription_service.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/services/admob_service.dart';
+import 'package:riovox/services/analytics_service.dart';
+import 'package:riovox/services/click_tracking.dart';
+import 'package:riovox/services/consent_service.dart';
+import 'package:riovox/services/audio_service.dart';
+import 'package:riovox/services/interaction_haptics.dart';
+import 'package:riovox/services/deck_notification_service.dart';
+import 'package:riovox/services/push_notification_service.dart';
+import 'package:riovox/services/subscription_service.dart';
 
 import 'app_start.dart';
 import 'app_theme.dart';
-import 'package:fluentdeck/ui_elements/app_scroll_behavior.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/responsive_layout.dart';
+import 'package:riovox/ui_elements/app_scroll_behavior.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/responsive_layout.dart';
 import 'services/theme_settings_store.dart';
 import 'services/api_service.dart';
 import 'services/auth_service.dart';
@@ -78,7 +78,10 @@ void main() async {
     FlutterError.presentError(details);
     debugPrint('FlutterError: ${details.exceptionAsString()}');
   };
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  final firebaseOptions = DefaultFirebaseOptions.currentPlatform;
+  if (firebaseOptions != null) {
+    await Firebase.initializeApp(options: firebaseOptions);
+  }
   await _loadDotenv();
   ApiService.onUnauthorized = AuthService.logout;
   await AppLocalizations.instance.load();

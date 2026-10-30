@@ -1,10 +1,10 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/config/brand_config.dart';
-import 'package:fluentdeck/english_main_screen.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/rio.dart';
+import 'package:riovox/config/brand_config.dart';
+import 'package:riovox/english_main_screen.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/widgets/rio.dart';
 import '../../routing/app_route_names.dart';
 import '../../routing/app_page_routes.dart';
 import '../../services/audio_service.dart';

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:riovox/localization/app_localizations.dart';
 
 import 'modern_page_widgets.dart';
 import 'screen_tutorial_targets.dart';
+import 'package:riovox/ui_elements/notification_bell.dart';
+import 'package:riovox/ui_elements/app_circle_icon_button.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -15,12 +17,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onExplainOnePartTap;
 
   /// Student homework launcher (Topics tab).
-  final VoidCallback? onAssignmentsTap;
-  final int assignmentsBadgeCount;
   final VoidCallback? onConversationHistoryTap;
   final VoidCallback? onNewConversationTap;
   final VoidCallback? onDecksSettingsTap;
-  final int notificationUnreadCount;
 
   /// Optional widget pinned to the right end of the sub-tab row (e.g. help).
   final Widget? tabBarTrailing;
@@ -44,12 +43,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.controller,
     this.onSearchTap,
     this.onExplainOnePartTap,
-    this.onAssignmentsTap,
-    this.assignmentsBadgeCount = 0,
     this.onConversationHistoryTap,
     this.onNewConversationTap,
     this.onDecksSettingsTap,
-    this.notificationUnreadCount = 0,
     this.tabBarTrailing,
     this.helpAction,
     this.trailingAction,
@@ -106,78 +102,47 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       toolbarHeight: _toolbarHeight,
       actions: [
         if (onNewConversationTap != null)
-          IconButton(
+          AppCircleIconButton(
             tooltip: 'New conversation',
-            icon: const Icon(Icons.add_comment_outlined, size: 26),
-            color: fg,
+            icon: const Icon(Icons.add_comment_outlined),
             onPressed: onNewConversationTap,
           ),
         if (onConversationHistoryTap != null)
-          IconButton(
+          AppCircleIconButton(
             tooltip: 'Conversation history',
-            icon: const Icon(Icons.history, size: 26),
-            color: fg,
+            icon: const Icon(Icons.history),
             onPressed: onConversationHistoryTap,
           ),
         if (onExplainOnePartTap != null)
-          IconButton(
+          AppCircleIconButton(
             tooltip: AppLocalizations.instance.t(
               'top-bar.explain-one-part-hint',
             ),
-            icon: const Icon(Icons.help_outline_rounded, size: 26),
-            color: fg,
+            icon: const Icon(Icons.help_outline_rounded),
             onPressed: onExplainOnePartTap,
           ),
         if (onSearchTap != null)
-          IconButton(
+          AppCircleIconButton(
             key: ScreenTutorialKeys.mainAppBarSearch,
-            icon: const Icon(Icons.search, size: 26),
-            color: fg,
+            icon: const Icon(Icons.search),
             tooltip: 'Search',
             onPressed: onSearchTap,
           ),
-        if (onAssignmentsTap != null)
-          Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: IconButton(
-              tooltip: AppLocalizations.instance.t(
-                'student.assignments.icon-tooltip',
-              ),
-              icon: Badge(
-                isLabelVisible: assignmentsBadgeCount > 0,
-                label: Text('$assignmentsBadgeCount'),
-                child: const Icon(Icons.assignment_outlined, size: 26),
-              ),
-              color: fg,
-              onPressed: onAssignmentsTap,
-            ),
-          ),
         if (onDecksSettingsTap != null)
-          IconButton(
+          AppCircleIconButton(
             tooltip: 'Decks settings',
-            icon: const Icon(Icons.settings_outlined, size: 26),
-            color: fg,
+            icon: const Icon(Icons.settings_outlined),
             onPressed: onDecksSettingsTap,
           ),
         if (helpAction != null) helpAction!,
         Builder(
           builder: (context) => Padding(
-            padding: EdgeInsets.only(
-              right: trailingAction != null ? 0 : (onAssignmentsTap != null ? 12 : 24),
-            ),
-            child: IconButton(
+            padding: EdgeInsets.only(right: trailingAction != null ? 0 : 16),
+            child: AppCircleIconButton(
               key: ScreenTutorialKeys.mainAppBarNotifications,
               tooltip: 'Notifications',
-              icon: Badge(
-                isLabelVisible: notificationUnreadCount > 0,
-                label: Text(
-                  notificationUnreadCount > 99
-                      ? '99+'
-                      : '$notificationUnreadCount',
-                ),
-                child: const Icon(Icons.notifications_none_outlined, size: 26),
-              ),
-              color: fg,
+              // Number for new ones, dot for ones marked unread (shared state).
+              icon: const NotificationBellIcon(size: AppCircleIconButton.iconSize),
               onPressed: () {
                 Scaffold.of(context).openEndDrawer();
               },

@@ -1,15 +1,16 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:fluentdeck/models/conversation_session_model.dart';
-import 'package:fluentdeck/services/conversation_history_service.dart';
-import 'package:fluentdeck/services/main_navigation_coordinator.dart';
-import 'package:fluentdeck/services/main_tab_config.dart';
-import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
-import 'package:fluentdeck/services/conversation_service.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/models/conversation_session_model.dart';
+import 'package:riovox/services/conversation_history_service.dart';
+import 'package:riovox/services/main_navigation_coordinator.dart';
+import 'package:riovox/services/main_tab_config.dart';
+import 'package:riovox/widgets/swipe_action_backgrounds.dart';
+import 'package:riovox/services/conversation_service.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/widgets/rio_empty_state.dart';
 
 class ConversationHistoryScreen extends StatefulWidget {
   const ConversationHistoryScreen({super.key});
@@ -176,15 +177,9 @@ class _ConversationHistoryScreenState extends State<ConversationHistoryScreen> {
               child: _loading
                   ? const AppListSkeleton(itemHeight: 76)
                   : _sessions.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          'No saved conversations yet.\nTalk with Rio on Today; each exchange is saved here.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppPageColors.subtitleOf(context)),
-                        ),
-                      ),
+                  ? const RioEmptyState(
+                      title: 'No chats yet',
+                      message: 'Talk with Rio on Today; each chat is saved here.',
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),

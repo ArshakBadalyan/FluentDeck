@@ -1,5 +1,5 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
@@ -7,20 +7,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_help_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_settings_section.dart';
-import 'package:fluentdeck/screens/learn_screen/note_types_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/shared_decks_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/decks_settings_widgets.dart';
-import 'package:fluentdeck/services/deck_backup_service.dart';
-import 'package:fluentdeck/services/deck_notification_service.dart';
-import 'package:fluentdeck/services/flashcard_export_service.dart';
-import 'package:fluentdeck/services/flashcard_import_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_store.dart';
-import 'package:fluentdeck/services/review_settings_store.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/screens/learn_screen/decks_help_screen.dart';
+import 'package:riovox/screens/learn_screen/decks_settings_section.dart';
+import 'package:riovox/screens/learn_screen/note_types_screen.dart';
+import 'package:riovox/screens/learn_screen/shared_decks_screen.dart';
+import 'package:riovox/screens/learn_screen/widgets/decks_settings_widgets.dart';
+import 'package:riovox/services/deck_backup_service.dart';
+import 'package:riovox/services/deck_notification_service.dart';
+import 'package:riovox/services/flashcard_export_service.dart';
+import 'package:riovox/services/flashcard_import_service.dart';
+import 'package:riovox/services/flashcard_sync_service.dart';
+import 'package:riovox/services/flashcard_sync_store.dart';
+import 'package:riovox/services/review_settings_store.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Detail screen for one Decks settings section.
 class DecksSettingsSectionScreen extends StatefulWidget {

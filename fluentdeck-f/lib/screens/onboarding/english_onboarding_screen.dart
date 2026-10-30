@@ -2,16 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/config/brand_config.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/screens/auth/auth_screen.dart';
-import 'package:fluentdeck/services/app_feature_config_service.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/primary_button.dart';
-import 'package:fluentdeck/utils/practice_time_format.dart';
-import 'package:fluentdeck/widgets/rio.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/config/brand_config.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/screens/auth/auth_screen.dart';
+import 'package:riovox/services/app_feature_config_service.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/primary_button.dart';
+import 'package:riovox/utils/practice_time_format.dart';
+import 'package:riovox/widgets/rio.dart';
 
 const String kEnglishOnboardingSeenPrefsKey = 'english_onboarding_seen';
 const String kEnglishLevelPrefsKey = 'english_level';

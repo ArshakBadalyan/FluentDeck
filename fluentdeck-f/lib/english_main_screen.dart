@@ -1,35 +1,37 @@
-import 'package:fluentdeck/services/logout_flow.dart';
-import 'package:fluentdeck/services/screen_tutorial_service.dart';
+import 'package:riovox/services/logout_flow.dart';
+import 'package:riovox/services/screen_tutorial_service.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/screens/activity_screen/activity_shell_screen.dart';
-import 'package:fluentdeck/screens/speaking_hub/speaking_hub_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_shell_screen.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_account_tab.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_security_tab.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_settings_tab.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_subscription_tab.dart';
-import 'package:fluentdeck/services/app_feature_config_service.dart';
-import 'package:fluentdeck/services/audio_service.dart';
-import 'package:fluentdeck/services/conversation_service.dart';
-import 'package:fluentdeck/services/auth_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_service.dart';
-import 'package:fluentdeck/services/deck_notification_service.dart';
-import 'package:fluentdeck/services/main_navigation_coordinator.dart';
-import 'package:fluentdeck/services/main_tab_config.dart';
-import 'package:fluentdeck/services/notifications_service.dart';
-import 'package:fluentdeck/utils/strapi_response.dart';
-import 'package:fluentdeck/services/theme_settings_store.dart';
-import 'package:fluentdeck/services/unsaved_changes_service.dart';
-import 'package:fluentdeck/ui_elements/english_bottom_nav.dart';
-import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
-import 'package:fluentdeck/ui_elements/main_app_bar.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/notification_panel.dart';
+import 'package:riovox/screens/learn_screen/widgets/decks_contextual_help.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/screens/activity_screen/activity_shell_screen.dart';
+import 'package:riovox/screens/speaking_hub/speaking_hub_screen.dart';
+import 'package:riovox/screens/learn_screen/decks_shell_screen.dart';
+import 'package:riovox/screens/profile_screen/profile_account_tab.dart';
+import 'package:riovox/screens/profile_screen/profile_security_tab.dart';
+import 'package:riovox/screens/profile_screen/profile_settings_tab.dart';
+import 'package:riovox/screens/profile_screen/profile_subscription_tab.dart';
+import 'package:riovox/services/app_feature_config_service.dart';
+import 'package:riovox/services/audio_service.dart';
+import 'package:riovox/services/conversation_service.dart';
+import 'package:riovox/services/auth_service.dart';
+import 'package:riovox/services/flashcard_sync_service.dart';
+import 'package:riovox/services/deck_notification_service.dart';
+import 'package:riovox/services/main_navigation_coordinator.dart';
+import 'package:riovox/services/main_tab_config.dart';
+import 'package:riovox/services/theme_settings_store.dart';
+import 'package:riovox/services/unsaved_changes_service.dart';
+import 'package:riovox/ui_elements/english_bottom_nav.dart';
+import 'package:riovox/ui_elements/handoff_tab_bar_view.dart';
+import 'package:riovox/ui_elements/main_app_bar.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/notification_panel.dart';
 import 'ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/fly_to_decks.dart';
+import 'package:riovox/services/notification_badge.dart';
+import 'package:riovox/services/achievement_service.dart';
+import 'package:riovox/ui_elements/app_circle_icon_button.dart';
 
 
 class EnglishMainScreen extends StatefulWidget {
@@ -73,7 +75,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
   late final TabController _activityTabController =
       TabController(length: _activitySubTabs.length, vsync: this);
   bool _speakInSession = false;
-  int _notificationUnreadCount = 0;
   bool _bottomNavShowShadow = false;
   /// When set before [PageController] navigation, overrides default sub-tab 0.
   int? _pendingSubIndex;
@@ -148,8 +149,14 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
       _speakingHubKey.currentState?.enterLoadedSession();
     };
     UnsavedChangesService().addListener(_onUnsavedChangesChanged);
+    // First sign-in on this device: the "Getting started" quick tips, once.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) DecksContextualHelpButton.maybeShowGettingStarted(context);
+    });
     unawaited(_initSoundSettings());
     unawaited(_refreshNotificationUnread());
+    // New achievements since last time become notifications.
+    unawaited(AchievementService.instance.checkAndNotify());
     unawaited(_initLearnFeatures());
   }
 
@@ -242,6 +249,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     if (!mounted || index == _currentIndex) return;
     _leaveSpeakTabIfNeeded(index);
     final tab = MainTabConfig.tabAt(index);
+    if (tab == MainTabId.decks) NewCardsBadge.clear();
     final subIndex = _pendingSubIndex ?? 0;
     _pendingSubIndex = null;
     _applySubIndex(tab, subIndex);
@@ -339,20 +347,7 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
     await _showMainPage(next);
   }
 
-  Future<void> _refreshNotificationUnread() async {
-    try {
-      final res = await NotificationsService.getNotifications();
-      final list = res['data'] as List? ?? [];
-      if (!mounted) return;
-      var count = 0;
-      for (final n in list) {
-        if (n is! Map) continue;
-        final read = StrapiResponse.field<bool>(Map<String, dynamic>.from(n), 'read');
-        if (read != true) count += 1;
-      }
-      setState(() => _notificationUnreadCount = count);
-    } catch (_) {}
-  }
+  Future<void> _refreshNotificationUnread() => NotificationBadge.refresh();
 
   Future<void> _initSoundSettings() async {
     final res = await AuthService.getUser();
@@ -436,10 +431,9 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
         trailingAction:
             isProfile
                 ? Builder(
-                  builder: (context) => IconButton(
+                  builder: (context) => AppCircleIconButton(
                     tooltip: 'Log out',
-                    icon: const Icon(Icons.logout_rounded, size: 24),
-                    color: AppPageColors.textPrimaryOf(context),
+                    icon: const Icon(Icons.logout_rounded),
                     onPressed: () => runLogoutFlow(context),
                   ),
                 )
@@ -491,7 +485,6 @@ class EnglishMainScreenState extends State<EnglishMainScreen>
                 : isSpeak && !_speakInSession
                 ? _speakTabController
                 : null,
-        notificationUnreadCount: _notificationUnreadCount,
       ),
       // Unread badge refreshes when the drawer closes (swipe / tap outside).
       onEndDrawerChanged: (isOpen) {
@@ -645,9 +638,8 @@ class _ThemeToggleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return IconButton(
+    return AppCircleIconButton(
       tooltip: isDark ? 'Switch to light mode' : 'Switch to dark mode',
-      color: AppPageColors.textPrimaryOf(context),
       onPressed: () => ThemeSettingsStore.instance.setThemeMode(
         isDark ? ThemeMode.light : ThemeMode.dark,
       ),
@@ -655,7 +647,6 @@ class _ThemeToggleButton extends StatelessWidget {
         child: Icon(
           isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
           key: ValueKey(isDark),
-          size: 24,
         ),
       ),
     );

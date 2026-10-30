@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/config/brand_config.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/config/brand_config.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// The app-wide skeleton look: a shimmer that loops until content arrives,
 /// or a still fill with reduced motion.

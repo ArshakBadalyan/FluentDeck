@@ -74,6 +74,32 @@ class SpeakingPreferences {
     'hy': 'Armenian',
   };
 
+  /// Beta languages (docs/beta-languages.md): the tutor's voice doesn't
+  /// support them well yet, so they are hidden from new choices. Anyone who
+  /// already picked one keeps it, and the server still supports them.
+  static const betaLanguageCodes = {'tr', 'vi', 'id', 'hy'};
+
+  /// Languages the tutor can't speak yet (no open voice good enough): the
+  /// chat is text only, with no Play / Hear it. Matches the server's
+  /// VOICELESS_LANGUAGES (strapi-fluentdeck/src/utils/ai-tutor.js).
+  static const voicelessLanguageCodes = {'id', 'hy'};
+
+  /// Whether the tutor speaks [code] aloud.
+  static bool hasTutorVoice(String code) => !voicelessLanguageCodes.contains(code);
+
+  /// [practiceLanguageOptions] to offer in a picker: no beta languages,
+  /// except [current] so an existing choice still shows.
+  static Map<String, String> selectablePracticeLanguages({String? current}) => {
+    for (final e in practiceLanguageOptions.entries)
+      if (!betaLanguageCodes.contains(e.key) || e.key == current) e.key: e.value,
+  };
+
+  /// [responseLanguageOptions] to offer in a picker (see above).
+  static Map<String, String> selectableResponseLanguages({String? current}) => {
+    for (final e in responseLanguageOptions.entries)
+      if (!betaLanguageCodes.contains(e.key) || e.key == current) e.key: e.value,
+  };
+
   /// The tutor can reply in any practice language.
   static const responseLanguageOptions = {
     'en': 'English',

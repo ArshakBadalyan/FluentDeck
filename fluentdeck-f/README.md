@@ -1,225 +1,73 @@
-# Math App (Flutter)
+# Riovox app (Flutter)
 
-This is a Flutter mobile application.
+The Riovox app for iOS, Android and the web: AI speaking practice with Rio, flashcard decks with spaced repetition, and progress tracking.
 
----
+- **Architecture and conventions:** [`../PROJECT.md`](../PROJECT.md).
+- **Production** (services, settings, launch checklist): [`../docs/production.md`](../docs/production.md).
+- **Backend:** [`../strapi-fluentdeck`](../strapi-fluentdeck).
 
-# 1. Install Flutter
+## Set up
 
-Download Flutter SDK:
-
-https://docs.flutter.dev/get-started/install
-
-Or clone Flutter repository:
-
-```bash
-git clone https://github.com/flutter/flutter.git -b stable
-```
-
-Add Flutter to PATH.
-
-Check installation:
+1. Install Flutter (stable) and check it with `flutter doctor`. For Android, install Android Studio and accept the licenses (`flutter doctor --android-licenses`). For iOS, install Xcode.
+2. Get the code and the packages:
 
 ```bash
-flutter doctor
-```
-
----
-
-# 2. Install Android Development Tools
-
-Install:
-
-- Android Studio
-- Android SDK
-- Android Emulator
-
-After installation run:
-
-```bash
-flutter doctor --android-licenses
-```
-
----
-
-# 3. Clone Project
-
-```bash
-git clone https://github.com/sahakyan-dev/fluentdeck-f.git
-```
-
-Enter project folder:
-
-```bash
-cd fluentdeck-f
-```
-
----
-
-# 4. Install Dependencies
-
-```bash
+git clone https://github.com/ArshakBadalyan/FluentDeck.git
+cd FluentDeck/fluentdeck-f
 flutter pub get
 ```
 
----
+3. **App settings:** `assets/fluentdeck_config.txt` (not committed). Set at least `API_URL`, e.g. `http://localhost:1338/api` for a local backend. See [`deploy/fluentdeck_config.staging.example`](deploy/fluentdeck_config.staging.example) and [`../docs/production.md`](../docs/production.md#app-fluentdeck-fassetsfluentdeck_configtxt).
 
-# 5. Check Connected Devices
-
-```bash
-flutter devices
-```
-
----
-
-# 6. Run Application
+## Run
 
 ```bash
-flutter run
+flutter devices            # connected phones, emulators, browsers
+flutter run                # default device
+flutter run -d <device_id> # a specific device
+flutter run -d chrome      # web
 ```
-For debugging use this
-```
-debugPrint('✅ get-answers-stats parsed: $res');
-```
----
 
-# 7. Run on Specific Device
+If something behaves oddly after changing packages: `flutter clean && flutter pub get`.
+
+## Test
 
 ```bash
-flutter run -d device_id
+flutter analyze
+flutter test
 ```
 
-Example:
+## Release
 
-```bash
-Android Emulator -> flutter run -d emulator-5554
-Narek iPhone -> flutter run -d 00008110-0001785C1EC0401E
-```
+1. **Version:** bump `version: x.y.z+N` in `pubspec.yaml`. `x.y.z` is what users see; `N` must always increase.
+2. **Android (Google Play):**
+   - Signing (one-time): a release keystore and `android/key.properties` (`storePassword`, `keyPassword`, `keyAlias`, `storeFile`). Never commit them.
+   - Build: `flutter clean && flutter pub get && flutter build appbundle --release`
+   - Upload `build/app/outputs/bundle/release/app-release.aab` in Play Console.
+3. **iOS (App Store):**
+   - In Xcode, the `Runner` and `OneSignalNotificationServiceExtension` targets need your Apple developer team, automatic signing and matching provisioning profiles.
+   - Build: `flutter build ipa`, then in Xcode: Product → Archive → Distribute App → App Store Connect.
+   - If App Store Connect reports a missing dSYM for `objective_c.framework`, create it from the latest archive:
 
----
-
-# 8. Clean Project
-
-```bash
-flutter clean
-```
-
-Then install dependencies again:
-
-```bash
-flutter pub get
-```
-
----
-
-# 9. Build APK for local test (Android)
-
-```bash
-flutter build apk
-```
-
-APK location:
-
-```
-build/app/outputs/flutter-apk/app-release.apk
-```
-
----
-
-# 10. Deploy to production
-
-1) Update app version in pubspec.yaml
-   In your Flutter project (fluentdeck-f), update:
-
-    `version: 1.2.3+45`
-
-    - 1.2.3 = versionName (what users see)
-    - 45 = versionCode (must always increase)
-
-# Google Play Market
-2) Make sure signing is configured (one-time setup, already done)
-
-    You need a release keystore and Gradle config.
-
-   - Keystore file (example): android/app/upload-keystore.jks
-   - Create android/key.properties with:
-     - storePassword=...
-     - keyPassword=...
-     - keyAlias=...
-     - storeFile=.../upload-keystore.jks
-   - Ensure android/app/build.gradle uses that signing config for release.
-
-```bash
-flutter clean
-flutter pub get
-flutter build appbundle --release
-```
-
-Location:
-
-```
-build/app/outputs/bundle/release/app-release.aab
-```
-# Apple AppStore
-
-2) Open Xcode, ensure the Runner and OneSignalNotificationServiceExtension targets both have:
-
-   - Correct Team (Narek Sahakyan / BHAU937236)
-   - Automatic signing enabled
-   - Matching provisioning profiles
-
-3) Run
-```bash
-flutter build ipa
-```
-
-4) Open Xcode
-    - Product -> Archive
-5) Run (temporary solution)
 ```bash
 ARCHIVE="$(ls -td "$HOME/Library/Developer/Xcode/Archives"/*/*.xcarchive | head -1)"
 xcrun dsymutil \
   "$ARCHIVE/Products/Applications/Runner.app/Frameworks/objective_c.framework/objective_c" \
   -o "$ARCHIVE/dSYMs/objective_c.framework.dSYM"
-xcrun dwarfdump --uuid \
-  "$ARCHIVE/dSYMs/objective_c.framework.dSYM/Contents/Resources/DWARF/objective_c"
-```
-6)
-  - Choose the latest archive
-  - Distribute App -> App Store Connect ->Distribute
----
-
-# Run On Web
-
-```
-flutter run -d chrome
 ```
 
-# Deploy To Web
-1. Copy content of `.env` to `assets/mathe_config.txt`, ignore AdMob and OneSignal variables.
-2. Run
-```
-flutter build web --release --base-href /web/ --pwa-strategy none
-```
-3. Copy the content of `/build/web` folder to `web` folder of the shculmatheapp.de server. Update of the server can take several hours.
+4. **Web:**
+   - Point `API_URL` in `assets/fluentdeck_config.txt` to the production API.
+   - Build: `flutter build web --release`
+   - Publish `build/web` on Netlify or Cloudflare Pages (see [`../docs/production.md`](../docs/production.md)). The landing site can also serve it at `/app/` (`npm run build:all` in `../fluentdeck-landing`).
 
-# Project Structure
+## Icons and splash screen
 
-```
-lib/
-  main.dart
+Sources are in `assets/icon/`. After changing them:
 
-android/
-ios/
-assets/
+```bash
+dart run flutter_launcher_icons
+dart run flutter_native_splash:create
 ```
 
----
-
-# Technologies
-
-- Flutter
-- Dart
-
----
-
+`flutter_launcher_icons` 0.13 writes an invalid value into `ios/Runner.xcodeproj/project.pbxproj`; revert that file's change afterwards.

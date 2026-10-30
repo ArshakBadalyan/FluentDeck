@@ -1,14 +1,14 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/services/card_tag_undo_store.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/services/card_tag_undo_store.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 enum BulkTagMode { add, remove, replace }
 

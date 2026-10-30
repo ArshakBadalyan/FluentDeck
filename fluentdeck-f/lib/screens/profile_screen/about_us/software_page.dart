@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 class SoftwarePage extends StatelessWidget {
   const SoftwarePage({super.key});

@@ -1,12 +1,12 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/services/main_tab_config.dart';
-import 'package:fluentdeck/services/main_navigation_coordinator.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
+import 'package:riovox/services/main_tab_config.dart';
+import 'package:riovox/services/main_navigation_coordinator.dart';
+import 'package:riovox/models/speaking_preferences.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
 
@@ -563,12 +563,13 @@ class _TrailHeader extends StatelessWidget {
           Positioned(
             left: 12,
             top: 12 + MediaQuery.paddingOf(context).top,
+            // Light circle in light mode, dark one in dark mode.
             child: Material(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: AppPageColors.cardBgOf(context).withValues(alpha: 0.9),
               shape: const CircleBorder(),
               child: IconButton(
                 tooltip: 'Close',
-                icon: const Icon(Icons.close_rounded, color: Color(0xFF102326)),
+                icon: Icon(Icons.close_rounded, color: AppPageColors.textPrimaryOf(context)),
                 onPressed: () {
                   final nav = Navigator.of(context);
                   if (nav.canPop()) {

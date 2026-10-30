@@ -1,5 +1,5 @@
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/utils/deck_limit.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/utils/deck_limit.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 FlashcardDeckModel _deck(int id, {bool isDefault = false, bool isFiltered = false}) =>

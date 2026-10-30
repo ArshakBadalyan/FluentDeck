@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/achievement_model.dart';
-import 'package:fluentdeck/services/achievement_service.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/responsive_layout.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/achievement_model.dart';
+import 'package:riovox/services/achievement_service.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/responsive_layout.dart';
 
 /// Full achievement grid with progress (Phase 3).
 class ProfileAchievementsScreen extends StatefulWidget {

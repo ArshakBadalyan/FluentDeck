@@ -1,7 +1,7 @@
-import 'package:fluentdeck/models/card_style_preset.dart';
-import 'package:fluentdeck/models/flashcard_note_model.dart';
-import 'package:fluentdeck/services/api_service.dart';
-import 'package:fluentdeck/services/auth_service.dart';
+import 'package:riovox/models/card_style_preset.dart';
+import 'package:riovox/models/flashcard_note_model.dart';
+import 'package:riovox/services/api_service.dart';
+import 'package:riovox/services/auth_service.dart';
 
 /// Per-account card style (theme) choices for built-in note types.
 ///

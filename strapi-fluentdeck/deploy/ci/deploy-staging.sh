@@ -6,7 +6,7 @@ set -euo pipefail
 : "${STAGING_BRANCH:=develop}"
 : "${DEPLOY_WEB:=false}"
 
-STRAPI_DIR="${STAGING_INSTALL_ROOT}/strapi-math"
+STRAPI_DIR="${STAGING_INSTALL_ROOT}/FluentDeck/strapi-fluentdeck"
 FLUTTER_DIR="${STAGING_INSTALL_ROOT}/fluentdeck-f"
 
 if [[ "${STAGING_INSTALL_ROOT}" == *production* ]]; then
@@ -37,7 +37,7 @@ if [[ "${DEPLOY_WEB}" == "true" ]]; then
   git checkout "${STAGING_BRANCH}" 2>/dev/null || git checkout develop
   git pull --ff-only || true
   if [[ -f .env.staging ]]; then
-    cp .env.staging assets/mathe_config.txt
+    cp .env.staging assets/fluentdeck_config.txt
   fi
   cd "${STRAPI_DIR}/deploy"
   docker compose --env-file ../.env.staging \

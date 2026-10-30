@@ -1,5 +1,5 @@
-import 'package:fluentdeck/models/speaking_session_record_model.dart';
-import 'package:fluentdeck/screens/activity_screen/language_levels_activity_tab.dart';
+import 'package:riovox/models/speaking_session_record_model.dart';
+import 'package:riovox/screens/activity_screen/language_levels_activity_tab.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 SpeakingSessionRecord _at(DateTime t) =>

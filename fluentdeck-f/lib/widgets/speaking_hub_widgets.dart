@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/speaking_item_icons.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/speaking_item_icons.dart';
 
 /// Matches [MainAppBar] sub-tab styling (Decks, Library, Speak).
 TabBar buildAppStyleTabBar({

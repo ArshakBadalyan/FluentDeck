@@ -1,39 +1,42 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'dart:math' as math;
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/utils/deck_visuals.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/services/admob_service.dart';
-import 'package:fluentdeck/services/subscription_service.dart';
-import 'package:fluentdeck/widgets/cached_strapi_image.dart';
-import 'package:fluentdeck/data/flashcard_offline_store.dart';
-import 'package:fluentdeck/models/card_style_preset.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_service.dart';
-import 'package:fluentdeck/services/deck_scheduling_defaults.dart';
-import 'package:fluentdeck/utils/sm2_preview.dart';
-import 'package:fluentdeck/utils/card_browser_utils.dart';
-import 'package:fluentdeck/utils/html_text_utils.dart';
-import 'package:fluentdeck/models/occlusion_model.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
-import 'package:fluentdeck/services/review_settings_store.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
-import 'package:fluentdeck/services/note_service.dart';
-import 'package:fluentdeck/services/phrase_audio_service.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/utils/review_queue_order.dart';
-import 'package:fluentdeck/utils/speaking_premium_gate.dart';
-import 'package:fluentdeck/utils/type_answer_utils.dart';
-import 'package:fluentdeck/widgets/image_occlusion_review.dart';
+import 'package:riovox/utils/deck_visuals.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/services/admob_service.dart';
+import 'package:riovox/services/subscription_service.dart';
+import 'package:riovox/widgets/cached_strapi_image.dart';
+import 'package:riovox/data/flashcard_offline_store.dart';
+import 'package:riovox/models/card_style_preset.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/flashcard_sync_service.dart';
+import 'package:riovox/services/deck_scheduling_defaults.dart';
+import 'package:riovox/utils/sm2_preview.dart';
+import 'package:riovox/utils/card_browser_utils.dart';
+import 'package:riovox/utils/html_text_utils.dart';
+import 'package:riovox/models/occlusion_model.dart';
+import 'package:riovox/screens/learn_screen/decks_settings_screen.dart';
+import 'package:riovox/services/review_settings_store.dart';
+import 'package:riovox/models/speaking_preferences.dart';
+import 'package:riovox/services/note_service.dart';
+import 'package:riovox/services/phrase_audio_service.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/utils/review_queue_order.dart';
+import 'package:riovox/utils/speaking_premium_gate.dart';
+import 'package:riovox/utils/type_answer_utils.dart';
+import 'package:riovox/widgets/image_occlusion_review.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
 import 'package:animations/animations.dart';
-import 'package:fluentdeck/widgets/rio.dart';
+import 'package:riovox/widgets/rio.dart';
+import 'package:riovox/widgets/rio_empty_state.dart';
+import 'package:riovox/services/achievement_service.dart';
 
 class ReviewSessionScreen extends StatefulWidget {
   const ReviewSessionScreen({super.key, this.deckId});
@@ -66,6 +69,12 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
   final TextEditingController _typeAnswerCtrl = TextEditingController();
   ReviewSettings _settings = const ReviewSettings();
   Offset? _panStart;
+
+  /// Horizontal drag while swiping the card (it follows the finger).
+  double _dragDx = 0;
+
+  /// Bumped on every reveal; drives the card's quick 3D turn.
+  int _revealCount = 0;
   Timer? _elapsedTimer;
   Map<int, DeckOptionsModel> _deckOptionsById = const {};
   Map<String, CardStylePreset> _themeByNoteTypeId = const {};
@@ -86,6 +95,8 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
 
   @override
   void dispose() {
+    // Reviews can unlock achievements (Warm-up, Daily reviewer).
+    AchievementService.instance.checkAndNotify();
     _elapsedTimer?.cancel();
     WakelockPlus.disable();
     _audioPlayer.dispose();
@@ -614,12 +625,16 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
       _answerChecked = true;
       _answerCorrect = correct;
       _revealed = true;
+      _revealCount++;
     });
   }
 
   void _revealCard() {
     if (_isTypeAnswer(_queue[_index]) && !_answerChecked) return;
-    setState(() => _revealed = true);
+    setState(() {
+      _revealed = true;
+      _revealCount++;
+    });
   }
 
   void _handleGestureAction(ReviewGestureAction action) {
@@ -639,7 +654,62 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     }
   }
 
+  /// Glow color for a swipe in the direction of [dx]: what letting go will do.
+  Color? _swipeColor(double dx) {
+    final action = dx < 0 ? _settings.gestures.swipeLeft : _settings.gestures.swipeRight;
+    if (!_revealed && action != ReviewGestureAction.reveal) return null;
+    return switch (action) {
+      ReviewGestureAction.again => AppColors.redWrong,
+      ReviewGestureAction.hard => AppColors.orangeHard,
+      ReviewGestureAction.good || ReviewGestureAction.easy => AppColors.greenCorrect,
+      ReviewGestureAction.reveal => AppPageColors.accentOf(context),
+      ReviewGestureAction.none => null,
+    };
+  }
+
+  /// The card follows a swipe (tilting, glowing in the action's color) and
+  /// does a quick 3D turn when its answer is revealed.
+  Widget _animatedCard({required Widget child}) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    final dx = _dragDx;
+    final strength = (dx.abs() / 120).clamp(0.0, 1.0);
+    final glow = dx == 0 ? null : _swipeColor(dx);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: _revealCount.toDouble()),
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOut,
+      builder: (context, t, child) {
+        final turn = math.sin((t - t.floorToDouble()) * math.pi) * 0.3;
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.0012)
+            ..rotateY(turn),
+          child: child,
+        );
+      },
+      child: AnimatedContainer(
+        duration: dx == 0 ? AppMotion.normal : Duration.zero,
+        curve: AppMotion.spring,
+        transform: Matrix4.translationValues(dx * 0.6, 0, 0)..rotateZ(dx / 1400),
+        transformAlignment: Alignment.bottomCenter,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: (glow ?? Colors.transparent).withValues(alpha: glow == null ? 0 : 0.55 * strength),
+              blurRadius: 28,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: child,
+      ),
+    );
+  }
+
   void _onPanEnd(DragEndDetails details, Size areaSize) {
+    if (_dragDx != 0) setState(() => _dragDx = 0);
     if (!_settings.gesturesEnabled || _panStart == null) return;
     final velocity = details.velocity.pixelsPerSecond;
     if (velocity.dx.abs() < 120 && velocity.dy.abs() < 120) return;
@@ -989,7 +1059,9 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
           ),
         ),
       ),
-      body: _buildBody(),
+      // Web/tablet: the card, picture and rating buttons stay a phone-like
+      // width in the middle instead of stretching across the window.
+      body: AppContentWidth(maxWidth: 600, child: _buildBody()),
     );
   }
 
@@ -1272,7 +1344,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
               // "Session complete" pops in (spring scale) with a confetti
               // burst; an empty deck just shows its icon.
               if (_startedEmpty)
-                const RioImage(RioPose.sleepy, height: 110, motion: RioMotion.sway)
+                const RioSleeping(height: 110)
               else
                 AppConfettiBurst(
                   colors: const [
@@ -1385,7 +1457,8 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                           _ghostCard(context, inset: 12, top: 10, front: true),
                           Padding(
                             padding: const EdgeInsets.only(top: 20),
-                            child: GestureDetector(
+                            child: _animatedCard(
+                              child: GestureDetector(
                         onDoubleTap:
                             _settings.gesturesEnabled
                                 ? () => _handleGestureAction(_settings.gestures.doubleTap)
@@ -1394,6 +1467,12 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                             _settings.gesturesEnabled
                                 ? (d) => _panStart = d.localPosition
                                 : null,
+                        onPanUpdate:
+                            _settings.gesturesEnabled
+                                ? (d) => setState(() => _dragDx += d.delta.dx)
+                                : null,
+                        onPanCancel:
+                            _settings.gesturesEnabled ? () => setState(() => _dragDx = 0) : null,
                         onPanEnd:
                             _settings.gesturesEnabled
                                 ? (d) => _onPanEnd(d, const Size(300, 300))
@@ -1527,6 +1606,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                                   ),
                         ),
                       ),
+                            ),
                           ),
                         ],
                       ),
@@ -1560,12 +1640,24 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
                       ],
                       if (typeAnswer && _answerChecked) ...[
                         const SizedBox(height: 8),
-                        Text(
-                          _answerCorrect == true ? 'Correct!' : 'Incorrect — compare with the answer above',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: _answerCorrect == true ? AppColors.greenCorrect : AppColors.redWrong,
+                        // Correct hops; wrong shakes.
+                        TweenAnimationBuilder<double>(
+                          key: ValueKey('$_index-$_answerCorrect'),
+                          tween: Tween(begin: 0, end: 1),
+                          duration: AppMotion.duration(context, const Duration(milliseconds: 520)),
+                          builder: (context, t, child) => Transform.translate(
+                            offset: _answerCorrect == true
+                                ? Offset(0, -math.sin(t * math.pi) * 8)
+                                : Offset(math.sin(t * math.pi * 6) * (1 - t) * 8, 0),
+                            child: child,
+                          ),
+                          child: Text(
+                            _answerCorrect == true ? 'Correct!' : 'Incorrect — compare with the answer above',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: _answerCorrect == true ? AppColors.greenCorrect : AppColors.redWrong,
+                            ),
                           ),
                         ),
                       ],
@@ -1718,6 +1810,9 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     final lower = url.toLowerCase();
     final hasAudio = url.isNotEmpty &&
         !const ['.png', '.jpg', '.jpeg', '.gif', '.webp'].any(lower.endsWith);
+    // A card's own audio always plays; reading the text aloud needs a tutor
+    // voice in the user's language (none for Indonesian, Armenian).
+    final canListen = hasAudio || PhraseAudioService.hasVoice;
     return Row(
       children: [
         if (deck.isNotEmpty)
@@ -1744,6 +1839,7 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
             ),
           ),
         const Spacer(),
+        if (canListen)
         Material(
           color: AppPageColors.cardBgOf(context),
           shape: CircleBorder(side: BorderSide(color: AppPageColors.subtleBorderOf(context))),
@@ -1768,6 +1864,8 @@ class _ReviewSessionScreenState extends State<ReviewSessionScreen> {
     final scale = _settings.reviewButtonScale;
     final colors = AppPageColors.tintOf(context, tint);
     return AppPressScale(
+      bounce: true,
+      pressedScale: 0.92,
       child: SizedBox(
         height: 64 * scale,
         child: TextButton(

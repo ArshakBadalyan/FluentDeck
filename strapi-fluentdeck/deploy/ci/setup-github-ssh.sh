@@ -6,7 +6,7 @@ KEY="${HOME}/.ssh/id_ed25519_github"
 CONFIG="${HOME}/.ssh/config"
 
 if [[ ! -f "${KEY}" ]]; then
-  ssh-keygen -t ed25519 -f "${KEY}" -N "" -C "github-strapi-math-push"
+  ssh-keygen -t ed25519 -f "${KEY}" -N "" -C "github-fluentdeck-push"
   chmod 600 "${KEY}"
 fi
 
@@ -30,8 +30,8 @@ echo ""
 cat "${KEY}.pub"
 echo ""
 echo "2) Test:  ssh -T git@github.com"
-echo "3) Push:   git remote set-url origin git@github.com:sahakyan-dev/strapi-math.git"
+echo "3) Push:   git remote set-url origin git@github.com:ArshakBadalyan/FluentDeck.git"
 echo "          git push origin develop"
 echo ""
 echo "Or use HTTPS + PAT (repo + workflow scopes) without SSH:"
-echo "  git remote set-url origin https://github.com/sahakyan-dev/strapi-math.git"
+echo "  git remote set-url origin https://github.com/ArshakBadalyan/FluentDeck.git"

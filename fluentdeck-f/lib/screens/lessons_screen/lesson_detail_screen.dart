@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/exercise_model.dart';
-import 'package:fluentdeck/models/lesson_model.dart';
-import 'package:fluentdeck/models/speaking_session_context.dart';
-import 'package:fluentdeck/screens/exercises_screen/exercise_screen.dart';
-import 'package:fluentdeck/services/conversation_service.dart';
-import 'package:fluentdeck/services/lesson_service.dart';
-import 'package:fluentdeck/services/main_navigation_coordinator.dart';
-import 'package:fluentdeck/services/main_tab_config.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/services/conversation_start_ad.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/exercise_model.dart';
+import 'package:riovox/models/lesson_model.dart';
+import 'package:riovox/models/speaking_session_context.dart';
+import 'package:riovox/screens/exercises_screen/exercise_screen.dart';
+import 'package:riovox/services/conversation_service.dart';
+import 'package:riovox/services/lesson_service.dart';
+import 'package:riovox/services/main_navigation_coordinator.dart';
+import 'package:riovox/services/main_tab_config.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/services/conversation_start_ad.dart';
 
 class LessonDetailScreen extends StatefulWidget {
   const LessonDetailScreen({super.key, required this.lessonId});

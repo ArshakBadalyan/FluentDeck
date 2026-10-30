@@ -1,4 +1,4 @@
-// https://docs.strapi.io/developer-docs/latest/setup-deployment-guides/deployment/hosting-guides/heroku.html
+// Production database: DATABASE_URL (PostgreSQL), see docs/production.md.
 
 const parse = require('pg-connection-string').parse;
 const config = parse(process.env.DATABASE_URL);

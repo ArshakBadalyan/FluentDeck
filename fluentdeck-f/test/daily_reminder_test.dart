@@ -1,5 +1,5 @@
-import 'package:fluentdeck/services/deck_notification_service.dart';
-import 'package:fluentdeck/services/review_settings_store.dart';
+import 'package:riovox/services/deck_notification_service.dart';
+import 'package:riovox/services/review_settings_store.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;

@@ -1,11 +1,11 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 import '../services/apple_auth_service.dart';
 import '../services/audio_service.dart';

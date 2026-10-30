@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Matches purple auth CTAs on forgot / reset password screens (`ElevatedButton` there).
 const Color _kAuthFlowPurple = AppColors.brandPrimary;

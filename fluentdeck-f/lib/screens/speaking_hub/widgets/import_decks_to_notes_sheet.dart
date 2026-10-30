@@ -1,13 +1,13 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/user_note_model.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/my_notes_linked_decks_store.dart';
-import 'package:fluentdeck/services/note_service.dart';
-import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/user_note_model.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/my_notes_linked_decks_store.dart';
+import 'package:riovox/services/note_service.dart';
+import 'package:riovox/ui_elements/frosted_bottom_sheet.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 class ImportDecksToNotesSheet extends StatefulWidget {
   const ImportDecksToNotesSheet({super.key});

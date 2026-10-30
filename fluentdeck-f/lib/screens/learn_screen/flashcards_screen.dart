@@ -1,37 +1,38 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
 import 'dart:async';
 
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/utils/deck_visuals.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/deck_overview_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/deck_count_buttons.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/deck_edit_sheet.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dart';
-import 'package:fluentdeck/screens/learn_screen/shared_decks_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/note_types_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/decks_overflow_menu.dart';
-import 'package:fluentdeck/services/app_feature_config_service.dart';
-import 'package:fluentdeck/services/deck_order_store.dart';
-import 'package:fluentdeck/services/deck_backup_service.dart';
-import 'package:fluentdeck/services/flashcard_export_service.dart';
-import 'package:fluentdeck/services/flashcard_import_service.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_service.dart';
-import 'package:fluentdeck/services/subscription_service.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/utils/api_exception.dart';
-import 'package:fluentdeck/utils/deck_limit.dart';
-import 'package:fluentdeck/utils/speaking_premium_gate.dart';
-import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/swipe_action_backgrounds.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/widgets/rio.dart';
+import 'package:riovox/utils/deck_visuals.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/screens/learn_screen/card_edit_screen.dart';
+import 'package:riovox/screens/learn_screen/deck_overview_screen.dart';
+import 'package:riovox/screens/learn_screen/review_session_screen.dart';
+import 'package:riovox/screens/learn_screen/widgets/deck_count_buttons.dart';
+import 'package:riovox/screens/learn_screen/widgets/deck_edit_sheet.dart';
+import 'package:riovox/screens/learn_screen/widgets/filtered_deck_dialog.dart';
+import 'package:riovox/screens/learn_screen/shared_decks_screen.dart';
+import 'package:riovox/screens/learn_screen/note_types_screen.dart';
+import 'package:riovox/screens/learn_screen/widgets/decks_overflow_menu.dart';
+import 'package:riovox/services/app_feature_config_service.dart';
+import 'package:riovox/services/deck_order_store.dart';
+import 'package:riovox/services/deck_backup_service.dart';
+import 'package:riovox/services/flashcard_export_service.dart';
+import 'package:riovox/services/flashcard_import_service.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/flashcard_sync_service.dart';
+import 'package:riovox/services/subscription_service.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/utils/api_exception.dart';
+import 'package:riovox/utils/deck_limit.dart';
+import 'package:riovox/utils/speaking_premium_gate.dart';
+import 'package:riovox/ui_elements/frosted_bottom_sheet.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/widgets/swipe_action_backgrounds.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/widgets/rio_empty_state.dart';
+import 'package:riovox/widgets/tutor_scene.dart';
 
 class _DeckRow {
   const _DeckRow({required this.deck, required this.depth, this.hasSubdecks = false});
@@ -424,7 +425,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                       AppSheetActionTile(
                         icon: Icons.create_new_folder_outlined,
                         title: 'Add a deck',
-                        subtitle: 'Empty deck, Anki import or shared decks',
+                        subtitle: 'Empty deck, import other decks, or shared decks',
                         onTap: () => Navigator.pop(ctx, 'shared'),
                       ),
                       _deckCreateTile(
@@ -759,7 +760,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   // can flash back to the old order for a frame. See
                   // _onDeckReorder for the matching synchronous-mutate half of
                   // this fix.
-                  child: CustomScrollView(
+                  child: AppContentWidth(child: CustomScrollView(
                     slivers: [
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
@@ -801,7 +802,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                             const SizedBox(height: 8),
                             if (_decks.isEmpty) ...[
                               const Center(
-                                child: RioImage(RioPose.sleepy, height: 120, motion: RioMotion.sway),
+                                child: RioSleeping(height: 120),
                               ),
                               const AppEmptyHint(
                                 text:
@@ -865,7 +866,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         ),
                       const SliverPadding(padding: EdgeInsets.only(bottom: 96)),
                     ],
-                  ),
+                  )),
                 ),
               ),
             ],
@@ -1109,60 +1110,96 @@ class _DueCard extends StatelessWidget {
       if (stats.newCards > 0) '${stats.newCards} new',
       if (due == 0) 'Nothing waiting. Nice work',
     ].join(' · ');
+    // Same look as the Levels card: hero gradient, Professor Rio's hiking
+    // scene on the right fading into it, the play button in the middle.
     return Container(
-      padding: const EdgeInsets.all(20),
+      // Tall enough to show the whole hiking scene at a good size.
+      constraints: const BoxConstraints(minHeight: 180),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.brandPrimaryDeep,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: AppColors.heroGradient,
+        ),
         borderRadius: BorderRadius.circular(26),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$due',
-                  style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w800, color: Colors.white),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  due == 1 ? 'card due today' : 'cards due today',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
-                ),
-                const SizedBox(height: 4),
-                Text(details, style: const TextStyle(fontSize: 13, color: Color(0xFFBFE4E7))),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 8)),
-              ],
-            ),
-            child: Material(
-              color: Colors.white,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: onReview,
-                child: const SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: Icon(
-                    Icons.play_arrow_rounded,
-                    size: 32,
-                    color: AppColors.brandPrimaryDeep,
-                    semanticLabel: 'Start review',
-                  ),
-                ),
-              ),
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.brandPrimary.withValues(alpha: 0.28),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
+      ),
+      child: SceneBackdrop(
+        scene: TutorScene.explorer,
+        color: AppColors.heroGradient.last,
+        // The hiking scene is tall: show it whole at the card's height.
+        fit: BoxFit.fitHeight,
+        widthFactor: 0.42,
+        // ≈ the scene's width at the card's height (it is 342×444), so the
+        // fade sits on the picture, not on empty space.
+        maxImageWidth: 140,
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final playSize = c.maxWidth >= 420 ? 76.0 : 68.0;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(22, 22, 0, 22),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$due',
+                          style: const TextStyle(fontSize: 48, height: 1, fontWeight: FontWeight.w800, color: Colors.white),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          due == 1 ? 'card due today' : 'cards due today',
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(details, style: const TextStyle(fontSize: 14, color: Color(0xFFBFE4E7))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 22, offset: const Offset(0, 8)),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: onReview,
+                        child: SizedBox(
+                          width: playSize,
+                          height: playSize,
+                          child: const Icon(
+                            Icons.play_arrow_rounded,
+                            size: 42,
+                            color: AppColors.brandPrimaryDeep,
+                            semanticLabel: 'Start review',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Keeps the button in the middle, clear of Rio on the right.
+                  SizedBox(width: (c.maxWidth * 0.28).clamp(100.0, 140.0)),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

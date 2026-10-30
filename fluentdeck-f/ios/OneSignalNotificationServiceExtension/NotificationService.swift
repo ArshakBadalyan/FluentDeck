@@ -2,7 +2,7 @@
 //  NotificationService.swift
 //  OneSignalNotificationServiceExtension
 //
-//  Created by Narek Sahakyan and replaced by Cursor on 28.03.26.
+//  Riovox push notification extension (OneSignal).
 //
 
 import UserNotifications

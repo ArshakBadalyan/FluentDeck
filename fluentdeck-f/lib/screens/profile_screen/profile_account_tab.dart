@@ -1,18 +1,18 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_achievements_navigation.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/services/achievement_service.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/models/user_note_model.dart';
-import 'package:fluentdeck/services/note_service.dart';
-import 'package:fluentdeck/services/unsaved_changes_service.dart';
-import 'package:fluentdeck/ui_elements/dialogs/account_error_info_dialog.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/screens/profile_screen/profile_achievements_navigation.dart';
+import 'package:riovox/models/speaking_preferences.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/services/achievement_service.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/models/user_note_model.dart';
+import 'package:riovox/services/note_service.dart';
+import 'package:riovox/services/unsaved_changes_service.dart';
+import 'package:riovox/ui_elements/dialogs/account_error_info_dialog.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';
@@ -21,7 +21,7 @@ import 'profile_subscription_tab.dart';
 import '../../ui_elements/dialogs/account_info_save_dialog.dart';
 import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/primary_button.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
 
 class ProfileAccountTab extends StatefulWidget {
   const ProfileAccountTab({super.key});

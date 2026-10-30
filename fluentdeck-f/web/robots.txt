@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://fluentdeck.com/sitemap.xml
+Sitemap: https://riovox.app/sitemap.xml

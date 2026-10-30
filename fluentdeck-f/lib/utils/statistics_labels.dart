@@ -1,5 +1,5 @@
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/flashcard_stats_model.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_stats_model.dart';
 
 /// Scope and range labels for Statistics.
 class StatisticsLabels {

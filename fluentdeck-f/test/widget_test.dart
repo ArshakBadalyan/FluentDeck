@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluentdeck/routing/app_route_names.dart';
+import 'package:riovox/routing/app_route_names.dart';
 
 void main() {
   test('AppRouteNames defines Riovox routes', () {

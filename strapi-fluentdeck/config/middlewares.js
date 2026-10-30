@@ -1,10 +1,8 @@
-const s3MediaOrigin = ({ env }) => {
+/** The S3 bucket serving uploads, for the admin's image/media policy (none when unset). */
+const s3MediaOrigins = ({ env }) => {
   const bucket = env('AWS_BUCKET');
   const region = env('AWS_REGION');
-  if (!bucket || !region) {
-    return 'https://math-app-bucket.s3.eu-west-3.amazonaws.com';
-  }
-  return `https://${bucket}.s3.${region}.amazonaws.com`;
+  return bucket && region ? [`https://${bucket}.s3.${region}.amazonaws.com`] : [];
 };
 
 const parseCorsOrigins = (env) => {
@@ -65,7 +63,7 @@ module.exports = ({ env }) => [
             "'self'",
             "data:",
             "blob:",
-            s3MediaOrigin({ env }),
+            ...s3MediaOrigins({ env }),
           ],
 
           // ✅ if Strapi treats some assets as media
@@ -73,7 +71,7 @@ module.exports = ({ env }) => [
             "'self'",
             "data:",
             "blob:",
-            s3MediaOrigin({ env }),
+            ...s3MediaOrigins({ env }),
           ],
 
           // optional but sometimes needed for admin previews / uploads

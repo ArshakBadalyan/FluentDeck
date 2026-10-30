@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluentdeck/config/toast_config.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/config/toast_config.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 
 void main() {
   testWidgets('toast renders above a bottom sheet', (tester) async {

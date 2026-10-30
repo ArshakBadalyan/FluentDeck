@@ -1,6 +1,6 @@
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluentdeck/services/flashcard_export_service.dart';
+import 'package:riovox/services/flashcard_export_service.dart';
 
 void main() {
   final service = FlashcardExportService.instance;

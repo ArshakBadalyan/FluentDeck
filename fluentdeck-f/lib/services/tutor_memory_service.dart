@@ -1,4 +1,4 @@
-import 'package:fluentdeck/services/api_service.dart';
+import 'package:riovox/services/api_service.dart';
 
 class TutorMemoryFact {
   final String fact;

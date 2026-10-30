@@ -1,14 +1,14 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
-import 'package:fluentdeck/services/push_notification_analytics.dart';
-import 'package:fluentdeck/services/push_notification_service.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/models/speaking_preferences.dart';
+import 'package:riovox/services/push_notification_analytics.dart';
+import 'package:riovox/services/push_notification_service.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 class ProfileNotificationsTab extends StatefulWidget {
   const ProfileNotificationsTab({super.key});

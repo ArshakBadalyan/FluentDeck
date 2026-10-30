@@ -1,4 +1,7 @@
-# Math App — Production deployment (complete guide)
+# Riovox — Production deployment (complete guide)
+
+> **Riovox production:** see [`docs/production.md`](../docs/production.md) for the services, AI models, settings, costs and launch checklist. This guide was written for an older project ("Riovox") with IP-only URLs; use it only for the Docker and PostgreSQL steps, and add HTTPS.
+
 
 Deploy **production** on a dedicated VPS: Docker (Strapi + PostgreSQL + nginx), database backup/restore, **IP-only** URLs (no DNS).  
 **Production is deployed manually** — not by GitHub Actions.
@@ -35,7 +38,7 @@ Record servers in [`deploy/docs/servers.md`](deploy/docs/servers.md).
 | | Staging | Production |
 |--|---------|------------|
 | Guide | `STAGING-DEPLOYMENT.md` | `PRODUCTION-DEPLOYMENT.md` |
-| Path on VPS | `/opt/mathapp-staging` | `/opt/mathapp-production` |
+| Path on VPS | `/opt/riovox-staging` | `/opt/riovox-production` |
 | Git branch | `develop` | `main` (or your release branch) |
 | Env file on server | `.env.staging` | `.env.production` (create from example) |
 | Public URL | `http://STAGING_IP` | `http://PRODUCTION_IP` |
@@ -53,8 +56,8 @@ Replace `PRODUCTION_IP` with production Hetzner **public IPv4**.
 
 | Variable | Production value |
 |----------|------------------|
-| `INSTALL_ROOT` | `/opt/mathapp-production` |
-| `SSH_USER` | `mathe_app_user` |
+| `INSTALL_ROOT` | `/opt/riovox-production` |
+| `SSH_USER` | `riovox` |
 | `SERVER_IP` / `PRODUCTION_IP` | Production IPv4 |
 | `GIT_BRANCH` | `main` |
 | `POSTGRES_DB` | `strapi` |
@@ -67,7 +70,7 @@ Replace `PRODUCTION_IP` with production Hetzner **public IPv4**.
 |-----|-----|
 | Admin | `http://PRODUCTION_IP/admin` |
 | API | `http://PRODUCTION_IP/api` |
-| `MY_HEROKU_URL` | `http://PRODUCTION_IP` |
+| `PUBLIC_URL` | `http://PRODUCTION_IP` |
 
 ---
 
@@ -75,17 +78,17 @@ Replace `PRODUCTION_IP` with production Hetzner **public IPv4**.
 
 Same flow as staging ([STAGING-DEPLOYMENT.md](./STAGING-DEPLOYMENT.md) Part A), but:
 
-- Server name e.g. `mathapp-production`
-- `INSTALL_ROOT=/opt/mathapp-production`
+- Server name e.g. `riovox-production`
+- `INSTALL_ROOT=/opt/riovox-production`
 - Do **not** reuse staging VPS unless intentional
 
 ### A1. Create VPS and SSH user
 
 ```bash
 ssh root@PRODUCTION_IP
-adduser mathe_app_user
-usermod -aG sudo mathe_app_user
-# ... authorized_keys for mathe_app_user (see staging guide Part A2)
+adduser riovox
+usermod -aG sudo riovox
+# ... authorized_keys for riovox (see staging guide Part A2)
 ```
 
 ### A2. Docker + firewall
@@ -95,8 +98,8 @@ sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp
 echo "y" | sudo ufw enable
 
-sudo mkdir -p /opt/mathapp-production
-sudo chown mathe_app_user:mathe_app_user /opt/mathapp-production
+sudo mkdir -p /opt/riovox-production
+sudo chown riovox:riovox /opt/riovox-production
 ```
 
 Install Docker (same commands as staging Part A3).
@@ -107,7 +110,7 @@ Install Docker (same commands as staging Part A3).
 
 Uses the same `docker-compose.staging.yml` with production `.env.production`:
 
-- Service `postgres`, volume `mathapp-production_pgdata`
+- Service `postgres`, volume `riovox-production_pgdata`
 - `DATABASE_URL=postgres://strapi:PASSWORD@postgres:5432/strapi`
 
 See [STAGING-DEPLOYMENT.md Part B](./STAGING-DEPLOYMENT.md#part-b--postgresql-in-docker) for details.
@@ -119,10 +122,10 @@ See [STAGING-DEPLOYMENT.md Part B](./STAGING-DEPLOYMENT.md#part-b--postgresql-in
 ### C1. Clone code
 
 ```bash
-ssh mathe_app_user@PRODUCTION_IP
-cd /opt/mathapp-production
-git clone https://github.com/sahakyan-dev/strapi-math.git strapi-math
-cd strapi-math
+ssh riovox@PRODUCTION_IP
+cd /opt/riovox-production
+git clone https://github.com/ArshakBadalyan/FluentDeck.git FluentDeck
+cd strapi-fluentdeck
 git checkout main
 git pull origin main
 ```
@@ -130,14 +133,14 @@ git pull origin main
 ### C2. Nginx (IP-only)
 
 ```bash
-cd /opt/mathapp-production/strapi-math/deploy/nginx
+cd /opt/riovox-production/FluentDeck/strapi-fluentdeck/deploy/nginx
 sed -i 's/server_name .*/server_name _;/' default.conf web.conf
 ```
 
 ### C3. Environment file
 
 ```bash
-cd /opt/mathapp-production/strapi-math
+cd /opt/riovox-production/FluentDeck/strapi-fluentdeck
 cp .env.staging.example .env.production
 nano .env.production
 ```
@@ -147,7 +150,7 @@ Use **production-only** secrets and production S3 bucket. Failure-notification a
 | Key | Value |
 |-----|--------|
 | `POSTGRES_PASSWORD` | New strong password |
-| `MY_HEROKU_URL` | `http://PRODUCTION_IP` |
+| `PUBLIC_URL` | `http://PRODUCTION_IP` |
 | `APP_KEYS`, salts | **New** random values (not staging) |
 | `AWS_*` | Production bucket only |
 
@@ -156,7 +159,7 @@ Add `.env.production` to `.gitignore` locally if you track it (server copy is ne
 ### C4. Start stack
 
 ```bash
-cd /opt/mathapp-production/strapi-math/deploy
+cd /opt/riovox-production/FluentDeck/strapi-fluentdeck/deploy
 docker compose --env-file ../.env.production \
   -f docker-compose.staging.yml up -d --build
 ```
@@ -195,8 +198,8 @@ pg_dump -h HOST -p PORT -U USER -d DB -Fc -f ~/prod-source.dump
 ### Restore `.sql` on production server
 
 ```bash
-ssh mathe_app_user@PRODUCTION_IP
-cd /opt/mathapp-production/strapi-math/deploy
+ssh riovox@PRODUCTION_IP
+cd /opt/riovox-production/FluentDeck/strapi-fluentdeck/deploy
 
 docker compose --env-file ../.env.production -f docker-compose.staging.yml stop strapi
 docker compose --env-file ../.env.production -f docker-compose.staging.yml up -d postgres
@@ -230,8 +233,8 @@ Full examples: [STAGING-DEPLOYMENT.md Part D](./STAGING-DEPLOYMENT.md#part-d--lo
 Production has **no** CI auto-deploy. Deploy after review/release process:
 
 ```bash
-ssh mathe_app_user@PRODUCTION_IP
-cd /opt/mathapp-production/strapi-math
+ssh riovox@PRODUCTION_IP
+cd /opt/riovox-production/FluentDeck/strapi-fluentdeck
 git fetch origin
 git checkout main
 git pull origin main
@@ -262,7 +265,7 @@ GitHub Actions deploys **staging only** when you push to **`develop`**. It must 
 ```text
 Push/merge → develop on GitHub
     → workflow Deploy staging (.github/workflows/deploy-staging.yml)
-    → SSH mathe_app_user@STAGING_IP
+    → SSH riovox@STAGING_IP
     → git pull origin develop + compose-staging.sh up -d --build
     → on failure: optional email (STAGING_NOTIFY_EMAILS)
 ```
@@ -273,7 +276,7 @@ Push/merge → develop on GitHub
 | Deploy script | `deploy/ci/deploy-staging.sh` |
 | Secrets | `STAGING_HOST`, `STAGING_SSH_KEY`; optional `STAGING_NOTIFY_EMAILS`, `SMTP_*` |
 | Trigger | Push to `develop` only |
-| Target path | `/opt/mathapp-staging` only |
+| Target path | `/opt/riovox-staging` only |
 
 **Full setup:** [`STAGING-DEPLOYMENT.md` Part F](./STAGING-DEPLOYMENT.md#part-f--github-actions-optional) · [`deploy/docs/GITHUB-ACTIONS-SETUP.md`](deploy/docs/GITHUB-ACTIONS-SETUP.md).
 
@@ -297,7 +300,7 @@ Production will get its own CI workflow, modeled on staging. **Not implemented y
 ```text
 Push/merge → main on GitHub
     → workflow Deploy production (to be added: .github/workflows/deploy-production.yml)
-    → SSH mathe_app_user@PRODUCTION_IP
+    → SSH riovox@PRODUCTION_IP
     → git pull origin main
     → docker compose --env-file ../.env.production -f docker-compose.staging.yml up -d --build
     → health check http://PRODUCTION_IP/admin
@@ -318,7 +321,7 @@ Push/merge → main on GitHub
 | Guard | Value |
 |-------|--------|
 | Trigger branch | `main` only (not `develop`) |
-| Install root | `/opt/mathapp-production` only |
+| Install root | `/opt/riovox-production` only |
 | Refuse paths containing `staging` | In deploy script, opposite of staging refusing `production` |
 | No `develop` trigger for prod workflow | Staging and prod workflows stay separate |
 
@@ -338,15 +341,15 @@ Use [`.github/workflows/deploy-staging.yml`](.github/workflows/deploy-staging.ym
 
 ### Compose note on production server
 
-`docker-compose.staging.yml` sets Docker project name `mathapp-staging` (volume `mathapp-staging_pgdata`). That is fine on a **dedicated** production VPS; only the filename is shared with staging.
+`docker-compose.staging.yml` sets Docker project name `riovox-staging` (volume `riovox-staging_pgdata`). That is fine on a **dedicated** production VPS; only the filename is shared with staging.
 
 ---
 
 ## Part G — Operations
 
 ```bash
-ssh mathe_app_user@PRODUCTION_IP
-cd /opt/mathapp-production/strapi-math/deploy
+ssh riovox@PRODUCTION_IP
+cd /opt/riovox-production/FluentDeck/strapi-fluentdeck/deploy
 
 docker compose --env-file ../.env.production -f docker-compose.staging.yml ps
 docker compose --env-file ../.env.production -f docker-compose.staging.yml logs -f strapi
@@ -365,7 +368,7 @@ docker compose --env-file ../.env.production -f docker-compose.staging.yml down
 
 | Problem | Fix |
 |---------|-----|
-| Admin/CSS broken | `MY_HEROKU_URL=http://PRODUCTION_IP` |
+| Admin/CSS broken | `PUBLIC_URL=http://PRODUCTION_IP` |
 | 502 | `logs strapi`; container health |
 | Wrong bucket | Production `AWS_*` only |
 | Staging data on prod | Never restore staging dump to prod unless intentional |
@@ -377,9 +380,9 @@ docker compose --env-file ../.env.production -f docker-compose.staging.yml down
 
 ```text
 [ ] Production VPS, PRODUCTION_IP in servers.md
-[ ] /opt/mathapp-production, branch main
+[ ] /opt/riovox-production, branch main
 [ ] .env.production — production secrets only
-[ ] MY_HEROKU_URL=http://PRODUCTION_IP
+[ ] PUBLIC_URL=http://PRODUCTION_IP
 [ ] docker compose up -d --build OK
 [ ] http://PRODUCTION_IP/admin OK
 [ ] S3 production bucket tested

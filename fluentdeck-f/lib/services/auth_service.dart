@@ -2,26 +2,26 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:fluentdeck/clarity_user_sync.dart'
-    if (dart.library.html) 'package:fluentdeck/clarity_user_sync_stub.dart';
-import 'package:fluentdeck/data/flashcard_offline_store.dart';
-import 'package:fluentdeck/services/analytics_service.dart';
-import 'package:fluentdeck/services/campaign_analytics.dart';
-import 'package:fluentdeck/services/conversation_limit_service.dart';
-import 'package:fluentdeck/services/english_level_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_store.dart';
-import 'package:fluentdeck/services/my_notes_linked_decks_store.dart';
-import 'package:fluentdeck/services/push_notification_service.dart';
-import 'package:fluentdeck/services/speaking_scores_service.dart';
-import 'package:fluentdeck/services/subscription_service.dart';
-import 'package:fluentdeck/services/token_storage.dart';
+import 'package:riovox/clarity_user_sync.dart'
+    if (dart.library.html) 'package:riovox/clarity_user_sync_stub.dart';
+import 'package:riovox/data/flashcard_offline_store.dart';
+import 'package:riovox/services/analytics_service.dart';
+import 'package:riovox/services/campaign_analytics.dart';
+import 'package:riovox/services/conversation_limit_service.dart';
+import 'package:riovox/services/english_level_service.dart';
+import 'package:riovox/services/flashcard_sync_service.dart';
+import 'package:riovox/services/flashcard_sync_store.dart';
+import 'package:riovox/services/my_notes_linked_decks_store.dart';
+import 'package:riovox/services/push_notification_service.dart';
+import 'package:riovox/services/speaking_scores_service.dart';
+import 'package:riovox/services/subscription_service.dart';
+import 'package:riovox/services/token_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:fluentdeck/utils/user_facing_api_error.dart';
-import 'package:fluentdeck/utils/api_exception.dart';
+import 'package:riovox/utils/user_facing_api_error.dart';
+import 'package:riovox/utils/api_exception.dart';
 
-import 'package:fluentdeck/utils/strapi_response.dart';
+import 'package:riovox/utils/strapi_response.dart';
 
 import 'api_service.dart';
 
@@ -471,14 +471,6 @@ class AuthService {
     await TokenStorage.saveToken(jwt);
     await TokenStorage.saveUserId(id);
     await TokenStorage.saveIsAdmin(user['is_admin'] == true);
-    final accountType = user['account_type']?.toString();
-    if (accountType == 'teacher') {
-      await TokenStorage.saveAccountType('teacher');
-      await TokenStorage.saveTeacherApproved(user['teacher_approved'] == true);
-    } else {
-      await TokenStorage.saveAccountType('student');
-      await TokenStorage.saveTeacherApproved(false);
-    }
     await TokenStorage.saveHideScreenExplanation(
       user['hide_screen_explanation'] == true,
     );

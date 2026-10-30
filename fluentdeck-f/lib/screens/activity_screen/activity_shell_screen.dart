@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/screens/activity_screen/english_activity_screen.dart';
-import 'package:fluentdeck/screens/activity_screen/language_levels_activity_tab.dart';
-import 'package:fluentdeck/screens/learn_screen/statistics_screen.dart';
-import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
+import 'package:riovox/screens/activity_screen/english_activity_screen.dart';
+import 'package:riovox/screens/activity_screen/language_levels_activity_tab.dart';
+import 'package:riovox/screens/learn_screen/statistics_screen.dart';
+import 'package:riovox/ui_elements/handoff_tab_bar_view.dart';
 
 /// Activity hub: Language levels + Speaking progress + Deck statistics.
 class ActivityShellScreen extends StatelessWidget {

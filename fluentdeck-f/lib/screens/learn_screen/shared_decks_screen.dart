@@ -1,11 +1,11 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/services/flashcard_import_service.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/services/flashcard_import_service.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Add a deck (Decks · Add a deck): start an empty deck, import an Anki or
 /// text file, or find a shared deck on Riovox's shared-decks web page.
@@ -96,7 +96,7 @@ class SharedDecksScreen extends StatelessWidget {
                 Expanded(
                   child: _AddTile(
                     icon: Icons.download_rounded,
-                    title: 'Import Anki',
+                    title: 'Import other deck',
                     subtitle: '.apkg or text file',
                     onTap: () => _openImportSheet(context),
                   ),

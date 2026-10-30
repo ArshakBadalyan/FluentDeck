@@ -1,16 +1,16 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/services/app_review_webhook_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/services/app_review_webhook_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Play / App Store targets when CMS policy is not loaded (matches [mobile_app_update_gate] fallbacks).
 const String kPlayStoreListingForReview =
-    'https://play.google.com/store/apps/details?id=com.fluentdeck.app';
+    'https://play.google.com/store/apps/details?id=app.riovox';
 const String kAppStoreWriteReview =
     'https://apps.apple.com/app/id6447060725?action=write-review';
 

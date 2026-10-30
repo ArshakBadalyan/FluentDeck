@@ -1,19 +1,19 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/utils/deck_visuals.dart';
+import 'package:riovox/utils/deck_visuals.dart';
 import 'statistics_screen.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/flashcard_stats_model.dart';
-import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/card_edit_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_settings_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/review_session_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/deck_edit_sheet.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/filtered_deck_dialog.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_stats_model.dart';
+import 'package:riovox/screens/learn_screen/card_browser_screen.dart';
+import 'package:riovox/screens/learn_screen/card_edit_screen.dart';
+import 'package:riovox/screens/learn_screen/decks_settings_screen.dart';
+import 'package:riovox/screens/learn_screen/review_session_screen.dart';
+import 'package:riovox/screens/learn_screen/widgets/deck_edit_sheet.dart';
+import 'package:riovox/screens/learn_screen/widgets/filtered_deck_dialog.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
 import 'package:animations/animations.dart';
 
 /// Deck overview — opened by tapping deck name or count buttons.

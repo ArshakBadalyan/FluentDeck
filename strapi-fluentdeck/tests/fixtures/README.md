@@ -9,4 +9,4 @@ Place sample `.apkg` files here for manual import QA:
 | `media-sound.apkg` | Deck with `[sound:…]` tags | Audio media |
 | `anki21-only.apkg` | Anki 23+ export | `collection.anki21` only |
 
-Automated coverage: run `node tests/apkg-import.test.js` from `strapi-math/`.
+Automated coverage: run `node tests/apkg-import.test.js` from `strapi-fluentdeck/`.

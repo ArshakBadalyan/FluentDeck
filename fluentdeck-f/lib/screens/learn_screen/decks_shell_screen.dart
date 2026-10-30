@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/screens/learn_screen/card_browser_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/flashcards_screen.dart';
-import 'package:fluentdeck/data/flashcard_offline_store.dart';
-import 'package:fluentdeck/services/deck_backup_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_service.dart';
-import 'package:fluentdeck/ui_elements/handoff_tab_bar_view.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/screens/learn_screen/card_browser_screen.dart';
+import 'package:riovox/screens/learn_screen/flashcards_screen.dart';
+import 'package:riovox/data/flashcard_offline_store.dart';
+import 'package:riovox/services/deck_backup_service.dart';
+import 'package:riovox/services/flashcard_sync_service.dart';
+import 'package:riovox/ui_elements/handoff_tab_bar_view.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Decks shell: Decks | Card browser.
 class DecksShellScreen extends StatefulWidget {

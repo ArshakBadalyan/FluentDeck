@@ -12,7 +12,7 @@ import 'speaking_notes_tab.dart';
 import 'speaking_practice_tab.dart';
 import 'speaking_role_play_tab.dart';
 import 'speaking_topics_tab.dart';
-import 'package:fluentdeck/services/conversation_start_ad.dart';
+import 'package:riovox/services/conversation_start_ad.dart';
 
 class SpeakingHubScreen extends StatefulWidget {
   const SpeakingHubScreen({

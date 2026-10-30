@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluentdeck/data/isar/flashcard_cache.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/flashcard_note_model.dart';
-import 'package:fluentdeck/models/occlusion_model.dart';
+import 'package:riovox/data/isar/flashcard_cache.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_note_model.dart';
+import 'package:riovox/models/occlusion_model.dart';
 
 const _noteTypesKey = 'flashcard_note_types_cache_v1';
 

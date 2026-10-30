@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/config/brand_config.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/config/brand_config.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// White 52 dp field with a hairline border; 2 dp teal when focused, 2 dp red
 /// with [error]. The label sits above the field (see [AuthField]).

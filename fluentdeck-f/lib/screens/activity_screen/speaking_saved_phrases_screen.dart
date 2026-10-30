@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/user_note_model.dart';
-import 'package:fluentdeck/services/note_service.dart';
-import 'package:fluentdeck/services/phrase_audio_service.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/user_note_model.dart';
+import 'package:riovox/services/note_service.dart';
+import 'package:riovox/services/phrase_audio_service.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 class SpeakingSavedPhrasesScreen extends StatefulWidget {
   const SpeakingSavedPhrasesScreen({super.key});
@@ -141,7 +141,7 @@ class _SavedPhraseCard extends StatelessWidget {
                 ),
               ),
               // Listen button; off unless SAVED_PHRASES_LISTEN_ENABLED=true.
-              if (PhraseAudioService.enabled) _ListenButton(text: note.word),
+              if (PhraseAudioService.enabled && PhraseAudioService.hasVoice) _ListenButton(text: note.word),
             ],
           ),
           if (meaning.isNotEmpty) ...[

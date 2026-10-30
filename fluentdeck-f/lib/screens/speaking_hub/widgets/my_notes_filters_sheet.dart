@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/speaking_hub_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/ui_elements/frosted_bottom_sheet.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/widgets/speaking_hub_widgets.dart';
 
 class MyNotesFiltersSheet extends StatefulWidget {
   const MyNotesFiltersSheet({

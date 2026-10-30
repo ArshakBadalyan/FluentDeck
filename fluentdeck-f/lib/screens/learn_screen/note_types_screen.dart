@@ -1,13 +1,13 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/flashcard_note_model.dart';
-import 'package:fluentdeck/screens/learn_screen/note_type_edit_screen.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/flashcard_note_model.dart';
+import 'package:riovox/screens/learn_screen/note_type_edit_screen.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
 
 /// Built-in and custom note types — the field/template layouts that define
 /// how a note's data is turned into cards.

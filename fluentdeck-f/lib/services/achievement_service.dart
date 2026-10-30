@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/models/achievement_model.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/user_progress_model.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/user_progress_service.dart';
+import 'package:riovox/models/achievement_model.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/user_progress_model.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/user_progress_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:riovox/services/auth_service.dart';
+import 'package:riovox/services/notification_badge.dart';
+import 'package:riovox/services/notifications_service.dart';
 
 class AchievementSnapshot {
   const AchievementSnapshot({
@@ -97,6 +101,53 @@ class AchievementService {
       target: 5,
     ),
   ];
+
+  bool _checking = false;
+
+  /// Sends a notification for each achievement unlocked since the last check
+  /// (once each; the server also refuses duplicates). The first check on a
+  /// device only remembers what is already unlocked, so old ones don't flood in.
+  Future<void> checkAndNotify() async {
+    if (_checking) return;
+    _checking = true;
+    try {
+      final user = (await AuthService.getUser())['user'];
+      final userId = user is Map ? user['id']?.toString() : null;
+      if (userId == null) return;
+      final unlocked = (await load()).achievements.where((a) => a.unlocked).map((a) => a.definition).toList();
+
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'achievements_notified_v1:$userId';
+      final stored = prefs.getStringList(key);
+      if (stored == null) {
+        await prefs.setStringList(key, unlocked.map((d) => d.id).toList());
+        return;
+      }
+      final done = stored.toSet();
+      var sent = false;
+      for (final d in unlocked.where((d) => !done.contains(d.id))) {
+        try {
+          await NotificationsService.reportAchievement(
+            achievementId: d.id,
+            title: d.title,
+            description: d.description,
+          );
+          done.add(d.id);
+          sent = true;
+        } catch (_) {
+          // Offline: try again next time.
+        }
+      }
+      if (sent) {
+        await prefs.setStringList(key, done.toList());
+        await NotificationBadge.refresh();
+      }
+    } catch (_) {
+      // Never let a check break the screen that triggered it.
+    } finally {
+      _checking = false;
+    }
+  }
 
   Future<AchievementSnapshot> load() async {
     UserProgressModel? progress;

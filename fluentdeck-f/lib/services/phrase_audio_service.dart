@@ -6,6 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'api_service.dart';
 import 'tts_cache_service.dart';
+import '../models/speaking_preferences.dart';
+import 'speaking_preferences_service.dart';
 
 /// Reads a saved phrase aloud outside a conversation (Saved phrases → Listen).
 ///
@@ -24,6 +26,12 @@ class PhraseAudioService {
   static bool get enabled =>
       dotenv.env['SAVED_PHRASES_LISTEN_ENABLED']?.trim().toLowerCase() == 'true';
 
+  /// False when the tutor has no voice in its reply language (Indonesian,
+  /// Armenian): listen buttons are hidden.
+  static bool get hasVoice => SpeakingPreferences.hasTutorVoice(
+    SpeakingPreferencesService.instance.current.responseLanguage,
+  );
+
   Future<void> play(String text) async {
     final phrase = text.trim();
     if (phrase.isEmpty) return;
@@ -33,6 +41,8 @@ class PhraseAudioService {
       var bytes = await TtsCacheService.instance.readBytes(phrase);
       if (bytes == null || bytes.isEmpty) {
         final data = await ApiService.post('ai/tts', {'text': phrase});
+        // No voice (none for this language, or the server failed): stay silent.
+        if (data is Map && data['voiceAvailable'] == false) return;
         if (data is! Map || data['audioBase64'] is! String) {
           throw Exception('Unexpected TTS response');
         }

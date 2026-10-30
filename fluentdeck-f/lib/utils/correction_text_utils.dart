@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/grammar_correction.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/grammar_correction.dart';
 
 class _TextRange {
   const _TextRange(this.start, this.end);

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/occlusion_model.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/html_text_utils.dart';
-import 'package:fluentdeck/utils/type_answer_utils.dart';
-import 'package:fluentdeck/widgets/image_occlusion_review.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/ui_elements/frosted_bottom_sheet.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/occlusion_model.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/html_text_utils.dart';
+import 'package:riovox/utils/type_answer_utils.dart';
+import 'package:riovox/widgets/image_occlusion_review.dart';
 
 /// Preview a study card from the browser (Phase 4D).
 class CardPreviewSheet extends StatefulWidget {

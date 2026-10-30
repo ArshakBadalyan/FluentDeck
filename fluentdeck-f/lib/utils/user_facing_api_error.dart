@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
-import 'package:fluentdeck/utils/api_exception.dart';
+import 'package:riovox/utils/api_exception.dart';
 
 /// Returns a key for [AppLocalizations] / [context.tr] — never expose [error.toString()] to users.
 String userFacingErrorLocalizationKey(Object error) {

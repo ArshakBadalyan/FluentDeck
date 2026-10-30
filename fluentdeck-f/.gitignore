@@ -47,5 +47,5 @@ app.*.map.json
 .env
 .env.staging
 .cursorrules
-assets/mathe_config.txt
+assets/fluentdeck_config.txt
 assets/english_config.txt

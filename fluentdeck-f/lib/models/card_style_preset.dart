@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:riovox/app_colors.dart';
 
 /// A named, visual "look" for a custom note type's cards — bundles font
 /// size/weight and colors so users pick a whole coordinated style in one tap

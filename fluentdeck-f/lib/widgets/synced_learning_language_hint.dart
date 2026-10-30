@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/screens/profile_screen/profile_settings_tab.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/screens/profile_screen/profile_settings_tab.dart';
 
 /// Tappable hint shown when sync deck language is on; opens Profile → Settings → AI Speaking.
 class SyncedLearningLanguageHint extends StatelessWidget {

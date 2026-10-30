@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:riovox/localization/app_localizations.dart';
 
 import '../../services/audio_service.dart';
 import '../../services/auth_service.dart';

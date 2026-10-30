@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/services/conversation_limit_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/practice_time_format.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/services/conversation_limit_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/practice_time_format.dart';
 
 /// Compact daily AI speaking meter for the conversation screen.
 class AiDailyUsageBar extends StatelessWidget {

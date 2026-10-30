@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/models/speaking_session_record_model.dart';
-import 'package:fluentdeck/screens/activity_screen/speaking_session_detail_screen.dart';
-import 'package:fluentdeck/services/speaking_session_service.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/models/speaking_session_record_model.dart';
+import 'package:riovox/screens/activity_screen/speaking_session_detail_screen.dart';
+import 'package:riovox/services/speaking_session_service.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 class SpeakingSessionHistoryScreen extends StatefulWidget {
   const SpeakingSessionHistoryScreen({super.key});
@@ -109,7 +109,7 @@ class _SpeakingSessionHistoryScreenState
               : RefreshIndicator(
                 onRefresh: _load,
                 color: AppColors.brandPrimary,
-                child: ListView.separated(
+                child: AppContentWidth(child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   itemCount: _history.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
@@ -122,7 +122,7 @@ class _SpeakingSessionHistoryScreenState
                       onTap: () => _openSession(session),
                     );
                   },
-                ),
+                )),
               ),
     );
   }

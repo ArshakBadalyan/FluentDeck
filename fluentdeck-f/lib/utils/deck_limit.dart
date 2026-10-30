@@ -1,4 +1,4 @@
-import 'package:fluentdeck/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_model.dart';
 
 /// Decks that count toward the free-plan limit. Mirrors the server's
 /// `countCustomDecks`: every deck except the built-in defaults (Saved words,

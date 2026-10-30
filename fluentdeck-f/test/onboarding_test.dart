@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/screens/onboarding/english_onboarding_screen.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/screens/onboarding/english_onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -68,7 +68,7 @@ void main() {
 
     await _tapNext(tester);
     expect(find.text('Your mistakes become flashcards'), findsOneWidget);
-    expect(find.text('Anki import'), findsOneWidget);
+    expect(find.text('Other deck import'), findsOneWidget);
 
     await _tapNext(tester);
     expect(find.text('See your progress'), findsOneWidget);

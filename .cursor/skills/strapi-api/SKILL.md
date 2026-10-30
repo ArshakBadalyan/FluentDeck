@@ -99,4 +99,3 @@ Without this, authenticated users get 403. Match the action string to Strapi's g
 
 - Call OpenAI from Flutter — use `src/utils/ai-tutor.js`, `open-ai.js`.
 - Commit `.env` — update `.env.example` with new var names only.
-- Trust legacy MatheApp docs — math/classroom modules removed.

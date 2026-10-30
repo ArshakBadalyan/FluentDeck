@@ -12,7 +12,7 @@ Riovox API runs **Strapi 5.49.0** (upgraded from 4.26.x).
 - `config/plugins.js` — S3 credentials under `s3Options`
 - `npm run build` and `npm run develop` succeed on Node 20
 - Backend unit tests pass (`npm test`)
-- **Removed** legacy MatheApp classroom utils (`assignment-*`, `classroom-*`, `class-report`, etc.)
+- **Removed** old classroom utils (`assignment-*`, `classroom-*`, `class-report`, etc.)
 - **Flutter:** `lib/utils/strapi_response.dart` — v4/v5 response parsing; `ApiService` sends `Strapi-Response-Format: v4` by default (`STRAPI_RESPONSE_FORMAT=v5` to disable)
 
 ## Remaining / follow-up

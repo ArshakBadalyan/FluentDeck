@@ -17,7 +17,7 @@
 | `STAGING_SERVER_IP` | `203.0.113.10` (your Hetzner IPv4) |
 | `API_URL` | `http://STAGING_SERVER_IP/api` |
 <!-- Domain deploy only (not used):
-| `STAGING_API_HOST` | `api.staging.schulmatheapp.de` |
+| `STAGING_API_HOST` | `api.staging.riovox.app` |
 | `API_URL` | `https://STAGING_API_HOST/api` |
 -->
 
@@ -28,10 +28,10 @@
 From repo root `fluentdeck-f`:
 
 ```bash
-cp deploy/mathe_config.staging.example assets/mathe_config.txt
+cp deploy/fluentdeck_config.staging.example assets/fluentdeck_config.txt
 ```
 
-Edit `assets/mathe_config.txt`:
+Edit `assets/fluentdeck_config.txt`:
 
 ```text
 API_URL=http://STAGING_SERVER_IP/api
@@ -42,7 +42,7 @@ ONESIGNAL_APP_ID=...    # staging OneSignal app
 ADMOB_ENABLED=false
 ```
 
-`assets/mathe_config.txt` is gitignored — never commit it.
+`assets/fluentdeck_config.txt` is gitignored — never commit it.
 
 ---
 
@@ -96,7 +96,7 @@ Then archive/distribute via Xcode (see main `README.md`).
 ## 5. Build web locally (without Docker)
 
 ```bash
-cp deploy/mathe_config.staging.example assets/mathe_config.txt
+cp deploy/fluentdeck_config.staging.example assets/fluentdeck_config.txt
 # edit API_URL etc.
 flutter pub get
 flutter build web --release --base-href /web/ --pwa-strategy none
@@ -108,7 +108,7 @@ Output: `build/web/` — can be rsync’d to a static host if not using VPS Dock
 
 ## 6. After API URL change
 
-Any change to `assets/mathe_config.txt` requires **rebuild** (web) or **re-run** (mobile). Config is baked in at build time.
+Any change to `assets/fluentdeck_config.txt` requires **rebuild** (web) or **re-run** (mobile). Config is baked in at build time.
 
 ---
 
@@ -126,4 +126,4 @@ curl -s "https://STAGING_API_HOST/api/categories" | head
 
 ---
 
-*Server deploy steps: `strapi-math/deploy/STAGING-DEPLOY.md.template`*
+*Server deploy steps: `strapi-fluentdeck/deploy/STAGING-DEPLOY.md.template`*

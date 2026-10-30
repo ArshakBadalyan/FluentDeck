@@ -1,10 +1,7 @@
 /**
  * Scheduled tasks for Riovox.
  *
- * Legacy MatheApp crons (parent digests, math goals, classroom reports) were
- * removed — those content types and tables are no longer part of this API.
- *
- * Set CRON_ENABLED=true in .env only after adding Riovox-specific jobs here.
+ * Set CRON_ENABLED=true in .env to run them.
  */
 module.exports = {
   /** Safety net for missed renewal/cancellation webhooks — flips anything

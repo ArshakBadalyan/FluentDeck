@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:riovox/app_colors.dart';
 
 /// Shared swipe backgrounds (conversation history / card browser style).
 class SwipeActionBackgrounds {

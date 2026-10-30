@@ -1068,13 +1068,15 @@ export interface ApiNotificationNotification
       'api::notification.notification'
     > &
       Schema.Attribute.Private;
+    markedUnread: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     metadata: Schema.Attribute.JSON;
     publishedAt: Schema.Attribute.DateTime;
     read: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    seen: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     text: Schema.Attribute.String;
     title: Schema.Attribute.String;
     type: Schema.Attribute.Enumeration<
-      ['congrats', 'unfinished_goal', 'assignment', 'class_membership']
+      ['congrats', 'unfinished_goal', 'achievement']
     >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

@@ -1,4 +1,4 @@
-import 'package:fluentdeck/models/flashcard_note_model.dart';
+import 'package:riovox/models/flashcard_note_model.dart';
 
 /// Built-in note types mirrored from the Strapi API (offline fallback).
 List<NoteTypeModel> builtinNoteTypes() => const [

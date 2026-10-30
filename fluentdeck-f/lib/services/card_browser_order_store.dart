@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:fluentdeck/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persists manual row order for the card browser per filter scope.

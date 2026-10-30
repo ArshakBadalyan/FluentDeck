@@ -1,4 +1,4 @@
-import 'package:fluentdeck/services/milestone_tracker.dart';
+import 'package:riovox/services/milestone_tracker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

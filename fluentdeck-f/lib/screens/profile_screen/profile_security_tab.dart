@@ -1,6 +1,6 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
+import 'package:riovox/localization/app_localizations.dart';
 
 import '../../app_colors.dart';
 import '../../services/audio_service.dart';

@@ -1,13 +1,13 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/config/brand_config.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
+import 'package:riovox/config/brand_config.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/ui_elements/frosted_bottom_sheet.dart';
 import 'app_motion.dart';
-import 'package:fluentdeck/widgets/tutor_scene.dart';
+import 'package:riovox/widgets/tutor_scene.dart';
 
 /// Soft tints from the redesign; see [AppPageColors.tintOf].
 enum AppTint { teal, voice, reward, success, warning, danger, info, pink, neutral }
@@ -1838,4 +1838,24 @@ Future<String?> showAppPromptDialog(
 
   if (result == null || result.isEmpty) return null;
   return result;
+}
+
+/// Keeps a page's content at a readable width on web and tablets (centered,
+/// at most [maxWidth]); on phones it changes nothing.
+class AppContentWidth extends StatelessWidget {
+  const AppContentWidth({super.key, required this.child, this.maxWidth = 640});
+
+  final Widget child;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: child,
+      ),
+    );
+  }
 }

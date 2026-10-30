@@ -1,4 +1,4 @@
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 import 'package:flutter/material.dart';
 
 /// Resolves a distinct Material icon for speaking hub list items.

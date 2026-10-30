@@ -1,8 +1,8 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/data/flashcard_offline_store.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_store.dart';
+import 'package:riovox/data/flashcard_offline_store.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/flashcard_sync_store.dart';
 
 /// Sync state for the Decks tab indicator (Phase 5E).
 enum FlashcardSyncStatus {

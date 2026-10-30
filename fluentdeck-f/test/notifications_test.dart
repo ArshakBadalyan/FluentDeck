@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:fluentdeck/screens/profile_screen/profile_notifications_tab.dart';
-import 'package:fluentdeck/services/notifications_service.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/screens/profile_screen/profile_notifications_tab.dart';
+import 'package:riovox/services/notifications_service.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

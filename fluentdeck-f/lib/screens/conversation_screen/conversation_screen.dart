@@ -1,37 +1,45 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'dart:math' as math;
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/screens/activity_screen/speaking_session_detail_screen.dart';
-import 'package:fluentdeck/models/speaking_session_record_model.dart';
-import 'package:fluentdeck/widgets/tutor_scene.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/config/brand_config.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
-import 'package:fluentdeck/models/conversation_turn_model.dart';
-import 'package:fluentdeck/models/grammar_correction.dart';
-import 'package:fluentdeck/models/speaking_session_context.dart';
-import 'package:fluentdeck/services/conversation_limit_service.dart';
-import 'package:fluentdeck/services/conversation_service.dart';
-import 'package:fluentdeck/services/milestone_tracker.dart';
-import 'package:fluentdeck/services/note_service.dart';
-import 'package:fluentdeck/services/daily_goal_tracker.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/services/speaking_scores_service.dart';
-import 'package:fluentdeck/services/rio_preferences.dart';
-import 'package:fluentdeck/services/speaking_session_service.dart';
-import 'package:fluentdeck/utils/correction_text_utils.dart';
-import 'package:fluentdeck/utils/vocabulary_highlight_utils.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/ai_daily_usage_bar.dart';
-import 'package:fluentdeck/widgets/rio_stage.dart';
-import 'package:fluentdeck/widgets/rio.dart';
+import 'package:riovox/screens/activity_screen/speaking_session_detail_screen.dart';
+import 'package:riovox/models/speaking_session_record_model.dart';
+import 'package:riovox/widgets/tutor_scene.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/config/brand_config.dart';
+import 'package:riovox/models/speaking_preferences.dart';
+import 'package:riovox/models/conversation_turn_model.dart';
+import 'package:riovox/models/grammar_correction.dart';
+import 'package:riovox/models/speaking_session_context.dart';
+import 'package:riovox/services/conversation_limit_service.dart';
+import 'package:riovox/services/conversation_service.dart';
+import 'package:riovox/services/milestone_tracker.dart';
+import 'package:riovox/services/note_service.dart';
+import 'package:riovox/services/daily_goal_tracker.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/services/speaking_scores_service.dart';
+import 'package:riovox/services/rio_preferences.dart';
+import 'package:riovox/models/tutor_persona.dart';
+import 'package:riovox/widgets/professor.dart';
+import 'package:riovox/services/speaking_session_service.dart';
+import 'package:riovox/utils/correction_text_utils.dart';
+import 'package:riovox/utils/vocabulary_highlight_utils.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/widgets/ai_daily_usage_bar.dart';
+import 'package:riovox/widgets/rio_stage.dart';
+import 'package:riovox/widgets/rio.dart';
 
 import 'conversation_chat_settings_sheet.dart';
 import 'save_word_meaning_sheet.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/fly_to_decks.dart';
+import 'package:riovox/widgets/level_up_celebration.dart';
+import 'package:riovox/widgets/rio_score_clip.dart';
+import 'package:riovox/services/achievement_service.dart';
+import 'package:riovox/services/language_levels_service.dart';
 
 class ConversationScreen extends StatefulWidget {
   const ConversationScreen({super.key, this.embedInShell = false, this.onExit});
@@ -73,6 +81,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     unawaited(RioPreferences.instance.load());
     RioPreferences.instance.showRio.addListener(_onRioPrefChanged);
     RioPreferences.instance.showRioStage.addListener(_onRioPrefChanged);
+    RioPreferences.instance.tutor.addListener(_onRioPrefChanged);
     _loadUsage();
   }
 
@@ -111,6 +120,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
     RioPreferences.instance.showRio.removeListener(_onRioPrefChanged);
     RioPreferences.instance.showRioStage.removeListener(_onRioPrefChanged);
+    RioPreferences.instance.tutor.removeListener(_onRioPrefChanged);
     _celebrationTimer?.cancel();
     _textController.dispose();
     _scrollController.dispose();
@@ -124,7 +134,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (!mounted) return;
     setState(() => _celebratingGoal = true);
     _celebrationTimer?.cancel();
-    _celebrationTimer = Timer(const Duration(milliseconds: 2800), () {
+    _celebrationTimer = Timer(const Duration(milliseconds: 6500), () {
       if (mounted) setState(() => _celebratingGoal = false);
     });
   }
@@ -137,10 +147,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     _scrollToBottom();
   }
 
-  /// Tutor view: the tutor character (Rio by default) big on screen with the latest exchange.
-  bool get _rioView =>
-      RioPreferences.instance.showRio.value &&
-      RioPreferences.instance.showRioStage.value;
+  /// "Show tutor": a video call with the tutor in the middle, instead of the chat.
+  bool get _rioView => RioPreferences.instance.showRioStage.value;
 
   void _onRioPrefChanged() {
     if (mounted) setState(() {});
@@ -172,6 +180,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
         // mismatched legacy values don't show Play after turning it off.
         onPlayAi:
             turn.isUser ||
+                !_service.tutorHasVoice ||
                 !(_service.soundOnEnabled && _service.autoPlayVoiceEnabled)
             ? null
             : () => _service.playAiText(turn.text, turnIndex: index),
@@ -183,61 +192,108 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   /// Rio big, the tutor's latest reply floating over it (with the learner's
   /// message and correction just before it), like a video call with Rio.
+  /// The video call: your tutor big in the middle of a soft "room", their
+  /// latest line as a caption, a status bubble (listening / thinking), and
+  /// buttons to switch to the chat or hang up (End & score).
   Widget _buildRioView() {
     final turns = _service.turns;
     final lastAi = turns.lastIndexWhere((t) => !t.isUser);
-    var from = lastAi < 0 ? turns.length : lastAi;
-    if (from > 0 && turns[from - 1].isUser) from -= 1;
+    final caption = lastAi < 0 ? null : turns[lastAi].text.trim();
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final tutor = RioPreferences.instance.tutor.value;
+    // Rio's room is lagoon teal; the people's is warm peach.
+    final room = tutor.isRio
+        ? (dark
+            ? const [Color(0xFF0E2A2E), Color(0xFF0A3F45)]
+            : const [Color(0xFFE6F4F4), Color(0xFF9FD3D6)])
+        : (dark
+            ? const [Color(0xFF2B1D16), Color(0xFF4A2B1C)]
+            : const [Color(0xFFFCEBDF), Color(0xFFF2B58C)]);
+    final status = _service.isRecording
+        ? 'Listening…'
+        : (_service.isProcessing || (_service.isPlayingTts && !_service.isTtsAudible))
+        ? 'Thinking…'
+        : null;
+    final ink = dark ? Colors.white : const Color(0xFF1D2A2C);
     return LayoutBuilder(
       builder: (context, c) {
-        final rioSize = (c.maxHeight * 0.6).clamp(160.0, 340.0);
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.45),
-                    radius: 0.9,
-                    colors: [
-                      AppColors.brandPrimary.withValues(
-                        alpha: dark ? 0.22 : 0.12,
+        final tutorSize = (c.maxHeight * 0.72).clamp(200.0, 520.0);
+        return Container(
+          margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: room,
+            ),
+          ),
+          child: Stack(
+            children: [
+              // The tutor, centered and big, standing on the bottom edge.
+              Align(
+                alignment: const Alignment(0, 0.35),
+                child: RioStage(mood: _rioMood, onTap: _onRioTap, size: tutorSize),
+              ),
+              // Back to the chat.
+              Positioned(
+                top: 12,
+                left: 12,
+                child: _CallButton(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  tooltip: 'Show the chat',
+                  background: Colors.white.withValues(alpha: dark ? 0.14 : 0.75),
+                  color: ink,
+                  onTap: () => RioPreferences.instance.setShowRioStage(false),
+                ),
+              ),
+              // Status: listening / thinking, like the call's typing bubble.
+              if (status != null)
+                Positioned(
+                  top: 14,
+                  right: 14,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: dark ? 0.16 : 0.9),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppTypingDots(color: AppPageColors.accentOf(context), dotSize: 6),
+                        const SizedBox(width: 8),
+                        Text(status, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ink)),
+                      ],
+                    ),
+                  ),
+                ),
+              // Caption: the tutor's latest line, with Play on tap.
+              if (caption != null && caption.isNotEmpty)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  child: GestureDetector(
+                    onTap: _onRioTap,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.42),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      AppPageColors.pageBgOf(context),
-                    ],
+                      child: Text(
+                        caption,
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 15, height: 1.35, color: Colors.white, fontWeight: FontWeight.w500),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: RioStage(
-                  mood: _rioMood,
-                  onTap: _onRioTap,
-                  size: rioSize,
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: c.maxHeight * 0.55),
-                child: SingleChildScrollView(
-                  reverse: true,
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (var i = from; i < turns.length; i++) _turnBubble(i),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -379,10 +435,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
         child: Center(
           child: Material(
             type: MaterialType.transparency,
-            child: RioLoader(
-              label: 'Rio is scoring your conversation…',
-              width: 200,
-            ),
+            child: RioScoringLoader(),
           ),
         ),
       ),
@@ -404,6 +457,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
     }
     final evaluation =
         result; // non-null from here (the dialog below captures it)
+    // The chat is now closed: readable, but no new messages.
+    await _service.markSessionScored();
+    if (!mounted) return;
 
     final ctx = _service.sessionContext;
     SpeakingSessionCompleteResult? saved;
@@ -424,6 +480,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
         level: result.level,
         newWords: result.newWords,
       );
+      // Speaking can unlock achievements (First words, On a roll, …).
+      unawaited(AchievementService.instance.checkAndNotify());
     } catch (e) {
       if (!mounted) return;
       AppToast.showSnackBar(
@@ -444,38 +502,86 @@ class _ConversationScreenState extends State<ConversationScreen> {
         ? await MilestoneTracker.instance.streakMilestone(saved.streakDays)
         : null;
     if (!mounted) return;
-    if (milestone != null) {
-      await showAppDialog<void>(
-        context: context,
-        builder: (dialogCtx) => AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const AppConfettiBurst(
-                colors: [
-                  AppColors.primaryYellow,
-                  AppColors.orangeHard,
-                  AppColors.brandPrimary,
-                  AppColors.voice,
+    // Rio's reaction to the score (transparent clip), the streak under it.
+    final streakDays = saved?.streakDays ?? 0;
+    await showAppDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (dialogCtx) {
+        final streak = Text(
+          milestone != null ? '🔥 $milestone-day streak!' : '🔥 $streakDays-day streak',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primaryYellow),
+        );
+        // No card: Rio floats over the dimmed chat.
+        return Material(
+          type: MaterialType.transparency,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RioScoreClip(score: evaluation.score, size: 260),
+                  if (streakDays > 0) ...[
+                    const SizedBox(height: 6),
+                    milestone != null
+                        ? AppConfettiBurst(
+                            colors: const [
+                              AppColors.primaryYellow,
+                              AppColors.orangeHard,
+                              AppColors.brandPrimary,
+                              AppColors.voice,
+                            ],
+                            child: streak,
+                          )
+                        : streak,
+                    if (milestone != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'New streak milestone',
+                          style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85)),
+                        ),
+                      ),
+                  ],
+                  const SizedBox(height: 20),
+                  FilledButton(
+                    onPressed: () => Navigator.of(dialogCtx).pop(),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppPageColors.accentOf(dialogCtx),
+                      foregroundColor: AppPageColors.onAccentOf(dialogCtx),
+                      minimumSize: const Size(220, 52),
+                      shape: const StadiumBorder(),
+                      textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    ),
+                    child: const Text('See my score'),
+                  ),
                 ],
-                child: RioImage(RioPose.determined, height: 110, motion: RioMotion.pop),
               ),
-              const SizedBox(height: 12),
-              Text(
-                '🔥 $milestone-day streak!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppPageColors.tintOf(dialogCtx, AppTint.reward).fg,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      );
-      if (!mounted) return;
+        );
+      },
+    );
+    if (!mounted) return;
+
+    // Level up only when the overall level rises: the one Progress → Levels
+    // shows (from all your speaking), not one chat's estimate. A single chat
+    // rated B1 while the overall level is A1 is not a level-up.
+    try {
+      final levels = await LanguageLevelsService.instance.fetch(forceRefresh: true);
+      final level = levels.estimatedLevel;
+      if (levels.hasAssessedLevel &&
+          level != null &&
+          await MilestoneTracker.instance.isLevelUp(levels.practiceLanguage, level)) {
+        if (!mounted) return;
+        await showLevelUpCelebration(context, level);
+      }
+    } catch (_) {
+      // Offline: Progress → Levels celebrates it next time instead.
     }
+    if (!mounted) return;
 
     // Progress · Session result: the score, skills and this chat's fixes.
     final startedAt = _service.sessionStartedAt ?? _service.turns.firstOrNull?.timestamp;
@@ -506,6 +612,14 @@ class _ConversationScreenState extends State<ConversationScreen> {
         builder: (pageCtx) => SpeakingSessionDetailScreen(
           session: record,
           corrections: corrections,
+          onDone: () {
+            Navigator.of(pageCtx).pop();
+            if (widget.onExit != null) {
+              widget.onExit!();
+            } else {
+              Navigator.of(context).maybePop();
+            }
+          },
           onPracticeAgain: () async {
             Navigator.of(pageCtx).pop();
             await _service.archiveAndStartNew();
@@ -530,7 +644,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
               elevation: 0,
               actions: [
                 IconButton(
-                  onPressed: () => showConversationChatSettingsSheet(context),
+                  onPressed: _service.isSessionScored
+                      ? null
+                      : () => showConversationChatSettingsSheet(context),
                   icon: const Icon(Icons.tune_rounded),
                   tooltip: 'Chat settings',
                 ),
@@ -548,7 +664,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   title: _service.sessionContext.title,
                   usage: _usage,
                   onExit: widget.onExit!,
-                  onSettings: () => showConversationChatSettingsSheet(context),
+                  onSettings: _service.isSessionScored
+                      ? null
+                      : () => showConversationChatSettingsSheet(context),
                 )
               else if (_usage != null && _usage!.hasMeter)
                 AiDailyUsageBar(usage: _usage!),
@@ -623,6 +741,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     ? () => _service.cancelActiveOperation()
                     : null,
               ),
+              if (_service.isSessionScored)
+                const _ScoredChatNotice()
+              else
               _InputBar(
                 isRecording: _service.isRecording,
                 isProcessing: _service.isProcessing,
@@ -799,6 +920,9 @@ class _TurnBubbleState extends State<_TurnBubble> {
       setState(() => _selectedText = next);
     }
   }
+
+  /// Bumped on each bookmark tap so the icon pops.
+  int _bookmarkTaps = 0;
 
   void _openSaveSheet(String phrase) {
     widget.onSaveSelection?.call(phrase, turn.text);
@@ -1000,15 +1124,27 @@ class _TurnBubbleState extends State<_TurnBubble> {
                                       minHeight: 32,
                                     ),
                                     tooltip: 'Save to deck',
-                                    icon: Icon(
-                                      Icons.bookmark_add_outlined,
-                                      size: 20,
-                                      color: isUser
-                                          ? Colors.white.withValues(alpha: 0.9)
-                                          : AppPageColors.accentOf(context),
+                                    // Pops on tap.
+                                    icon: TweenAnimationBuilder<double>(
+                                      key: ValueKey(_bookmarkTaps),
+                                      tween: Tween(begin: _bookmarkTaps == 0 ? 1 : 0, end: 1),
+                                      duration: AppMotion.duration(context, const Duration(milliseconds: 420)),
+                                      builder: (context, t, child) => Transform.scale(
+                                        scale: 1 + math.sin(t * math.pi) * 0.35,
+                                        child: child,
+                                      ),
+                                      child: Icon(
+                                        Icons.bookmark_add_outlined,
+                                        size: 20,
+                                        color: isUser
+                                            ? Colors.white.withValues(alpha: 0.9)
+                                            : AppPageColors.accentOf(context),
+                                      ),
                                     ),
-                                    onPressed: () =>
-                                        _openSaveSheet(turn.text.trim()),
+                                    onPressed: () {
+                                      setState(() => _bookmarkTaps++);
+                                      _openSaveSheet(turn.text.trim());
+                                    },
                                   ),
                                 ),
                             ],
@@ -1151,16 +1287,30 @@ class _CorrectionCardState extends State<_CorrectionCard> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // A surprised Rio peeks at the fix (unless Rio is turned off).
+            // Professor Rio looks over the fix (unless the tutor is turned
+            // off); the face varies with the mistake.
             ValueListenableBuilder<bool>(
               valueListenable: RioPreferences.instance.showRio,
               builder: (context, show, _) => show
-                  ? const Padding(
-                      padding: EdgeInsets.only(right: 4),
-                      child: RioImage(
-                        RioPose.surprised,
-                        height: 52,
-                        motion: RioMotion.pop,
+                  ? ValueListenableBuilder<TutorPersona>(
+                      valueListenable: RioPreferences.instance.tutor,
+                      builder: (context, tutor, _) => Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: RioImage.asset(
+                          tutor.isRio
+                              ? ProfessorFace.forSeed(
+                                  widget.corrections.first.originalText,
+                                  from: const [
+                                    ProfessorFace.thoughtful,
+                                    ProfessorFace.encouraging,
+                                    ProfessorFace.surprised,
+                                    ProfessorFace.winking,
+                                  ],
+                                ).asset
+                              : tutor.image,
+                          height: 56,
+                          motion: RioMotion.pop,
+                        ),
                       ),
                     )
                   : const SizedBox.shrink(),
@@ -1271,6 +1421,7 @@ class _CorrectionItem extends StatefulWidget {
 class _CorrectionItemState extends State<_CorrectionItem> {
   bool _saving = false;
   bool _saved = false;
+  final _saveButtonKey = GlobalKey();
 
   bool get _isSaved => _saved || widget.correction.autoSaved;
 
@@ -1286,6 +1437,10 @@ class _CorrectionItemState extends State<_CorrectionItem> {
       );
       if (!mounted) return;
       if (result.ok) {
+        if (result.flashcardCreated) {
+          final from = _saveButtonKey.currentContext;
+          if (from != null && from.mounted) flyCardToDecks(from);
+        }
         setState(() => _saved = true);
         final msg = result.flashcardCreated
             ? 'Saved to notes and From speaking deck'
@@ -1349,6 +1504,8 @@ class _CorrectionItemState extends State<_CorrectionItem> {
           spacing: 8,
           runSpacing: 8,
           children: [
+            // No "Hear it" where the tutor has no voice (Indonesian, Armenian).
+            if (ConversationService.instance.tutorHasVoice)
             OutlinedButton.icon(
               onPressed: () => ConversationService.instance.speakText(c.correctedText),
               icon: const Icon(Icons.volume_up_rounded, size: 16),
@@ -1385,6 +1542,7 @@ class _CorrectionItemState extends State<_CorrectionItem> {
               )
             else
               OutlinedButton.icon(
+                key: _saveButtonKey,
                 onPressed: _saving ? null : _saveToNotes,
                 icon: Icon(
                   _saving ? Icons.hourglass_top_rounded : Icons.bookmark_add_outlined,
@@ -1495,11 +1653,12 @@ class _RioAvatar extends StatelessWidget {
         color: AppColors.brandPrimary.withValues(alpha: 0.18),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Transform.scale(
-        scale: 2.1,
-        alignment: const Alignment(0, -0.62), // zoom in on the face
-        child: Image.asset(
-          RioPose.happy.asset,
+      // The selected tutor: Rio's face, or the person's portrait (head and
+      // shoulders, so the top of the picture is the face).
+      child: ValueListenableBuilder<TutorPersona>(
+        valueListenable: RioPreferences.instance.tutor,
+        builder: (context, tutor, _) => Image.asset(
+          tutor.image,
           fit: BoxFit.cover,
           alignment: Alignment.topCenter,
         ),
@@ -1812,7 +1971,8 @@ class _SessionHeader extends StatelessWidget {
   final String title;
   final ConversationUsageStatus? usage;
   final VoidCallback onExit;
-  final VoidCallback onSettings;
+  /// Null disables it (a scored chat).
+  final VoidCallback? onSettings;
 
   /// "2:48", or "3:59:58" once an hour or more is left.
   static String _clock(int seconds) {
@@ -1855,7 +2015,16 @@ class _SessionHeader extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: dark ? AppPageColors.tintOf(context, AppTint.teal).bg : BrandConfig.tealTintStrong,
                     ),
-                    child: Image.asset(RioPose.happy.asset, fit: BoxFit.cover, excludeFromSemantics: true),
+                    // Your tutor's face, not the full body squeezed in.
+                    child: ValueListenableBuilder<TutorPersona>(
+                      valueListenable: RioPreferences.instance.tutor,
+                      builder: (context, tutor, _) => Image.asset(
+                        tutor.isRio ? ProfessorFace.determined.asset : tutor.image,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        excludeFromSemantics: true,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -1863,7 +2032,7 @@ class _SessionHeader extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Rio',
+                          RioPreferences.instance.tutor.value.name,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -1951,11 +2120,8 @@ class _DailyGoalReachedCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const RioImage(
-                RioPose.catchFish,
-                height: 110,
-                motion: RioMotion.pop,
-              ),
+              // Rio's GREAT clip (jump, confetti, thumbs-up).
+              const RioScoreClip(score: 10, size: 180),
               const SizedBox(height: 8),
               const Text(
                 'Daily goal reached!',
@@ -2140,6 +2306,81 @@ class _CatchesCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A round button on the video call (chat, hang up).
+class _CallButton extends StatelessWidget {
+  const _CallButton({
+    required this.icon,
+    required this.tooltip,
+    required this.background,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final Color background;
+  final Color color;
+  final VoidCallback? onTap;
+
+  static const double size = 44;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: background,
+        shape: const CircleBorder(),
+        elevation: 0,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Icon(icon, size: size * 0.48, color: color, semanticLabel: tooltip),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown instead of the mic and keyboard once a chat has been scored: the
+/// history stays readable, but the conversation is over.
+class _ScoredChatNotice extends StatelessWidget {
+  const _ScoredChatNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppPageColors.cardBgOf(context),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppPageColors.subtleBorderOf(context)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.lock_outline_rounded, size: 20, color: AppPageColors.subtitleOf(context)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'This conversation is scored and closed. Go back to start a new one.',
+                style: TextStyle(fontSize: 14, height: 1.35, color: AppPageColors.subtitleOf(context)),
               ),
             ),
           ],

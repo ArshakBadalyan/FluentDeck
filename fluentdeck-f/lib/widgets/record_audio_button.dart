@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Mic button for card field toolbars: tap to record, tap again to stop.
 /// Hands the clip's bytes and a filename to [onRecorded] (e.g. to upload it

@@ -1,5 +1,5 @@
-import 'package:fluentdeck/models/occlusion_model.dart';
-import 'package:fluentdeck/services/deck_scheduling_defaults.dart';
+import 'package:riovox/models/occlusion_model.dart';
+import 'package:riovox/services/deck_scheduling_defaults.dart';
 
 class CardReviewStateModel {
   final int? id;

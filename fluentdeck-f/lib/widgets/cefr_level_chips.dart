@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/config/brand_config.dart';
-import 'package:fluentdeck/services/english_level_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/config/brand_config.dart';
+import 'package:riovox/services/english_level_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 class CefrLevelChips extends StatelessWidget {
   const CefrLevelChips({

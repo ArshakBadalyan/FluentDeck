@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/services/main_navigation_coordinator.dart';
-import 'package:fluentdeck/services/main_tab_config.dart';
-import 'package:fluentdeck/services/theme_settings_store.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/services/main_navigation_coordinator.dart';
+import 'package:riovox/services/main_tab_config.dart';
+import 'package:riovox/services/theme_settings_store.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 import 'about_us/profile_about_tab.dart';
 import 'profile_notifications_tab.dart';
 import 'profile_settings_category_screen.dart';
 import 'profile_sound_tab.dart';
 import 'package:animations/animations.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
 
 /// Scroll Profile → Settings to a section (`ai-speaking`, `decks`, `general`).
 class ProfileSettingsNavigation {

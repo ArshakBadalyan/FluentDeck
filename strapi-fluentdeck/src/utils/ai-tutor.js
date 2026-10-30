@@ -4,7 +4,6 @@ const { toFile } = require("openai");
 const { sanitizeNewWords, normalizeCefrLevel } = require("./speaking-session-utils");
 
 const TUTOR_MODEL = process.env.AI_TUTOR_MODEL || "gpt-4o-mini";
-const TTS_MODEL = process.env.AI_TTS_MODEL || "tts-1";
 const TTS_VOICE = process.env.AI_TTS_VOICE || "nova";
 const WHISPER_MODEL = process.env.AI_WHISPER_MODEL || "whisper-1";
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
@@ -747,10 +746,14 @@ async function translateWithGlossary({ text, targetLanguage, word }) {
 }
 
 /**
- * Kokoro-82M (open-weight TTS, ~$0.6–1 per 1M characters hosted, vs $15 for
- * OpenAI tts-1) speaks only these languages. Value = Kokoro's voice prefix.
- * Every other language — and any Kokoro error — uses OpenAI tts-1.
- * See docs/subscription-and-ai-costs.md.
+ * The tutor's voice runs on our own servers only (no paid TTS):
+ *   - Kokoro-82M: en, es, fr, it, pt, ja, zh, hi
+ *   - Piper: de, ru, ar, tr, vi
+ *   - MeloTTS: ko
+ * Indonesian and Armenian have no voice yet (text only). When a service isn't
+ * configured or fails, there is no audio and the app shows the text only.
+ * Each service is any OpenAI-compatible /audio/speech server, enabled by its
+ * *_BASE_URL. See docs/launch-plan-and-ai-models.md.
  */
 const KOKORO_LANGUAGES = { en: "a", es: "e", fr: "f", it: "i", pt: "p", ja: "j", zh: "z", hi: "h" };
 
@@ -766,44 +769,82 @@ const KOKORO_VOICES = {
   h: { f: "hf_alpha", m: "hm_omega" },
 };
 
-/** The user's tutor voice (OpenAI names) → male/female for Kokoro. */
+/**
+ * Piper voices (rhasspy/piper-voices) per language: female / male. Some
+ * languages have one voice only. Override with PIPER_VOICES (same JSON shape).
+ */
+const PIPER_VOICES = {
+  de: { f: "de_DE-kerstin-low", m: "de_DE-thorsten-medium" },
+  ru: { f: "ru_RU-irina-medium", m: "ru_RU-dmitri-medium" },
+  ar: { f: "ar_JO-kareem-medium", m: "ar_JO-kareem-medium" },
+  tr: { f: "tr_TR-fahrettin-medium", m: "tr_TR-fahrettin-medium" },
+  vi: { f: "vi_VN-vais1000-medium", m: "vi_VN-vais1000-medium" },
+};
+
+/** MeloTTS speaker per language. */
+const MELOTTS_VOICES = { ko: "KR" };
+
+/** No open voice good enough yet: the tutor is text only in these. */
+const VOICELESS_LANGUAGES = new Set(["id", "hy"]);
+
+/** The user's tutor voice (OpenAI names) → male/female for our voices. */
 const MALE_TUTOR_VOICES = new Set(["onyx", "echo", "fable"]);
 
+function piperVoices(env) {
+  if (!env.PIPER_VOICES) return PIPER_VOICES;
+  try {
+    return { ...PIPER_VOICES, ...JSON.parse(env.PIPER_VOICES) };
+  } catch {
+    return PIPER_VOICES;
+  }
+}
+
 /**
- * Which TTS service speaks [language]. Kokoro when TTS_PROVIDER=kokoro,
- * KOKORO_BASE_URL is set (any OpenAI-compatible /audio/speech server, e.g.
- * self-hosted Kokoro-FastAPI or a hosted Kokoro) and Kokoro has the language.
+ * Which voice service speaks [language], or null when there is no voice
+ * (Indonesian, Armenian, or the service isn't configured): text only.
  */
 function resolveTtsRoute({ language = "en", voicePreference, env = process.env } = {}) {
-  const openaiRoute = {
-    provider: "openai",
-    model: env.AI_TTS_MODEL || TTS_MODEL,
-    voice: resolveTutorVoice(voicePreference),
-  };
-  const prefix = KOKORO_LANGUAGES[String(language || "en").trim().toLowerCase()];
-  if (
-    String(env.TTS_PROVIDER ?? "").trim().toLowerCase() !== "kokoro" ||
-    !env.KOKORO_BASE_URL ||
-    !prefix
-  ) {
-    return openaiRoute;
-  }
+  const lang = String(language || "en").trim().toLowerCase();
+  if (VOICELESS_LANGUAGES.has(lang)) return null;
   const gender = MALE_TUTOR_VOICES.has(resolveTutorVoice(voicePreference)) ? "m" : "f";
-  return {
-    provider: "kokoro",
-    baseURL: env.KOKORO_BASE_URL,
-    apiKey: env.KOKORO_API_KEY || "not-needed",
-    model: env.KOKORO_MODEL || "kokoro",
-    voice: KOKORO_VOICES[prefix][gender],
-    fallback: openaiRoute,
-  };
+  const server = (name, baseURL, apiKey, model, voice) => ({
+    provider: name,
+    baseURL,
+    apiKey: apiKey || "not-needed",
+    model,
+    voice,
+  });
+
+  const kokoro = KOKORO_LANGUAGES[lang];
+  if (kokoro && env.KOKORO_BASE_URL) {
+    return server("kokoro", env.KOKORO_BASE_URL, env.KOKORO_API_KEY, env.KOKORO_MODEL || "kokoro", KOKORO_VOICES[kokoro][gender]);
+  }
+  const piper = piperVoices(env)[lang];
+  if (piper && env.PIPER_BASE_URL) {
+    return server("piper", env.PIPER_BASE_URL, env.PIPER_API_KEY, env.PIPER_MODEL || "piper", piper[gender] || piper.f);
+  }
+  const melo = MELOTTS_VOICES[lang];
+  if (melo && env.MELOTTS_BASE_URL) {
+    return server("melotts", env.MELOTTS_BASE_URL, env.MELOTTS_API_KEY, env.MELOTTS_MODEL || "melotts", melo);
+  }
+  return null;
+}
+
+/** True when the tutor has a voice in [language] on this server. */
+function hasTutorVoice(language, env = process.env) {
+  return resolveTtsRoute({ language, env }) !== null;
+}
+
+/** No audio for this text: the app shows the reply as text only. */
+class VoiceUnavailableError extends Error {
+  constructor(message) {
+    super(message);
+    this.code = "VOICE_UNAVAILABLE";
+  }
 }
 
 async function requestSpeech(route, text) {
-  const client =
-    route.provider === "kokoro"
-      ? new OpenAI({ apiKey: route.apiKey, baseURL: route.baseURL, timeout: 30_000, maxRetries: 1 })
-      : getOpenAIClient();
+  const client = new OpenAI({ apiKey: route.apiKey, baseURL: route.baseURL, timeout: 30_000, maxRetries: 1 });
   const response = await client.audio.speech.create({
     model: route.model,
     voice: route.voice,
@@ -813,28 +854,27 @@ async function requestSpeech(route, text) {
   return Buffer.from(await response.arrayBuffer());
 }
 
-/** MP3 of [text] in the tutor's reply [language], cached per text + voice + model. */
+/**
+ * MP3 of [text] in the tutor's reply [language], cached per text + voice +
+ * service. Throws VoiceUnavailableError when there is no voice or the voice
+ * service fails; there is no paid fallback.
+ */
 async function synthesizeSpeech(text, voicePreference, language = "en") {
   const { readCachedAudio, writeCachedAudio } = require('./tts-cache');
-  let route = resolveTtsRoute({ language, voicePreference });
-  // Kokoro entries are cached under their own model name; OpenAI keeps the
-  // historical key (model + voice), so existing cached audio stays valid.
-  const cacheModel = (r) => (r.provider === "kokoro" ? `kokoro:${r.model}` : r.model);
-  const cached = readCachedAudio(text, route.voice, cacheModel(route));
+  const route = resolveTtsRoute({ language, voicePreference });
+  if (!route) throw new VoiceUnavailableError(`No tutor voice for "${language}"`);
+  const cacheModel = `${route.provider}:${route.model}`;
+  const cached = readCachedAudio(text, route.voice, cacheModel);
   if (cached) return cached;
 
   let buffer;
   try {
     buffer = await requestSpeech(route, text);
   } catch (err) {
-    if (!route.fallback) throw err;
-    console.warn(`[ai.tts] Kokoro failed (${err?.status ?? ""} ${err?.message ?? err}); using OpenAI`);
-    route = route.fallback;
-    const fallbackCached = readCachedAudio(text, route.voice, cacheModel(route));
-    if (fallbackCached) return fallbackCached;
-    buffer = await requestSpeech(route, text);
+    console.warn(`[ai.tts] ${route.provider} failed (${err?.status ?? ""} ${err?.message ?? err}); text only`);
+    throw new VoiceUnavailableError(`${route.provider} failed`);
   }
-  writeCachedAudio(text, route.voice, cacheModel(route), buffer);
+  writeCachedAudio(text, route.voice, cacheModel, buffer);
   return buffer;
 }
 
@@ -998,7 +1038,12 @@ Evaluate the learner's spoken English in this session.`;
 
 module.exports = {
   resolveTtsRoute,
+  hasTutorVoice,
+  VoiceUnavailableError,
   KOKORO_LANGUAGES,
+  PIPER_VOICES,
+  MELOTTS_VOICES,
+  VOICELESS_LANGUAGES,
   resolveSttConfig,
   transcribeAudio,
   looksLikeWhisperHallucination,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 enum DeckCountKind { newCards, learning, review }
 

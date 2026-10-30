@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/data/decks_help_content.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/data/decks_help_content.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/widgets/professor.dart';
 
 class _Faq {
   const _Faq(this.question, this.answer);
@@ -176,6 +177,10 @@ class _HelpFaqPageState extends State<HelpFaqPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
           children: [
+            const ProfessorTip(
+              text: "Hi, I'm Professor Rio. Search below or open a topic, and I'll explain.",
+            ),
+            const SizedBox(height: 12),
             TextField(
               onChanged: (v) => setState(() => _query = v),
               decoration: InputDecoration(

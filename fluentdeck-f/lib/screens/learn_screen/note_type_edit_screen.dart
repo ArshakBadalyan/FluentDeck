@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/card_style_preset.dart';
-import 'package:fluentdeck/models/flashcard_note_model.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/note_type_style_store.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/card_style_preset.dart';
+import 'package:riovox/models/flashcard_note_model.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/note_type_style_store.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 /// Create or edit a user-defined note type. No HTML/CSS in sight — pick what
 /// information each note stores (fields) and a ready-made visual look

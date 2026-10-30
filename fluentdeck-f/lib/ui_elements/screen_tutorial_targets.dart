@@ -19,26 +19,6 @@ abstract final class ScreenTutorialTargetIds {
 
   static const activityStatusDailyGoal = 'activity.status_daily_goal';
 
-  static const activityTopListBody = 'activity.top_list_body';
-
-  static const activityTopListCardCourse = 'activity.top_list_card_course';
-
-  static const activityTopListCardInstitution =
-      'activity.top_list_card_institution';
-
-  static const activityTopListCardCity = 'activity.top_list_card_city';
-
-  static const activityTopListCardCountry = 'activity.top_list_card_country';
-
-  /// Spotlight target for a ranking row (`course`, `institution`, …).
-  static String topListCardTargetId(String rankingKey) => switch (rankingKey) {
-    'course' => activityTopListCardCourse,
-    'institution' => activityTopListCardInstitution,
-    'city' => activityTopListCardCity,
-    'country' => activityTopListCardCountry,
-    _ => activityTopListBody,
-  };
-
   static const activityAnswersBody = 'activity.answers_body';
 
   static const activityProgressPeriodPivot = 'activity.progress_period';
@@ -94,36 +74,6 @@ abstract final class ScreenTutorialKeys {
   static final GlobalKey activityStatusDailyGoalOnly = GlobalKey(
     debugLabel: 'coach_daily_goal_only',
   );
-
-  static final GlobalKey activityTopListBody = GlobalKey(
-    debugLabel: 'coach_leaderboard_body',
-  );
-
-  static final GlobalKey activityTopListCardCourseKey = GlobalKey(
-    debugLabel: 'coach_top_list_class',
-  );
-
-  static final GlobalKey activityTopListCardInstitutionKey = GlobalKey(
-    debugLabel: 'coach_top_list_school',
-  );
-
-  static final GlobalKey activityTopListCardCityKey = GlobalKey(
-    debugLabel: 'coach_top_list_city',
-  );
-
-  static final GlobalKey activityTopListCardCountryKey = GlobalKey(
-    debugLabel: 'coach_top_list_country',
-  );
-
-  /// Coach spotlight anchor for a Top List menu row (`course` / `institution` / …).
-  static GlobalKey? globalKeyForTopListRankingCard(String rankingKey) =>
-      switch (rankingKey) {
-        'course' => activityTopListCardCourseKey,
-        'institution' => activityTopListCardInstitutionKey,
-        'city' => activityTopListCardCityKey,
-        'country' => activityTopListCardCountryKey,
-        _ => null,
-      };
 
   static final GlobalKey activityAnswersBody = GlobalKey(
     debugLabel: 'coach_answer_donuts_scroll',
@@ -203,11 +153,6 @@ abstract final class ScreenTutorialKeys {
     yield ScreenTutorialTargetIds.mainAppBarSearch;
     yield ScreenTutorialTargetIds.mainAppBarNotifications;
     yield ScreenTutorialTargetIds.activityStatusDailyGoal;
-    yield ScreenTutorialTargetIds.activityTopListBody;
-    yield ScreenTutorialTargetIds.activityTopListCardCourse;
-    yield ScreenTutorialTargetIds.activityTopListCardInstitution;
-    yield ScreenTutorialTargetIds.activityTopListCardCity;
-    yield ScreenTutorialTargetIds.activityTopListCardCountry;
     yield ScreenTutorialTargetIds.activityAnswersBody;
     yield ScreenTutorialTargetIds.activityProgressPeriodPivot;
     yield ScreenTutorialTargetIds.activityProgressDiagramPivot;
@@ -234,15 +179,6 @@ abstract final class ScreenTutorialKeys {
         mainAppBarNotifications,
       ScreenTutorialTargetIds.activityStatusDailyGoal =>
         activityStatusDailyGoalOnly,
-      ScreenTutorialTargetIds.activityTopListBody => activityTopListBody,
-      ScreenTutorialTargetIds.activityTopListCardCourse =>
-        activityTopListCardCourseKey,
-      ScreenTutorialTargetIds.activityTopListCardInstitution =>
-        activityTopListCardInstitutionKey,
-      ScreenTutorialTargetIds.activityTopListCardCity =>
-        activityTopListCardCityKey,
-      ScreenTutorialTargetIds.activityTopListCardCountry =>
-        activityTopListCardCountryKey,
       ScreenTutorialTargetIds.activityAnswersBody => activityAnswersBody,
       ScreenTutorialTargetIds.activityProgressPeriodPivot =>
         activityProgressPeriodStrip,

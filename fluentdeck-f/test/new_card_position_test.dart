@@ -1,6 +1,6 @@
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/services/review_settings_store.dart';
-import 'package:fluentdeck/utils/review_queue_order.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/services/review_settings_store.dart';
+import 'package:riovox/utils/review_queue_order.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 FlashcardModel _card(String id, String state) => FlashcardModel(

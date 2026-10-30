@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/flashcard_note_model.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_note_model.dart';
 
 const _webCacheKey = 'flashcard_offline_cache_v1';
 const _webPendingKey = 'flashcard_pending_reviews_v1';

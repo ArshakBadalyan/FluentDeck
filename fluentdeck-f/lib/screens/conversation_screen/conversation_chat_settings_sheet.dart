@@ -1,4 +1,4 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +9,7 @@ import '../../services/subscription_service.dart';
 import '../../services/speaking_preferences_service.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../ui_elements/modern_page_widgets.dart';
+import '../../models/tutor_persona.dart';
 
 /// Quick toggles for the active conversation (same prefs as Profile → Settings).
 Future<void> showConversationChatSettingsSheet(BuildContext context) {
@@ -148,6 +149,91 @@ class _ConversationChatSettingsSheetState
     );
   }
 
+  /// Rio and the six people; picking a person also picks their voice. With
+  /// Rio picked, his voice is chosen below.
+  Widget _tutorGrid(BuildContext context) {
+    return ValueListenableBuilder<TutorPersona>(
+      valueListenable: RioPreferences.instance.tutor,
+      builder: (context, tutor, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LayoutBuilder(
+            builder: (context, c) {
+              const gap = 8.0;
+              final columns = c.maxWidth >= 520 ? 4 : 3;
+              final width = (c.maxWidth - gap * (columns - 1)) / columns;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final p in TutorPersona.all)
+                    SizedBox(
+                      width: width,
+                      child: _TutorCard(
+                        persona: p,
+                        selected: tutor.id == p.id,
+                        locked: !p.isRio &&
+                            !_isPremium &&
+                            !SpeakingPreferences.freeVoiceIds.contains(p.voice),
+                        onTap: () => _pickTutor(p),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          // Indonesian and Armenian: the tutor has no voice yet (text only).
+          if (!SpeakingPreferences.hasTutorVoice(_prefs.responseLanguage)) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppPageColors.fieldBgOf(context),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.volume_off_rounded, size: 18, color: AppPageColors.subtitleOf(context)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Your tutor writes in ${SpeakingPreferences.responseLanguageOptions[_prefs.responseLanguage] ?? 'this language'} '
+                      'but doesn\'t speak it yet. You can still talk; replies are text only.',
+                      style: TextStyle(fontSize: 13, height: 1.35, color: AppPageColors.subtitleOf(context)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else if (tutor.isRio) ...[
+            const SizedBox(height: 14),
+            _label(context, "Rio's voice"),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final id in SpeakingPreferences.voiceOptions.keys)
+                  _voiceChip(context, id),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _pickTutor(TutorPersona p) {
+    final voice = p.voice;
+    if (voice != null && !_isPremium && !SpeakingPreferences.freeVoiceIds.contains(voice)) {
+      _premiumNotice();
+      return;
+    }
+    RioPreferences.instance.setTutor(p);
+    if (voice != null && _prefs.tutorVoice != voice) {
+      _save(_prefs.copyWith(tutorVoice: voice));
+    }
+  }
+
   Widget _voiceChip(BuildContext context, String id) {
     final selected = _prefs.tutorVoice == id;
     final locked = !_isPremium && !SpeakingPreferences.freeVoiceIds.contains(id);
@@ -261,15 +347,8 @@ class _ConversationChatSettingsSheetState
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _label(context, 'Tutor voice'),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final id in SpeakingPreferences.voiceOptions.keys)
-                            _voiceChip(context, id),
-                        ],
-                      ),
+                      _label(context, 'Your tutor'),
+                      _tutorGrid(context),
                       const SizedBox(height: 16),
                       _CheckGroup(
                         rows: [
@@ -286,6 +365,7 @@ class _ConversationChatSettingsSheetState
                               value: _prefs.showTranslations,
                               onChanged: (v) => _save(_prefs.copyWith(showTranslations: v)),
                             ),
+                          if (SpeakingPreferences.hasTutorVoice(_prefs.responseLanguage))
                           _CheckRow(
                             title: 'Auto-play voice',
                             subtitle: 'Rio speaks each answer',
@@ -324,13 +404,7 @@ class _ConversationChatSettingsSheetState
                           ),
                           _CheckRow(
                             title: 'Show tutor',
-                            subtitle: 'Rio the otter in the chat (this device)',
-                            listenable: RioPreferences.instance.showRio,
-                            onChanged: RioPreferences.instance.setShowRio,
-                          ),
-                          _CheckRow(
-                            title: 'Video-call view',
-                            subtitle: 'Rio big on screen, his latest reply over him',
+                            subtitle: 'A video call with your tutor instead of the chat (this device)',
                             listenable: RioPreferences.instance.showRioStage,
                             onChanged: RioPreferences.instance.setShowRioStage,
                           ),
@@ -456,6 +530,84 @@ class _CheckRow extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One tutor in the "Your tutor" grid: portrait, name, and what they're like.
+class _TutorCard extends StatelessWidget {
+  const _TutorCard({
+    required this.persona,
+    required this.selected,
+    required this.locked,
+    required this.onTap,
+  });
+
+  final TutorPersona persona;
+  final bool selected;
+  final bool locked;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppPageColors.accentOf(context);
+    final voice = persona.voice;
+    final voiceName = voice == null ? null : SpeakingPreferences.voiceOptions[voice]?.split(' — ').first;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '${persona.name}, ${persona.blurb}${locked ? ', Premium' : ''}',
+      excludeSemantics: true,
+      child: Material(
+        color: selected ? AppPageColors.tintOf(context, AppTint.teal).bg : AppPageColors.cardBgOf(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: selected ? accent : AppPageColors.subtleBorderOf(context), width: selected ? 2 : 1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
+            child: Column(
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    SizedBox(
+                      height: 72,
+                      child: Opacity(
+                        opacity: locked ? 0.55 : 1,
+                        child: Image.asset(persona.image, fit: BoxFit.contain, excludeFromSemantics: true),
+                      ),
+                    ),
+                    if (locked)
+                      Positioned(
+                        right: -4,
+                        bottom: 0,
+                        child: Icon(Icons.lock_rounded, size: 16, color: AppPageColors.subtitleOf(context)),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  persona.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppPageColors.textPrimaryOf(context)),
+                ),
+                Text(
+                  voiceName == null ? persona.blurb : '$voiceName · ${persona.blurb}',
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11.5, height: 1.25, color: AppPageColors.subtitleOf(context)),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

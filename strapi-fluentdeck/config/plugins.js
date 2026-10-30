@@ -3,19 +3,19 @@ module.exports = ({ env }) => ({
     config: {
       provider: "nodemailer",
       providerOptions: {
-        host: env("SMTP_HOST", "mail.schulmatheapp.de"),
-        port: env("SMTP_PORT", 465),
-        secure: true,
+        // Any SMTP provider (Resend, Brevo, Amazon SES, …); see docs/production.md.
+        host: env("SMTP_HOST"),
+        port: env.int("SMTP_PORT", 465),
+        // true for port 465; false for 587 (STARTTLS).
+        secure: env.bool("SMTP_SECURE", true),
         auth: {
           user: env("SMTP_USERNAME"),
           pass: env("SMTP_PASSWORD"),
         },
-        tls: {
-          rejectUnauthorized: false, // ignore hostname mismatch
-        },
       },
       settings: {
-        defaultFrom: "no-reply@strapi.io",
+        defaultFrom: env("EMAIL_FROM"),
+        defaultReplyTo: env("EMAIL_REPLY_TO", env("EMAIL_FROM")),
       },
     },
   },

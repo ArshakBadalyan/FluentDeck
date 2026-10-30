@@ -583,8 +583,8 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
       const user = await findUserById(strapi, userId, {
         fields: ["tutor_voice", "response_language"],
       });
-      // The tutor speaks its reply language; the TTS service is picked per
-      // language (Kokoro where it can, OpenAI otherwise).
+      // The tutor speaks its reply language with our own voice services
+      // (Kokoro, Piper, MeloTTS). No voice → text only (no paid fallback).
       const audioBuffer = await synthesizeSpeech(
         safeText,
         user?.tutor_voice,
@@ -603,6 +603,11 @@ module.exports = createCoreController("api::ai.ai-config", ({ strapi }) => ({
             }),
       };
     } catch (error) {
+      if (error?.code === "VOICE_UNAVAILABLE") {
+        // Not an error for the app: show the reply as text, nothing charged.
+        ctx.body = { voiceAvailable: false, usage: usageBefore };
+        return;
+      }
       strapi.log.error("[ai.tts]", error);
       return ctx.internalServerError("TTS request failed");
     }

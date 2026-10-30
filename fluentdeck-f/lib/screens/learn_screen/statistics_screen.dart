@@ -1,21 +1,23 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/config/brand_config.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/data/decks_help_content.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/models/flashcard_stats_model.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/services/flashcard_stats_export_service.dart';
-import 'package:fluentdeck/screens/learn_screen/review_log_screen.dart';
-import 'package:fluentdeck/screens/learn_screen/widgets/decks_contextual_help.dart';
-import 'package:fluentdeck/services/decks_help_hints_store.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/utils/statistics_labels.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/activity_preview_list.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/config/brand_config.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/data/decks_help_content.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/models/flashcard_stats_model.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/services/flashcard_stats_export_service.dart';
+import 'package:riovox/screens/learn_screen/review_log_screen.dart';
+import 'package:riovox/screens/learn_screen/widgets/decks_contextual_help.dart';
+import 'package:riovox/services/decks_help_hints_store.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/utils/statistics_labels.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/widgets/activity_preview_list.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/widgets/professor.dart';
+import 'package:riovox/widgets/rio.dart';
 
 /// Statistics as its own page (Deck overview → Statistics), with a back arrow.
 class StatisticsPage extends StatelessWidget {
@@ -412,15 +414,24 @@ class _EmptyHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Professor Rio, thinking it over, until there's data to show.
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: AppPageColors.subtitleOf(context),
-          fontSize: 14,
-          height: 1.45,
-        ),
+      child: Row(
+        children: [
+          RioImage.asset(ProfessorFace.thoughtful.asset, height: 48, motion: RioMotion.none),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: AppPageColors.subtitleOf(context),
+                fontSize: 14,
+                height: 1.45,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

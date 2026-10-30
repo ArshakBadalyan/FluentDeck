@@ -11,7 +11,14 @@ enum TutorScene {
   exploring,
   hiking,
   cave,
-  fishing;
+  fishing,
+
+  /// Professor Rio reading on a rock by a lake (Otter Professor sheet).
+  mentor,
+
+  /// Professor Rio hiking in the mountains with his backpack (Otter
+  /// Professor sheet, "Exploring").
+  explorer;
 
   String get asset => 'assets/tutor/scene-$name.webp';
 
@@ -32,6 +39,10 @@ enum TutorScene {
       case TutorScene.reading:
       case TutorScene.online:
         return const Alignment(0.05, 0);
+      case TutorScene.mentor:
+        return const Alignment(0.15, 0);
+      case TutorScene.explorer:
+        return const Alignment(0, -0.2);
       case TutorScene.fishing:
       case TutorScene.listening:
       case TutorScene.exploring:
@@ -56,6 +67,7 @@ class SceneBackdrop extends StatelessWidget {
     this.onLeft = false,
     this.widthFactor = 0.55,
     this.maxImageWidth = 300,
+    this.fit = BoxFit.cover,
   });
 
   final TutorScene scene;
@@ -70,6 +82,10 @@ class SceneBackdrop extends StatelessWidget {
   final double widthFactor;
   final double maxImageWidth;
 
+  /// [BoxFit.cover] crops wide scenes to the card; [BoxFit.fitHeight] shows a
+  /// tall scene whole, at the card's height.
+  final BoxFit fit;
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -77,40 +93,40 @@ class SceneBackdrop extends StatelessWidget {
         Positioned.fill(
           child: LayoutBuilder(
             builder: (context, c) {
-              // Whole pixels: fractional edges left a hairline seam on the web.
-              final imageWidth = (c.maxWidth * widthFactor)
-                  .clamp(0.0, maxImageWidth)
-                  .roundToDouble();
-              // Fade only the picture's inner edge (first 30% of it).
+              final width = c.maxWidth;
+              final imageWidth = (width * widthFactor).clamp(0.0, maxImageWidth).roundToDouble();
+              // Fade over the first 30% of the picture, from its inner edge.
               final fade = (imageWidth * 0.3).roundToDouble();
-              return Stack(
-                children: [
-                  Positioned(
-                    top: 0,
-                    bottom: 0,
+              if (width <= 0 || imageWidth <= 0) return const SizedBox.shrink();
+              // The mask spans the whole card, not just the picture: the
+              // picture's own edge sits where the mask is fully transparent,
+              // so the web renderer can't leave a hairline seam there.
+              final edge = (width - imageWidth) / width;
+              final opaque = (width - imageWidth + fade) / width;
+              return ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (rect) => LinearGradient(
+                  begin: onLeft ? Alignment.centerRight : Alignment.centerLeft,
+                  end: onLeft ? Alignment.centerLeft : Alignment.centerRight,
+                  colors: const [Color(0x00000000), Color(0x00000000), Color(0xFF000000)],
+                  stops: [0, edge + 2 / width, opaque.clamp(0.0, 1.0)],
+                ).createShader(rect),
+                child: Align(
+                  alignment: onLeft ? Alignment.centerLeft : Alignment.centerRight,
+                  child: SizedBox(
                     width: imageWidth,
-                    left: onLeft ? 0 : null,
-                    right: onLeft ? null : 0,
-                    // The picture itself fades out at its inner edge, so the card's own
-                    // background (even a gradient) shows through: no colour seam.
-                    child: ShaderMask(
-                      blendMode: BlendMode.dstIn,
-                      shaderCallback: (rect) => LinearGradient(
-                        begin: onLeft ? Alignment.centerRight : Alignment.centerLeft,
-                        end: onLeft ? Alignment.centerLeft : Alignment.centerRight,
-                        colors: const [Color(0x00000000), Color(0xFF000000)],
-                        stops: [0, fade / imageWidth],
-                      ).createShader(rect),
-                      child: Image.asset(
-                        scene.asset,
-                        fit: BoxFit.cover,
-                        alignment: scene.focus,
-                        filterQuality: FilterQuality.medium,
-                        excludeFromSemantics: true,
-                      ),
+                    height: c.maxHeight,
+                    child: Image.asset(
+                      scene.asset,
+                      fit: fit,
+                      alignment: fit == BoxFit.cover
+                          ? scene.focus
+                          : (onLeft ? Alignment.centerLeft : Alignment.centerRight),
+                      filterQuality: FilterQuality.medium,
+                      excludeFromSemantics: true,
                     ),
                   ),
-                ],
+                ),
               );
             },
           ),

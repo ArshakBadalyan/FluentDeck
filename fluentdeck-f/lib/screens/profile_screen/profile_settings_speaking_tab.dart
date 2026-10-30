@@ -1,17 +1,19 @@
 import 'dart:async';
 
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
-import 'package:fluentdeck/services/conversation_service.dart';
-import 'package:fluentdeck/services/english_level_service.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/services/subscription_service.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/speaking_premium_gate.dart';
-import 'package:fluentdeck/widgets/cefr_level_chips.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/speaking_preferences.dart';
+import 'package:riovox/services/conversation_service.dart';
+import 'package:riovox/services/english_level_service.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/services/subscription_service.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/speaking_premium_gate.dart';
+import 'package:riovox/widgets/cefr_level_chips.dart';
+import 'package:riovox/models/tutor_persona.dart';
+import 'package:riovox/services/rio_preferences.dart';
 
 /// AI Speaking section for Profile → Settings (grouped sub-sections).
 class ProfileSettingsSpeakingSection extends StatefulWidget {
@@ -174,7 +176,9 @@ class _ProfileSettingsSpeakingSectionState
                 value: _speakingPrefs.practiceLanguage,
                 enabled: true,
                 options:
-                    SpeakingPreferences.practiceLanguageOptions.entries
+                    SpeakingPreferences.selectablePracticeLanguages(
+                          current: _speakingPrefs.practiceLanguage,
+                        ).entries
                         .map(
                           (entry) => AppSelectOption(
                             value: entry.key,
@@ -226,7 +230,9 @@ class _ProfileSettingsSpeakingSectionState
                 value: _speakingPrefs.responseLanguage,
                 enabled: true,
                 options:
-                    SpeakingPreferences.responseLanguageOptions.entries
+                    SpeakingPreferences.selectableResponseLanguages(
+                          current: _speakingPrefs.responseLanguage,
+                        ).entries
                         .map(
                           (entry) => AppSelectOption(
                             value: entry.key,
@@ -273,6 +279,12 @@ class _ProfileSettingsSpeakingSectionState
                   _saveSpeakingPreferences(
                     _speakingPrefs.copyWith(tutorVoice: value),
                   );
+                  // A person tutor follows the voice (each has their own);
+                  // Rio keeps whatever voice is chosen.
+                  final rio = RioPreferences.instance;
+                  if (!rio.tutor.value.isRio) {
+                    rio.setTutor(TutorPersona.personForVoice(value) ?? TutorPersona.rio);
+                  }
                 },
               ),
               const SizedBox(height: 12),

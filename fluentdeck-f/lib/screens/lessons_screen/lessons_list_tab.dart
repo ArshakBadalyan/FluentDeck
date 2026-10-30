@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/lesson_model.dart';
-import 'package:fluentdeck/screens/lessons_screen/lesson_detail_screen.dart';
-import 'package:fluentdeck/services/english_level_service.dart';
-import 'package:fluentdeck/services/lesson_service.dart';
-import 'package:fluentdeck/ui_elements/app_skeletons.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/lesson_model.dart';
+import 'package:riovox/screens/lessons_screen/lesson_detail_screen.dart';
+import 'package:riovox/services/english_level_service.dart';
+import 'package:riovox/services/lesson_service.dart';
+import 'package:riovox/ui_elements/app_skeletons.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/widgets/professor.dart';
+import 'package:riovox/widgets/rio.dart';
 
 class LessonsListTab extends StatefulWidget {
   const LessonsListTab({super.key});
@@ -115,10 +117,17 @@ class _LessonsListTabState extends State<LessonsListTab> {
           child:
               _lessons.isEmpty
                   ? Center(
-                    child: Text(
-                      'No lessons yet.\nAdd lessons in Strapi admin.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppPageColors.subtitleOf(context)),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        RioImage.asset(ProfessorPose.teaching.asset, height: 140),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No lessons yet.\nAdd lessons in Strapi admin.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppPageColors.subtitleOf(context)),
+                        ),
+                      ],
                     ),
                   )
                   : RefreshIndicator(

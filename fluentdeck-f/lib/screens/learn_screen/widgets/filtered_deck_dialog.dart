@@ -1,11 +1,11 @@
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/models/flashcard_model.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/ui_elements/frosted_bottom_sheet.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/utils/api_exception.dart';
-import 'package:fluentdeck/utils/speaking_premium_gate.dart';
+import 'package:riovox/models/flashcard_model.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/ui_elements/frosted_bottom_sheet.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/utils/api_exception.dart';
+import 'package:riovox/utils/speaking_premium_gate.dart';
 
 /// Create a filtered deck from a saved search query (Phase 4F), or edit
 /// [existing] (name + filter).

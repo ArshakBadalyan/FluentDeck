@@ -1,10 +1,10 @@
-import 'package:fluentdeck/ui_elements/app_dialog.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_dialog.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
+import 'package:riovox/app_colors.dart';
 
 import '../../models/conversation_training_session.dart';
 import '../../models/speaking_session_context.dart';
@@ -19,7 +19,8 @@ import '../../ui_elements/app_skeletons.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../utils/learning_language_utils.dart';
 import '../../widgets/speaking_hub_widgets.dart';
-import 'package:fluentdeck/ui_elements/app_motion.dart';
+import 'package:riovox/ui_elements/app_motion.dart';
+import 'package:riovox/widgets/rio_empty_state.dart';
 
 class SpeakingNotesTab extends StatefulWidget {
   const SpeakingNotesTab({super.key, required this.onStart});
@@ -686,16 +687,9 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       );
     }
     if (_notes.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            'No saved notes match these filters.\n'
-            'Save words from speaking chat, or tap + to add a deck.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppPageColors.subtitleOf(context), height: 1.4),
-          ),
-        ),
+      return const RioEmptyState(
+        title: 'No notes here yet',
+        message: 'Save words from speaking chat, or tap + to add a deck.',
       );
     }
 
@@ -706,7 +700,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
       child: RefreshIndicator(
       onRefresh: _load,
       color: AppColors.brandPrimary,
-      child: ListView(
+      child: AppContentWidth(child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
         children: [
@@ -762,7 +756,7 @@ class _SpeakingNotesTabState extends State<SpeakingNotesTab> {
             );
           }),
         ],
-      ),
+      )),
     ),
     );
   }

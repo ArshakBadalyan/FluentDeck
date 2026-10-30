@@ -1,8 +1,8 @@
-import 'package:fluentdeck/screens/learn_screen/decks_settings_section.dart';
-import 'package:fluentdeck/screens/learn_screen/decks_settings_section_screen.dart';
-import 'package:fluentdeck/services/deck_backup_service.dart';
-import 'package:fluentdeck/services/flashcard_sync_store.dart';
-import 'package:fluentdeck/services/review_settings_store.dart';
+import 'package:riovox/screens/learn_screen/decks_settings_section.dart';
+import 'package:riovox/screens/learn_screen/decks_settings_section_screen.dart';
+import 'package:riovox/services/deck_backup_service.dart';
+import 'package:riovox/services/flashcard_sync_store.dart';
+import 'package:riovox/services/review_settings_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

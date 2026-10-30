@@ -1,5 +1,5 @@
-import 'package:fluentdeck/models/app_feature_config_model.dart';
-import 'package:fluentdeck/services/conversation_start_ad.dart';
+import 'package:riovox/models/app_feature_config_model.dart';
+import 'package:riovox/services/conversation_start_ad.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

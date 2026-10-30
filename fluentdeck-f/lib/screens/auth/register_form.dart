@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:fluentdeck/ui_elements/app_toast.dart';
+import 'package:riovox/ui_elements/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/localization/app_localizations.dart';
-import 'package:fluentdeck/models/speaking_preferences.dart';
-import 'package:fluentdeck/english_main_screen.dart';
-import 'package:fluentdeck/screens/profile_screen/about_us/privacy_policy_page.dart';
-import 'package:fluentdeck/services/app_feature_config_service.dart';
-import 'package:fluentdeck/services/speaking_preferences_service.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/localization/app_localizations.dart';
+import 'package:riovox/models/speaking_preferences.dart';
+import 'package:riovox/english_main_screen.dart';
+import 'package:riovox/screens/profile_screen/about_us/privacy_policy_page.dart';
+import 'package:riovox/services/app_feature_config_service.dart';
+import 'package:riovox/services/speaking_preferences_service.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 import '../../routing/app_route_names.dart';
 import '../../routing/app_page_routes.dart';
 import '../../services/audio_service.dart';
@@ -87,7 +87,9 @@ class _RegisterFormState extends State<RegisterForm> {
   }
 
   Future<void> _pickLanguage({required bool native}) async {
-    final options = native ? _nativeOptions : SpeakingPreferences.practiceLanguageOptions;
+    final options = native
+        ? _nativeOptions
+        : SpeakingPreferences.selectablePracticeLanguages(current: _target);
     final picked = await showAppSelectSheet<String>(
       context: context,
       title: context.tr(native ? 'login-register.i-speak' : 'login-register.i-want-to-speak'),

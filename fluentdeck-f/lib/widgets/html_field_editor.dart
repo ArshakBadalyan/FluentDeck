@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
-import 'package:fluentdeck/widgets/rich_text_controller.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/widgets/rich_text_controller.dart';
 
 /// Card field with a formatting toolbar. Bold, italic, underline and red show
 /// as formatting while typing; [controller] keeps the stored HTML.

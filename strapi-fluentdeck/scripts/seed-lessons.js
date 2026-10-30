@@ -10,7 +10,7 @@
  * The API token must be "Full access" OR have create+find on lessons and exercises.
  *
  * Usage:
- *   cd strapi-math
+ *   cd strapi-fluentdeck
  *   STRAPI_API_TOKEN=your_token node scripts/seed-lessons.js
  */
 

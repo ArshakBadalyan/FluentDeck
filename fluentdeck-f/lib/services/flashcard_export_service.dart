@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
-import 'package:fluentdeck/services/flashcard_service.dart';
-import 'package:fluentdeck/utils/file_download.dart';
+import 'package:riovox/services/flashcard_service.dart';
+import 'package:riovox/utils/file_download.dart';
 
 class FlashcardExportService {
   FlashcardExportService._();

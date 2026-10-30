@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:fluentdeck/app_colors.dart';
-import 'package:fluentdeck/models/exercise_model.dart';
-import 'package:fluentdeck/services/user_progress_service.dart';
-import 'package:fluentdeck/ui_elements/primary_button.dart';
-import 'package:fluentdeck/ui_elements/modern_page_widgets.dart';
+import 'package:riovox/app_colors.dart';
+import 'package:riovox/models/exercise_model.dart';
+import 'package:riovox/services/user_progress_service.dart';
+import 'package:riovox/ui_elements/primary_button.dart';
+import 'package:riovox/ui_elements/modern_page_widgets.dart';
 
 class ExerciseScreen extends StatefulWidget {
   const ExerciseScreen({

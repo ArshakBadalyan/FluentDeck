@@ -15,7 +15,7 @@ AI-powered English learning: Flutter app + Strapi 5 API.
 
 | Path | Stack | Package / name |
 |------|-------|----------------|
-| `fluentdeck-f/` | Flutter (iOS, Android, Web) | Dart package `fluentdeck` |
+| `fluentdeck-f/` | Flutter (iOS, Android, Web) | Dart package `riovox` |
 | `strapi-fluentdeck/` | Strapi 5.49, Node 20, PostgreSQL | `fluentdeck-api` |
 
 Reference docs: `PROJECT.md`, `README.md`, `strapi-fluentdeck/STRAPI5-MIGRATION.md`.
@@ -48,7 +48,7 @@ Reference docs: `PROJECT.md`, `README.md`, `strapi-fluentdeck/STRAPI5-MIGRATION.
 **Backend**
 - All OpenAI calls proxied through Strapi — never from the Flutter client.
 - Node 20 (`nvm use` in `strapi-fluentdeck/`).
-- Legacy MatheApp classroom/math modules removed — trust `src/api/` and `PROJECT.md`.
+- Trust `src/api/` and `PROJECT.md` for what exists.
 
 ## Code change principles
 

@@ -5,4 +5,4 @@ STAGING_HOST=CHANGE_ME
 # GitHub: Settings → Secrets and variables → Actions → Secrets (not Variables for IP)
 #   STAGING_HOST     = same IPv4 as above (required — workflow uses secrets.STAGING_HOST)
 #   STAGING_SSH_KEY  = private key from keys/github-actions-staging-deploy
-# Public .pub file → VPS mathe_app_user ~/.ssh/authorized_keys (NOT GitHub)
+# Public .pub file → VPS riovox ~/.ssh/authorized_keys (NOT GitHub)

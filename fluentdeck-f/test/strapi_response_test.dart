@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluentdeck/utils/strapi_response.dart';
+import 'package:riovox/utils/strapi_response.dart';
 
 void main() {
   test('list parses v4 collection', () {

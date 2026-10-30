@@ -17,14 +17,17 @@ import '../../services/conversation_service.dart';
 import '../../services/flashcard_service.dart';
 import '../../services/main_navigation_coordinator.dart';
 import '../../services/main_tab_config.dart';
-import '../../services/notifications_service.dart';
 import '../../services/speaking_content_service.dart';
 import '../../ui_elements/app_motion.dart';
 import '../../ui_elements/frosted_bottom_sheet.dart';
 import '../../ui_elements/modern_page_widgets.dart';
 import '../../utils/practice_time_format.dart';
-import '../../utils/strapi_response.dart';
-import '../../widgets/rio.dart';
+import '../../models/tutor_persona.dart';
+import '../../services/rio_preferences.dart';
+import '../../widgets/professor.dart';
+import '../../services/app_feature_config_service.dart';
+import '../../services/notification_badge.dart';
+import '../../ui_elements/notification_bell.dart';
 
 /// Home of the Today tab (Riovox App Redesign · Today · Home): greeting with
 /// the streak, today's practice card with one clear way to start, then
@@ -44,17 +47,17 @@ class _SpeakingChatTabState extends State<SpeakingChatTab> {
   FlashcardStudyStats? _cards;
   List<SpeakingTopicModel> _topics = const [];
   String? _name;
-  int _unread = 0;
 
   @override
   void initState() {
     super.initState();
+    RioPreferences.instance.load();
     _loadUsage();
     _loadShortcuts();
     _loadHeader();
   }
 
-  /// Name, and unread notifications for the bell's dot.
+  /// Name, and the bell's badge.
   Future<void> _loadHeader() async {
     try {
       final res = await AuthService.getUser();
@@ -64,16 +67,7 @@ class _SpeakingChatTabState extends State<SpeakingChatTab> {
         setState(() => _name = (name == null || name.isEmpty) ? null : name);
       }
     } catch (_) {}
-    try {
-      final res = await NotificationsService.getNotifications();
-      final list = res['data'] as List? ?? [];
-      var count = 0;
-      for (final n in list) {
-        if (n is! Map) continue;
-        if (StrapiResponse.field<bool>(Map<String, dynamic>.from(n), 'read') != true) count += 1;
-      }
-      if (mounted) setState(() => _unread = count);
-    } catch (_) {}
+    await NotificationBadge.refresh();
   }
 
   /// "Pick up where you left off" and "Talk about…": each part is optional
@@ -175,7 +169,6 @@ class _SpeakingChatTabState extends State<SpeakingChatTab> {
                         greeting: _greeting,
                         name: _name,
                         streak: cards?.reviewStreakDays,
-                        unread: _unread,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -188,6 +181,9 @@ class _SpeakingChatTabState extends State<SpeakingChatTab> {
                         onStart: () => widget.onStart(SpeakingSessionContext.freeChat()),
                       ),
                     ),
+                    // Today is the first of several pages; show the others.
+                    const SizedBox(height: 20),
+                    const AppStaggeredFadeIn(index: 3, child: _MorePages()),
                     if (showLast || showCards) ...[
                       const SizedBox(height: 20),
                       AppStaggeredFadeIn(
@@ -290,13 +286,11 @@ class _Header extends StatelessWidget {
     required this.greeting,
     required this.name,
     required this.streak,
-    required this.unread,
   });
 
   final String greeting;
   final String? name;
   final int? streak;
-  final int unread;
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +306,16 @@ class _Header extends StatelessWidget {
             shape: BoxShape.circle,
             color: dark ? AppPageColors.tintOf(context, AppTint.teal).bg : BrandConfig.tealTintStrong,
           ),
-          child: Image.asset(RioPose.happy.asset, fit: BoxFit.cover, semanticLabel: 'Rio, your tutor'),
+          // Your tutor's face: Rio's calm smile, or the chosen person.
+          child: ValueListenableBuilder<TutorPersona>(
+            valueListenable: RioPreferences.instance.tutor,
+            builder: (context, tutor, _) => Image.asset(
+              tutor.isRio ? ProfessorFace.determined.asset : tutor.image,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              semanticLabel: '${tutor.name}, your tutor',
+            ),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -352,7 +355,7 @@ class _Header extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.local_fire_department_rounded, size: 18, color: AppColors.primaryYellow),
+                        const _FlickerFlame(size: 18),
                         const SizedBox(width: 6),
                         Text(
                           '$streak',
@@ -374,11 +377,7 @@ class _Header extends StatelessWidget {
             tooltip: 'Notifications',
             constraints: const BoxConstraints.tightFor(width: 44, height: 44),
             padding: EdgeInsets.zero,
-            icon: Badge(
-              isLabelVisible: unread > 0,
-              smallSize: 8,
-              child: Icon(Icons.notifications_none_rounded, size: 20, color: AppPageColors.textPrimaryOf(context)),
-            ),
+            icon: NotificationBellIcon(size: 20, color: AppPageColors.textPrimaryOf(context)),
             onPressed: () => Scaffold.of(context).openEndDrawer(),
           ),
         ),
@@ -502,6 +501,70 @@ class _TodayCard extends StatelessWidget {
   }
 }
 
+/// The streak flame: lights up with a bounce, then flickers gently.
+class _FlickerFlame extends StatefulWidget {
+  const _FlickerFlame({required this.size});
+
+  final double size;
+
+  @override
+  State<_FlickerFlame> createState() => _FlickerFlameState();
+}
+
+class _FlickerFlameState extends State<_FlickerFlame> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = Icon(Icons.local_fire_department_rounded, size: widget.size);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.2, end: 1),
+      duration: AppMotion.duration(context, const Duration(milliseconds: 700)),
+      curve: Curves.elasticOut,
+      builder: (context, pop, child) => Transform.scale(scale: pop, child: child),
+      child: AnimatedBuilder(
+        animation: _c,
+        child: icon,
+        builder: (context, child) {
+          final t = _c.value * math.pi * 2;
+          // Two out-of-step waves so it never looks like a plain pulse.
+          final flick = (math.sin(t) + math.sin(t * 2.7) * 0.5) / 1.5;
+          return Transform(
+            alignment: Alignment.bottomCenter,
+            transform: Matrix4.diagonal3Values(1 - flick * 0.04, 1 + flick * 0.1, 1)
+              ..rotateZ(flick * 0.06),
+            child: IconTheme(
+              data: IconThemeData(
+                color: Color.lerp(AppColors.primaryYellow, AppColors.orangeHard, (flick + 1) / 4),
+              ),
+              child: child!,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 /// Daily goal ring + "X of Y minutes" from the conversation meter.
 class _GoalRow extends StatelessWidget {
   const _GoalRow({required this.usage, required this.accent});
@@ -550,14 +613,29 @@ class _GoalRow extends StatelessWidget {
             label: title,
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: hasMeter ? u.progress : (u == null ? 0 : 1)),
-              duration: AppMotion.duration(context, AppMotion.slow),
+              duration: AppMotion.duration(context, const Duration(milliseconds: 1000)),
               curve: AppMotion.decelerateCurve,
-              builder: (context, value, _) => CustomPaint(
-                painter: _RingPainter(
-                  progress: value,
-                  color: exhausted ? AppColors.primaryYellow : accent,
-                  track: track,
-                ),
+              builder: (context, value, _) => Stack(
+                fit: StackFit.expand,
+                children: [
+                  CustomPaint(
+                    painter: _RingPainter(
+                      progress: value,
+                      color: exhausted ? AppColors.primaryYellow : accent,
+                      track: track,
+                    ),
+                  ),
+                  // Goal reached: a check pops in once the ring closes.
+                  if (hasMeter)
+                    Center(
+                      child: AnimatedScale(
+                        scale: value >= 0.999 ? 1 : 0,
+                        duration: AppMotion.duration(context, const Duration(milliseconds: 500)),
+                        curve: Curves.elasticOut,
+                        child: const Icon(Icons.check_rounded, size: 26, color: AppColors.primaryYellow),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -918,6 +996,151 @@ class _TopicChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "More ways to practice": the other Today pages (Role-play, Games, …) as
+/// cards, with a page indicator and a "swipe left" hint. Today hides the tab
+/// bar that names them, so without this they are easy to miss.
+class _MorePages extends StatefulWidget {
+  const _MorePages();
+
+  // Same order as the pages after Today (EnglishMainScreen._speakSubTabDefs).
+  static const _pages = [
+    ('roleplay', 'Role-play', Icons.theater_comedy_rounded, AppTint.voice),
+    ('games', 'Games', Icons.sports_esports_rounded, AppTint.reward),
+    ('topics', 'Topics', Icons.forum_rounded, AppTint.teal),
+    ('notes', 'My notes', Icons.sticky_note_2_rounded, AppTint.pink),
+    ('practice', 'Deck words', Icons.style_rounded, AppTint.success),
+  ];
+
+  @override
+  State<_MorePages> createState() => _MorePagesState();
+}
+
+class _MorePagesState extends State<_MorePages> with SingleTickerProviderStateMixin {
+  late final AnimationController _nudge = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _nudge.stop();
+    } else if (!_nudge.isAnimating) {
+      _nudge.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _nudge.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hidden = AppFeatureConfigService.instance.config.hiddenSpeakingTabs;
+    final pages = _MorePages._pages.where((p) => !hidden.contains(p.$1)).toList();
+    if (pages.isEmpty) return const SizedBox.shrink();
+    final accent = AppPageColors.accentOf(context);
+    final muted = AppPageColors.subtleBorderOf(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Expanded(child: _SectionTitle('More ways to practice')),
+            // Page indicator: Today is page 1; the rest are a swipe away.
+            Semantics(
+              label: 'Page 1 of ${pages.length + 1}. Swipe left for more.',
+              excludeSemantics: true,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i <= pages.length; i++)
+                    Container(
+                      width: i == 0 ? 16 : 6,
+                      height: 6,
+                      margin: const EdgeInsets.only(left: 4),
+                      decoration: BoxDecoration(
+                        color: i == 0 ? accent : muted,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Swipe',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: accent),
+                  ),
+                  AnimatedBuilder(
+                    animation: _nudge,
+                    builder: (context, child) => Transform.translate(
+                      // A short tug to the left, then rest: "swipe this way".
+                      offset: Offset(-5 * math.sin(math.pi * (_nudge.value * 2).clamp(0.0, 1.0)), 0),
+                      child: child,
+                    ),
+                    child: Icon(Icons.arrow_back_rounded, size: 16, color: accent),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 96,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            itemCount: pages.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (context, i) {
+              final (id, label, icon, tintName) = pages[i];
+              final tint = AppPageColors.tintOf(context, tintName);
+              return Material(
+                color: AppPageColors.cardBgOf(context),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: muted),
+                ),
+                child: InkWell(
+                  customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  onTap: () => MainNavigationCoordinator.goToSpeakSubTab(id),
+                  child: SizedBox(
+                    width: 100,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(color: tint.bg, shape: BoxShape.circle),
+                          child: Icon(icon, size: 22, color: tint.fg),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppPageColors.textPrimaryOf(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
